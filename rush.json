@@ -424,6 +424,10 @@
     {
       "packageName": "xivanalysis-zh",
       "projectFolder": "packages/xivanalysis-zh"
+    },
+    {
+      "packageName": "tenhou-pairi-kokei-display",
+      "projectFolder": "packages/tenhou-pairi-kokei-display"
     }
     //
     // {

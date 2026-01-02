@@ -1,0 +1,46 @@
+.shanten-tile {
+  position: relative;
+  .popup {
+    display: none;
+    width: 300px;
+    background-color: #ddd;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px 0;
+    position: absolute;
+    z-index: 1;
+    top: 125%;
+    left: 50%;
+    margin-left: -150px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: calc(0% - 10px);
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: transparent transparent #ddd transparent;
+    }
+
+    &.show {
+      visibility: visible;
+    }
+
+    .popup-tile img:last-of-type {
+      margin-left: 5px;
+    }
+
+    table {
+      text-align: initial;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+
+  &:hover .popup {
+    display: block;
+  }
+}

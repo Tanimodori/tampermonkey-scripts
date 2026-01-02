@@ -1,0 +1,45 @@
+{
+  "name": "tenhou-pairi-kokei-display",
+  "version": "0.1.0",
+  "description": "Display Kokei percentage of ii-shan-ten in Tenhou-Pairi",
+  "main": "dist/index.js",
+  "files": [
+    "src",
+    "dist",
+    "build",
+    "vite.config.ts"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tanimodori/tenhou-pairi-kokei-display.git"
+  },
+  "keywords": [
+    "tenhou",
+    "greasyfork"
+  ],
+  "author": "Tanimodori",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Tanimodori/tenhou-pairi-kokei-display/issues"
+  },
+  "homepage": "https://github.com/Tanimodori/tenhou-pairi-kokei-display#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.35.1",
+    "eslint": "^8.23.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "happy-dom": "^6.0.4",
+    "less": "^4.1.3",
+    "prettier": "^2.7.1",
+    "typescript": "^4.8.2",
+    "vite": "^3.0.9",
+    "vitest": "^0.22.1"
+  },
+  "dependencies": {
+    "@tanimodori/mj-core": "^0.2.11"
+  }
+}

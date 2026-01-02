@@ -428,6 +428,10 @@
     {
       "packageName": "tenhou-pairi-kokei-display",
       "projectFolder": "packages/tenhou-pairi-kokei-display"
+    },
+    {
+      "packageName": "fflogs-scripts",
+      "projectFolder": "packages/fflogs-scripts"
     }
     //
     // {

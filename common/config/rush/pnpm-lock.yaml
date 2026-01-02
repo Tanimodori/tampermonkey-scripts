@@ -10,6 +10,39 @@ importers:
 
   .: {}
 
+  ../../packages/fflogs-scripts:
+    devDependencies:
+      '@ianvs/prettier-plugin-sort-imports':
+        specifier: ^4.4.0
+        version: 4.7.0(prettier@3.7.4)
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.19.3
+      acorn:
+        specifier: ^8.14.1
+        version: 8.15.0
+      esbuild:
+        specifier: ^0.25.1
+        version: 0.25.12
+      fast-glob:
+        specifier: ^3.3.3
+        version: 3.3.3
+      prettier:
+        specifier: ^3.3.3
+        version: 3.7.4
+      typescript:
+        specifier: ~5.6.2
+        version: 5.6.3
+      vite:
+        specifier: ^6.0.5
+        version: 6.4.1(@types/node@22.19.3)(less@4.5.1)
+      vite-plugin-strip-comments:
+        specifier: ^0.0.5
+        version: 0.0.5
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.3)(happy-dom@6.0.4)(less@4.5.1)
+
   ../../packages/tenhou-pairi-kokei-display:
     dependencies:
       '@tanimodori/mj-core':
@@ -1755,6 +1788,10 @@ packages:
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
 
+  vite-plugin-strip-comments@0.0.5:
+    resolution: {integrity: sha512-fhctuC2DoB8NHf7rqE08/kXQuxd6xnIaQL8YWFFVpdXc9vQGwMlHJVZwOXfZaPvnruU9xMxlANmihNshm1yRlQ==}
+    engines: {deno: '>=2.0.4', node: '>=20', pnpm: '>=9.10.0'}
+
   vite@3.2.11:
     resolution: {integrity: sha512-K/jGKL/PgbIgKCiJo5QbASQhFiV02X9Jh+Qq0AKCRCRKZtOTVi4t6wh75FDpGf2N9rYOnzH87OEFQNaFy6pdxQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
@@ -2288,13 +2325,13 @@ snapshots:
 
   '@types/concat-stream@1.6.1':
     dependencies:
-      '@types/node': 22.19.3
+      '@types/node': 25.0.3
 
   '@types/estree@1.0.8': {}
 
   '@types/form-data@0.0.33':
     dependencies:
-      '@types/node': 22.19.3
+      '@types/node': 25.0.3
 
   '@types/json-schema@7.0.15': {}
 
@@ -3463,16 +3500,7 @@ snapshots:
       - supports-color
       - terser
 
-  vite@3.2.11(@types/node@22.19.3)(less@4.5.1):
-    dependencies:
-      esbuild: 0.15.18
-      postcss: 8.5.6
-      resolve: 1.22.11
-      rollup: 2.79.2
-    optionalDependencies:
-      '@types/node': 22.19.3
-      fsevents: 2.3.3
-      less: 4.5.1
+  vite-plugin-strip-comments@0.0.5: {}
 
   vite@3.2.11(@types/node@25.0.3)(less@4.5.1):
     dependencies:
@@ -3512,13 +3540,13 @@ snapshots:
     dependencies:
       '@types/chai': 4.3.20
       '@types/chai-subset': 1.3.6(@types/chai@4.3.20)
-      '@types/node': 22.19.3
+      '@types/node': 25.0.3
       chai: 4.5.0
       debug: 4.4.3
       local-pkg: 0.4.3
       tinypool: 0.2.4
       tinyspy: 1.1.1
-      vite: 3.2.11(@types/node@22.19.3)(less@4.5.1)
+      vite: 3.2.11(@types/node@25.0.3)(less@4.5.1)
     optionalDependencies:
       happy-dom: 6.0.4
     transitivePeerDependencies:

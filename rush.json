@@ -427,12 +427,10 @@
     //   // "tags": [ "1.0.0-release", "frontend-team" ]
     // },
     // 
-    // {
-    //   "packageName": "my-controls",
-    //   "projectFolder": "libraries/my-controls",
-    //   "reviewCategory": "production",
-    //   "tags": [ "frontend-team" ]
-    // },
+    {
+      "packageName": "xivanalysis-zh",
+      "projectFolder": "packages/xivanalysis-zh",
+    }
     // 
     // {
     //   "packageName": "my-toolchain",

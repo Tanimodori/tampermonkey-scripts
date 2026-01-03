@@ -7,11 +7,11 @@ import pkg from "../package.json";
 
 const metadata = `// ==UserScript==
 // @name         universalis-zh-data
-// @name:zh      Universalis 中文数据
+// @name:zh      Universalis 中文数据补全
 // @namespace    http://tanimodori.com/
 // @version      ${pkg.version}
 // @description  Universalis Chinese data localization script
-// @description:zh Universalis 中文数据引入脚本
+// @description:zh Universalis 中文数据补全脚本
 // @author       ${pkg.author}
 // @match        https://universalis.app/*
 // @include      https://universalis.app/*

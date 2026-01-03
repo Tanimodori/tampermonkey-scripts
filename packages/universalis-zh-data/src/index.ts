@@ -66,6 +66,13 @@ const getItemCategory = (UICategoryId: number): ItemCategory => {
   return category;
 };
 
+const getGarlandItem = async (itemId: number): Promise<GarlandItem> => {
+  const GARLAND_API_ITEM_ENDPOINT = `https://www.garlandtools.cn/db/doc/item/chs/3/${itemId}.json`;
+  const response = await fetch(GARLAND_API_ITEM_ENDPOINT);
+  const json: GarlandItemResponse = await response.json();
+  return json.item;
+};
+
 const searchGarlandItem = async (
   item: GarlandSearchItem,
 ): Promise<XIVAPIItemResult | null> => {
@@ -85,11 +92,7 @@ const searchGarlandItem = async (
   };
 
   try {
-    const GARLAND_API_ITEM_ENDPOINT = `https://www.garlandtools.cn/db/doc/item/chs/3/${item.id}.json`;
-    const response = await fetch(GARLAND_API_ITEM_ENDPOINT);
-    const json: GarlandItemResponse = await response.json();
-    const itemDetail: GarlandItem = json.item;
-
+    const itemDetail = await getGarlandItem(item.id);
     if (itemDetail.tradeable !== 1) {
       return null;
     }
@@ -161,3 +164,56 @@ const processPackage: PackageInjector = async (pkg) => {
 };
 
 injectFetch(processPackage);
+
+const getIconElement = (): HTMLImageElement | null => {
+  return document.querySelector<HTMLImageElement>("img.item-icon");
+};
+
+const injectItemImage = () => {
+  document.addEventListener("DOMContentLoaded", async () => {
+    let iconUrl = "";
+    let threshold = 100;
+
+    const getIconUrl = async () => {
+      if (iconUrl) {
+        return;
+      }
+      // https://universalis.app/market/46246
+      const id = parseInt(document.location.pathname.split("/").pop() || "0");
+      const itemDetail = await getGarlandItem(id);
+      iconUrl = `https://www.garlandtools.cn/files/icons/item/${itemDetail.icon}.png`;
+    };
+
+    const check = async () => {
+      const currentImg = getIconElement();
+      // no img, keep checking
+      if (!currentImg) {
+        requestAnimationFrame(check);
+        return;
+      }
+      // wrong img, replace and keep checking
+      const url = new URL(currentImg.src);
+      if (url.pathname === "/i/universalis/error.png") {
+        await getIconUrl();
+        currentImg.src = iconUrl;
+        requestAnimationFrame(check);
+        return;
+      }
+      // not loaded yet, keep checking
+      if (currentImg.complete === false) {
+        requestAnimationFrame(check);
+        return;
+      }
+      // wait until threshold expires
+      --threshold;
+      if (threshold) {
+        requestAnimationFrame(check);
+        return;
+      }
+    };
+
+    requestAnimationFrame(check);
+  });
+};
+
+injectItemImage();

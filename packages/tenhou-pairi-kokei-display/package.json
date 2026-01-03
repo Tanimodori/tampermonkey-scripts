@@ -6,13 +6,13 @@
     "tenhou",
     "greasyfork"
   ],
-  "homepage": "https://github.com/Tanimodori/tenhou-pairi-kokei-display#readme",
+  "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
   "bugs": {
-    "url": "https://github.com/Tanimodori/tenhou-pairi-kokei-display/issues"
+    "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Tanimodori/tenhou-pairi-kokei-display.git"
+    "url": "git+https://github.com/Tanimodori/tampermonkey-scripts.git"
   },
   "license": "MIT",
   "author": "Tanimodori",

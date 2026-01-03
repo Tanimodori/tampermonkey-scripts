@@ -3,13 +3,13 @@
   "version": "0.0.1",
   "private": true,
   "description": "Fill in the missing Chinese translations for xivanalysis.",
-  "homepage": "https://github.com/Tanimodori/fflogs-scripts#readme",
+  "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
   "bugs": {
-    "url": "https://github.com/Tanimodori/fflogs-scripts/issues"
+    "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Tanimodori/fflogs-scripts.git"
+    "url": "git+https://github.com/Tanimodori/tampermonkey-scripts.git"
   },
   "license": "MIT",
   "author": "Tanimodori",

@@ -4,7 +4,7 @@
  */
 const config = {
   $schema: "https://json.schemastore.org/prettierrc",
-  printWidth: 120,
+  printWidth: 160,
   semi: true,
   singleQuote: true,
   overrides: [

@@ -426,6 +426,10 @@
       "projectFolder": "packages/xivanalysis-zh"
     },
     {
+      "packageName": "universalis-zh-data",
+      "projectFolder": "packages/universalis-zh-data"
+    },
+    {
       "packageName": "tenhou-pairi-kokei-display",
       "projectFolder": "packages/tenhou-pairi-kokei-display"
     },

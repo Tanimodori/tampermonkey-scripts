@@ -2,43 +2,43 @@
 
 ## v0.1.0 (2022/9/17)
 
-* Rewritten in TypeScript. Using `vite` and `vitest` to build and test this project.
-* Re-sort rows to get rid of tenhou-pairi strange orders (e.g. `11334445667792m`, the last two rows is `5m`-`2m`)
-* Using CSS `:hover` to display popups, allowing hover on popups.
+- Rewritten in TypeScript. Using `vite` and `vitest` to build and test this project.
+- Re-sort rows to get rid of tenhou-pairi strange orders (e.g. `11334445667792m`, the last two rows is `5m`-`2m`)
+- Using CSS `:hover` to display popups, allowing hover on popups.
 
 ## v0.0.9 (2022/9/1)
 
-* 天鳳牌理の自動補足で入力手牌は3n+2枚だが14枚不足の時に起動していないバグを修正。「加班第一帅」さんに感謝いたします。
+- 天鳳牌理の自動補足で入力手牌は 3n+2 枚だが 14 枚不足の時に起動していないバグを修正。「加班第一帅」さんに感謝いたします。
 
 ## v0.0.8 (2022/8/30)
 
-* 国士無双の判定バグを修正。「KI_碘化钾」さんに感謝いたします。
-* 13牌を入力すると天鳳牌理の自動補足によるバグを修正。「Damn☆You」さんに感謝いたします。
+- 国士無双の判定バグを修正。「KI\_碘化钾」さんに感謝いたします。
+- 13 牌を入力すると天鳳牌理の自動補足によるバグを修正。「Damn☆You」さんに感謝いたします。
 
 ## v0.0.7 (2022/5/13)
 
-* 七対子の4枚使いも和了というバグを修正。「u-羽沢つぐみ」さんに感謝いたします。
+- 七対子の 4 枚使いも和了というバグを修正。「u-羽沢つぐみ」さんに感謝いたします。
 
 ## v0.0.6 (2021/12/5)
 
-* 「好形率」の説明が付く。
+- 「好形率」の説明が付く。
 
 ## v0.0.5 (2021/11/7)
 
-* 好形率は一直線にする。
+- 好形率は一直線にする。
 
 ## v0.0.4 (2021/11/7)
 
-* 聴牌形一覧表のスタイルを修正。
+- 聴牌形一覧表のスタイルを修正。
 
 ## v0.0.3 (2021/11/7)
 
-* 聴牌形の一覧の機能を追加、赤ドラを含む七対子のバグを修正。
-  
+- 聴牌形の一覧の機能を追加、赤ドラを含む七対子のバグを修正。
+
 ## v0.0.2 (2021/11/7)
 
-* 赤ドラや牌順のバグを直す。
+- 赤ドラや牌順のバグを直す。
 
 ## v0.0.1 (2021/11/7)
 
-* リリース。
+- リリース。

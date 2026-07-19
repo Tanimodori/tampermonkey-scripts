@@ -1,8 +1,8 @@
 {
-  "name": "feishu-audio-download",
+  "name": "feishu-download",
   "version": "0.0.1",
   "private": true,
-  "description": "Download audio resources from Feishu pages.",
+  "description": "Download audio and image resources from Feishu pages.",
   "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
   "bugs": {
     "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"

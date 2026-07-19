@@ -1,10 +1,14 @@
-const BUTTON_CLASS = 'tm-feishu-audio-download';
+const BUTTON_CLASS = 'tm-feishu-download';
 const FILE_PAGE_PATH_RE = /^\/file\/([A-Za-z0-9]+)$/;
 const TOOLBAR_SELECTOR = '.note-title__btn-container';
 const TOOLBAR_PC_TOOLS_SELECTOR = '.pc-tools';
-const BUTTON_WRAP_CLASS = 'tm-feishu-audio-download-wrap';
-const BUTTON_ID = 'tm-feishu-audio-download-button';
-const BUTTON_TEXT_DEFAULT = '下载音频';
+const BUTTON_WRAP_CLASS = 'tm-feishu-download-wrap';
+const AUDIO_BUTTON_ID = 'tm-feishu-audio-download-button';
+const IMAGE_BUTTON_ID = 'tm-feishu-image-download-button';
+const AUDIO_BUTTON_TEXT = '下载音频';
+const IMAGE_BUTTON_TEXT = '下载图片';
+const SOURCE_ATTR = 'data-download-src';
+const FILENAME_ATTR = 'data-download-filename';
 
 const installDownloadClickInterceptor = () => {
   const originalAddEventListener = EventTarget.prototype.addEventListener;
@@ -64,6 +68,34 @@ const isTargetAudioElement = (audio: HTMLAudioElement, pageFileToken: string): b
   }
 };
 
+const isTargetImageElement = (img: HTMLImageElement): boolean => {
+  if (img.getAttribute('data-select') !== 'box-preview-image-viewer') {
+    return false;
+  }
+
+  const fileToken = img.getAttribute('data-file-token');
+  if (!fileToken) {
+    return false;
+  }
+
+  const src = img.src;
+  if (!src) {
+    return false;
+  }
+
+  try {
+    const url = new URL(src);
+    if (url.hostname !== 'internal-api-drive-stream.feishu.cn') {
+      return false;
+    }
+
+    const expectedPath = `/space/api/box/stream/download/preview/${fileToken}`;
+    return url.pathname === expectedPath;
+  } catch {
+    return false;
+  }
+};
+
 const injectStyle = () => {
   const style = document.createElement('style');
   style.textContent = `
@@ -92,21 +124,70 @@ const getAudioSource = (audio: HTMLAudioElement): string | null => {
   return null;
 };
 
+const getMetaTitleFileName = (): string | null => {
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="title"]');
+  if (!meta) {
+    return null;
+  }
+
+  const title = meta.content.trim();
+  return title || null;
+};
+
 const buildFileName = (urlString: string) => {
+  const fromMeta = getMetaTitleFileName();
+  if (fromMeta) {
+    return fromMeta;
+  }
+
   try {
     const url = new URL(urlString);
-    const raw = decodeURIComponent(url.pathname.split('/').pop() || 'feishu-audio');
-    return raw || 'feishu-audio';
+    const raw = decodeURIComponent(url.pathname.split('/').pop() || 'feishu-download');
+    return raw || 'feishu-download';
   } catch {
-    return 'feishu-audio';
+    return 'feishu-download';
   }
 };
 
 const bindDownload = (anchor: HTMLAnchorElement, src: string) => {
-  anchor.href = src;
-  anchor.download = buildFileName(src);
+  const filename = buildFileName(src);
+  anchor.href = '#';
+  anchor.download = filename;
+  anchor.setAttribute(SOURCE_ATTR, src);
+  anchor.setAttribute(FILENAME_ATTR, filename);
   anchor.removeAttribute('target');
   anchor.rel = 'noreferrer noopener';
+};
+
+const triggerBlobDownload = (blob: Blob, filename: string) => {
+  const blobUrl = URL.createObjectURL(blob);
+  const temp = document.createElement('a');
+  temp.href = blobUrl;
+  temp.download = filename;
+  temp.style.display = 'none';
+  document.body.appendChild(temp);
+  temp.click();
+  temp.remove();
+  URL.revokeObjectURL(blobUrl);
+};
+
+const downloadByBlob = async (anchor: HTMLAnchorElement) => {
+  const src = anchor.getAttribute(SOURCE_ATTR);
+  const filename = anchor.getAttribute(FILENAME_ATTR) || 'feishu-download';
+  if (!src) {
+    return;
+  }
+
+  const response = await fetch(src, {
+    credentials: 'include',
+    mode: 'cors',
+  });
+  if (!response.ok) {
+    throw new Error(`Download request failed: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  triggerBlobDownload(blob, filename);
 };
 
 const getFirstAudioSource = (pageFileToken: string): string | null => {
@@ -124,8 +205,23 @@ const getFirstAudioSource = (pageFileToken: string): string | null => {
   return null;
 };
 
-const getOrCreateDownloadButton = (): HTMLAnchorElement | null => {
-  const existing = document.getElementById(BUTTON_ID);
+const getFirstImageSource = (): string | null => {
+  const images = document.querySelectorAll<HTMLImageElement>(
+    'img[data-select="box-preview-image-viewer"][data-file-token]',
+  );
+  for (const img of images) {
+    if (!isTargetImageElement(img)) {
+      continue;
+    }
+    if (img.src) {
+      return img.src;
+    }
+  }
+  return null;
+};
+
+const getOrCreateDownloadButton = (buttonId: string, text: string): HTMLAnchorElement | null => {
+  const existing = document.getElementById(buttonId);
   if (existing instanceof HTMLAnchorElement) {
     return existing;
   }
@@ -139,9 +235,16 @@ const getOrCreateDownloadButton = (): HTMLAnchorElement | null => {
   wrap.className = BUTTON_WRAP_CLASS;
 
   const anchor = document.createElement('a');
-  anchor.id = BUTTON_ID;
+  anchor.id = buttonId;
   anchor.className = `${BUTTON_CLASS} ud__button ud__button--outlined ud__button--outlined-default ud__button--size-md`;
-  anchor.textContent = BUTTON_TEXT_DEFAULT;
+  anchor.textContent = text;
+  anchor.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    void downloadByBlob(anchor).catch((error) => {
+      console.error('Failed to download file via blob:', error);
+    });
+  });
   wrap.appendChild(anchor);
 
   const pcTools = toolbar.querySelector(TOOLBAR_PC_TOOLS_SELECTOR);
@@ -159,8 +262,8 @@ const getOrCreateDownloadButton = (): HTMLAnchorElement | null => {
   return anchor;
 };
 
-const removeDownloadButton = () => {
-  const anchor = document.getElementById(BUTTON_ID);
+const removeDownloadButton = (buttonId: string) => {
+  const anchor = document.getElementById(buttonId);
   if (!(anchor instanceof HTMLElement)) {
     return;
   }
@@ -173,13 +276,13 @@ const removeDownloadButton = () => {
   anchor.remove();
 };
 
-const syncDownloadButton = (src: string | null) => {
+const syncDownloadButton = (buttonId: string, text: string, src: string | null) => {
   if (!src) {
-    removeDownloadButton();
+    removeDownloadButton(buttonId);
     return;
   }
 
-  const anchor = getOrCreateDownloadButton();
+  const anchor = getOrCreateDownloadButton(buttonId, text);
   if (!anchor) {
     return;
   }
@@ -190,12 +293,15 @@ const syncDownloadButton = (src: string | null) => {
 const injectAll = () => {
   const pageFileToken = getPageFileToken();
   if (!pageFileToken) {
-    removeDownloadButton();
+    removeDownloadButton(AUDIO_BUTTON_ID);
+    removeDownloadButton(IMAGE_BUTTON_ID);
     return;
   }
 
-  const src = getFirstAudioSource(pageFileToken);
-  syncDownloadButton(src);
+  const audioSrc = getFirstAudioSource(pageFileToken);
+  const imageSrc = getFirstImageSource();
+  syncDownloadButton(AUDIO_BUTTON_ID, AUDIO_BUTTON_TEXT, audioSrc);
+  syncDownloadButton(IMAGE_BUTTON_ID, IMAGE_BUTTON_TEXT, imageSrc);
 };
 
 const observeAudioChanges = () => {

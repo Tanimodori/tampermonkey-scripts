@@ -6,12 +6,12 @@ import { PluginOption } from 'vite';
 import pkg from '../package.json';
 
 const metadata = `// ==UserScript==
-// @name         feishu-audio-download
-// @name:zh      飞书音频下载
+// @name         feishu-download
+// @name:zh      飞书资源下载
 // @namespace    http://tanimodori.com/
 // @version      ${pkg.version}
-// @description  Download audio resources from Feishu pages
-// @description:zh 在飞书页面中下载音频资源
+// @description  Download audio and image resources from Feishu pages
+// @description:zh 在飞书页面中下载音频和图片资源
 // @author       ${pkg.author}
 // @match        https://*.feishu.cn/*
 // @match        https://*.larksuite.com/*

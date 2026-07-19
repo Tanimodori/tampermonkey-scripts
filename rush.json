@@ -438,8 +438,8 @@
       "projectFolder": "packages/fflogs-scripts"
     },
     {
-      "packageName": "feishu-audio-download",
-      "projectFolder": "packages/feishu-audio-download"
+      "packageName": "feishu-download",
+      "projectFolder": "packages/feishu-download"
     }
     //
     // {

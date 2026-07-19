@@ -10,7 +10,7 @@ importers:
 
   .: {}
 
-  ../../packages/feishu-audio-download:
+  ../../packages/feishu-download:
     devDependencies:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.4.0

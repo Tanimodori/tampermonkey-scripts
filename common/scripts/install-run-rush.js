@@ -16,25 +16,75 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 176760:
-/*!****************************!*\
-  !*** external "node:path" ***!
-  \****************************/
-/***/ ((module) => {
+/***/ 207008
+/*!*********************************************************************!*\
+  !*** ./lib-intermediate-esm/scripts/generated/BootstrapProtocol.js ***!
+  \*********************************************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
-module.exports = require("node:path");
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   BOOTSTRAP_PROTOCOL_MAJOR: () => (/* binding */ BOOTSTRAP_PROTOCOL_MAJOR),
+/* harmony export */   encodeBootstrapEnvelope: () => (/* binding */ encodeBootstrapEnvelope)
+/* harmony export */ });
+// Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
+// See LICENSE in the project root for license information.
+// THIS FILE IS GENERATED. Run "rushx generate-bootstrap-protocol" in libraries/reporter to update it.
+// Sources: libraries/reporter/src/bootstrap/BootstrapProtocol.ts
+//          libraries/reporter/src/protocol/ReporterProtocol.ts
+/**
+ * The protocol major version frozen into the bootstrap encoder.
+ *
+ * @remarks
+ * The `install-run-rush` build embeds a generated copy of this constant and
+ * the encoder below. The generated module is checked byte-for-byte during the
+ * reporter build.
+ *
+ * @beta
+ */
+const BOOTSTRAP_PROTOCOL_MAJOR = 1;
+/**
+ * Encodes one bootstrap event envelope without importing the reporter package.
+ *
+ * @beta
+ */
+function encodeBootstrapEnvelope(input) {
+    return JSON.stringify({
+        protocolVersion: { major: BOOTSTRAP_PROTOCOL_MAJOR, minor: 0 },
+        eventId: input.eventId,
+        sessionId: input.sessionId,
+        sequence: input.sequence,
+        timestamp: input.timestamp,
+        source: input.source,
+        privacy: input.privacy,
+        required: input.required,
+        type: input.type,
+        payload: input.payload === undefined ? {} : input.payload
+    });
+}
+//# sourceMappingURL=BootstrapProtocol.js.map
 
-/***/ }),
+/***/ },
 
-/***/ 973024:
+/***/ 973024
 /*!**************************!*\
   !*** external "node:fs" ***!
   \**************************/
-/***/ ((module) => {
+(module) {
 
 module.exports = require("node:fs");
 
-/***/ })
+/***/ },
+
+/***/ 176760
+/*!****************************!*\
+  !*** external "node:path" ***!
+  \****************************/
+(module) {
+
+module.exports = require("node:path");
+
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -56,6 +106,12 @@ module.exports = require("node:fs");
 /******/ 		};
 /******/
 /******/ 		// Execute the module function
+/******/ 		if (!(moduleId in __webpack_modules__)) {
+/******/ 			delete __webpack_module_cache__[moduleId];
+/******/ 			var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
+/******/ 		}
 /******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
 /******/
 /******/ 		// Return the exports of the module
@@ -107,23 +163,31 @@ module.exports = require("node:fs");
 var __webpack_exports__ = {};
 // This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
 (() => {
-/*!************************************************!*\
-  !*** ./lib-esnext/scripts/install-run-rush.js ***!
-  \************************************************/
+/*!**********************************************************!*\
+  !*** ./lib-intermediate-esm/scripts/install-run-rush.js ***!
+  \**********************************************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! node:path */ 176760);
 /* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_path__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! node:fs */ 973024);
 /* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _generated_BootstrapProtocol__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./generated/BootstrapProtocol */ 207008);
 // Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
 // See LICENSE in the project root for license information.
 /* eslint-disable no-console */
 
 
+
 const { installAndRun, findRushJsonFolder, RUSH_JSON_FILENAME, runWithErrorAndStatusCode } = require('./install-run');
 const PACKAGE_NAME = '@microsoft/rush';
 const RUSH_PREVIEW_VERSION = 'RUSH_PREVIEW_VERSION';
+const RUSH_QUIET_MODE = 'RUSH_QUIET_MODE';
 const INSTALL_RUN_RUSH_LOCKFILE_PATH_VARIABLE = 'INSTALL_RUN_RUSH_LOCKFILE_PATH';
+function _validateBundledBootstrapProtocol() {
+    if (_generated_BootstrapProtocol__WEBPACK_IMPORTED_MODULE_2__.BOOTSTRAP_PROTOCOL_MAJOR < 1 || typeof _generated_BootstrapProtocol__WEBPACK_IMPORTED_MODULE_2__.encodeBootstrapEnvelope !== 'function') {
+        throw new Error('The bundled Rush reporter bootstrap protocol is invalid.');
+    }
+}
 function _getRushVersion(logger) {
     const rushPreviewVersion = process.env[RUSH_PREVIEW_VERSION];
     if (rushPreviewVersion !== undefined) {
@@ -156,6 +220,7 @@ function _getBin(scriptName) {
     }
 }
 function _run() {
+    _validateBundledBootstrapProtocol();
     const [nodePath /* Ex: /bin/node */, scriptPath /* /repo/common/scripts/install-run-rush.js */, ...packageBinArgs /* [build, --to, myproject] */] = process.argv;
     // Detect if this script was directly invoked, or if the install-run-rushx script was invokved to select the
     // appropriate binary inside the rush package to run
@@ -165,7 +230,8 @@ function _run() {
         throw new Error('Unexpected exception: could not detect node path or script path');
     }
     let commandFound = false;
-    let logger = { info: console.log, error: console.error };
+    const quietModeEnvValue = process.env[RUSH_QUIET_MODE];
+    let quiet = quietModeEnvValue === '1' || quietModeEnvValue === 'true';
     for (const arg of packageBinArgs) {
         if (arg === '-q' || arg === '--quiet') {
             // The -q/--quiet flag is supported by both `rush` and `rushx`, and will suppress
@@ -174,10 +240,7 @@ function _run() {
             // To maintain the same user experience, the install-run* scripts pass along this
             // flag but also use it to suppress any diagnostic information normally printed
             // to stdout.
-            logger = {
-                info: () => { },
-                error: console.error
-            };
+            quiet = true;
         }
         else if (!arg.startsWith('-') || arg === '-h' || arg === '--help') {
             // We either found something that looks like a command (i.e. - doesn't start with a "-"),
@@ -198,6 +261,9 @@ function _run() {
         }
         process.exit(1);
     }
+    const logger = quiet
+        ? { info: () => { }, error: console.error }
+        : { info: console.log, error: console.error };
     runWithErrorAndStatusCode(logger, () => {
         const version = _getRushVersion(logger);
         logger.info(`The ${RUSH_JSON_FILENAME} configuration requests Rush version ${version}`);

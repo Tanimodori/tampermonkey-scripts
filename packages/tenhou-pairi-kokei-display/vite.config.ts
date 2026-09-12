@@ -1,6 +1,6 @@
+import { resolve } from 'path';
 /// <reference types="node" />
 import { defineConfig } from 'vitest/config';
-import { resolve } from 'path';
 import gfMetadata from './build/gfMetadata';
 
 export default defineConfig({

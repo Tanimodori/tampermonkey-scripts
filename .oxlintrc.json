@@ -1,0 +1,19 @@
+{
+  "plugins": ["eslint", "typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "es2021": true,
+    "browser": true
+  },
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/.rush/**"],
+  "overrides": [
+    {
+      "files": ["**/vite.config.ts", "**/build/**"],
+      "env": {
+        "node": true
+      }
+    }
+  ]
+}

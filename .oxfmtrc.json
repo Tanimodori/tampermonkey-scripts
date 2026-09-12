@@ -1,0 +1,25 @@
+{
+  "printWidth": 160,
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "proseWrap": "never",
+  "htmlWhitespaceSensitivity": "ignore",
+  "vueIndentScriptAndStyle": true,
+  "endOfLine": "crlf",
+  "sortPackageJson": false,
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/.rush/**"],
+  "sortImports": {
+    "groups": ["builtin", "external", ["internal", "subpath"], ["parent", "sibling", "index"], "style", "unknown"],
+    "internalPattern": ["@/", "#"],
+    "newlinesBetween": false
+  },
+  "overrides": [
+    {
+      "files": ["**/*.css", "**/*.scss", "**/*.html"],
+      "options": { "singleQuote": false }
+    }
+  ]
+}

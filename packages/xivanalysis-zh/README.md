@@ -10,7 +10,6 @@ Install this scirpt at [GreasyFork](https://greasyfork.org/zh-CN/scripts/523443-
 
 `pnpm i`
 
-
 ## test
 
 `pnpm run test`

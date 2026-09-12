@@ -33,4 +33,3 @@ export default defineConfig(async (): Promise<UserConfig> => {
     plugins: [stripComments({ type: 'none' })],
   };
 });
-

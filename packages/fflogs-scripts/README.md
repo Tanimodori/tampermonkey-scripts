@@ -13,4 +13,3 @@ FFLogs scripts for personal use
 ## build
 
 `pnpm run build`
-

@@ -1,14 +1,6 @@
 import { injectFetch } from './hooks';
 import { injectStyle } from './style';
-import {
-  injectIcon,
-  injectTimeline,
-  translateAction,
-  translateActionRich,
-  translateAddon,
-  translateItem,
-  translateStatus,
-} from './translate';
+import { injectIcon, injectTimeline, translateAction, translateActionRich, translateAddon, translateItem, translateStatus } from './translate';
 import { Package } from './types';
 import { isXIVPackage } from './xivapi';
 
@@ -56,4 +48,3 @@ injectStyle();
 injectTimeline();
 
 injectIcon();
-

@@ -1,7 +1,7 @@
 import { Window, Document } from 'happy-dom';
+import MJ from '@/MJ';
 import { UIInfo } from '@/ui';
 import { getElement } from '@/ui/utils';
-import MJ from '@/MJ';
 
 /** Test case for ui manipulation */
 export interface TestCaseInput {
@@ -172,9 +172,7 @@ export const buildTeipaikeiTable = (document: Document, testCase: TestCase) => {
 export const buildTextareaContent = (testCase: TestCase) => {
   // It uses `testCase.input`, not `testCase.tiles`
   const firstLine = `${testCase.input}\n`;
-  const mainLines = testCase.calculated.result.map(
-    ([discard, tiles, count]) => `打${discard} 摸[${MJ.toArray(tiles).join('')} ${count}枚]`,
-  );
+  const mainLines = testCase.calculated.result.map(([discard, tiles, count]) => `打${discard} 摸[${MJ.toArray(tiles).join('')} ${count}枚]`);
   return firstLine + mainLines.join('\n');
 };
 

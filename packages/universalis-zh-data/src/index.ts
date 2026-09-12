@@ -1,5 +1,5 @@
-import { injectFetch } from "./hooks";
-import { SearchCategory, UICategory } from "./ItemCategory";
+import { injectFetch } from './hooks';
+import { SearchCategory, UICategory } from './ItemCategory';
 import type {
   GarlandItem,
   GarlandItemResponse,
@@ -9,23 +9,20 @@ import type {
   PackageInjector,
   XIVAPIItemResponse,
   XIVAPIItemResult,
-} from "./types";
+} from './types';
 
 const isCafeMakerPackage = (pkg: Package) => {
   const url = new URL(pkg.url);
 
   // https://cafemaker.wakingsands.com/search?string=%E5%B0%A4%E6%8B%89%E7%B2%BE%E5%8D%8E&indexes=item&language=chs&filters=ItemSearchCategory.ID%3E=1&columns=ID,Icon,Name,LevelItem,Rarity,ItemSearchCategory.Name,ItemSearchCategory.ID,ItemKind.Name&limit=100&sort_field=LevelItem&sort_order=desc
-  if (
-    url.hostname === "cafemaker.wakingsands.com" &&
-    url.pathname === "/search"
-  ) {
+  if (url.hostname === 'cafemaker.wakingsands.com' && url.pathname === '/search') {
     return true;
   }
   return false;
 };
 
 const getIconUrl = (iconId: number): string => {
-  const padded = iconId.toString().padStart(6, "0");
+  const padded = iconId.toString().padStart(6, '0');
   return `/i/${padded.substring(0, 3)}000/${padded}.png`;
 };
 
@@ -33,11 +30,11 @@ const getItemCategory = (UICategoryId: number): ItemCategory => {
   const category: ItemCategory = {
     Icon: -1,
     UICategory: UICategoryId,
-    UICategoryName: "",
+    UICategoryName: '',
     SearchCategory: -1,
-    SearchCategoryName: "",
+    SearchCategoryName: '',
     ParentCategory: -1,
-    ParentCategoryName: "",
+    ParentCategoryName: '',
   };
 
   // Search in UICategory
@@ -73,18 +70,16 @@ const getGarlandItem = async (itemId: number): Promise<GarlandItem> => {
   return json.item;
 };
 
-const searchGarlandItem = async (
-  item: GarlandSearchItem,
-): Promise<XIVAPIItemResult | null> => {
+const searchGarlandItem = async (item: GarlandSearchItem): Promise<XIVAPIItemResult | null> => {
   const result: XIVAPIItemResult = {
     ID: item.id,
-    Icon: "",
+    Icon: '',
     ItemKind: {
-      Name: "",
+      Name: '',
     },
     ItemSearchCategory: {
       ID: -1,
-      Name: "",
+      Name: '',
     },
     LevelItem: item.obj.l,
     Name: item.obj.n,
@@ -107,7 +102,7 @@ const searchGarlandItem = async (
     result.ItemSearchCategory.ID = category.SearchCategory;
     result.ItemSearchCategory.Name = category.SearchCategoryName;
   } catch (e) {
-    console.error("Failed to parse Garland API response:", e);
+    console.error('Failed to parse Garland API response:', e);
   }
 
   return result;
@@ -116,21 +111,16 @@ const searchGarlandItem = async (
 const searchGarland = async (searchString: string) => {
   const newParams = new URLSearchParams({
     text: searchString,
-    lang: "chs",
-    type: "item",
+    lang: 'chs',
+    type: 'item',
   });
 
-  const GARLAND_API_SEARCH_ENDPOINT =
-    "https://www.garlandtools.cn/api/search.php";
+  const GARLAND_API_SEARCH_ENDPOINT = 'https://www.garlandtools.cn/api/search.php';
 
-  const response = await fetch(
-    `${GARLAND_API_SEARCH_ENDPOINT}?${newParams.toString()}`,
-  );
+  const response = await fetch(`${GARLAND_API_SEARCH_ENDPOINT}?${newParams.toString()}`);
   const data: GarlandSearchItem[] = await response.json();
 
-  const result = await Promise.all(
-    data.map(async (item) => await searchGarlandItem(item)),
-  );
+  const result = await Promise.all(data.map(async (item) => await searchGarlandItem(item)));
 
   return result.filter((item) => item) as XIVAPIItemResult[];
 };
@@ -142,7 +132,7 @@ const processPackage: PackageInjector = async (pkg) => {
 
   const json = pkg.json as XIVAPIItemResponse;
   const searchParams = new URL(pkg.url).searchParams;
-  const searchString = searchParams.get("string") || "";
+  const searchString = searchParams.get('string') || '';
 
   // fetch item IDs from Garland API
   const result = await searchGarland(searchString);
@@ -166,12 +156,12 @@ const processPackage: PackageInjector = async (pkg) => {
 injectFetch(processPackage);
 
 const getIconElement = (): HTMLImageElement | null => {
-  return document.querySelector<HTMLImageElement>("img.item-icon");
+  return document.querySelector<HTMLImageElement>('img.item-icon');
 };
 
 const injectItemImage = () => {
-  document.addEventListener("DOMContentLoaded", async () => {
-    let iconUrl = "";
+  document.addEventListener('DOMContentLoaded', async () => {
+    let iconUrl = '';
     let threshold = 100;
 
     const getIconUrl = async () => {
@@ -179,7 +169,7 @@ const injectItemImage = () => {
         return;
       }
       // https://universalis.app/market/46246
-      const id = parseInt(document.location.pathname.split("/").pop() || "0");
+      const id = parseInt(document.location.pathname.split('/').pop() || '0');
       const itemDetail = await getGarlandItem(id);
       iconUrl = `https://www.garlandtools.cn/files/icons/item/${itemDetail.icon}.png`;
     };
@@ -193,7 +183,7 @@ const injectItemImage = () => {
       }
       // wrong img, replace and keep checking
       const url = new URL(currentImg.src);
-      if (url.pathname === "/i/universalis/error.png") {
+      if (url.pathname === '/i/universalis/error.png') {
         await getIconUrl();
         currentImg.src = iconUrl;
         requestAnimationFrame(check);

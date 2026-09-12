@@ -54,7 +54,7 @@ function getElementInner(document: DocumentLike, spec: ElementSpec): ElementResu
     } else if (key === '_innerHTML') {
       element.innerHTML = spec[key] as string;
     } else if (key === '_children') {
-      const value = spec[key] as typeof spec[];
+      const value = spec[key] as (typeof spec)[];
       const children = value.map((x) => getElementInner(document, x));
       element.append(...children);
     } else {

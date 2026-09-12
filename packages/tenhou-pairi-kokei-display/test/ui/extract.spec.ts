@@ -1,6 +1,6 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import MJ from '@/MJ';
 import { shantenToNumber, getShantenInfo, getTiles, getTextareaTiles, getUIInfo } from '@/ui';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { buildDocument, buildUIinfo } from './builder';
 import { testCases } from './cases';
 

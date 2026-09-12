@@ -1,4 +1,4 @@
-import { PackageInjector } from "./types";
+import { PackageInjector } from './types';
 
 // Hooks
 export const origFetch = window.fetch;

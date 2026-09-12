@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import MJ from '@/MJ';
 import { Hand } from '@/hand';
+import MJ from '@/MJ';
 
 describe('MJ.toArray', () => {
   it('can split tiles', () => {

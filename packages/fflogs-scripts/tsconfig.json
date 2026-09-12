@@ -23,4 +23,3 @@
   },
   "include": ["src/**/*.ts", "build/**/*.ts", "test/**/*.ts"]
 }
-

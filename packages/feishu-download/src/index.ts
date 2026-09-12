@@ -18,12 +18,7 @@ const installDownloadClickInterceptor = () => {
     options?: boolean | AddEventListenerOptions,
   ): void {
     if (type === 'click' && listener) {
-      const listenerText =
-        typeof listener === 'function'
-          ? listener.toString()
-          : listener.handleEvent
-            ? listener.handleEvent.toString()
-            : '';
+      const listenerText = typeof listener === 'function' ? listener.toString() : listener.handleEvent ? listener.handleEvent.toString() : '';
       if (listenerText.includes('download')) {
         return;
       }
@@ -206,9 +201,7 @@ const getFirstAudioSource = (pageFileToken: string): string | null => {
 };
 
 const getFirstImageSource = (): string | null => {
-  const images = document.querySelectorAll<HTMLImageElement>(
-    'img[data-select="box-preview-image-viewer"][data-file-token]',
-  );
+  const images = document.querySelectorAll<HTMLImageElement>('img[data-select="box-preview-image-viewer"][data-file-token]');
   for (const img of images) {
     if (!isTargetImageElement(img)) {
       continue;

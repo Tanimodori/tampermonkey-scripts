@@ -1,5 +1,5 @@
-import { run } from '@/entry';
 import { describe, vi, it } from 'vitest';
+import { run } from '@/entry';
 import { buildDocument } from './builder';
 import { testCases } from './cases';
 

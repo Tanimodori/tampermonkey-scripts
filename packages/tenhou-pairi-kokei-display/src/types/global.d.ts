@@ -1,7 +1,7 @@
 import { ImportMeta, ImportMetaEnv } from 'vite/client';
 
 declare module '*.css?inline' {
-  declare const style: string;
+  const style: string;
   export default style;
 }
 

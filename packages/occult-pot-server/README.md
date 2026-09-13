@@ -47,10 +47,10 @@ docker compose up -d --build      # 重新构建镜像并重建容器
 镜像重建后 `up -d` 会自行重建容器（想强制就再加 `--force-recreate`）；只重建不启动是 `docker compose build occult-pot-server`。"镜像里带着旧代码"这一种可能排除了：`Dockerfile.dockerignore` 排除了 `**/dist`，运行阶段的 `dist/` 只可能是在容器里从容器内的源码编出来的，而 `COPY . .` 之后每一层都随源码失效，所以一般也用不着 `--no-cache`。确认线上跑的是哪一份：
 
 ```bash
-curl -sS localhost:8080/api/v1 | head -c 120                        # routes 应全是 /api/v1/...
-curl -sS -o /dev/null -w '%{http_code}\n' localhost:8080/v1/pots    # 旧路径应为 404
-docker compose exec occult-pot-server grep -c '"/v1' dist/index.js  # 必须输出 0
-docker images occult-pot-server --format '{{.CreatedAt}} {{.ID}}'   # 镜像时间应刚刚构建
+curl -sS -o /dev/null -w '%{http_code}\n' localhost:29070/api/v1/pots   # 200
+curl -sS -o /dev/null -w '%{http_code}\n' localhost:29070/api/v1        # 404（索引已删）
+docker compose exec occult-pot-server grep -c '"/v1' dist/index.js      # 必须输出 0
+docker images occult-pot-server --format '{{.CreatedAt}} {{.ID}}'       # 镜像时间应刚刚构建
 ```
 
 这个 compose 用的是本地构建的 `occult-pot-server:latest`（没有任何 registry），所以 `docker compose pull` 在它身上什么也不做；若是改成在别处构建、推送到 registry 再拉取，那一侧的命令才是 `docker compose pull && docker compose up -d`。前面还有 CDN 或云 LB 时记得刷缓存 —— 404 同样会被缓存。
@@ -65,9 +65,11 @@ docker compose build --build-arg APT_MIRROR=deb.debian.org --build-arg NPM_MIRRO
 
 | 服务 | 镜像 | 宿主端口 | 说明 |
 | --- | --- | --- | --- |
-| `nginx` | `nginx:1.30-alpine` | `${OPS_NGINX_PORT:-8080}:80` | **唯一对外暴露的端口**；反代到 app，配置是仓库里的 [`nginx/default.conf`](nginx/default.conf)（只读挂载） |
+| `nginx` | `nginx:1.30-alpine` | `${OPS_NGINX_PORT:-29070}:80` | **唯一对外暴露的端口**；反代到 app，配置是仓库里的 [`deploy/nginx/default.conf`](deploy/nginx/default.conf)（只读挂载） |
 | `occult-pot-server` | 本仓构建 | 不发布 | 只在这张网络里以 `occult-pot-server:3000` 可达 |
 | `redis` | `redis:7-alpine` | 不发布 | AOF 持久化 + 命名卷 |
+
+**公网暴露面**：nginx 只放行三条路径 —— `GET /api/v1/pots`、`POST /api/v1/pots`、`GET /api/v1/pots/<id>`，外加就绪探针 `GET /readyz`；其余一切（`/api/v1`、`/api/v1` 下的未知路径、`/healthz`、扫描器的 `/cgi-bin/...`）都由 nginx 直接返回纯文本 `404 Not Found`，不转发给 app、不产生 app 日志，但仍然过同一套按 IP 限流（`limit_req`，20r/s、POST 2r/s）。`/healthz` 只留给容器自己的健康检查（直连 app 的 3000 端口）。运维侧的交付物（nginx 配置、fail2ban、logrotate）都在 [`deploy/`](deploy/README.md)，安装与封禁细节见那份说明。
 
 `OPS_NGINX_PORT` 由 compose 插值，只读 shell 或 `--env-file`（不是 `env_file` 里的那些文件，也不是入库的 `.env` —— 它是纯文档、不生效），例如 `OPS_NGINX_PORT=9000 docker compose up -d`。改完 nginx 配置执行 `docker compose exec nginx nginx -s reload`，`docker compose exec nginx nginx -t` 先验语法。TLS 请在前面一层终止（云 LB、CDN 或宿主上的另一个反代）：这份 compose 只跑 HTTP，并把 `X-Forwarded-Proto` 透传下去。
 
@@ -81,6 +83,8 @@ redis 的密码走 `OPS_SERVER_REDIS_PASSWORD`（应用配置字段是 `server.r
 ls -l logs/                                  # 宿主侧直接看
 docker compose exec occult-pot-server tail -f /var/log/occult-pot-server/occult-pot-server.log
 ```
+
+同一个目录里还有 **`logs/nginx-access.log`**：nginx 的访问日志（一行一条 JSON，含 `remoteAddr`/`method`/`status`/`uri`），由 `deploy/logrotate/occult-pot-nginx` 轮转，是 fail2ban 读的那一份（`docker compose logs nginx` 仍是同一个格式的 stdout 副本）。时间戳默认都是 UTC；要让 app 与 nginx 都按 GMT+8 记录，设 `OPS_SERVER_LOG_TIMEZONE=Asia/Shanghai`（app 读 env 文件，nginx 那一层由 compose 插值，见 [`.env`](.env) 与该变量的说明），app 的每行会多出 `timestampLocal` 字段而 `@timestamp` 仍是 UTC。
 
 运行用户是 uid 1000（镜像里的 `node`），绑定挂载的目录要它能写：原生 Linux 上 `mkdir -p logs && chown 1000:1000 logs` 一次即可，WSL/DrvFs 上通常不用。`logs/` 本身入库（放一个 `.gitkeep`），内容被 ignore。轮转文件名是 `occult-pot-server.log.1`、`.2`…，由 `OPS_LOG_ROTATING_FILE_MAX_SIZE` / `_MAX_FILES` 控制。
 

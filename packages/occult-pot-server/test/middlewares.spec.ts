@@ -6,6 +6,7 @@ import type { NextFunction, Request, Response } from 'express';
 import type Redis from 'ioredis';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
+import { clientIp } from '@/middlewares/clientIp.ts';
 import { errorHandler, methodNotAllowed, notFoundHandler } from '@/middlewares/errorHandler.ts';
 import { userContext } from '@/middlewares/userContext.ts';
 import { setRedis } from '@/stores/redis.ts';
@@ -133,6 +134,28 @@ describe('errorHandler', () => {
   });
 });
 
+describe('clientIp', () => {
+  const withHeader = (value: string | undefined, ip: string | undefined): Request =>
+    ({ headers: value === undefined ? {} : { 'x-real-ip': value }, ip }) as unknown as Request;
+
+  it('takes the address from the proxy header', () => {
+    expect(clientIp(withHeader('203.0.113.7', '127.0.0.1'))).toBe('203.0.113.7');
+    expect(clientIp(withHeader(' 2001:db8::1 ', '127.0.0.1'))).toBe('2001:db8::1');
+  });
+
+  it('ignores a header that is not one bare address, and falls back to the socket', () => {
+    // A client-supplied list, a hostname and an empty value are all "not the proxy's statement".
+    expect(clientIp(withHeader('203.0.113.7, 10.0.0.9', '127.0.0.1'))).toBe('127.0.0.1');
+    expect(clientIp(withHeader('example.com', '127.0.0.1'))).toBe('127.0.0.1');
+    expect(clientIp(withHeader('', '127.0.0.1'))).toBe('127.0.0.1');
+    expect(clientIp(withHeader(undefined, '10.0.0.1'))).toBe('10.0.0.1');
+  });
+
+  it('says unknown when there is no address at all', () => {
+    expect(clientIp(withHeader(undefined, undefined))).toBe('unknown');
+  });
+});
+
 describe('userContext', () => {
   afterEach(() => {
     setRedis(undefined);
@@ -149,6 +172,28 @@ describe('userContext', () => {
 
     // The write is fire-and-forget: `next()` has already run by the time it settles.
     expect(forwarded).toBe(true);
+  });
+
+  it('touches nothing for a path it was told to skip', async () => {
+    loadTestConfig();
+    const records = captureLogs();
+    // If the probe were recorded, this client would throw and the failure would be logged.
+    setRedis({
+      multi: () => {
+        throw new Error('the probe should not have been recorded');
+      },
+    } as unknown as Redis);
+    const response = makeResponse();
+    let forwarded = false;
+
+    userContext({ skip: ['/healthz'] })({ ...request, ip: '127.0.0.1', path: '/healthz', requestId: 'req-1' } as unknown as Request, response.res, (() => {
+      forwarded = true;
+    }) as NextFunction);
+
+    expect(forwarded).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    // Nothing was attempted: had the skip not worked, the throwing client would have produced this.
+    expect(records.filter((entry) => entry.message === 'Could not record the caller in Redis')).toEqual([]);
   });
 
   it('reports a Redis failure instead of failing the request', async () => {

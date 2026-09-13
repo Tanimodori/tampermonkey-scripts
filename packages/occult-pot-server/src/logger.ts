@@ -2,7 +2,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { getFileSink, getRotatingFileSink } from '@logtape/file';
 import { configureSync, disposeSync, getConsoleSink, getJsonLinesFormatter } from '@logtape/logtape';
-import type { Sink } from '@logtape/logtape';
+import type { Sink, TextFormatter } from '@logtape/logtape';
 import { redactByField } from '@logtape/redaction';
 
 /**
@@ -24,6 +24,14 @@ import { redactByField } from '@logtape/redaction';
 export const LOG_LEVELS = ['debug', 'info', 'warning', 'error'] as const;
 
 export type LogLevel = (typeof LOG_LEVELS)[number];
+
+/**
+ * The zone records are written in unless `OPS_SERVER_LOG_TIMEZONE` names another.
+ *
+ * UTC, so a deployment that says nothing gets the instant every tool already reads, and the log
+ * line is byte for byte what LogTape produces. Naming a zone is what adds `timestampLocal`.
+ */
+export const DEFAULT_LOG_TIMEZONE = 'UTC';
 
 /** The category every record from this service carries. */
 export const LOG_CATEGORY = ['occult-pot-server'];
@@ -72,6 +80,8 @@ export interface RotatingFileSinkConfig {
 export interface ConfigureLoggingOptions {
   /** Where records go; defaults to one JSON line per record on the console. Replaces the console sink. */
   readonly sink?: Sink;
+  /** The zone `timestampLocal` is rendered in; `DEFAULT_LOG_TIMEZONE` adds no such field. */
+  readonly timezone?: string;
   /** The plain file destination; ignored when `rotatingFile` names a path. */
   readonly file?: FileSinkConfig;
   /** The rotating file destination. The configuration schema keeps the two paths exclusive. */
@@ -90,7 +100,7 @@ export interface ConfigureLoggingOptions {
  *   startup failure, not something to discover once the records are already missing.
  */
 export function configureLogging(level: LogLevel, options: ConfigureLoggingOptions = {}): void {
-  const formatter = getJsonLinesFormatter({ message: 'rendered', properties: 'flatten' });
+  const formatter = logFormatter(options.timezone ?? DEFAULT_LOG_TIMEZONE);
   const consoleSink = options.sink ?? getConsoleSink({ formatter });
   const file = fileSink(options, formatter);
 
@@ -123,7 +133,7 @@ export function flushLogging(): void {
 }
 
 /** The configured file destination, or `undefined` when the environment named none. */
-function fileSink(options: ConfigureLoggingOptions, formatter: ReturnType<typeof getJsonLinesFormatter>): Sink | undefined {
+function fileSink(options: ConfigureLoggingOptions, formatter: TextFormatter): Sink | undefined {
   const rotating = options.rotatingFile;
   if (rotating?.path !== undefined) {
     prepareDirectory(rotating.path);
@@ -164,6 +174,52 @@ function prepareDirectory(path: string): void {
 /** Wraps one sink so a credential never reaches it, whichever destination it is. */
 function redact(sink: Sink): Sink {
   return redactByField(sink, { fieldPatterns: CREDENTIAL_FIELDS, action: () => '[redacted]' });
+}
+
+/**
+ * One JSON line per record, with the local-time field a deployment asked for.
+ *
+ * LogTape's formatter owns the shape and its `@timestamp` stays exactly as it is: ISO 8601 UTC, the
+ * one instant every tool already reads. `timestampLocal` is *added* beside it — never written over
+ * it — and only when the configured zone is not UTC, so the default line is byte for byte what the
+ * library produces.
+ */
+function logFormatter(timeZone: string): TextFormatter {
+  const base = getJsonLinesFormatter({ message: 'rendered', properties: 'flatten' });
+  if (timeZone === DEFAULT_LOG_TIMEZONE) return base;
+
+  return (record) => {
+    const { '@timestamp': timestamp, ...rest } = JSON.parse(base(record)) as Record<string, unknown>;
+    return JSON.stringify({ '@timestamp': timestamp, timestampLocal: formatTimestamp(record.timestamp, timeZone), ...rest });
+  };
+}
+
+/**
+ * An epoch-millisecond instant in `timeZone`, as RFC 3339 with its offset
+ * (`2026-09-14T03:46:11.063+08:00`).
+ *
+ * The offset is the point: a local rendering without one would be ambiguous, and a line carrying
+ * both this and the UTC `@timestamp` can be read by a person and by a parser. The zone is validated
+ * by the configuration schema, so a `RangeError` here is a programming error, not an operator's typo.
+ */
+export function formatTimestamp(epochMs: number, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZoneName: 'longOffset',
+  }).formatToParts(epochMs);
+
+  const part = (type: Intl.DateTimeFormatPartTypes): string => parts.find((entry) => entry.type === type)?.value ?? '';
+  // `longOffset` answers `GMT+08:00`, and a bare `GMT` for UTC itself.
+  const offset = part('timeZoneName').replace(/^GMT/, '') || '+00:00';
+  const milliseconds = ((epochMs % 1000) + 1000) % 1000;
+  return `${part('year')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}:${part('second')}.${String(milliseconds).padStart(3, '0')}${offset}`;
 }
 
 /**

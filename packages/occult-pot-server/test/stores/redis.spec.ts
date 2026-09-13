@@ -4,6 +4,7 @@
 import { captureLogs, loadTestConfig, resetRedis, testEnv } from '@test/testUtils/helpers.ts';
 import RedisMock from 'ioredis-mock';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { RATE_LIMIT_KEY_PREFIX } from '@/middlewares/rateLimit.ts';
 import { closeRedis, getRedis, redisCommandSender, setRedis, traced } from '@/stores/redis.ts';
 
 /**
@@ -100,7 +101,7 @@ describe('redisCommandSender', () => {
 
   it('loads the script and runs it by SHA, which is the part the mock does not implement', async () => {
     loadTestConfig();
-    const send = redisCommandSender();
+    const send = redisCommandSender(RATE_LIMIT_KEY_PREFIX);
 
     const sha = await send('SCRIPT', 'LOAD', INCREMENT);
     expect(String(sha)).toMatch(/^[0-9a-f]{40}$/);
@@ -116,7 +117,7 @@ describe('redisCommandSender', () => {
 
   it('refuses a SHA it never loaded, and a command the mock does not implement', async () => {
     loadTestConfig();
-    const send = redisCommandSender();
+    const send = redisCommandSender(RATE_LIMIT_KEY_PREFIX);
 
     await expect(send('EVALSHA', 'deadbeef', '1', 'occult-pot:test:counter')).rejects.toThrow(/NOSCRIPT/);
     // The mock reports this itself; a server says `ERR unknown command`.
@@ -125,7 +126,7 @@ describe('redisCommandSender', () => {
 
   it('passes the other commands through', async () => {
     loadTestConfig();
-    const send = redisCommandSender();
+    const send = redisCommandSender(RATE_LIMIT_KEY_PREFIX);
     await getRedis().set('occult-pot:test:count', '3');
 
     await expect(send('DECR', 'occult-pot:test:count')).resolves.toBe(2);
@@ -133,16 +134,17 @@ describe('redisCommandSender', () => {
 });
 
 describe('the command records', () => {
-  it('records a command the service issued at info, with its key and duration', async () => {
+  it('records a command the service issued at info, with the operation that ran it', async () => {
     loadTestConfig();
     const records = captureLogs();
 
-    await traced('GET', ['occult-pot:pots'], Promise.resolve('value'));
+    await traced('readPotState', 'GET', ['occult-pot:pots'], Promise.resolve('value'));
 
     expect(records).toEqual([
       expect.objectContaining({
         level: 'info',
         message: 'Redis command answered',
+        operation: 'readPotState',
         command: 'GET',
         keys: ['occult-pot:pots'],
         durationMs: expect.any(Number),
@@ -154,14 +156,29 @@ describe('the command records', () => {
     loadTestConfig();
     const records = captureLogs();
 
-    await expect(traced('SET', ['occult-pot:pots'], Promise.reject(new Error('connection reset')))).rejects.toThrow('connection reset');
+    await expect(traced('writePotState', 'SET', ['occult-pot:pots'], Promise.reject(new Error('connection reset')))).rejects.toThrow('connection reset');
 
-    expect(records).toEqual([expect.objectContaining({ level: 'warning', message: 'Redis command failed', command: 'SET', reason: 'connection reset' })]);
+    expect(records).toEqual([
+      expect.objectContaining({ level: 'warning', message: 'Redis command failed', operation: 'writePotState', command: 'SET', reason: 'connection reset' }),
+    ]);
+  });
+
+  it('records the caller address of a limiter command as a field, not only inside the key', async () => {
+    loadTestConfig();
+    const send = redisCommandSender(`${RATE_LIMIT_KEY_PREFIX}general:`);
+    const records = captureLogs('debug');
+    const key = `${RATE_LIMIT_KEY_PREFIX}general:10.0.0.1`;
+
+    await send('INCR', key);
+
+    expect(records).toEqual([
+      expect.objectContaining({ level: 'debug', message: 'Redis command answered', operation: 'rateLimit', command: 'INCR', ip: '10.0.0.1', keys: [key] }),
+    ]);
   });
 
   it('keeps the limiter scripts at debug, so one request does not flood the file', async () => {
     loadTestConfig();
-    const send = redisCommandSender();
+    const send = redisCommandSender(`${RATE_LIMIT_KEY_PREFIX}general:`);
     const records = captureLogs('debug');
 
     const sha = await send('SCRIPT', 'LOAD', 'return 1');

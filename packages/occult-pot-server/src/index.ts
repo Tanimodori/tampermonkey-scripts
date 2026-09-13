@@ -29,7 +29,7 @@ async function main(): Promise<void> {
   // the strict load below is what reports it.
   const logging = readLoggingOptions(env);
   try {
-    configureLogging(logging.level, { file: logging.file, rotatingFile: logging.rotatingFile });
+    configureLogging(logging.level, { timezone: logging.timezone, file: logging.file, rotatingFile: logging.rotatingFile });
   } catch (error) {
     // A destination that cannot be opened is fatal and has nowhere else to go.
     process.stderr.write(`Could not open the log destination: ${error instanceof Error ? error.message : String(error)}\n`);
@@ -69,7 +69,7 @@ async function main(): Promise<void> {
   // Redis holds the state the service serves, so it is as much a startup dependency as the document
   // the state comes from — and a mock never fails this.
   try {
-    await traced('PING', [], getRedis().ping());
+    await traced('checkRedis', 'PING', [], getRedis().ping());
   } catch (error) {
     logger.error('Could not reach Redis; refusing to start', { error: error instanceof Error ? error.message : String(error) });
     await created.close().catch(() => undefined);

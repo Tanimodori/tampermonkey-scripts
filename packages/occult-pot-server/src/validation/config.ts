@@ -40,6 +40,22 @@ const ID_CHARS = /^[0-9A-Za-z$_-]+$/;
 const API_BASE_ERROR = 'must be a valid URL';
 const FILE_ID_ERROR = 'must be the API fileID (e.g. 300000000$abcdefghijkl), not a sheet URL';
 const SHEET_ID_ERROR = 'must be a smartsheet sub-sheet ID (sheetID)';
+const TIME_ZONE_ERROR = 'must be an IANA time zone name (e.g. Asia/Shanghai)';
+
+/**
+ * Whether the runtime can resolve a zone of that name.
+ *
+ * `Intl` is the authority on which names exist (`Asia/Shanghai`, `UTC`), and asking it is also the
+ * only check that matters: the same call is what renders `timestampLocal` at runtime.
+ */
+export function isTimeZone(value: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const serverSchema = z.object({
   port: integerFrom({ min: 1, max: 65535 }),
@@ -48,6 +64,8 @@ const serverSchema = z.object({
   corsOrigins: originListFromString(),
   jsonBodyLimit: requiredString(),
   logLevel: oneOf(LOG_LEVELS),
+  /** The zone log records carry as `timestampLocal`; UTC means the field is left out entirely. */
+  logTimezone: requiredString(TIME_ZONE_ERROR).refine(isTimeZone, { error: TIME_ZONE_ERROR }),
   /** `redis://[username:password@]host:port/db`. Leaving it out is what selects the in-process mock. */
   redisUrl: z
     .string()

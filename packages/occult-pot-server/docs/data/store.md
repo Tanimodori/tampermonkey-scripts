@@ -26,7 +26,7 @@
 - 留下的行**整份覆盖**写回缓存，`updateTime` 打的是这次读取到达的时刻。
 - **回表失败**（网络、鉴权、5xx 都算）：缓存里已经有读过的东西（`updateTime !== 0`）时，返回旧缓存并记一条 warning（`Served a stale pot list; the sheet read failed`，带原因、`ageMs` 与罐子数）；`updateTime === 0`（从未读过）时没有可服务的东西，错误照旧抛给调用方（502/503）。
 - 并发读取单飞：第一个调用者回表，其余复用同一个 Promise，N 个并发读只产生一次上游请求。
-- `/readyz` 的 `cache.*`（`updateTime`/`ageMs`/`pots`）来自 `state()`，它只读 Redis，不触发回表；键不存在时三项都是 `null`，与「还没读过」同一个含义。
+- 缓存的新鲜度不再从 `/readyz` 读（探针只回答 `online`/`offline`，见 `endpoints.md` §4）：`state()` 仍是「只读 Redis、不触发回表」的那个读，要看 `updateTime`/`ageMs`/罐子数就查 Redis（`occult-pot:pots`）或看日志。
 
 ## 3. 写路径
 
@@ -42,11 +42,12 @@
 - 启动核对（`upstreamStore.resolve()`）时先读 `occult-pot:docs:credential`：Redis 里的 access token **仍然有效**就用它（连同其中的 `clientId`/`openId`/`refreshToken`），因为那可能比环境变量里的更新（进程外刷新过）；已过期或不存在，就用环境变量的值，并把它写进 Redis。
 - 显式配置的 `OPS_DOCS_OPEN_ID` 始终优先：它是每次调用都要对得上的那个 id。
 - `refresh()` 成功后把新的 access token（以及流程返回的新 refresh token、`user_id`）写回 Redis，所以重启后继续用刷新过的凭据，而不是环境里那份旧的。
-- 凭据的健康度只通过 `/readyz` 的 `credential`（长度、到期时刻、校验结果）暴露，token 本身永不打印，也永不写日志。
+- 凭据的健康度**只进日志**：token 的长度、到期时刻与校验结果在 span 记录里（`Verified the Tencent Docs document`、`Access token expires soon…`），`/readyz` 只回答 `online`/`offline`；token 本身永不打印，也永不写日志，连调用 URL 的查询串都不记（`userinfo` 与刷新调用把凭据放在那里）。
 
 ## 5. 调用者数据
 
-- 标识用 `req.ip`（受 `OPS_SERVER_TRUST_PROXY` 影响）；请求 id 一起记进 `lastRequestId`，用于把一次请求追回它触碰过的用户记录。
+- 标识用 `clientIp(req)`（有 nginx 覆盖写入的 `X-Real-IP` 就用它，否则回落 `req.ip`，受 `OPS_SERVER_TRUST_PROXY` 影响；只接受单独的 IP 字面量）；请求 id 一起记进 `lastRequestId`，用于把一次请求追回它触碰过的用户记录。Redis 那条记录把地址另记为 `ip` 字段，不必从键里拆。
+- **探针不算调用者**：`/healthz` 与 `/readyz` 被 `userContext({ skip })` 跳过 —— 镜像的健康检查每 30 秒从容器内打一次，不跳的话就会一直写 `occult-pot:user:127.0.0.1`（线上实测占该文件 83% 的 Redis 记录）。
 - `occult-pot:user:<ip>` 由 `userContext()` 中间件**异步**写（fire-and-forget）：请求不等它，写失败只记一条 warning —— 强制项是限流，它由限流器自己报错。
 - 限流计数就是 `occult-pot:user:rate-limit:<limiter>:<ip>`：官方 `rate-limit-redis` store 落在 Redis 里，因此多实例共享同一份窗口计数。用 mock（没有 `OPS_SERVER_REDIS_URL`）时，`stores/redis.ts` 里的命令垫片把该 store 用到的 `SCRIPT LOAD`/`EVALSHA` 翻译成 mock 支持的 `EVAL`，Lua 本身不变。
 - pow 尚未实现：约定好的键是 `occult-pot:user:pow:<ip>`，字段见 §1 表格，等接口落地再写。

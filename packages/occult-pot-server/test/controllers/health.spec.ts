@@ -1,4 +1,5 @@
-import { callsMatching, docs, startApp } from '@test/testUtils/app.ts';
+import { callsMatching, docs, NOW, startApp } from '@test/testUtils/app.ts';
+import { clock } from '@test/testUtils/clock.ts';
 /**
  * @module-tag redis
  */
@@ -16,10 +17,22 @@ vi.mock('@/services/upstream/client.ts', async (importOriginal) => {
   return { ...actual, useClient: (options?: ClientOptions) => (options === undefined ? docs.client : actual.useClient(options)) };
 });
 
+/** A JWT-shaped token whose payload anyone can read — this service never verifies the signature. */
+function encodeSegment(payload: Record<string, unknown>): string {
+  return Buffer.from(JSON.stringify(payload), 'utf8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** A token whose expiry is `seconds` away from the pinned instant the fixtures are written against. */
+function makeTokenExpiringIn(seconds: number): string {
+  return `${encodeSegment({ alg: 'HS256', typ: 'JWT' })}.${encodeSegment({ exp: Math.round(NOW / 1000) + seconds })}.signature`;
+}
+
 /**
- * The probes, `src/controllers/health.ts`: liveness that touches nothing, and readiness that reports
- * the credential and the cache without ever publishing the token. Everything else about the app
- * (headers, logging, unknown paths) is `test/app.spec.ts`.
+ * The probes, `src/controllers/health.ts`: liveness that touches nothing, and readiness that answers
+ * one word. Everything the answer is computed from — the credential, the cache, the outbound budget —
+ * is the service's own business, so what the probe publishes is only whether it can serve, and the
+ * reason behind a transition is a log record. Everything else about the app (headers, logging,
+ * unknown paths) is `test/app.spec.ts`.
  */
 describe('GET /healthz, /readyz', () => {
   it('reports liveness without touching the upstream', async () => {
@@ -31,25 +44,44 @@ describe('GET /healthz, /readyz', () => {
     expect(callsMatching('getRecords')).toHaveLength(0);
   });
 
-  it('reports readiness with token and cache details', async () => {
+  it('answers readiness with the status and nothing else', async () => {
     const { client } = await startApp();
 
     const response = await client.get('/readyz').expect(200);
-    expect((response.body as { data: Record<string, unknown> }).data).toMatchObject({
-      ready: true,
-      fileIdResolved: true,
-      tokenExpired: false,
-    });
+    expect(response.body).toMatchObject({ code: 'SUCCESS', data: { status: 'online' }, message: 'ok' });
+    // No credential, no cache, no upstream budget: exactly one field.
+    expect(Object.keys((response.body as { data: Record<string, unknown> }).data)).toEqual(['status']);
   });
 
-  it('reports credential health without exposing the token', async () => {
+  it('never publishes the credential, however ready it is', async () => {
     const { client } = await startApp();
 
     const response = await client.get('/readyz').expect(200);
-    const credential = (response.body as { data: { credential: Record<string, unknown> } }).data.credential;
 
-    // The test credential is not a decodable JWT, so its health is reported as "unknown".
-    expect(credential).toMatchObject({ tokenLength: 'test-access-token-value'.length, expiresAt: null, expired: null });
     expect(JSON.stringify(response.body)).not.toContain('test-access-token-value');
+    expect(JSON.stringify(response.body)).not.toContain('token');
+  });
+
+  it('answers offline with 503 once the credential is unusable', async () => {
+    // A token that is still valid when the app starts, and expired by the time the probe asks.
+    const { client } = await startApp({ OPS_DOCS_ACCESS_TOKEN: makeTokenExpiringIn(60) });
+    clock.set(NOW + 120_000);
+
+    const response = await client.get('/readyz').expect(503);
+    expect(response.body).toMatchObject({ code: 'ERR_NOT_READY', data: { status: 'offline' }, message: 'offline' });
+  });
+
+  it('records the reason once per transition, not once per poll', async () => {
+    const { client, logs } = await startApp({ OPS_DOCS_ACCESS_TOKEN: makeTokenExpiringIn(60) });
+
+    await client.get('/readyz').expect(200);
+    await client.get('/readyz').expect(200);
+    clock.set(NOW + 120_000);
+    await client.get('/readyz').expect(503);
+    await client.get('/readyz').expect(503);
+
+    const transitions = logs.filter((entry) => typeof entry.message === 'string' && entry.message.startsWith('Readiness is'));
+    expect(transitions.map((entry) => entry.message)).toEqual(['Readiness is online', 'Readiness is offline']);
+    expect(transitions[1]?.reasons).toEqual([expect.stringContaining('access token has expired')]);
   });
 });

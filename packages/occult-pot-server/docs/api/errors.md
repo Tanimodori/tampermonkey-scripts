@@ -18,19 +18,19 @@
 - `requestId` 与 `X-Request-Id` 响应头一致，用来把这次答复追回日志。
 - 排查用的额外信息（非生产 5xx 的 `stack` 前 5 行）在**日志行**上，不在响应体里。
 
-（唯一的例外是 `/readyz`：它是探针，`503` 时 `code` 是 `ERR_NOT_READY`、`message` 是原因，而 `data` 仍然是那份报告本身 —— 见 `endpoints.md` §4。）
+（`/readyz` 是探针，只回答状态：`503` 时 `code` 是 `ERR_NOT_READY`、`data` 是 `{"status":"offline"}`、`message` 只是 `offline` —— 没有原因字段，也没别的东西，见 `endpoints.md` §4。）
 
 ## 2. 错误码
 
 | code                         | HTTP | 何时出现                                                                                                 |
 | ---------------------------- | ---- | -------------------------------------------------------------------------------------------------------- |
 | `ERR_BAD_REQUEST`            | 400  | 请求体或路径参数不合规；请求体不是合法 JSON                                                              |
-| `ERR_NOT_FOUND`              | 404  | 未知的罐子 ID，或没有匹配的路径 / `v1` 子路径                                                            |
+| `ERR_NOT_FOUND`              | 404  | 未知的罐子 ID，或没有匹配的路径 / 前缀下的子路径                                                         |
 | `ERR_METHOD_NOT_ALLOWED`     | 405  | 路径存在但不支持该方法（响应带 `Allow`）                                                                 |
 | `ERR_UNSUPPORTED_MEDIA_TYPE` | 415  | 请求体没有声明 `application/json`，或编码不支持                                                          |
 | `ERR_PAYLOAD_TOO_LARGE`      | 413  | 请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`                                                                  |
 | `ERR_RATE_LIMITED`           | 429  | 按 IP 的入站限流；也可能是前置 nginx 的 `limit_req` 直接挡下（同样的 code 与信封，但没有 `RateLimit-*`） |
-| `ERR_NOT_READY`              | 503  | `/readyz` 判为不可用（凭据过期、坐标未核对、Redis 读不到）                                               |
+| `ERR_NOT_READY`              | 503  | `/readyz` 判为不可用（凭据过期、坐标未核对、Redis 读不到）；响应体只有 `{"status":"offline"}`            |
 | `ERR_UPSTREAM_AUTH_FAILED`   | 503  | 腾讯文档拒绝凭据（HTTP 401/403，或业务码 `10007`/`10302`/`10303`/`10313`/`37019`），或凭据已过期         |
 | `ERR_UPSTREAM_RATE_LIMITED`  | 503  | 腾讯文档返回 429 或业务码 `400007`；带 `retryAfterSeconds`                                               |
 | `ERR_UPSTREAM_BAD_REQUEST`   | 400  | 腾讯文档以参数类业务码拒绝请求（`400000 ≤ ret < 500000`，或其他非零 `ret`）                              |
@@ -44,14 +44,16 @@
 | --------- | ------------------------------------------------------------------------------------------------- |
 | 200       | 一切成功：读取、写入、`/healthz`、`/readyz` 可用                                                  |
 | 400       | 请求体或参数非法，`message` 逐字段说明（见 §4）                                                   |
-| 404       | 未知罐子或未知路径                                                                                |
+| 404       | 未知罐子或未知路径（公网侧的未知路径由 nginx 用纯文本 `Not Found` 直接挡掉，见 §3 末）            |
 | 405       | 路径已知、方法不支持（带 `Allow`）                                                                |
 | 413       | 请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`                                                           |
 | 415       | 请求体未声明 `Content-Type: application/json`                                                     |
 | 429       | 按 IP 限流（应用带 `RateLimit-*` 与 `Retry-After`；前置 nginx 的 `limit_req` 只带 `Retry-After`） |
 | 502 / 503 | 上游失败（读与写都是），或凭据过期、被上游限流；`/readyz` 不可用也是 503                          |
 
-`/api/v1` 下的未知路径与不支持的方法也被当作普通错误抛出，由同一个错误处理器应答（同样是 `ERR_NOT_FOUND` / `ERR_METHOD_NOT_ALLOWED` 信封，`405` 带 `Allow`，并照常进日志）；`/api/v1` 之外的任何路径由全局兜底抛 `ERR_NOT_FOUND`。
+`/api/v1` 下的未知路径与不支持的方法也被当作普通错误抛出，由同一个错误处理器应答（同样是 `ERR_NOT_FOUND` / `ERR_METHOD_NOT_ALLOWED` 信封，`405` 带 `Allow`，并照常进日志）；前缀之外的任何路径由全局兜底抛 `ERR_NOT_FOUND`。
+
+**但公网上看不到这些信封**：nginx 只转发 `/api/v1/pots`、`/api/v1/pots/<id>` 与 `/readyz`，其余路径（含 `/api/v1` 与它下面的未知路径）在 nginx 层就以纯文本 `404 Not Found` 结束，既不进 app 也不产生 app 日志。上面那套 JSON 信封只对**直连 app 端口**的调用者（容器内、宿主上的运维操作）可见，见 `../deploy/README.md`。
 
 ## 4. 校验失败的文案
 
@@ -111,7 +113,7 @@ body-parser 的失败由同一个错误处理器映射：
 
 - **启动期失败**：配置非法（列出全部问题后退出），或子表核对/凭据校验失败（记 error 后拒绝启动）—— 见 `../README.md` 的快速开始。
 - **凭据告警**：子表核对与凭据校验都通过时记一条 info（`Verified the Tencent Docs document`）；凭据已过期或进入 `OPS_DOCS_TOKEN_EXPIRY_WARN_MS` 时记一条 warning（`Access token has expired; …` / `Access token expires soon; schedule a credential rotation`）。
-- **Redis 不可用**：启动时 `ping` 失败会记 error 并拒绝启动；运行期限流/状态读写失败会成为 `500`，`/readyz` 则返回 `503` 并在 `reasons` 里写明 `state store is unavailable: …`。调用者记录（`touchUser`）失败只记一条 warning，不影响请求。
+- **Redis 不可用**：启动时 `ping` 失败会记 error 并拒绝启动；运行期限流/状态读写失败会成为 `500`，`/readyz` 则返回 `503` + `{"status":"offline"}`，原因只进日志（翻转时那条 `Readiness is offline` 带 `reasons`）。调用者记录（`touchUser`）失败只记一条 warning，不影响请求。
 
 **写入失败不再是日志里的事**：一次 `addRecords` 失败就是发起它的那个请求的失败（`ERR_UPSTREAM_*`），由 `errorHandler` 按 4xx/5xx 记一行，没有第二次机会、也没有留在 Redis 里的待写变更。
 

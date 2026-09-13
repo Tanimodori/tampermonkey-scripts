@@ -4,12 +4,16 @@
 
 每一条记录都是一行 JSON（[LogTape](https://logtape.org) 的 `getJsonLinesFormatter`，`message` 渲染成字符串、`properties` 摊平），字段是 LogTape 自己的：`@timestamp`、`level`、`message`、`category` 加业务字段。
 
+`@timestamp` 永远是 LogTape 写出的 ISO 8601 UTC，**不会被改写**。`OPS_SERVER_LOG_TIMEZONE` 设成 UTC 以外的时区时，每条记录在它后面多一个 `timestampLocal`（同一个瞬间，RFC 3339 带偏移，例如 `2026-09-14T03:46:11.063+08:00`）；默认 UTC 不加这个字段，所以默认输出与库自己的产物逐字节一致。nginx 的访问日志用同一个变量名（compose 把 `TZ` 注进去），两边墙钟一致。
+
 两个去处，同一份内容：
 
 | 去处 | 谁在写 | 说明 |
 | --- | --- | --- |
 | stdout / stderr | 始终 | `info` 及以下走 stdout，`warning` 及以上走 stderr —— 容器的日志收集器读的就是这两条流 |
 | 文件 | `OPS_LOG_FILE_PATH` 或 `OPS_LOG_ROTATING_FILE_PATH` | 两者互斥；生产模板用 rotating，写到 `/var/log/occult-pot-server/occult-pot-server.log`，compose 把它绑定挂载到仓库的 `./logs` |
+
+同一个 `./logs` 里还有 nginx 的 `nginx-access.log`（它按同一个 `log_format` 再写一份给 fail2ban，见 §5）。
 
 文件里的记录与 stdout 完全一致，所以 `docker compose logs` 与 `logs/occult-pot-server.log` 可以对着看。轮转文件名是 `<名字>.1`、`.2`…，`.1` 是最新的一份；`OPS_LOG_ROTATING_FILE_MAX_FILES` 决定保留几份（1..1000，默认 5），`OPS_LOG_ROTATING_FILE_MAX_SIZE` 决定单文件多大（默认 1 MiB）。
 
@@ -36,18 +40,22 @@
 | 配置解析 | `Configuration resolved`（含 `sources`：本次真正读到的 env 文件；redis 只记 host/port/db 与「有没有密码」） | info | config |
 | 配置错误 | `Configuration is invalid`（`problems` 是逐条列出的非法变量），同时写 stderr | error | config |
 | 用户请求 | `request`（requestId/method/path/status/durationMs/ip） | info | http |
+| 探针请求 | `request`（`/healthz`、`/readyz`；镜像每 30s 自查一次，`info` 级会让文件被它填满） | debug | http |
+| 就绪翻转 | `Readiness is online` / `Readiness is offline`（后者带 `reasons`）—— 只在状态变化时记一条，探针本身只回答 `online`/`offline` | info / warning | http |
 | 请求失败 | `Request failed`（5xx）/ `Request rejected`（4xx），带 code、非生产带 stack 前 5 行 | error / warning | http |
-| API 请求 | `Tencent Docs call answered` / `Tencent Docs call failed` / `Tencent Docs call could not be sent`（operation/method/path/status/ret/durationMs，失败再带 code 与 retryable） | info / warning | upstream |
+| API 请求 | `Tencent Docs call answered` / `Tencent Docs call failed` / `Tencent Docs call could not be sent`（operation/method/path/status/ret/durationMs，失败再带 code 与 retryable；**path 不含查询串**，凭据不进日志） | info / warning | upstream |
 | 重试 | `Retrying a failed Tencent Docs call`（retries/maxRetries/delayMs） | info | upstream |
 | 出站排队 | `Tencent Docs call waited in the pacing queue`（waitMs） | debug | upstream |
-| redis | `Redis command answered` / `Redis command failed`（command/keys/durationMs） | info / warning | redis |
-| redis（限流器脚本） | `Redis command answered`（`EVAL`/`EVALSHA`/`SCRIPT`，每请求 1–2 条） | debug | redis |
+| redis | `Redis command answered` / `Redis command failed`（operation/command/keys/durationMs；调用者相关的命令另带 `ip`） | info / warning | redis |
+| redis（限流器脚本） | `Redis command answered`（`operation: rateLimit`，`EVAL`/`EVALSHA`/`SCRIPT`，每请求 1–2 条，带 `ip`） | debug | redis |
 | 自主删除 | `Deleted unusable pots from the sheet`（stale/unusable 计数 + potIds）/ 失败时 `Could not delete unusable pots…`（rows + potIds + reason） | info / warning | pots |
 | 缓存回退 | `Served a stale pot list; the sheet read failed`、`Appended a pot but could not update the cached list; dropped the cache` | warning | pots |
 | 启动依赖 | `Could not reach Redis; refusing to start`、`Could not resolve the Tencent Docs document or validate the credential; refusing to start`、`Could not bind the HTTP listener` | error | 根分类 |
 | 停机 | `Shutting down`、`Shutdown complete`（`disposeSync()` 之后的最后一条） | info | 根分类 |
 
-写进日志的**没有**：请求头（凭据在 `Authorization` 里）、腾讯文档的响应体（一次读就是整张表）、Redis 的值（缓存与调用者记录）。凭据按字段名脱敏（名字以 `token`/`secret`/`password`/`cookie`/`apiKey` 等结尾的字段值替换成 `[redacted]`），文件与 stdout 各自套一层，所以两条流一样干净。
+写进日志的**没有**：请求头（凭据在 `Authorization` 里）、腾讯文档的响应体（一次读就是整张表）、Redis 的值（缓存与调用者记录）、以及**调用 URL 的查询串**——`userinfo` 把 `access_token`、刷新调用把 `client_secret` 与 `refresh_token` 放在查询串里，所以记录的 `path` 只到 `?` 之前，错误消息里的 URL 同样如此。凭据按字段名脱敏（名字以 `token`/`secret`/`password`/`cookie`/`apiKey` 等结尾的字段值替换成 `[redacted]`），文件与 stdout 各自套一层，所以两条流一样干净；被引用的响应体（错误消息里的 `body`）也会先把凭据形状的成员换成 `[redacted]`。
+
+请求的 `ip` 与调用者记录的键都来自同一个 `clientIp()`：有 nginx 覆盖写入的 `X-Real-IP` 就用它（客户端伪造无效，且只接受单独的 IP 字面量），没有则回落到 `req.ip`（遵循 `OPS_SERVER_TRUST_PROXY`），最后是 `unknown`。
 
 `Configuration resolved` 里的 `redis` 是唯一需要手工拆开的字段：密码藏在 URL 里，字段名脱敏看不到它，所以只记 `{ configured, host, port, db, passwordConfigured }`（`passwordConfigured` 而不是 `password`：按字段名的脱敏会把 `password` 的值换成 `[redacted]`，恰好抹掉这个信号）。
 
@@ -60,5 +68,5 @@
 ## 5. 明确不做的
 
 - **不做非阻塞写**：本服务日志量很小，缓冲加定时刷写已经够，而 `nonBlocking` 要求异步配置与异步dispose（`configureSync` 不支持），后台写失败也只进 `logtape.meta`。
-- **不让 nginx 落盘**：访问日志留在 stdout，与应用日志用同一个 `requestId`（nginx 覆盖 `X-Request-Id`）对齐，需要留存时由外部收集器负责。
+- **不做日志聚合**：需要留存时用宿主上的收集器，或者直接看 `./logs` 里那两份文件（app 的 rotating 文件、给 fail2ban 的 `nginx-access.log`）；这个服务不引入 filebeat / loki / journald 之类的中转。
 - **级别不按 sink 分流**：console 与文件拿到同样的记录；日志量由轮转参数与 `OPS_SERVER_LOG_LEVEL` 控制，而不是两套级别。

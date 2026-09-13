@@ -93,9 +93,30 @@ export function asArray(value: unknown): readonly unknown[] {
   return Array.isArray(value) ? value : [];
 }
 
-/** A bounded, printable form of a response body, for an error message. */
+/**
+ * A bounded, printable form of a response body, for an error message.
+ *
+ * Credential-shaped members are masked first: a response body is upstream data, and the one that
+ * carries a token (the OAuth refresh) would otherwise put it in an error message — and from there
+ * into a log line or an HTTP response.
+ */
 export function describeBody(body: unknown): string {
-  return JSON.stringify(body ?? null).slice(0, 300);
+  return JSON.stringify(maskCredentials(body) ?? null).slice(0, 300);
+}
+
+/** Field names whose value could be a credential; matched the way the log redaction matches them. */
+const CREDENTIAL_KEYS = /token|secret|password/i;
+
+/** The same body with every credential-shaped member replaced, one level deep. */
+function maskCredentials(body: unknown): unknown {
+  if (Array.isArray(body)) return body.map((entry) => maskCredentials(entry));
+  if (typeof body !== 'object' || body === null) return body;
+
+  const masked: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
+    masked[key] = CREDENTIAL_KEYS.test(key) ? '[redacted]' : value;
+  }
+  return masked;
 }
 
 /** Joins the parts of a diagnostic, dropping the ones the upstream did not send. */
@@ -175,7 +196,19 @@ function classifier(handler: Dispatcher.DispatchHandler, call: CallContext): Dis
 
 /** The words every record about a call carries: what was asked for, and where. */
 function describeCall(call: CallContext): Record<string, unknown> {
-  return { operation: call.operation ?? 'request', method: call.method, path: call.path };
+  return { operation: call.operation ?? 'request', method: call.method, path: displayPath(call.path) };
+}
+
+/**
+ * A call's path without its query string.
+ *
+ * The two OAuth calls carry their credential in the query string (`access_token` for `userinfo`,
+ * `client_secret` and `refresh_token` for the refresh), and a log line — or an error message, which
+ * can reach an HTTP response — is no place for either. No call this service makes is identified by
+ * its query string, so dropping it loses nothing.
+ */
+function displayPath(path: string | undefined): string {
+  return path?.split('?')[0] ?? '';
 }
 
 /** The smartsheet envelope's business code, when the response carried one. */
@@ -273,7 +306,7 @@ function classifyResponse(response: JsonResponse, call: CallContext): UpstreamEr
 
 /** A failure with no response at all: a timeout, a refused connection, a dropped socket. */
 function transportFailure(cause: unknown, call: CallContext): UpstreamError {
-  const target = `${call.origin ?? ''}${call.path ?? ''}`;
+  const target = `${call.origin ?? ''}${displayPath(call.path)}`;
   return new UpstreamError(
     'ERR_UPSTREAM_FAILED',
     `Request to ${target} failed`,

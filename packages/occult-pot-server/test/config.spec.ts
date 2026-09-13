@@ -500,13 +500,34 @@ describe('the logging configuration', () => {
     // The strict path rejects the whole group; the bootstrap path keeps what parsed and drops the rest.
     expect(readLoggingOptions({ OPS_SERVER_LOG_LEVEL: 'warning', OPS_LOG_FILE_PATH: 'a.log', OPS_LOG_FILE_BUFFER_SIZE: '0' })).toEqual({
       level: 'warning',
+      timezone: 'UTC',
       file: { path: 'a.log', bufferSize: 0 },
       rotatingFile: {},
     });
     expect(readLoggingOptions({ OPS_SERVER_LOG_LEVEL: 'nonsense', OPS_LOG_FILE_PATH: 'a.log', OPS_LOG_FILE_LAZY: 'maybe' })).toEqual({
       level: 'info',
+      timezone: 'UTC',
       file: undefined,
       rotatingFile: {},
     });
+  });
+
+  it('reads the zone records are written in, defaulting to UTC', () => {
+    expect(loadConfig(baseEnv()).server.logTimezone).toBe('UTC');
+    expect(loadConfig(baseEnv({ OPS_SERVER_LOG_TIMEZONE: 'Asia/Shanghai' })).server.logTimezone).toBe('Asia/Shanghai');
+    expect(describeConfig(loadConfig(baseEnv({ OPS_SERVER_LOG_TIMEZONE: 'Asia/Shanghai' }))).timezone).toBe('Asia/Shanghai');
+  });
+
+  it('rejects a zone the runtime cannot resolve', () => {
+    expect(() => loadConfig(baseEnv({ OPS_SERVER_LOG_TIMEZONE: 'Asia/Shangai' }))).toThrow(
+      expect.objectContaining({
+        problems: expect.arrayContaining([expect.stringContaining('OPS_SERVER_LOG_TIMEZONE must be an IANA time zone name')]),
+      }),
+    );
+  });
+
+  it('falls back to UTC on the bootstrap path when the zone does not resolve', () => {
+    expect(readLoggingOptions({ OPS_SERVER_LOG_TIMEZONE: 'Asia/Shanghai' }).timezone).toBe('Asia/Shanghai');
+    expect(readLoggingOptions({ OPS_SERVER_LOG_TIMEZONE: 'nowhere' }).timezone).toBe('UTC');
   });
 });

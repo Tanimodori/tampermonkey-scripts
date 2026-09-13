@@ -1,6 +1,6 @@
 import { apiOrigin, captureLogs, loadTestConfig, rawRecord, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { classify } from '@/services/upstream/interceptors/classify.ts';
+import { classify, describeBody } from '@/services/upstream/interceptors/classify.ts';
 import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
 
 /**
@@ -221,5 +221,39 @@ describe('what it records about an attempt', () => {
     expect(JSON.stringify(records)).not.toContain('54-1-4000E8F3');
     expect(records[0]).not.toHaveProperty('body');
     expect(records[0]).not.toHaveProperty('data');
+  });
+
+  it('records a call path without its query string, so a credential in it is never written down', async () => {
+    loadTestConfig();
+    const records = captureLogs();
+    const secret = 'access-token-value';
+
+    // `userinfo` is the call that carries its credential in the query string.
+    await client().request(options({ operation: 'userinfo', method: 'GET', path: `/oauth/v2/userinfo?access_token=${secret}`, body: undefined, headers: {} }));
+
+    expect(records).toEqual([expect.objectContaining({ message: 'Tencent Docs call answered', path: '/oauth/v2/userinfo' })]);
+    expect(JSON.stringify(records)).not.toContain(secret);
+  });
+
+  it('does not quote a credential-bearing URL in the failure of a call that got no answer', async () => {
+    loadTestConfig();
+    const records = captureLogs();
+    // Nothing intercepts this path, so the request fails at the transport — and its URL is what the
+    // failure message used to spell out in full.
+    const path = '/oauth/v2/refresh?client_secret=client-secret-value&refresh_token=refresh-secret-value';
+
+    const error = await client()
+      .request(options({ operation: 'refreshToken', method: 'GET', path, body: undefined, headers: {} }))
+      .catch((failure: unknown) => failure);
+
+    expect(String((error as Error).message)).toContain('/oauth/v2/refresh');
+    expect(String((error as Error).message)).not.toContain('client-secret-value');
+    expect(JSON.stringify(records)).not.toContain('refresh-secret-value');
+  });
+
+  it('masks credential-shaped members of a body it has to quote', () => {
+    expect(describeBody({ ret: 10003, msg: 'bad', access_token: 'a-value', refresh_token: 'b-value', expires_in: 60 })).toBe(
+      '{"ret":10003,"msg":"bad","access_token":"[redacted]","refresh_token":"[redacted]","expires_in":60}',
+    );
   });
 });

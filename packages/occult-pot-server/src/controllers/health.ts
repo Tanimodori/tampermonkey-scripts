@@ -1,8 +1,8 @@
+import { getLogger } from '@logtape/logtape';
 import { Router } from 'express';
 import type { RequestHandler } from 'express';
-import { getConfig } from '@/config.ts';
 import { ok } from '@/errors.ts';
-import { formatInstant } from '@/logger.ts';
+import { LOG_CATEGORIES } from '@/logger.ts';
 import { getRequestId } from '@/middlewares/requestId.ts';
 import { potState } from '@/services/pot.ts';
 import { now } from '@/services/time.ts';
@@ -14,9 +14,30 @@ export interface HealthControllerDeps {
   readonly startedAt: number;
 }
 
-/** Liveness and readiness probes. Deliberately unversioned and never rate limited. */
+/**
+ * The probe paths: unversioned, never rate limited, and not treated as callers by `app.ts` (a health
+ * check is not traffic). They are also what nginx is configured around — `/readyz` is the only probe
+ * the proxy forwards, since the image's own health check reaches the app without it.
+ */
+export const HEALTH_PATHS = ['/healthz', '/readyz'] as const;
+
+const [LIVENESS_PATH, READINESS_PATH] = HEALTH_PATHS;
+
+/**
+ * Liveness and readiness probes.
+ *
+ * `/readyz` answers one thing and one thing only: whether this instance can serve — `online` or
+ * `offline`. Everything the answer is computed from (the credential's expiry, the document
+ * coordinates, the cache's age) is a description of the service's innards, which is exactly what the
+ * public probe should not hand out; the reason a transition happened is recorded in the log instead.
+ */
 export function createHealthController(deps: HealthControllerDeps): Router {
   const router = Router();
+  const logger = getLogger(LOG_CATEGORIES.http);
+
+  // What the last `/readyz` answered, so only a change is recorded: a probe is polled forever, and
+  // one line per poll would be noise rather than a signal.
+  let online: boolean | undefined;
 
   const health: RequestHandler = (req, res) => {
     ok(res, req, {
@@ -27,11 +48,9 @@ export function createHealthController(deps: HealthControllerDeps): Router {
   };
 
   const ready: RequestHandler = async (req, res) => {
-    const nowMs = now();
     const report = upstreamStore.readiness();
 
-    // A probe that cannot reach the store it reports on is not ready — and says why instead of
-    // failing with a 500.
+    // A probe that cannot reach the store it reports on is not ready.
     let state: PotState | undefined;
     let storeError: string | undefined;
     try {
@@ -41,40 +60,25 @@ export function createHealthController(deps: HealthControllerDeps): Router {
     }
 
     const readyNow = report.ready && state !== undefined;
-    const reasons = [...report.reasons, ...(storeError === undefined ? [] : [`state store is unavailable: ${storeError}`])];
 
-    // The report is the payload on both answers: a probe is read by machines that need the detail,
-    // so only `code` and the status distinguish ready from not.
-    const body = {
-      ready: readyNow,
-      fileIdResolved: report.fileIdResolved,
-      tokenValidated: report.tokenValidated,
-      tokenExpiresAt: report.tokenExpiresAt ?? null,
-      tokenExpiresInMs: report.tokenExpiresInMs ?? null,
-      tokenWarning: report.tokenWarning,
-      tokenExpired: report.tokenExpired,
-      reasons,
-      // Credential health from the store that actually sends the token. Length, expiry and the
-      // last validation only — never the token itself.
-      credential: upstreamStore.describe(),
-      // The pot list as Redis holds it. `null` means nothing has been read yet.
-      cache: {
-        updateTime: state === undefined || state.updateTime === 0 ? null : formatInstant(state.updateTime),
-        ageMs: state === undefined || state.updateTime === 0 ? null : nowMs - state.updateTime,
-        pots: state?.data.length ?? null,
-      },
-      upstream: { maxPerInterval: getConfig().upstream.maxPerInterval, intervalMs: getConfig().upstream.intervalMs },
-    };
+    if (online !== readyNow) {
+      online = readyNow;
+      // The response says online/offline; this is where the reason goes, once per transition.
+      const reasons = [...report.reasons, ...(storeError === undefined ? [] : [`state store is unavailable: ${storeError}`])];
+      if (readyNow) logger.info('Readiness is online');
+      else logger.warning('Readiness is offline', { reasons });
+    }
 
     if (readyNow) {
-      ok(res, req, body);
+      ok(res, req, { status: 'online' });
       return;
     }
-    res.status(503).json({ code: 'ERR_NOT_READY', data: body, message: reasons.join('; ') || 'not ready', requestId: getRequestId(req) });
+
+    res.status(503).json({ code: 'ERR_NOT_READY', data: { status: 'offline' }, message: 'offline', requestId: getRequestId(req) });
   };
 
-  router.get('/healthz', health);
-  router.get('/readyz', ready);
+  router.get(LIVENESS_PATH, health);
+  router.get(READINESS_PATH, ready);
 
   return router;
 }

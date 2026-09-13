@@ -112,7 +112,7 @@
 
 ## 7. token 解析与更新
 
-`upstreamStore` 持有凭据并对外给出：请求头三元组、到期时刻、健康描述（`describe()`）与就绪判断（`readiness()`，`/readyz` 直接用它）。`index.ts` 在开始监听前调用一次 `upstreamStore.resolve()`；`app.ts` 不再参与文档或凭据的任何逻辑。
+`upstreamStore` 持有凭据并对外给出：请求头三元组、到期时刻、健康描述（`describe()`）与就绪判断（`readiness()`，`/readyz` 用它得出那一个词）。`index.ts` 在开始监听前调用一次 `upstreamStore.resolve()`；`app.ts` 不再参与文档或凭据的任何逻辑。
 
 ### 7.1 现状（已实现）
 
@@ -120,9 +120,9 @@
 - `resolve()` 开头先看 Redis 里存的凭据：其中的 access token **仍未过期**就用它（连同 `clientId`/`openId`/`refreshToken`），否则用环境变量的值并把它写进 Redis。这样进程外刷新过的 token 不会被环境里的旧值盖掉，也不会让一个已过期的 token 把服务卡住。
 - 服务会**本地解码 JWT 的 payload**（不验签 —— 有效性由腾讯文档判定），只取 `exp` 与 `sub`：`exp` 推算出到期时刻，`sub` 补 Open-Id。
 - 启动时（`resolve()` 里）先 `GET …/files/{fileID}/sheets` 核对配置的 `OPS_DOCS_SHEET_ID` 确实在这份文档里（不在就报 `ERR_CONFIG_INVALID`，并列出可用子表），再调 `GET /oauth/v2/userinfo?access_token=…` **校验凭据**：被拒绝（`ret` 为 `10313`/`10303`/`10302`/`37019` 等）就拒绝启动；返回的 `openID` 与显式配置的 `OPS_DOCS_OPEN_ID` 不一致同样拒绝启动。
-- `OPS_DOCS_TOKEN_EXPIRY_WARN_MS`（默认 3 天）之内：`resolve()` 时由 store 记一条 warning（`Access token expires soon; schedule a credential rotation`，带到期时刻与剩余毫秒），`/readyz` 标 degraded（`tokenWarning: true`），但仍然返回 200；已过期则记 `Access token has expired; …` 并把 `ready`/`tokenExpired` 置为不可用。
-- 过期之后：上游调用返回 `ERR_UPSTREAM_AUTH_FAILED`（503），`/readyz` 返回 503，`reasons` 里写明原因。
-- **轮换方式是改环境变量并重启**（或调用 `refresh()`，见下；刷新结果会写回 Redis，重启后继续生效）；日志与 `/readyz` 只暴露 token 长度、到期时刻与校验结果，绝不输出 token 本身。
+- `OPS_DOCS_TOKEN_EXPIRY_WARN_MS`（默认 3 天）之内：`resolve()` 时由 store 记一条 warning（`Access token expires soon; schedule a credential rotation`，带到期时刻与剩余毫秒），这只是 degraded —— `/readyz` 仍然回答 `online`；已过期则记 `Access token has expired; …`，就绪翻转为 `offline`（503），翻转那一刻的日志带 `reasons`。
+- 过期之后：上游调用返回 `ERR_UPSTREAM_AUTH_FAILED`（503），`/readyz` 返回 503 + `{"status":"offline"}`，原因只进日志（`Readiness is offline`）。
+- **轮换方式是改环境变量并重启**（或调用 `refresh()`，见下；刷新结果会写回 Redis，重启后继续生效）；日志只暴露 token 长度、到期时刻与校验结果，绝不输出 token 本身，调用路径里的查询串（`access_token` / `client_secret` / `refresh_token`）也不记录。
 
 ### 7.2 刷新（方法已实现，调度尚未做）
 
@@ -133,7 +133,7 @@ GET https://docs.qq.com/oauth/v2/token?client_id=…&client_secret=…&grant_typ
 ```
 
 - 需要 `OPS_DOCS_CLIENT_SECRET` 与 `OPS_DOCS_REFRESH_TOKEN`（两个可选的配置项）；缺任一个就抛 `ERR_CONFIG_INVALID`。
-- 成功后只更新**进程内存**里的 Access Token、到期时刻（`expires_in` 秒；响应没带就用新 token 的 `exp`）与 Open-Id；刷新结果没有校验过，`/readyz` 的 `credential.validated` 会回到 `false` 直到下一次 `validate()`。
+- 成功后只更新**进程内存**里的 Access Token、到期时刻（`expires_in` 秒；响应没带就用新 token 的 `exp`）与 Open-Id；刷新结果没有校验过，`describe().validated` 会回到 `false` 直到下一次 `validate()`（`/readyz` 对此仍然只回答状态）。
 - 官方规定 Access Token 30 天、Refresh Token 1 年、授权码 5 分钟且一次性，并且**换取与刷新都必须由后台服务发起**。
 - 刷新成功后写入 Redis 的只有 `clientId`/`openId`/`refreshToken`/`accessToken` 四项；`clientSecret` 只从环境读，绝不落库。
 

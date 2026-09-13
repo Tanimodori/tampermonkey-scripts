@@ -28,20 +28,11 @@ vi.mock('@/services/upstream/client.ts', async (importOriginal) => {
 const potsOf = (body: unknown): Pot[] => (body as { data: Pot[] }).data;
 
 describe('GET /api/v1', () => {
-  it('documents the field mapping and routes, with no query parameters on reads', async () => {
+  it('no longer describes itself: the index is gone', async () => {
     const { client } = await startApp();
 
-    const response = await client.get('/api/v1').expect(200);
-    const data = (response.body as { data: { fields: Record<string, string>; routes: Array<{ method: string; path: string; description: string }> } }).data;
-
-    expect(data.fields.world).toBe('区服');
-    expect(data.fields.map).toBe('地图');
-    expect(data.fields.potId).toBe('ID');
-    expect(data.fields.northRefreshAtMs).toContain('北罐刷新时间');
-    expect(data.routes.map((route) => `${route.method} ${route.path}`)).toEqual(['GET /api/v1/pots', 'GET /api/v1/pots/:potId', 'POST /api/v1/pots']);
-    for (const route of data.routes.filter((entry) => entry.method === 'GET')) {
-      expect(route.description).toContain('No query parameters');
-    }
+    const response = await client.get('/api/v1').expect(404);
+    expect((response.body as { code: string }).code).toBe('ERR_NOT_FOUND');
   });
 });
 

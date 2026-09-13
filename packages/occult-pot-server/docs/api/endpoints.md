@@ -16,16 +16,15 @@
 
 ## 2. 端点一览
 
-| 方法 | 路径                   | 说明                                       |
-| ---- | ---------------------- | ------------------------------------------ |
-| GET  | `/healthz`             | 存活探针，不触碰上游                       |
-| GET  | `/readyz`              | 就绪探针：凭据有效期、状态新鲜度、出站预算 |
-| GET  | `/api/v1`              | 版本索引（字段映射、约定、路由）           |
-| GET  | `/api/v1/pots`         | 表上所有罐子，一次返回                     |
-| GET  | `/api/v1/pots/{potId}` | 按游戏内 ID 取一个罐子                     |
-| POST | `/api/v1/pots`         | 追加一个罐子（同步写回表）                 |
+| 方法 | 路径                   | 说明                                     |
+| ---- | ---------------------- | ---------------------------------------- |
+| GET  | `/healthz`             | 存活探针，不触碰上游（只给容器健康检查） |
+| GET  | `/readyz`              | 就绪探针：只回答 online / offline        |
+| GET  | `/api/v1/pots`         | 表上所有罐子，一次返回                   |
+| GET  | `/api/v1/pots/{potId}` | 按游戏内 ID 取一个罐子                   |
+| POST | `/api/v1/pots`         | 追加一个罐子（同步写回表）               |
 
-`/healthz` 与 `/readyz` 不带版本前缀，也不限流。
+`/healthz` 与 `/readyz` 不带版本前缀，也不限流。经 nginx 暴露的探针只有 `/readyz`：容器的健康检查直连 app 的 3000 端口，所以 `/healthz` 不必对公网开放。白名单之外的任何路径（包括 `/api/v1` 本身、`/api/v1` 下的未知路径、扫描器的 `/cgi-bin/...`）由 nginx 直接返回**纯文本** `404 Not Found`，不带本文档描述的信封 —— 它们根本到不了 app，也不进 app 日志（nginx 的访问日志照常记录，fail2ban 读的就是那份）。
 
 ## 3. `GET /healthz`
 
@@ -35,27 +34,17 @@
 
 ## 4. `GET /readyz`
 
-`200` 表示可以服务；不可用时返回 `503`。凭据临近过期只标记为 degraded，仍然返回 `200`。启动时会核对一次子表（`OPS_DOCS_SHEET_ID` 在不在 `OPS_DOCS_FILE_ID` 里）并用 `GET /oauth/v2/userinfo` 校验一次凭据，校验结果反映在 `tokenValidated` 与 `credential.validated` 上。这一组值由 upstream store 给出（`readiness()` / `describe()`），探针只负责组装。
+`200` + `{"status":"online"}` 表示可以服务；不可用时 `503` + `{"status":"offline"}`。就绪的含义是：启动时核对过文档坐标（`OPS_DOCS_SHEET_ID` 在 `OPS_DOCS_FILE_ID` 里）、凭据没有过期，并且此刻读得到状态存储（Redis）。凭据临近过期只算 degraded（进入 `OPS_DOCS_TOKEN_EXPIRY_WARN_MS` 窗口），仍然返回 online。
 
-**探针报的是状态，不是错误对象**：`503` 时 `code` 是 `ERR_NOT_READY`、`message` 是不可用的原因，而 `data` **仍然是这份报告本身**，这样只看状态码的负载均衡和要读细节的人都拿到自己那份。
+```json
+{ "code": "SUCCESS", "data": { "status": "online" }, "message": "ok", "requestId": "…" }
+```
 
-| 字段 | 含义 |
-| --- | --- |
-| `ready` | 为 `true` 时才返回 200 |
-| `fileIdResolved` | 启动时是否已核对过文档坐标（配置的 `fileID` + 子表） |
-| `tokenValidated` | 启动时那次凭据校验是否成功 |
-| `tokenExpiresAt` / `tokenExpiresInMs` | 凭据到期时刻（epoch 毫秒）与剩余毫秒；未知为 `null` |
-| `tokenWarning` / `tokenExpired` | 是否进入 `OPS_DOCS_TOKEN_EXPIRY_WARN_MS` 告警窗口 / 是否已过期 |
-| `reasons[]` | 不可用（或降级）的原因，直接可读 |
-| `credential` | 凭据健康度：`tokenLength`、`expiresAt`（ISO 8601 或 `null`）、`expired`（`null` 表示未知）、`validated`、`validatedAt`（ISO 8601 或 `null`）；**永远不含 token 本身** |
-| `cache.updateTime` / `ageMs` / `pots` | Redis 里那份缓存是**什么时候回表读来的**（ISO 8601）、距今多久、持有多少个罐子；**从未读过时三者都是 `null`**（Redis 读不到时 `pots` 也是 `null`，并给出 `reasons`） |
-| `upstream.maxPerInterval` / `intervalMs` | 当前出站节流窗口 |
+**探针只回答状态，不回答为什么**：`data` 里只有 `status` 一个字段（离线时 `message` 也只是 `offline`）。凭据的到期时刻、token 长度、校验时间、缓存新鲜度、出站节流窗口都不再出现在响应里 —— 探针是对公网的，那些是服务内部的事，报出来只会替扫描者做侦察。状态**翻转**时各记一条日志（离线那条带 `reasons`，见 `logging.md` §3）：要细节看日志，而不是看探针。
 
-## 5. `GET /api/v1`
+启动时会用 `GET /oauth/v2/userinfo` 校验一次凭据、并核对一次子表；这两件事的结果由 upstream store 给出（`readiness()`），探针只负责把它折成一个词。详见 [与腾讯文档通讯](upstream.md) §7。
 
-返回版本索引：`version`、`resource`、`fields`（五个字段与列标题的映射）、`conventions`（文本与时间约定）和 `routes`（除自身以外的端点列表）。它是给客户端自描述用的，不是数据端点。
-
-## 6. `GET /api/v1/pots`
+## 5. `GET /api/v1/pots`
 
 一次返回表上所有罐子，**不接受任何参数**：这张表最多几十个罐子，所以没有分页、没有过滤、也没有视图切换。
 
@@ -82,13 +71,13 @@
 - `最后一次进岛时间` 距今超过 `OPS_UPSTREAM_STALE_AFTER_MS`（默认 3 小时）的行同样会被删掉，永远不会返回。
 - 重复行**照原样返回**：去重是客户端脚本的职责（见 `../data/pot.md`）。
 - 读的是 Redis 里的缓存：只有缓存超过 `OPS_UPSTREAM_CACHE_TTL` 才会回表刷新；回表失败而缓存非空时，旧缓存会照常返回（并记一条 warning），缓存为空时才把失败报给调用方。
-- 走 `general` 限流（见 §9）。
+- 走 `general` 限流（见 §8）。
 
 ```bash
 curl 'http://127.0.0.1:3000/api/v1/pots'
 ```
 
-## 7. `GET /api/v1/pots/{potId}`
+## 6. `GET /api/v1/pots/{potId}`
 
 唯一输入是路径里的游戏内 ID（查询参数被忽略），返回形状与列表里的单个罐子一致；找不到时是 `404` `ERR_NOT_FOUND`。
 
@@ -96,7 +85,7 @@ curl 'http://127.0.0.1:3000/api/v1/pots'
 curl 'http://127.0.0.1:3000/api/v1/pots/54-1-4000E8F3'
 ```
 
-## 8. `POST /api/v1/pots`
+## 7. `POST /api/v1/pots`
 
 **文本字段是 JSON 字符串，时刻是 13 位字符串或数字。**
 
@@ -145,7 +134,7 @@ Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 178
 - **表拒绝这次写入时，请求就失败**（`502` `ERR_UPSTREAM_FAILED`、`503` `ERR_UPSTREAM_AUTH_FAILED` / `ERR_UPSTREAM_RATE_LIMITED`、`400` `ERR_UPSTREAM_BAD_REQUEST`），而且**什么都没写进去**：缓存也不会多出这个罐子。没有队列、没有后台重试、没有可轮询的句柄。
 - 写入成功后这次结果同时折进 Redis 缓存，所以 `GET /api/v1/pots` 立刻看得到它，且这次读不会回表。
 - 没有批次：一次请求一次 `addRecords`，行序等于请求到达顺序。
-- 走 `writes` 限流（见 §9）。
+- 走 `writes` 限流（见 §8）。
 
 值得知道的几件事：
 
@@ -158,7 +147,7 @@ curl -X POST http://127.0.0.1:3000/api/v1/pots \
   -d '{"world":"鸟","map":"北岛","potId":"60-0-4000ABCD","northRefreshAt":"1789201200000","lastVisitAt":"1789199700000"}'
 ```
 
-## 9. 限流
+## 8. 限流
 
 两个按客户端 IP 计的滑动窗口限流器：`general` 覆盖整个匿名 API，`writes` 更紧，因为每次写入都要消耗出站腾讯文档配额。
 

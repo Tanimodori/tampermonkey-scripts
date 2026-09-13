@@ -2,7 +2,7 @@ import express from 'express';
 import type { Express } from 'express';
 import helmet from 'helmet';
 import { getConfig } from './config.ts';
-import { createHealthController } from './controllers/health.ts';
+import { createHealthController, HEALTH_PATHS } from './controllers/health.ts';
 import { createV1Controller, V1_PREFIX } from './controllers/v1/index.ts';
 import { corsMiddleware } from './middlewares/cors.ts';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.ts';
@@ -39,10 +39,12 @@ export function createApp(): CreatedApp {
   // CORS headers a browser needs in order to read them.
   app.use(corsMiddleware(config.server.corsOrigins));
   app.use(requestId());
-  // Before the body and router middleware, so short-circuited responses are logged as well.
-  app.use(requestLogger());
-  // Records the caller by IP and request id; nothing downstream waits on it.
-  app.use(userContext());
+  // Before the body and router middleware, so short-circuited responses are logged as well. The
+  // probes are recorded at `debug`: the image's own health check asks every 30 seconds forever.
+  app.use(requestLogger({ quiet: HEALTH_PATHS }));
+  // Records the caller by IP and request id; nothing downstream waits on it. A probe is not a caller,
+  // so it is skipped rather than written into Redis as `occult-pot:user:127.0.0.1` every 30 seconds.
+  app.use(userContext({ skip: HEALTH_PATHS }));
   app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(jsonBody(config.server.jsonBodyLimit));
   app.use(requireJsonForBody());

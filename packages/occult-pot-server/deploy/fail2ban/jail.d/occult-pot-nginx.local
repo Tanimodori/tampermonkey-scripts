@@ -1,0 +1,39 @@
+# The jail that reads the other half of the whitelist in `deploy/nginx/default.conf`.
+#
+# Install:
+#   sudo apt-get install fail2ban
+#   sudo cp deploy/fail2ban/filter.d/occult-pot-nginx.conf /etc/fail2ban/filter.d/
+#   sudo cp deploy/fail2ban/jail.d/occult-pot-nginx.local     /etc/fail2ban/jail.d/
+#   sudo systemctl restart fail2ban
+# Verify:
+#   sudo fail2ban-client status occult-pot-nginx
+#   sudo iptables -S DOCKER-USER
+
+[occult-pot-nginx]
+enabled = true
+
+# The port the service publishes (OPS_NGINX_PORT). Only informative: the ban below is not port-scoped,
+# because a scanner that found one port will try the others.
+port = 29070
+
+filter = occult-pot-nginx
+logpath = /home/ubuntu/tampermonkey-scripts/packages/occult-pot-server/logs/nginx-access.log
+
+# Tuned to the traffic this host actually sees: the busiest scanner sent 106 requests in one stretch
+# and was already being refused by nginx's own `limit_req`. Twenty misses inside ten minutes is a
+# scanner, not a mistyped client.
+maxretry = 20
+findtime = 10m
+bantime = 1h
+
+# Repeat offenders stay out longer (available since fail2ban 0.11).
+bantime.increment = true
+bantime.factor = 2
+bantime.maxtime = 1w
+
+# **This is the part that is easy to get wrong.** Docker publishes a port by DNAT: the packets are
+# rewritten in the nat table and then travel the FORWARD path through the `DOCKER-USER` chain — they
+# never traverse the host's INPUT chain. The stock `iptables-allports` action inserts into INPUT, so
+# it would ban nothing at all for a published container port while reporting the IP as banned.
+# Pointing the action at DOCKER-USER is what actually drops the traffic.
+action = iptables-allports[chain="DOCKER-USER", name=occult-pot-nginx]

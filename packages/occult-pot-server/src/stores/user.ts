@@ -34,8 +34,10 @@ export async function touchUser(ip: string, requestId: string): Promise<void> {
   const key = userKey(ip);
 
   // One record for the whole pipeline: the four commands are one write from the service's point of
-  // view, and the key is what an operator would look up either way.
+  // view, and the key is what an operator would look up either way. The address is also a field of
+  // its own, so the line says who called without the key having to be taken apart.
   await traced(
+    'touchUser',
     'MULTI/EXEC',
     [key],
     getRedis()
@@ -45,5 +47,6 @@ export async function touchUser(ip: string, requestId: string): Promise<void> {
       .hincrby(key, 'requests', 1)
       .pexpire(key, USER_TTL_MS)
       .exec(),
+    { ip },
   );
 }

@@ -168,13 +168,13 @@ export function useUpstreamStore(): UpstreamStore {
 
   /** The credential fields Redis holds; `clientSecret` is never among them. */
   async function storedCredential(): Promise<Record<string, string>> {
-    return traced('HGETALL', [CREDENTIAL_KEY], getRedis().hgetall(CREDENTIAL_KEY));
+    return traced('storedCredential', 'HGETALL', [CREDENTIAL_KEY], getRedis().hgetall(CREDENTIAL_KEY));
   }
 
   /** Writes only the fields it was given, so a partial refresh never drops the rest. */
   async function rememberCredential(fields: Record<string, string | undefined>): Promise<void> {
     const entries = Object.entries(fields).filter((entry): entry is [string, string] => typeof entry[1] === 'string' && entry[1].length > 0);
-    if (entries.length > 0) await traced('HSET', [CREDENTIAL_KEY], getRedis().hset(CREDENTIAL_KEY, Object.fromEntries(entries)));
+    if (entries.length > 0) await traced('rememberCredential', 'HSET', [CREDENTIAL_KEY], getRedis().hset(CREDENTIAL_KEY, Object.fromEntries(entries)));
   }
 
   /**

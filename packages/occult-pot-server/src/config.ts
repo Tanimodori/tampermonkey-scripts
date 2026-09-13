@@ -3,9 +3,9 @@ import { parseEnv } from 'node:util';
 import { defu } from 'defu';
 import type { z } from 'zod';
 import { ConfigError } from './errors.ts';
-import { LOG_LEVELS } from './logger.ts';
+import { DEFAULT_LOG_TIMEZONE, LOG_LEVELS } from './logger.ts';
 import type { LogLevel } from './logger.ts';
-import { appConfigSchema, appEnvConfigSchema, logFileSchema, logRotatingFileSchema } from './validation/config.ts';
+import { appConfigSchema, appEnvConfigSchema, isTimeZone, logFileSchema, logRotatingFileSchema } from './validation/config.ts';
 import type { AppConfig, AppEnvConfig } from './validation/config.ts';
 
 /**
@@ -131,6 +131,7 @@ const ENV_PATHS = [
   'server.corsOrigins',
   'server.jsonBodyLimit',
   'server.logLevel',
+  'server.logTimezone',
   'server.redisUrl',
   'server.redisPassword',
   'docs.apiBase',
@@ -197,7 +198,7 @@ function getDefaultConfig(): AppEnvConfig {
   return {
     // No `redisUrl`: leaving it out is what selects the in-process Redis. No `redisPassword` either:
     // a server that wants one is told so by the deployment, not by a default.
-    server: { port: 3000, host: '0.0.0.0', trustProxy: false, corsOrigins: '*', jsonBodyLimit: '64kb', logLevel: 'info' },
+    server: { port: 3000, host: '0.0.0.0', trustProxy: false, corsOrigins: '*', jsonBodyLimit: '64kb', logLevel: 'info', logTimezone: DEFAULT_LOG_TIMEZONE },
     docs: { apiBase: 'https://docs.qq.com', tokenExpiryWarnMs: 3 * DAY_MS },
     rateLimit: { ipWindowMs: 60_000, ipMax: 120, writeMax: 20 },
     // The outbound pace is the original client script's: ten calls per three seconds, shared by every
@@ -328,6 +329,7 @@ export function describeConfig(config: AppConfig): Record<string, unknown> {
     mode: MODE,
     sources: readFrom,
     level: config.server.logLevel,
+    timezone: config.server.logTimezone,
     host: config.server.host,
     port: config.server.port,
     trustProxy: config.server.trustProxy,
@@ -389,6 +391,8 @@ function describeLogDestination(config: AppConfig): Record<string, unknown> {
 /** What the logging variables say, as `configureLogging` takes them. */
 export interface LoggingOptions {
   readonly level: LogLevel;
+  /** The zone `timestampLocal` is rendered in; `DEFAULT_LOG_TIMEZONE` leaves the field out. */
+  readonly timezone: string;
   readonly file?: z.infer<typeof logFileSchema>;
   readonly rotatingFile?: z.infer<typeof logRotatingFileSchema>;
 }
@@ -404,9 +408,13 @@ export interface LoggingOptions {
  */
 export function readLoggingOptions(env: NodeJS.ProcessEnv = process.env): LoggingOptions {
   const level = LOG_LEVELS.find((candidate) => candidate === readEnv(env, 'server.logLevel')) ?? 'info';
+  // A zone the runtime cannot resolve reads as unset here, the way an unparseable sink option does:
+  // the strict load below is what reports the typo, and until then the records still get written.
+  const configuredZone = readEnv(env, 'server.logTimezone');
+  const timezone = configuredZone !== undefined && isTimeZone(configuredZone) ? configuredZone : DEFAULT_LOG_TIMEZONE;
   const file = readGroup(logFileSchema, 'logFile', env);
   const rotatingFile = readGroup(logRotatingFileSchema, 'logRotatingFile', env);
-  return { level, file, rotatingFile };
+  return { level, timezone, file, rotatingFile };
 }
 
 /** One variable, with the empty string reading as absent — the same rule the strict path applies. */

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { getLogger } from '@logtape/logtape';
 import { captureLogs } from '@test/testUtils/helpers.ts';
 import { afterEach, describe, expect, it } from 'vitest';
-import { configureLogging, flushLogging, formatInstant, LOG_CATEGORY, LOG_CATEGORIES } from '@/logger.ts';
+import { configureLogging, flushLogging, formatInstant, formatTimestamp, LOG_CATEGORY, LOG_CATEGORIES } from '@/logger.ts';
 
 /**
  * These pin this service's logging conventions: the level an operator writes in `OPS_SERVER_LOG_LEVEL`, the
@@ -91,6 +91,17 @@ describe('formatInstant', () => {
   });
 });
 
+describe('formatTimestamp', () => {
+  it('renders the instant in the named zone, offset included', () => {
+    // 2026-09-12T08:00:00Z, read from four places: east of UTC, UTC itself, a half-hour zone and one
+    // on daylight time.
+    expect(formatTimestamp(1_789_200_000_000, 'Asia/Shanghai')).toBe('2026-09-12T16:00:00.000+08:00');
+    expect(formatTimestamp(1_789_200_000_000, 'UTC')).toBe('2026-09-12T08:00:00.000+00:00');
+    expect(formatTimestamp(1_789_200_000_000, 'Asia/Kolkata')).toBe('2026-09-12T13:30:00.000+05:30');
+    expect(formatTimestamp(1_789_200_000_000, 'America/New_York')).toBe('2026-09-12T04:00:00.000-04:00');
+  });
+});
+
 describe('the file sinks', () => {
   const directories: string[] = [];
 
@@ -157,6 +168,31 @@ describe('the file sinks', () => {
     flushLogging();
 
     expect(recordsIn(path)).toHaveLength(1);
+  });
+
+  it('leaves @timestamp as LogTape writes it, and adds no local field, while the zone is UTC', () => {
+    const path = join(temporaryDirectory(), 'utc.log');
+
+    configureLogging('info', { sink: () => undefined, file: { path, bufferSize: 0 } });
+    getLogger(LOG_CATEGORY).info('hello');
+
+    const [record] = recordsIn(path);
+    expect(record?.['@timestamp']).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(record).not.toHaveProperty('timestampLocal');
+  });
+
+  it('adds timestampLocal beside the UTC instant once a zone is configured', () => {
+    const path = join(temporaryDirectory(), 'shanghai.log');
+
+    configureLogging('info', { sink: () => undefined, file: { path, bufferSize: 0 }, timezone: 'Asia/Shanghai' });
+    getLogger(LOG_CATEGORY).info('hello');
+
+    const [record] = recordsIn(path);
+    // The machine-readable instant is untouched; the local rendering sits next to it.
+    expect(record?.['@timestamp']).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(record?.timestampLocal).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}\+08:00$/);
+    // And the field order is the readable one: the UTC instant, then the local one.
+    expect(Object.keys(record ?? {}).slice(0, 2)).toEqual(['@timestamp', 'timestampLocal']);
   });
 
   it('creates no file when no destination is configured', () => {

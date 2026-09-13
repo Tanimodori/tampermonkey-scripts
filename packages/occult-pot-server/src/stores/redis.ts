@@ -98,7 +98,9 @@ function buildServer(config: AppConfig): Redis {
 }
 
 // ---------------------------------------------------------------------------
-// Every command, recorded: what ran, which key it touched, how long it took.
+// Every command, recorded: which operation issued it, what it ran, which key it touched, how long
+// it took — and, when the command is about one caller, that caller's address as a field of its own
+// rather than only inside the key.
 // ---------------------------------------------------------------------------
 
 /** The two levels a successful command is recorded at: the service's own at `info`, the limiter's at `debug`. */
@@ -107,12 +109,17 @@ type CommandLevel = Extract<LogLevel, 'info' | 'debug'>;
 /**
  * Runs one Redis command and records it.
  *
- * The command is handed in as the promise the call already is (`traced('GET', [KEY],redis.get(KEY))`),
- * so a call site gains a wrapper and no restructuring. The keys are recorded; a *value* never is —
- * the cached pot list and the caller records are not something a log line should carry.
+ * `operation` names the function that issued it — `touchUser`, `readPotState`, … — because a record
+ * that says only `MULTI/EXEC` says nothing about what the service was doing. `extra` carries what
+ * the call site knows and the key does not spell out, which today is the caller's address.
+ *
+ * The command is handed in as the promise the call already is
+ * (`traced('readPotState', 'GET', [KEY], redis.get(KEY))`), so a call site gains a wrapper and no
+ * restructuring. The keys are recorded; a *value* never is — the cached pot list and the caller
+ * records are not something a log line should carry.
  */
-export function traced<T>(command: string, keys: readonly string[], pending: Promise<T>): Promise<T> {
-  return traceCommand('info', command, keys, pending);
+export function traced<T>(operation: string, command: string, keys: readonly string[], pending: Promise<T>, extra?: Record<string, unknown>): Promise<T> {
+  return traceCommand('info', operation, command, keys, pending, extra);
 }
 
 /**
@@ -122,18 +129,32 @@ export function traced<T>(command: string, keys: readonly string[], pending: Pro
  * credential, a caller's record, which an operator wants at the configured level — from the limiter's
  * bookkeeping, which is one or two commands per request and belongs at `debug`.
  */
-async function traceCommand<T>(level: CommandLevel, command: string, keys: readonly string[], pending: Promise<T>): Promise<T> {
+async function traceCommand<T>(
+  level: CommandLevel,
+  operation: string,
+  command: string,
+  keys: readonly string[],
+  pending: Promise<T>,
+  extra?: Record<string, unknown>,
+): Promise<T> {
   const startedAt = now();
   const logger = getLogger(LOG_CATEGORIES.redis);
   try {
     const answer = await pending;
-    const fields = { command, keys, durationMs: now() - startedAt };
+    const fields = { operation, command, keys, durationMs: now() - startedAt, ...extra };
     if (level === 'debug') logger.debug('Redis command answered', fields);
     else logger.info('Redis command answered', fields);
     return answer;
   } catch (error) {
     // A failed command is always worth recording, whatever level the successes are kept at.
-    logger.warning('Redis command failed', { command, keys, durationMs: now() - startedAt, reason: error instanceof Error ? error.message : String(error) });
+    logger.warning('Redis command failed', {
+      operation,
+      command,
+      keys,
+      durationMs: now() - startedAt,
+      ...extra,
+      reason: error instanceof Error ? error.message : String(error),
+    });
     throw error;
   }
 }
@@ -156,12 +177,20 @@ const mockScripts = new Map<string, string>();
  * These commands are the limiter's own bookkeeping rather than something the service asked for, so
  * they are recorded at `debug`; a caller actually being refused is already a `Request rejected`
  * record from the error handler.
+ *
+ * `callerKeyPrefix` is the limiter's own key prefix (`occult-pot:user:rate-limit:<limiter>:`): it is
+ * how the caller's address is recognised in the arguments, so the record can carry the address as a
+ * field of its own instead of leaving it only inside the key.
  */
-export function redisCommandSender(): (...args: string[]) => Promise<unknown> {
+export function redisCommandSender(callerKeyPrefix: string): (...args: string[]) => Promise<unknown> {
   const redis = getRedis();
-  const trace = <T>(command: string, pending: Promise<T>): Promise<T> => traceCommand('debug', command, [], pending);
+  const trace = <T>(command: string, args: readonly string[], pending: Promise<T>): Promise<T> => {
+    const key = args.find((argument) => argument.startsWith(callerKeyPrefix));
+    const extra = key === undefined ? undefined : { ip: key.slice(callerKeyPrefix.length) };
+    return traceCommand('debug', 'rateLimit', command, key === undefined ? [] : [key], pending, extra);
+  };
 
-  if (!usesMock(getConfig())) return (...args: string[]) => trace((args[0] ?? '').toUpperCase(), redis.call(args[0] ?? '', ...args.slice(1)));
+  if (!usesMock(getConfig())) return (...args: string[]) => trace((args[0] ?? '').toUpperCase(), args, redis.call(args[0] ?? '', ...args.slice(1)));
 
   return async (...args: string[]): Promise<unknown> => {
     const [command, ...rest] = args;
@@ -171,17 +200,17 @@ export function redisCommandSender(): (...args: string[]) => Promise<unknown> {
       const lua = rest[1] ?? '';
       const sha = createHash('sha1').update(lua).digest('hex');
       mockScripts.set(sha, lua);
-      return trace(name, Promise.resolve(sha));
+      return trace(name, args, Promise.resolve(sha));
     }
 
     if (name === 'EVALSHA') {
       const [sha, numKeys, ...keysAndArgs] = rest;
       const lua = mockScripts.get(sha ?? '');
       if (lua === undefined) throw new Error(`NOSCRIPT No matching script. Please use EVAL.`);
-      return trace(name, mockCommand(redis, 'EVAL', [lua, numKeys ?? '0', ...keysAndArgs]));
+      return trace(name, args, mockCommand(redis, 'EVAL', [lua, numKeys ?? '0', ...keysAndArgs]));
     }
 
-    return trace(name, mockCommand(redis, name, rest));
+    return trace(name, args, mockCommand(redis, name, rest));
   };
 }
 

@@ -69,7 +69,7 @@
 }
 ```
 
-规则本身都在 `src/validation/`：`pot.ts`（罐子的规则与写入 body）、`sheet.ts`（行映射）、`config.ts`（`AppConfig`/`AppEnvConfig` 与其类型）、`utils.ts`（共享解析助手）。请求体与表里的行共用同一套规则，`Pot` 类型就是从 `potSchema` 推导出来的，所以模型和它的规则不会各自漂移。
+规则本身都在 `src/validation/`：`pot.ts`（罐子的规则、写入 body，以及 `PotState`/`PotModify` 两个纯类型）、`sheet.ts`（行映射）、`config.ts`（`AppConfig`/`AppEnvConfig` 与其类型）、`utils.ts`（共享解析助手）。请求体与表里的行共用同一套规则，`Pot` 类型就是从 `potSchema` 推导出来的，所以模型和它的规则不会各自漂移。
 
 ## 5. 请求体解析失败
 

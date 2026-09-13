@@ -34,7 +34,7 @@ function makeResponse(): { res: Response; status: () => number | undefined; body
   return { res, status: () => state.status, body: () => state.body, header: (name) => headers.get(name.toLowerCase()) };
 }
 
-const request = { method: 'GET', originalUrl: '/v1/pots?view=raw', path: '/pots' } as unknown as Request;
+const request = { method: 'GET', originalUrl: '/api/v1/pots?view=raw', path: '/pots' } as unknown as Request;
 
 describe('errorHandler', () => {
   it('records a client error at warning and answers with the error envelope', () => {
@@ -52,7 +52,7 @@ describe('errorHandler', () => {
         requestId: 'unknown',
         method: 'GET',
         // The mounted prefix survives: `path` would have been just `/pots`.
-        path: '/v1/pots?view=raw',
+        path: '/api/v1/pots?view=raw',
         status: 404,
         code: 'ERR_NOT_FOUND',
         error: 'No handler for GET /nope',
@@ -180,7 +180,7 @@ describe('fallbacks', () => {
 
     expect(forwarded).toBeInstanceOf(AppError);
     expect(forwarded).toMatchObject({ code: 'ERR_NOT_FOUND', status: 404 });
-    expect((forwarded as Error).message).toContain('GET /v1/pots?view=raw');
+    expect((forwarded as Error).message).toContain('GET /api/v1/pots?view=raw');
   });
 
   it('answers an unsupported verb by throwing METHOD_NOT_ALLOWED with Allow', () => {

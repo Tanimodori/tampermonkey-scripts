@@ -31,7 +31,7 @@
 ## 3. 写路径
 
 1. `create(pot)` **先写表**：一次 `addRecords`（一行，列由 `toSheetValues` 生成）。**表拒绝这次写入就是请求的失败** —— 错误按 `errors.md` 返回给调用方，缓存一个字节都不动，也没有任何「稍后重试」的承诺。
-2. 写表成功后，在串行链里重新读 Redis，把 pot **追加**进 `data`，`updateTime` 保持不动（写不是读，TTL 仍从上次回表算起）。于是罐子立刻能被 `GET /v1/pots` 读到，而这次读不会回表。
+2. 写表成功后，在串行链里重新读 Redis，把 pot **追加**进 `data`，`updateTime` 保持不动（写不是读，TTL 仍从上次回表算起）。于是罐子立刻能被 `GET /api/v1/pots` 读到，而这次读不会回表。
 3. 缓存是**追加**而不是合并：表里刚多了一行，缓存就照原样多一条；同一个 `区服|地图|ID` 发两次就是两行（去重仍是客户端脚本的事，见 [Pot 数据](pot.md)）。
 4. 表写成功但 Redis 写失败：记一条 warning（`Appended a pot but could not update the cached list; dropped the cache`）并删掉 `occult-pot:pots`，让下次读回表重建；**请求仍然成功**，因为表确实写进去了 —— 报失败会误导客户端。
 5. 串行化：`serialized()` 链把「回表写缓存」与「写后更新缓存」排成一队；一次回表期间到达的写入会等这次回表结束（一次网络读，通常是百毫秒级），换来的是两边都不会互相覆盖。

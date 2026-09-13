@@ -7,6 +7,14 @@ import type { RateLimiters } from '@/middlewares/rateLimit.ts';
 import { createPot, getPot, listPots } from '@/services/pot.ts';
 import { createPotBodySchema, parseWith, potParamsSchema } from '@/validation/index.ts';
 
+/**
+ * The base path this controller is mounted under, and the one the index documents.
+ *
+ * `/api/v1`: the version stays in the path, and the `/api` segment leaves room for whatever a front
+ * end might serve beside it (its own endpoints, static files) without a second origin.
+ */
+export const V1_PREFIX = '/api/v1';
+
 export interface V1ControllerDeps {
   readonly rateLimiters: RateLimiters;
 }
@@ -18,21 +26,21 @@ export interface ApiRouteDescriptor {
 }
 
 export const V1_ROUTES: readonly ApiRouteDescriptor[] = [
-  { method: 'GET', path: '/v1', description: 'This index of available endpoints.' },
+  { method: 'GET', path: V1_PREFIX, description: 'This index of available endpoints.' },
   {
     method: 'GET',
-    path: '/v1/pots',
+    path: `${V1_PREFIX}/pots`,
     description:
       'List every occult pot on the sheet, in one response. No query parameters: the sheet holds only a few dozen pots, so there is no pagination, filtering or view switch.',
   },
   {
     method: 'GET',
-    path: '/v1/pots/:potId',
+    path: `${V1_PREFIX}/pots/:potId`,
     description: 'Fetch one occult pot by its in-game ID, e.g. 54-1-4000E8F3. No query parameters.',
   },
   {
     method: 'POST',
-    path: '/v1/pots',
+    path: `${V1_PREFIX}/pots`,
     description:
       'Append one occult pot. Body: { world, map, potId, northRefreshAt, lastVisitAt } — all five columns are required, the text fields are strings, and the instants are epoch milliseconds either as 13 digit strings or as numbers (e.g. 1789201200000). Answers 200 with the pot it wrote: the row reaches the sheet before the response, and a sheet that refuses the write fails the request.',
   },
@@ -57,9 +65,9 @@ export function createV1Controller(deps: V1ControllerDeps): Router {
       conventions: {
         parameters: 'text parameters are JSON strings; epochs accept a 13 digit string or a number',
         instants: 'epoch milliseconds, e.g. 1789201200000; date/time strings are not parsed',
-        readEndpoints: 'GET /v1/pots and GET /v1/pots/{potId} take no parameters',
+        readEndpoints: `GET ${V1_PREFIX}/pots and GET ${V1_PREFIX}/pots/{potId} take no parameters`,
       },
-      routes: V1_ROUTES.filter((route) => route.path !== '/v1'),
+      routes: V1_ROUTES.filter((route) => route.path !== V1_PREFIX),
     });
   });
 
@@ -106,9 +114,10 @@ export function createV1Controller(deps: V1ControllerDeps): Router {
   router.route('/pots').all(methodNotAllowed(['GET', 'POST']));
   router.route('/pots/:potId').all(methodNotAllowed(['GET']));
 
-  // Anything else under /v1 does not exist.
+  // Anything else under the prefix does not exist. `originalUrl` (not the router-relative `path`)
+  // names the request the way the global fallback and the 405 handler do.
   router.all('/{*splat}', (req, _res, next) => {
-    next(new AppError('ERR_NOT_FOUND', `No v1 endpoint matches ${req.method} ${req.path}`));
+    next(new AppError('ERR_NOT_FOUND', `No ${V1_PREFIX} endpoint matches ${req.method} ${req.originalUrl}`));
   });
 
   return router;

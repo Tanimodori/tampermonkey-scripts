@@ -3,7 +3,7 @@ import type { Express } from 'express';
 import helmet from 'helmet';
 import { getConfig } from './config.ts';
 import { createHealthController } from './controllers/health.ts';
-import { createV1Controller } from './controllers/v1/index.ts';
+import { createV1Controller, V1_PREFIX } from './controllers/v1/index.ts';
 import { corsMiddleware } from './middlewares/cors.ts';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.ts';
 import { jsonBody, requireJsonForBody } from './middlewares/jsonBody.ts';
@@ -48,7 +48,7 @@ export function createApp(): CreatedApp {
   app.use(requireJsonForBody());
 
   app.use(createHealthController({ startedAt }));
-  app.use('/v1', createV1Controller({ rateLimiters }));
+  app.use(V1_PREFIX, createV1Controller({ rateLimiters }));
   app.use(notFoundHandler());
   app.use(errorHandler({ isProduction: process.env.NODE_ENV === 'production' }));
 

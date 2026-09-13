@@ -26,7 +26,7 @@ export function requestLogger(): RequestHandler {
     logger.info('request', {
       requestId: getRequestId(req),
       method: tokens.method?.(req, res),
-      // `:url` is `originalUrl`, so a route mounted under `/v1` logs its full path.
+      // `:url` is `originalUrl`, so a route mounted under a prefix logs its full path.
       path: tokens.url?.(req, res),
       status: res.statusCode,
       durationMs: Number(tokens['response-time']?.(req, res)),

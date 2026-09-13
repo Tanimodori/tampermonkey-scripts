@@ -68,15 +68,15 @@ describe('the app around the routes', () => {
   it('logs a mounted route under its full path', async () => {
     const { client, logs } = await startApp();
 
-    await client.get('/v1/pots').expect(200);
+    await client.get('/api/v1/pots').expect(200);
 
-    expect(logs.filter((entry) => entry.message === 'request').map((entry) => entry.path)).toContain('/v1/pots');
+    expect(logs.filter((entry) => entry.message === 'request').map((entry) => entry.path)).toContain('/api/v1/pots');
   });
 
   it('logs short-circuited failures, which never reach the routers', async () => {
     const { client, logs } = await startApp();
 
-    await client.post('/v1/pots').set('Content-Type', 'text/plain').send('{}').expect(415);
+    await client.post('/api/v1/pots').set('Content-Type', 'text/plain').send('{}').expect(415);
     await client.get('/nope').expect(404);
 
     const statuses = logs.filter((entry) => entry.message === 'request').map((entry) => entry.status);
@@ -88,7 +88,7 @@ describe('the app around the routes', () => {
     const { client } = await startApp();
 
     // A validation failure on the write path is the remaining 4xx a client can trigger.
-    const response = await client.post('/v1/pots').set('Origin', 'https://example.com').send({ world: '鸟' }).expect(400);
+    const response = await client.post('/api/v1/pots').set('Origin', 'https://example.com').send({ world: '鸟' }).expect(400);
     expect(response.headers['access-control-allow-origin']).toBe('*');
   });
 });
@@ -104,7 +104,7 @@ describe('the caller record', () => {
   it('records the caller and its rate-limit counters in Redis', async () => {
     const { client } = await startApp();
 
-    await client.get('/v1/pots').expect(200);
+    await client.get('/api/v1/pots').expect(200);
 
     // The limiter's window is a key of its own, under the caller's namespace.
     const keys = await getRedis().keys('occult-pot:user:*');

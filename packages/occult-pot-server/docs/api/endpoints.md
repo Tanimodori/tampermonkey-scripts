@@ -16,14 +16,14 @@
 
 ## 2. 端点一览
 
-| 方法 | 路径               | 说明                                       |
-| ---- | ------------------ | ------------------------------------------ |
-| GET  | `/healthz`         | 存活探针，不触碰上游                       |
-| GET  | `/readyz`          | 就绪探针：凭据有效期、状态新鲜度、出站预算 |
-| GET  | `/v1`              | 版本索引（字段映射、约定、路由）           |
-| GET  | `/v1/pots`         | 表上所有罐子，一次返回                     |
-| GET  | `/v1/pots/{potId}` | 按游戏内 ID 取一个罐子                     |
-| POST | `/v1/pots`         | 追加一个罐子（同步写回表）                 |
+| 方法 | 路径                   | 说明                                       |
+| ---- | ---------------------- | ------------------------------------------ |
+| GET  | `/healthz`             | 存活探针，不触碰上游                       |
+| GET  | `/readyz`              | 就绪探针：凭据有效期、状态新鲜度、出站预算 |
+| GET  | `/api/v1`              | 版本索引（字段映射、约定、路由）           |
+| GET  | `/api/v1/pots`         | 表上所有罐子，一次返回                     |
+| GET  | `/api/v1/pots/{potId}` | 按游戏内 ID 取一个罐子                     |
+| POST | `/api/v1/pots`         | 追加一个罐子（同步写回表）                 |
 
 `/healthz` 与 `/readyz` 不带版本前缀，也不限流。
 
@@ -51,11 +51,11 @@
 | `cache.updateTime` / `ageMs` / `pots` | Redis 里那份缓存是**什么时候回表读来的**（ISO 8601）、距今多久、持有多少个罐子；**从未读过时三者都是 `null`**（Redis 读不到时 `pots` 也是 `null`，并给出 `reasons`） |
 | `upstream.maxPerInterval` / `intervalMs` | 当前出站节流窗口 |
 
-## 5. `GET /v1`
+## 5. `GET /api/v1`
 
 返回版本索引：`version`、`resource`、`fields`（五个字段与列标题的映射）、`conventions`（文本与时间约定）和 `routes`（除自身以外的端点列表）。它是给客户端自描述用的，不是数据端点。
 
-## 6. `GET /v1/pots`
+## 6. `GET /api/v1/pots`
 
 一次返回表上所有罐子，**不接受任何参数**：这张表最多几十个罐子，所以没有分页、没有过滤、也没有视图切换。
 
@@ -85,18 +85,18 @@
 - 走 `general` 限流（见 §9）。
 
 ```bash
-curl 'http://127.0.0.1:3000/v1/pots'
+curl 'http://127.0.0.1:3000/api/v1/pots'
 ```
 
-## 7. `GET /v1/pots/{potId}`
+## 7. `GET /api/v1/pots/{potId}`
 
 唯一输入是路径里的游戏内 ID（查询参数被忽略），返回形状与列表里的单个罐子一致；找不到时是 `404` `ERR_NOT_FOUND`。
 
 ```bash
-curl 'http://127.0.0.1:3000/v1/pots/54-1-4000E8F3'
+curl 'http://127.0.0.1:3000/api/v1/pots/54-1-4000E8F3'
 ```
 
-## 8. `POST /v1/pots`
+## 8. `POST /api/v1/pots`
 
 **文本字段是 JSON 字符串，时刻是 13 位字符串或数字。**
 
@@ -143,7 +143,7 @@ Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 178
 ```
 
 - **表拒绝这次写入时，请求就失败**（`502` `ERR_UPSTREAM_FAILED`、`503` `ERR_UPSTREAM_AUTH_FAILED` / `ERR_UPSTREAM_RATE_LIMITED`、`400` `ERR_UPSTREAM_BAD_REQUEST`），而且**什么都没写进去**：缓存也不会多出这个罐子。没有队列、没有后台重试、没有可轮询的句柄。
-- 写入成功后这次结果同时折进 Redis 缓存，所以 `GET /v1/pots` 立刻看得到它，且这次读不会回表。
+- 写入成功后这次结果同时折进 Redis 缓存，所以 `GET /api/v1/pots` 立刻看得到它，且这次读不会回表。
 - 没有批次：一次请求一次 `addRecords`，行序等于请求到达顺序。
 - 走 `writes` 限流（见 §9）。
 
@@ -153,7 +153,7 @@ Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 178
 - 表与缓存都写成功之后才回答，所以「成功」意味着这次写入在两侧都已生效。
 
 ```bash
-curl -X POST http://127.0.0.1:3000/v1/pots \
+curl -X POST http://127.0.0.1:3000/api/v1/pots \
   -H 'Content-Type: application/json' \
   -d '{"world":"鸟","map":"北岛","potId":"60-0-4000ABCD","northRefreshAt":"1789201200000","lastVisitAt":"1789199700000"}'
 ```

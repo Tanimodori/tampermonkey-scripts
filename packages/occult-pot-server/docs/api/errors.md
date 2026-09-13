@@ -51,7 +51,7 @@
 | 429       | 按 IP 限流（应用带 `RateLimit-*` 与 `Retry-After`；前置 nginx 的 `limit_req` 只带 `Retry-After`） |
 | 502 / 503 | 上游失败（读与写都是），或凭据过期、被上游限流；`/readyz` 不可用也是 503                          |
 
-`/v1` 下的未知路径与不支持的方法也被当作普通错误抛出，由同一个错误处理器应答（同样是 `ERR_NOT_FOUND` / `ERR_METHOD_NOT_ALLOWED` 信封，`405` 带 `Allow`，并照常进日志）；`/v1` 之外的任何路径由全局兜底抛 `ERR_NOT_FOUND`。
+`/api/v1` 下的未知路径与不支持的方法也被当作普通错误抛出，由同一个错误处理器应答（同样是 `ERR_NOT_FOUND` / `ERR_METHOD_NOT_ALLOWED` 信封，`405` 带 `Allow`，并照常进日志）；`/api/v1` 之外的任何路径由全局兜底抛 `ERR_NOT_FOUND`。
 
 ## 4. 校验失败的文案
 
@@ -92,7 +92,7 @@ body-parser 的失败由同一个错误处理器映射：
 错误只在一处记录：`src/middlewares/errorHandler.ts`。请求路径上出问题的任何东西（抛出的 `AppError`、body-parser 的失败、忘了 catch 的处理器）都汇到这里，由它同时决定响应与日志行：
 
 - 5xx 记 `error`「Request failed」，4xx 记 `warning`「Request rejected」；
-- 字段是 `requestId`、`method`、`path`（用 `req.originalUrl`，因为挂在 `/v1` 下的控制器会改写 `req.path`）、`status`、`code`、`error`；
+- 字段是 `requestId`、`method`、`path`（用 `req.originalUrl`，因为挂在 `/api/v1` 下的控制器会改写 `req.path`）、`status`、`code`、`error`；
 - 除此之外没有别的请求级日志调用者 —— 处理器只管抛错。
 
 访问日志由 morgan 出一行：`requestId`、`method`、`path`、`status`、`durationMs`、`ip`。它注册在 body 与路由中间件之前，所以被短路的响应（413、415、429、404）同样会被记录。

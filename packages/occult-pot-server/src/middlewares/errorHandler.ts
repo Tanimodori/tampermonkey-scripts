@@ -65,7 +65,7 @@ export function errorHandler(deps: ErrorHandlerDeps): (error: unknown, req: Requ
     const appError = isAppError(error) ? error : undefined;
     const requestId = getRequestId(req);
 
-    // `originalUrl`, not `path`: a controller mounted under `/v1` rewrites the latter.
+    // `originalUrl`, not `path`: a controller mounted under a prefix rewrites the latter.
     const fields = { requestId, method: req.method, path: req.originalUrl, status, code, error: reasonFor(error) };
     // An unexpected failure outside production is diagnosable from the top of its stack, which the
     // log line carries instead of the response body.

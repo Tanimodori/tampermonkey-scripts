@@ -85,7 +85,9 @@ rushx test:api
 
 `test:redis` 用 [cross-env](https://github.com/kentcdodds/cross-env) 设置 `OPS_ENV_PATH`（跨平台），真实服务器是共享的，所以要关掉文件并行（否则各个 spec 会互相 `flushall`）。`test:api` 的 live spec 只在「`api` 标签被过滤进来 **且** 配置指向的不是测试夹具文档」时才跑：`test:unit` 没有任何 tag 过滤，而官方文档说明这种情况下 `TestRunner.matchesTags` 恒为 true，所以第二个条件才是把它挡在 unit 之外的那道门。live spec 会真写一行再删掉，清理由 `afterAll` 兜底；跑之前确认 `.env.test-api.local` 指向的是**测试文档**。
 
-时钟只有一处（`src/services/time.ts` 的 `now()`），需要控制时间的测试在文件顶部 mock 掉该模块——`vi.mock('@/services/time.ts', () => import('@test/clock.ts'))`，之后用 `clock.set()` / `clock.advance()` 摆布它。
+`test/controllers/`、`test/services/`、`test/stores/`、`test/validation/` 与 `src/` 一一对齐，一个控制器一个 spec；测试自己的东西（`testUtils/app.ts` 的 harness、`testUtils/helpers.ts`、`testUtils/clock.ts`）集中在 `test/testUtils/`，与「测产品代码」的 spec 分开。
+
+时钟只有一处（`src/services/time.ts` 的 `now()`），需要控制时间的测试在文件顶部 mock 掉该模块——`vi.mock('@/services/time.ts', () => import('@test/testUtils/clock.ts'))`，之后用 `clock.set()` / `clock.advance()` 摆布它。
 
 ## 文档
 

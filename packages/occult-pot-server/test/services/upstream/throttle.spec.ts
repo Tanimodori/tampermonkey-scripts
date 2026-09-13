@@ -1,4 +1,4 @@
-import { loadTestConfig } from '@test/helpers.ts';
+import { loadTestConfig } from '@test/testUtils/helpers.ts';
 import { describe, expect, it } from 'vitest';
 import { throttle } from '@/services/upstream/throttle.ts';
 

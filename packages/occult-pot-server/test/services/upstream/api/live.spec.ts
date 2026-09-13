@@ -1,4 +1,4 @@
-import { FILE_ID, loadTestConfig, testEnv } from '@test/helpers.ts';
+import { FILE_ID, loadTestConfig, testEnv } from '@test/testUtils/helpers.ts';
 /**
  * @module-tag api
  */

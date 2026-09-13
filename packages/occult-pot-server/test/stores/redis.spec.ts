@@ -1,7 +1,7 @@
 /**
  * @module-tag redis
  */
-import { captureLogs, loadTestConfig, resetRedis, testEnv } from '@test/helpers.ts';
+import { captureLogs, loadTestConfig, resetRedis, testEnv } from '@test/testUtils/helpers.ts';
 import RedisMock from 'ioredis-mock';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { closeRedis, getRedis, redisCommandSender, setRedis } from '@/stores/redis.ts';

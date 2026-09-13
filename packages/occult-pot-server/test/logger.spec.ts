@@ -1,7 +1,7 @@
 import { getLogger } from '@logtape/logtape';
+import { captureLogs } from '@test/testUtils/helpers.ts';
 import { describe, expect, it } from 'vitest';
 import { formatInstant, LOG_CATEGORY } from '@/logger.ts';
-import { captureLogs } from './helpers.ts';
 
 /**
  * These pin this service's logging conventions: the level an operator writes in `OPS_SERVER_LOG_LEVEL`, the

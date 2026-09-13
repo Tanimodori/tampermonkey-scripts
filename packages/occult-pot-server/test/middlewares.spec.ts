@@ -1,3 +1,4 @@
+import { captureLogs, loadTestConfig } from '@test/testUtils/helpers.ts';
 /**
  * @module-tag redis
  */
@@ -8,7 +9,6 @@ import { AppError } from '@/errors.ts';
 import { errorHandler, methodNotAllowed, notFoundHandler } from '@/middlewares/errorHandler.ts';
 import { userContext } from '@/middlewares/userContext.ts';
 import { setRedis } from '@/stores/redis.ts';
-import { captureLogs, loadTestConfig } from './helpers.ts';
 
 /**
  * The error handler is the only place a request-scoped error is recorded, so these tests pin both

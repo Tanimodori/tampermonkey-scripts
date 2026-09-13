@@ -1,8 +1,8 @@
 /**
  * @module-tag redis
  */
-import { clock } from '@test/clock.ts';
-import { captureLogs, loadTestConfig, rawRecord, resetRedis, setupTencentDocsMock } from '@test/helpers.ts';
+import { clock } from '@test/testUtils/clock.ts';
+import { captureLogs, loadTestConfig, rawRecord, resetRedis, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
 import { createPot, getPot, listPots, potState, usePotService } from '@/services/pot.ts';
@@ -12,9 +12,9 @@ import type { ClientOptions } from '@/services/upstream/client.ts';
 import { getRedis } from '@/stores/redis.ts';
 import type { Pot, PotState } from '@/validation/index.ts';
 
-// The service reads the time through `@/services/time.ts`; this replaces it with `@test/clock.ts`, so
+// The service reads the time through `@/services/time.ts`; this replaces it with `@test/testUtils/clock.ts`, so
 // a TTL or staleness case moves time instead of waiting for it.
-vi.mock('@/services/time.ts', () => import('@test/clock.ts'));
+vi.mock('@/services/time.ts', () => import('@test/testUtils/clock.ts'));
 
 /**
  * The pot service: the layer that decides *when* the sheet is read and the cache is written.

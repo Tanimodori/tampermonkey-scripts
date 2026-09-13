@@ -1,15 +1,15 @@
 /**
  * @module-tag redis
  */
-import { clock } from '@test/clock.ts';
-import { loadTestConfig, resetRedis } from '@test/helpers.ts';
+import { clock } from '@test/testUtils/clock.ts';
+import { loadTestConfig, resetRedis } from '@test/testUtils/helpers.ts';
 import type Redis from 'ioredis';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getRedis, setRedis } from '@/stores/redis.ts';
 import { touchUser, userKey, USER_TTL_MS } from '@/stores/user.ts';
 
 // The record is stamped with the service clock, so the cases pin it like the other store specs do.
-vi.mock('@/services/time.ts', () => import('@test/clock.ts'));
+vi.mock('@/services/time.ts', () => import('@test/testUtils/clock.ts'));
 
 const START = 1_700_000_000_000;
 

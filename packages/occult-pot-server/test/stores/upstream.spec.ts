@@ -1,8 +1,8 @@
 /**
  * @module-tag redis
  */
-import { clock } from '@test/clock.ts';
-import { captureLogs, FILE_ID, loadTestConfig, resetRedis, SHEET_ID, setupTencentDocsMock } from '@test/helpers.ts';
+import { clock } from '@test/testUtils/clock.ts';
+import { captureLogs, FILE_ID, loadTestConfig, resetRedis, SHEET_ID, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
 import type { ClientOptions } from '@/services/upstream/client.ts';
@@ -11,7 +11,7 @@ import { upstreamStore } from '@/stores/upstream.ts';
 
 // The credential's expiry is judged against `@/services/time.ts`; the tokens below are minted from
 // the same pinned instant, so nothing here depends on the machine's wall clock.
-vi.mock('@/services/time.ts', () => import('@test/clock.ts'));
+vi.mock('@/services/time.ts', () => import('@test/testUtils/clock.ts'));
 
 /** The instant every case starts from; the token lifetimes below are offsets from it. */
 const NOW = 1_789_140_693_000;

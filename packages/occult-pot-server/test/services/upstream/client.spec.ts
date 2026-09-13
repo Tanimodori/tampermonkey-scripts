@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
+import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import { useClient } from '@/services/upstream/client.ts';
 import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';

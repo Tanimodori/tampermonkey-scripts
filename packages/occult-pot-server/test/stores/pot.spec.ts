@@ -1,7 +1,7 @@
 /**
  * @module-tag redis
  */
-import { loadTestConfig, resetRedis } from '@test/helpers.ts';
+import { loadTestConfig, resetRedis } from '@test/testUtils/helpers.ts';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { clearPotState, readPotState, writePotState } from '@/stores/pot.ts';
 import { getRedis } from '@/stores/redis.ts';

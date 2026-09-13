@@ -1,4 +1,4 @@
-import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
+import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { addRecords, deleteRecords, getRecords, getSheetList } from '@/services/upstream/api/sheet.ts';
 import type { ClientOptions } from '@/services/upstream/client.ts';

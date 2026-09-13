@@ -109,8 +109,10 @@ describe('loadConfig and getConfig', () => {
     const config = loadConfig(baseEnv());
     expect(config.server.port).toBe(3000);
     expect(config.upstream.cacheTtl).toBe(30_000);
-    expect(config.upstream.maxPerInterval).toBe(120);
-    expect(config.upstream.intervalMs).toBe(60_000);
+    expect(config.upstream.staleAfterMs).toBe(10_800_000);
+    // The original client script's pace: ten calls per three seconds, shared by reads, writes and deletes.
+    expect(config.upstream.maxPerInterval).toBe(10);
+    expect(config.upstream.intervalMs).toBe(3_000);
     expect(config.upstream.maxRetries).toBe(2);
     expect(config.upstream.timeoutMs).toBe(10_000);
   });
@@ -128,6 +130,7 @@ describe('loadConfig and getConfig', () => {
         OPS_SERVER_LOG_LEVEL: 'warning',
         OPS_DOCS_TOKEN_EXPIRY_WARN_MS: '60000',
         OPS_UPSTREAM_CACHE_TTL: '1000',
+        OPS_UPSTREAM_STALE_AFTER_MS: '7200000',
         OPS_RATE_LIMIT_IP_WINDOW_MS: '1000',
         OPS_RATE_LIMIT_IP_MAX: '5',
         OPS_RATE_LIMIT_WRITE_MAX: '2',
@@ -152,7 +155,7 @@ describe('loadConfig and getConfig', () => {
       },
       docs: { tokenExpiryWarnMs: 60_000 },
       rateLimit: { ipWindowMs: 1000, ipMax: 5, writeMax: 2 },
-      upstream: { maxPerInterval: 7, intervalMs: 2000, maxRetries: 3, retryBackoffMs: 10, timeoutMs: 2000, cacheTtl: 1000 },
+      upstream: { maxPerInterval: 7, intervalMs: 2000, maxRetries: 3, retryBackoffMs: 10, timeoutMs: 2000, cacheTtl: 1000, staleAfterMs: 7_200_000 },
     });
   });
 

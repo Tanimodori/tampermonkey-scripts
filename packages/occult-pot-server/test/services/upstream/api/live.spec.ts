@@ -4,12 +4,12 @@ import { FILE_ID, loadTestConfig, testEnv } from '@test/helpers.ts';
  */
 import { TestRunner, afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getConfig } from '@/config.ts';
+import { listPots } from '@/services/pot.ts';
 import { addRecords, getRecords, getSheetList } from '@/services/upstream/api/sheet.ts';
 import { getUserInfo } from '@/services/upstream/api/token.ts';
 import { useClient } from '@/services/upstream/client.ts';
 import { asArray, asRecord, parseBody } from '@/services/upstream/interceptors/classify.ts';
 import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
-import { potStore } from '@/stores/pot.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 import { POT_ID_PATTERN, toSheetValues } from '@/validation/index.ts';
 import type { Pot } from '@/validation/index.ts';
@@ -37,6 +37,14 @@ const MARKER: Pot = {
   northRefreshAtMs: 1_789_201_800_000,
   lastVisitAtMs: 1_789_199_000_000,
 };
+
+/**
+ * The same marker, last visited in 2001 — what the sweep is supposed to delete.
+ *
+ * The window the sweep test runs with is seven days, and the document's own rows are hours old, so
+ * only this row qualifies: the test never touches the data the document is kept for.
+ */
+const ANCIENT: Pot = { ...MARKER, northRefreshAtMs: 1_000_000_000_000, lastVisitAtMs: 1_000_000_000_000 };
 
 /** The five columns, as the sheet heads them. */
 const COLUMNS = ['区服', '地图', 'ID', '北罐刷新时间', '最后一次进岛时间'] as const;
@@ -105,7 +113,9 @@ async function deleteRecords(recordIDs: readonly string[]): Promise<void> {
 
 describe.skipIf(!live)('the real Tencent Docs document', () => {
   beforeAll(() => {
-    loadTestConfig();
+    // A window wide enough that the document's own rows are never swept by the read cases: they are
+    // hours old, not months. The sweep itself is exercised by its own case below.
+    loadTestConfig({ OPS_UPSTREAM_STALE_AFTER_MS: String(30 * 24 * 60 * 60 * 1000) });
   });
 
   afterAll(async () => {
@@ -157,14 +167,29 @@ describe.skipIf(!live)('the real Tencent Docs document', () => {
 
   it('maps every row of the sheet onto a valid pot', async () => {
     const records = await allRecords();
-    const state = await potStore.get();
+    const pots = await listPots();
 
-    expect(state.data.length).toBeGreaterThan(0);
-    expect(state.data.length).toBeLessThanOrEqual(records.length);
-    for (const pot of state.data) {
+    expect(pots.length).toBeGreaterThan(0);
+    expect(pots.length).toBeLessThanOrEqual(records.length);
+    for (const pot of pots) {
       expect(pot.potId).toMatch(POT_ID_PATTERN);
       expect(pot.northRefreshAtMs).toBeGreaterThan(0);
     }
+  });
+
+  it('sweeps the rows nobody should see any more, and leaves the rest alone', async () => {
+    // Every read refreshes (TTL 0), and a row last visited in 2001 is far past a seven day window.
+    loadTestConfig({ OPS_UPSTREAM_CACHE_TTL: '0', OPS_UPSTREAM_STALE_AFTER_MS: String(7 * 24 * 60 * 60 * 1000) });
+    const before = (await allRecords()).length;
+    await addRecords([{ values: toSheetValues(ANCIENT) }]);
+    expect((await allRecords()).length).toBe(before + 1);
+
+    const pots = await listPots();
+
+    // The stale row is gone from the sheet — not merely filtered out of the answer — and the rows the
+    // document is kept for are untouched.
+    expect(pots.some((pot) => pot.potId === ANCIENT.potId)).toBe(false);
+    expect((await allRecords()).length).toBe(before);
   });
 
   it('appends one row, reads it back as stored, and deletes it again', async () => {

@@ -7,9 +7,9 @@ import { createApp } from '@/app.ts';
 import type { CreatedApp } from '@/app.ts';
 import { startServer } from '@/server.ts';
 import type { RunningServer } from '@/server.ts';
-import { getRedis } from '@/services/redis.ts';
 import type { RawRecordDto } from '@/services/upstream/api/sheet.ts';
 import type { ClientOptions } from '@/services/upstream/client.ts';
+import { getRedis } from '@/stores/redis.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 import type { Pot } from '@/validation/index.ts';
 import { captureLogs, loadTestConfig, rawRecord, resetRedis, sheetInstant, setupTencentDocsMock, testClient } from './helpers.ts';
@@ -19,8 +19,12 @@ import { captureLogs, loadTestConfig, rawRecord, resetRedis, sheetInstant, setup
 // (`NOW`), pinned before each app is built.
 vi.mock('@/services/time.ts', () => import('@test/clock.ts'));
 
-/** The clock the app runs on: pinned to the wall clock once, and never moved afterwards. */
-const NOW = Date.now();
+/**
+ * The clock the app runs on: pinned to a fixed instant in the fixture world, and never moved
+ * afterwards. Pinning it is what keeps the fixtures meaningful — the stale row below is "four hours
+ * before now", and a wall clock would make every fixture row stale the day after they were written.
+ */
+const NOW = sheetInstant('2026-09-12 15:45');
 
 /** Mirrors the live sheet, plus invalid rows and a duplicate pair for the edge cases. */
 function fixtureRows(): RawRecordDto[] {
@@ -239,9 +243,10 @@ describe('GET /v1/pots', () => {
     const response = await client.get('/v1/pots').expect(200);
     const pots = potsOf(response.body);
 
-    // Ordered by sheet position. Only rows that fail the sheet's rules are absent: the malformed
-    // ID and the north=0 row. Duplicates and stale rows are returned as stored — neither is this
-    // service's business any more.
+    // Ordered by sheet position. The rows that are absent are the ones the service will not serve:
+    // the malformed ID, the north=0 row, and the row nobody has visited for over three hours. All
+    // three are deleted from the sheet on the read that found them (see the case below); duplicates
+    // are still returned as stored, because de-duplication is the client script's business.
     expect(pots).toEqual([
       { world: '鸟', map: '北岛', potId: '54-1-4000E8F3', northRefreshAtMs: sheetInstant('2026-09-12 16:16'), lastVisitAtMs: sheetInstant('2026-09-12 15:51') },
       { world: '猫', map: '北岛', potId: '44-1-4000AE40', northRefreshAtMs: sheetInstant('2026-09-12 15:36'), lastVisitAtMs: sheetInstant('2026-09-12 15:20') },
@@ -251,7 +256,6 @@ describe('GET /v1/pots', () => {
       // A second row with the same world|map|potId, carrying an older 最后一次进岛时间: it is
       // returned as stored rather than folded away.
       { world: '猫', map: '南岛', potId: '57-0-400076E4', northRefreshAtMs: sheetInstant('2026-09-12 13:45'), lastVisitAtMs: sheetInstant('2026-09-12 13:00') },
-      { world: '狗', map: '北岛', potId: '22-0-4000BBBB', northRefreshAtMs: sheetInstant('2026-09-12 12:00'), lastVisitAtMs: NOW - 4 * 3_600_000 },
     ]);
     expect(response.body).not.toHaveProperty('meta.total');
     expect(response.body).not.toHaveProperty('meta.sheetTotal');
@@ -279,6 +283,17 @@ describe('GET /v1/pots', () => {
     const decorated = potsOf((await client.get('/v1/pots?limit=2&offset=1&view=raw&world=猫&refresh=true&includeStale=true').expect(200)).body);
 
     expect(decorated).toEqual(plain);
+  });
+
+  it('deletes the rows it will not serve, so a later read cannot bring them back', async () => {
+    const { client } = await startApp();
+
+    await client.get('/v1/pots').expect(200);
+
+    // One delete call, carrying the stale row and the two unusable ones, and they are gone from the
+    // sheet afterwards — not merely filtered out of the answer.
+    expect(docs.state.deleted).toEqual(expect.arrayContaining(['rStale', 'rBad', 'rZero']));
+    expect(docs.state.records.map((record) => record.recordID)).not.toEqual(expect.arrayContaining(['rStale', 'rBad', 'rZero']));
   });
 
   it('serves the cache: a second read does not touch the upstream', async () => {

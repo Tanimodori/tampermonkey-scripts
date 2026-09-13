@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
 import { errorHandler, methodNotAllowed, notFoundHandler } from '@/middlewares/errorHandler.ts';
 import { userContext } from '@/middlewares/userContext.ts';
-import { setRedis } from '@/services/redis.ts';
+import { setRedis } from '@/stores/redis.ts';
 import { captureLogs, loadTestConfig } from './helpers.ts';
 
 /**

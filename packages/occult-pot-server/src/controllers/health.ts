@@ -4,8 +4,8 @@ import { getConfig } from '@/config.ts';
 import { ok } from '@/errors.ts';
 import { formatInstant } from '@/logger.ts';
 import { getRequestId } from '@/middlewares/requestId.ts';
+import { potState } from '@/services/pot.ts';
 import { now } from '@/services/time.ts';
-import { potStore } from '@/stores/pot.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 import type { PotState } from '@/validation/index.ts';
 
@@ -35,7 +35,7 @@ export function createHealthController(deps: HealthControllerDeps): Router {
     let state: PotState | undefined;
     let storeError: string | undefined;
     try {
-      state = await potStore.state();
+      state = await potState();
     } catch (error) {
       storeError = error instanceof Error ? error.message : String(error);
     }

@@ -130,6 +130,7 @@ const ENV_PATHS = [
   'upstream.retryBackoffMs',
   'upstream.timeoutMs',
   'upstream.cacheTtl',
+  'upstream.staleAfterMs',
 ] as const;
 
 /**
@@ -168,7 +169,17 @@ function getDefaultConfig(): AppEnvConfig {
     server: { port: 3000, host: '0.0.0.0', trustProxy: false, corsOrigins: '*', jsonBodyLimit: '64kb', logLevel: 'info' },
     docs: { apiBase: 'https://docs.qq.com', tokenExpiryWarnMs: 3 * DAY_MS },
     rateLimit: { ipWindowMs: 60_000, ipMax: 120, writeMax: 20 },
-    upstream: { maxPerInterval: 120, intervalMs: 60_000, maxRetries: 2, retryBackoffMs: 500, timeoutMs: 10_000, cacheTtl: 30_000 },
+    // The outbound pace is the original client script's: ten calls per three seconds, shared by every
+    // read, write and delete. The platform also caps the day (20k calls with a super membership).
+    upstream: {
+      maxPerInterval: 10,
+      intervalMs: 3000,
+      maxRetries: 2,
+      retryBackoffMs: 500,
+      timeoutMs: 10_000,
+      cacheTtl: 30_000,
+      staleAfterMs: 3 * 60 * 60 * 1000,
+    },
   };
 }
 

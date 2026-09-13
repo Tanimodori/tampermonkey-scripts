@@ -86,6 +86,8 @@ const upstreamSchema = z.object({
   timeoutMs: integerFrom({ min: 1 }),
   /** How long a read is answered from the cached pot list before the sheet is read again. */
   cacheTtl: integerFrom({ min: 0 }),
+  /** A row whose last visit is at least this old is deleted from the sheet the next time it is read. */
+  staleAfterMs: integerFrom({ min: 0 }),
 });
 
 /** A complete configuration: what `loadConfig()` hands out. */

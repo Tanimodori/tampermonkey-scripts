@@ -1,5 +1,5 @@
-import { getRedis } from '@/services/redis.ts';
 import { now } from '@/services/time.ts';
+import { getRedis } from '@/stores/redis.ts';
 
 /**
  * What the service remembers about a caller.

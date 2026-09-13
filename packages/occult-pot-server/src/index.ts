@@ -4,7 +4,7 @@ import { getConfig, loadConfig, loadEnv, publishEnv } from './config.ts';
 import { ConfigError } from './errors.ts';
 import { configureLogging, LOG_CATEGORY } from './logger.ts';
 import { startServer } from './server.ts';
-import { getRedis } from './services/redis.ts';
+import { getRedis } from './stores/redis.ts';
 import { upstreamStore } from './stores/upstream.ts';
 
 async function main(): Promise<void> {

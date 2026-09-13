@@ -8,11 +8,13 @@ services:
       redis:
         condition: service_healthy
     env_file:
-      # Both optional: `.env` for the shared values, `.env.production` to override them.
+      # Both optional: `.env` for the shared values, `.env.production.local` for the deployment's own
+      # (it is git-ignored — the committed `.env.production` is only a template, and is deliberately
+      # not read here so its placeholders can never reach a container).
       # `required:` needs Docker Compose v2.24 or newer.
       - path: .env
         required: false
-      - path: .env.production
+      - path: .env.production.local
         required: false
     environment:
       # Keep the container's healthcheck/port in sync with the published port.

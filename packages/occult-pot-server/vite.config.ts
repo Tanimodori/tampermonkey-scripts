@@ -35,7 +35,13 @@ export default defineConfig({
     // silently ignored typo.
     tags: [
       { name: 'redis', description: 'Uses Redis: the in-process mock by default, the test server under test:redis.' },
-      { name: 'api', description: 'Talks to the real Tencent Docs document; runs under test:api.' },
+      {
+        name: 'api',
+        description: 'Talks to the real Tencent Docs document; runs under test:api.',
+        // A real round trip is about a second, and the task is paced politely, so the 5 s default is
+        // too tight for a case that makes a handful of calls.
+        timeout: 60_000,
+      },
     ],
     // The mock upstream every default run points at. A task's env file overrides it, because files
     // beat the ambient environment (see `src/config.ts`).

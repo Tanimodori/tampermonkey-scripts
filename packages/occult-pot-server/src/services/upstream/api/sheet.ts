@@ -52,6 +52,15 @@ export async function addRecords(records: readonly RecordValues[]): Promise<void
   await sheetCall('addRecords', { addRecords: { records } });
 }
 
+/**
+ * Removes rows by record id. The pot service uses it to sweep the rows it will not serve — the ones
+ * whose last visit is too old and the ones that are not a pot — and it is paced like every other
+ * call, because it spends the same upstream quota.
+ */
+export async function deleteRecords(recordIDs: readonly string[]): Promise<void> {
+  await sheetCall('deleteRecords', { deleteRecords: { recordIDs } });
+}
+
 /** The document's sub-sheets, as `查询子表` reports them; the store checks its `sheetId` against them. */
 export async function getSheetList(fileId: string): Promise<readonly Record<string, unknown>[]> {
   const body = await send({

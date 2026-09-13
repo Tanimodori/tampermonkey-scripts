@@ -18,15 +18,19 @@
 
 ## 2. 读路径
 
-- `get()` 先读 `occult-pot:pots`：`updateTime` 距今不到 `OPS_UPSTREAM_CACHE_TTL` 就直接返回，不碰表。
-- 过期才回表：`getRecords` 翻页取整张表（`limit = 100`，跟着 `hasMore`/`next` 走），映射成 `Pot`（规则见 [Pot 数据](pot.md)），然后**整份覆盖**写回，`updateTime` 打的是这次读取到达的时刻。
+这一切都在 `services/pot.ts` 里（`stores/pot.ts` 只管 Redis 的读写，`api/sheet.ts` 只管一次调用）：
+
+- 先读 `occult-pot:pots`：`updateTime` 距今不到 `OPS_UPSTREAM_CACHE_TTL` 就直接返回，不碰表；返回前仍会按下面的过期规则过滤一遍。
+- 过期才回表：`getRecords` 翻页取整张表（`limit = 100`，跟着 `hasMore`/`next` 走），映射成 `Pot`（规则见 [Pot 数据](pot.md)）。
+- **回表之后清理**：`最后一次进岛时间` 距今超过 `OPS_UPSTREAM_STALE_AFTER_MS`（默认 3 小时）的行，以及根本不是合法 pot 的行，收集 recordID 后用**一次** `deleteRecords` 从表里删掉（走同一条出站节流）。删除失败只记一条 warning，这些行照样不进缓存、不进答复，下一次回表再试。
+- 留下的行**整份覆盖**写回缓存，`updateTime` 打的是这次读取到达的时刻。
 - **回表失败**（网络、鉴权、5xx 都算）：缓存里已经有读过的东西（`updateTime !== 0`）时，返回旧缓存并记一条 warning（`Served a stale pot list; the sheet read failed`，带原因、`ageMs` 与罐子数）；`updateTime === 0`（从未读过）时没有可服务的东西，错误照旧抛给调用方（502/503）。
 - 并发读取单飞：第一个调用者回表，其余复用同一个 Promise，N 个并发读只产生一次上游请求。
 - `/readyz` 的 `cache.*`（`updateTime`/`ageMs`/`pots`）来自 `state()`，它只读 Redis，不触发回表；键不存在时三项都是 `null`，与「还没读过」同一个含义。
 
 ## 3. 写路径
 
-1. `put(pot)` **先写表**：一次 `addRecords`（一行，列由 `toSheetValues` 生成）。**表拒绝这次写入就是请求的失败** —— 错误按 `errors.md` 返回给调用方，缓存一个字节都不动，也没有任何「稍后重试」的承诺。
+1. `create(pot)` **先写表**：一次 `addRecords`（一行，列由 `toSheetValues` 生成）。**表拒绝这次写入就是请求的失败** —— 错误按 `errors.md` 返回给调用方，缓存一个字节都不动，也没有任何「稍后重试」的承诺。
 2. 写表成功后，在串行链里重新读 Redis，把 pot **追加**进 `data`，`updateTime` 保持不动（写不是读，TTL 仍从上次回表算起）。于是罐子立刻能被 `GET /v1/pots` 读到，而这次读不会回表。
 3. 缓存是**追加**而不是合并：表里刚多了一行，缓存就照原样多一条；同一个 `区服|地图|ID` 发两次就是两行（去重仍是客户端脚本的事，见 [Pot 数据](pot.md)）。
 4. 表写成功但 Redis 写失败：记一条 warning（`Appended a pot but could not update the cached list; dropped the cache`）并删掉 `occult-pot:pots`，让下次读回表重建；**请求仍然成功**，因为表确实写进去了 —— 报失败会误导客户端。
@@ -44,15 +48,16 @@
 
 - 标识用 `req.ip`（受 `OPS_SERVER_TRUST_PROXY` 影响）；请求 id 一起记进 `lastRequestId`，用于把一次请求追回它触碰过的用户记录。
 - `occult-pot:user:<ip>` 由 `userContext()` 中间件**异步**写（fire-and-forget）：请求不等它，写失败只记一条 warning —— 强制项是限流，它由限流器自己报错。
-- 限流计数就是 `occult-pot:user:rate-limit:<limiter>:<ip>`：官方 `rate-limit-redis` store 落在 Redis 里，因此多实例共享同一份窗口计数。用 mock（没有 `OPS_SERVER_REDIS_URL`）时，`services/redis.ts` 里的命令垫片把该 store 用到的 `SCRIPT LOAD`/`EVALSHA` 翻译成 mock 支持的 `EVAL`，Lua 本身不变。
+- 限流计数就是 `occult-pot:user:rate-limit:<limiter>:<ip>`：官方 `rate-limit-redis` store 落在 Redis 里，因此多实例共享同一份窗口计数。用 mock（没有 `OPS_SERVER_REDIS_URL`）时，`stores/redis.ts` 里的命令垫片把该 store 用到的 `SCRIPT LOAD`/`EVALSHA` 翻译成 mock 支持的 `EVAL`，Lua 本身不变。
 - pow 尚未实现：约定好的键是 `occult-pot:user:pow:<ip>`，字段见 §1 表格，等接口落地再写。
 
 ## 6. 相关配置
 
-| 变量                     | 默认值  | 作用                                                                                                 |
-| ------------------------ | ------- | ---------------------------------------------------------------------------------------------------- |
-| `OPS_SERVER_REDIS_URL`   | —       | `redis://[user:password@]host:port/db`；**没给就用进程内的 mock**（生产会告警）；用户名/密码写进 URL |
-| `OPS_UPSTREAM_CACHE_TTL` | `30000` | 缓存多久之内直接由 Redis 回答；过期才回表                                                            |
+| 变量                          | 默认值     | 作用                                                                                                 |
+| ----------------------------- | ---------- | ---------------------------------------------------------------------------------------------------- |
+| `OPS_SERVER_REDIS_URL`        | —          | `redis://[user:password@]host:port/db`；**没给就用进程内的 mock**（生产会告警）；用户名/密码写进 URL |
+| `OPS_UPSTREAM_CACHE_TTL`      | `30000`    | 缓存多久之内直接由 Redis 回答；过期才回表                                                            |
+| `OPS_UPSTREAM_STALE_AFTER_MS` | `10800000` | 回表时，`最后一次进岛时间` 超过这个时长的行走不到下游：从表与缓存里都删掉（3 小时）                  |
 
 出站调用的节流与重试参数见 [与腾讯文档通讯](../api/upstream.md)，入站限流见 [API 端点](../api/endpoints.md)。
 

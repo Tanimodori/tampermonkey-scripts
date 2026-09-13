@@ -2,11 +2,11 @@ import { getLogger } from '@logtape/logtape';
 import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
 import { formatInstant, LOG_CATEGORY } from '@/logger.ts';
-import { getRedis } from '@/services/redis.ts';
 import { now } from '@/services/time.ts';
 import { getSheetList } from '@/services/upstream/api/sheet.ts';
 import { getUserInfo, refreshAccessToken } from '@/services/upstream/api/token.ts';
 import { asRecord, describeBody } from '@/services/upstream/interceptors/classify.ts';
+import { getRedis } from '@/stores/redis.ts';
 import type { AppConfig } from '@/validation/index.ts';
 
 /**

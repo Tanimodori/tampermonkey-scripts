@@ -5,8 +5,8 @@ import { clock } from '@test/clock.ts';
 import { captureLogs, FILE_ID, loadTestConfig, resetRedis, SHEET_ID, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
-import { getRedis } from '@/services/redis.ts';
 import type { ClientOptions } from '@/services/upstream/client.ts';
+import { getRedis } from '@/stores/redis.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 
 // The credential's expiry is judged against `@/services/time.ts`; the tokens below are minted from

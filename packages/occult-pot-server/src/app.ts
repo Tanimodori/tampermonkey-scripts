@@ -11,14 +11,11 @@ import { createRateLimiters } from './middlewares/rateLimit.ts';
 import { requestId } from './middlewares/requestId.ts';
 import { requestLogger } from './middlewares/requestLogger.ts';
 import { userContext } from './middlewares/userContext.ts';
-import { closeRedis } from './services/redis.ts';
 import { now } from './services/time.ts';
-import { potStore } from './stores/pot.ts';
-import type { PotStore } from './stores/pot.ts';
+import { closeRedis } from './stores/redis.ts';
 
 export interface CreatedApp {
   readonly app: Express;
-  readonly store: PotStore;
   /** Releases what the process holds open; the upstream pool lives as long as the process does. */
   close(): Promise<void>;
 }
@@ -27,8 +24,8 @@ export function createApp(): CreatedApp {
   const config = getConfig();
   const startedAt = now();
 
-  // The stores and the services take what they need themselves — records through `api.ts`, ids and
-  // credential through the upstream store, pots through the pot store, the clock through
+  // The stores and the services take what they need themselves — records through `api/sheet.ts`,
+  // ids and credential through the upstream store, pots through the pot service, the clock through
   // `services/time.ts` — so the composition root only hands the routes their limiters.
   const rateLimiters = createRateLimiters();
 
@@ -57,7 +54,6 @@ export function createApp(): CreatedApp {
 
   return {
     app,
-    store: potStore,
     async close(): Promise<void> {
       await closeRedis();
     },

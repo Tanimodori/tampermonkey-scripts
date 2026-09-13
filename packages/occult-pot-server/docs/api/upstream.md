@@ -27,7 +27,7 @@
 | 校验凭据 | `GET /oauth/v2/userinfo?access_token={token}` → `data.openID`（官方说明该接口即用于校验 Access Token） |
 | 刷新凭据 | `GET /oauth/v2/token?client_id&client_secret&grant_type=refresh_token&refresh_token` → `{access_token, expires_in, user_id}`（无 `ret` 信封） |
 | 读记录 | `{"getRecords":{"offset":0,"limit":100}}` |
-| 删记录 | `{"deleteRecords":{"recordIDs":["rMW8vK"]}}` |
+| 删记录 | `{"deleteRecords":{"recordIDs":["rMW8vK"]}}`；清理过期/非法行时由服务发出（见 §4） |
 | 改记录 | `{"updateRecords":{"records":[{"recordID":"rMW8vK","values":{…}}]}}` |
 | 追加记录 | `{"addRecords":{"records":[{"values":{…}}]}}` |
 
@@ -47,7 +47,8 @@
 ## 4. 现在的做法（本服务）
 
 - **只读整表**：`getRecords` 按 `limit = 100` 一页页读到 `hasMore` 为假（没有页数上限），再经 `fromSheetValues` 映射成 `Pot`，不满足规则的行走不到下游（规则见 `../data/pot.md`）。
-- **只追加**：`addRecords` 是唯一会发出的写。`overwrite` 与 `remove` 直接抛 `INTERNAL_ERROR`（表没有可用的按 id 更新/删除语义），`update` 为空时不发请求；文本列写成 `[{"type":"text","text":…}]`（见 `../data/pot.md`：裸字符串会被上游静默丢弃）。
+- **只追加**：业务写入只有 `addRecords`。`overwrite` 与 `remove` 直接抛 `INTERNAL_ERROR`（表没有可用的按 id 更新/删除语义），`update` 为空时不发请求；文本列写成 `[{"type":"text","text":…}]`（见 `../data/pot.md`：裸字符串会被上游静默丢弃）。
+- **回表后清理**：整表读完之后，服务会把「最后一次进岛」超过 `OPS_UPSTREAM_STALE_AFTER_MS`（默认 3 小时）的行、以及根本不是合法 pot 的行收集起来，用一次 `deleteRecords` 从表里删掉；它们同时被排除在缓存与所有答复之外。删除失败只记 warning，下一次回表再试（见 [存储设计](../data/store.md) §2）。
 - **不解析时间**：服务不解析日期文本，也不推算刷新时刻；两个时刻原样存取。
 - **凭据来自环境变量，并保存在 Redis 里**（`occult-pot:docs:credential`，见 [存储设计](../data/store.md)）：环境变量是种子，刷新出来的 token 写回 Redis 供重启后继续使用；`OPS_DOCS_CLIENT_SECRET` 永不入库。
 - **文档坐标由配置给出、由 `stores/upstream.ts` 分发**：`OPS_DOCS_FILE_ID`/`OPS_DOCS_SHEET_ID` 就是调用路径里的两个 id，没有 converter、没有子表回退，也不再有 `viewId`（记录接口不接受它）。启动时 store 做两件事：用「查子表列表」核对子表确实在这份文档里，再用 `userinfo` **校验凭据**；任一步失败就拒绝启动，而不是等到第一个请求。两件都通过后记一条 `Verified the Tencent Docs document`（带 `fileIdLength`/`sheetId`），凭据已过期或临近过期时再记一条 warning。
@@ -61,12 +62,12 @@
 | `src/services/upstream/interceptors/classify.ts` | 分类拦截器：缓冲响应体、套用下面的表，能用的原样回放、不能用的抛成 `AppError`；响应体读取助手（`parseBody`/`asRecord`/`asArray`/`describeBody`）与调用契约（`UpstreamCall`/`CallOptions`）也在这里 |
 | `src/services/upstream/interceptors/retry.ts` | 重试拦截器：undici 的 `interceptors.retry` 接上我们的策略 —— 读分类器挂在错误上的计划，按 `OPS_UPSTREAM_MAX_RETRIES` 决定重放 |
 | `src/services/upstream/throttle.ts` | 出站节流：唯一的 [`throttled-queue`](https://github.com/shaunpersad/throttled-queue)，按 `upstream` 配置给所有逻辑调用排节奏 |
-| `src/services/upstream/api/sheet.ts` | 子表端点：`getRecords`/`addRecords`/`getSheetList`，负责 URL 拼装、payload 关键字与取信封里的那一段；**自己持有自己的 client 实例** |
+| `src/services/upstream/api/sheet.ts` | 在线表端点：`getRecords`/`addRecords`/`deleteRecords`/`getSheetList`，负责 URL 拼装、payload 关键字与取信封里的那一段；**自己持有自己的 client 实例** |
 | `src/services/upstream/api/token.ts` | OAuth 端点：`getUserInfo`/`refreshAccessToken`（后者不带信封），同样是自己的 URL 助手与 client 实例 |
 | `src/stores/upstream.ts` | 身份与凭据：`useUpstreamStore()` 工厂 + 默认实例 `upstreamStore`，分发配置里的 `fileId`/`sheetId` 与凭据三元组，启动时核对子表并校验 token、按需刷新，自报核对结果与到期告警，并给出 `/readyz` 的就绪判断（见 §7） |
-| `src/stores/pot.ts` | pot 状态：`usePotStore()` 工厂 + 默认实例 `potStore`，翻页读整张表、把行映射成 `Pot`，并把读缓存与写透（先表后 Redis）都收在这里（见 [存储设计](../data/store.md)） |
-| `src/services/pot.ts` | pot 服务：路由要的三件事（列表、按 ID 取一个、接受一个），只做取用与「不存在」的判定 |
-| `src/services/redis.ts` | Redis 连接：唯一客户端（跟随配置、可注入、可关闭）；没有 `OPS_SERVER_REDIS_URL` 时改用进程内 mock 并告警，同时给 `rate-limit-redis` 提供命令发送器（mock 下把 `SCRIPT LOAD`/`EVALSHA` 翻译成 `EVAL`） |
+| `src/stores/pot.ts` | Redis 里的 pot 列表：`readPotState()`/`writePotState()`/`clearPotState()` 三个函数，只管键、形状与坏值；不知道表，也不知道 TTL |
+| `src/services/pot.ts` | pot 服务：**整合层**，也是唯一对外的入口。翻页读整张表、把行映射成 `Pot`、回表后清理过期/非法行、判断读缓存是否过期、写透（先表后 Redis）都在这里；对路由暴露 `listPots`/`getPot`/`createPot`/`potState`，另有一个 `usePotService()` 工厂给测试（见 [存储设计](../data/store.md)） |
+| `src/stores/redis.ts` | Redis 连接（stores 就是「操作 Redis 的服务」）：唯一客户端（跟随配置、可注入、可关闭）；没有 `OPS_SERVER_REDIS_URL` 时改用进程内 mock 并告警，同时给 `rate-limit-redis` 提供命令发送器（mock 下把 `SCRIPT LOAD`/`EVALSHA` 翻译成 `EVAL`） |
 | `src/stores/user.ts` | 调用者记录：`touchUser()` 写 `occult-pot:user:<ip>`（首次/最近出现、请求数、latest request id） |
 | `src/services/time.ts` | 唯一的时钟：`now()`；TTL、时间戳、凭据到期都由它读，测试 mock 这个模块来钉住时间 |
 
@@ -79,13 +80,13 @@
 
 **限速**
 
-| 变量                            | 默认值  | 说明                                 |
-| ------------------------------- | ------- | ------------------------------------ |
-| `OPS_UPSTREAM_MAX_PER_INTERVAL` | `120`   | 每个窗口允许的调用数                 |
-| `OPS_UPSTREAM_INTERVAL_MS`      | `60000` | 窗口长度                             |
-| `OPS_UPSTREAM_TIMEOUT_MS`       | `10000` | 单次尝试的超时（连接、响应头、正文） |
+| 变量                            | 默认值  | 说明                                       |
+| ------------------------------- | ------- | ------------------------------------------ |
+| `OPS_UPSTREAM_MAX_PER_INTERVAL` | `10`    | 每个窗口允许的调用数（读、写、删共用一份） |
+| `OPS_UPSTREAM_INTERVAL_MS`      | `3000`  | 窗口长度                                   |
+| `OPS_UPSTREAM_TIMEOUT_MS`       | `10000` | 单次尝试的超时（连接、响应头、正文）       |
 
-默认值 120/分钟留在官方上限（每 `fileID` 150 次/分钟、每 `openID` 300 次/分钟）之下；超时由连接池统一施加，每次尝试各自计时。
+默认值就是原版客户端脚本的节奏：**3 秒最多 10 次**。腾讯文档的调用次数按天限量（超级会员 20000 次/天），所以这个窗口是突发上限，不是日预算 —— 真正决定长期用量的是缓存 TTL 与清理频率。超时由连接池统一施加，每次尝试各自计时。
 
 **分类与重试**
 

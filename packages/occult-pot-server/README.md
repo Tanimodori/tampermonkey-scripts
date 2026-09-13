@@ -33,7 +33,7 @@ process.env  <  .env  <  .env.<mode>  <  .env.local  <  .env.<mode>.local  <  OP
 ```bash
 # 构建上下文是整个 monorepo（Dockerfile 要用仓库的 Rush/pnpm 装依赖），所以在仓库根目录执行：
 docker build -f packages/occult-pot-server/Dockerfile -t occult-pot-server .
-docker compose up -d --build      # 变量由 compose 注入：.env、.env.production（都可选）
+docker compose up -d --build      # 变量由 compose 注入：.env、.env.production.local（都可选）
 ```
 
 compose 里还有一个 `redis` 服务（`redis:7-alpine`，AOF 持久化 + 命名卷），server 通过 `OPS_SERVER_REDIS_URL=redis://:<密码>@redis:6379` 连它；密码从 shell 的 `REDIS_PASSWORD` 读（`REDIS_PASSWORD=… docker compose up -d`），compose 文件里不写明文（密码含 `@`/`:`/`#` 时需要百分号编码）。
@@ -46,15 +46,16 @@ compose 里还有一个 `redis` 服务（`redis:7-alpine`，AOF 持久化 + 命�
 
 所有配置都来自**一个合并后的环境**：变量名是配置路径加 `OPS_` 前缀（`server.port` → `OPS_SERVER_PORT`，`docs.fileId` → `OPS_DOCS_FILE_ID`，`upstream.cacheTtl` → `OPS_UPSTREAM_CACHE_TTL`），加上只从原生环境读取的 `OPS_ENV_PATH`。完整清单、默认值与注释以 [`.env.development`](.env.development) 为准；`loadConfig()` 在启动时读取一次并缓存，之后各模块用 `getConfig()` 取用；有缺失或非法的变量时会一次性列出全部问题并退出。各子文档只解释自己涉及的那几个变量。
 
-| 文件                       | 用途                                                                     | 是否入库   |
-| -------------------------- | ------------------------------------------------------------------------ | ---------- |
-| `.env.development`         | 模板：全 mock（Redis 用进程内 mock，上游 origin 指向本地），也是变量清单 | 是         |
-| `.env.test-redis(.local)`  | `test:redis` 的 Redis 地址；`.local` 放本机自己的地址                    | 示例是，否 |
-| `.env.test-api(.local)`    | `test:api` 的测试文档坐标与凭据；`.local` 放真实值                       | 示例是，否 |
-| `.env.production.local`    | 生产文档的坐标与凭据（本机跑 `dist/` 或 `OPS_ENV_PATH=.env.production`） | 否         |
-| `.env` / `.env.production` | 最底层默认值 / 部署值，compose 注入                                      | 否         |
+| 文件                      | 用途                                                                     | 是否入库   |
+| ------------------------- | ------------------------------------------------------------------------ | ---------- |
+| `.env.development`        | 模板：全 mock（Redis 用进程内 mock，上游 origin 指向本地），也是变量清单 | 是         |
+| `.env.test-redis(.local)` | `test:redis` 的 Redis 地址；`.local` 放本机自己的地址                    | 示例是，否 |
+| `.env.test-api(.local)`   | `test:api` 的测试文档坐标与凭据；`.local` 放真实值                       | 示例是，否 |
+| `.env.production`         | 生产变量模板（占位值，故意过不了校验），也是变量清单                     | 是         |
+| `.env.production.local`   | 生产文档的真实坐标与凭据；`production` 模式读在模板之上                  | 否         |
+| `.env`                    | compose 注入的部署值                                                     | 否         |
 
-compose 的 `env_file` 用 `required: false`（Docker Compose v2.24+），所以两个文件都可以不存在。
+compose 的 `env_file` 用 `required: false`（Docker Compose v2.24+），所以两个文件都可以不存在；容器只读 `.env` 与 `.env.production.local`，**不读入库的 `.env.production`**，这样模板里的占位值永远不会进容器。
 
 ## 开发
 

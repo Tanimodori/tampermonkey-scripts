@@ -102,6 +102,11 @@ body-parser 的失败由同一个错误处理器映射：
 - **回表失败但有缓存**：`Served a stale pot list; the sheet read failed`（带原因、`ageMs` 与罐子数）—— 读照常返回旧缓存；缓存为空时不会走到这里，失败会直接抛给调用方。
 - **写入成功但缓存没跟上**：`Appended a pot but could not update the cached list; dropped the cache`（带 `potId` 与原因）—— 行已经在表里，所以请求仍然成功，缓存键被删掉，下次读回表重建。
 
+回表之后的清理也在这里记两行：
+
+- **清理成功**：`Deleted unusable pots from the sheet`（info，带 `stale`/`unusable` 计数与 potId 列表）。
+- **清理失败**：`Could not delete unusable pots; they stay out of every answer until the next refresh`（warning，带行数与原因）—— 读照常返回留下的行，下一次回表再试。
+
 启动与凭据路径上的三处：
 
 - **启动期失败**：配置非法（列出全部问题后退出），或子表核对/凭据校验失败（记 error 后拒绝启动）—— 见 `../README.md` 的快速开始。

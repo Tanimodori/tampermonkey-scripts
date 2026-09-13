@@ -174,6 +174,10 @@ export interface TencentDocsMockState {
   pageSize: number | undefined;
   /** Every `addRecords` payload the service sent, in order. */
   added: Array<Record<string, unknown>>;
+  /** Every `deleteRecords` request's record ids, in order. */
+  deleted: string[];
+  /** Set to make `deleteRecords` answer with this business error instead. */
+  deleteFailure: MockFailure | undefined;
   /** Every intercepted request, for assertions about method/body/headers. */
   calls: Array<{ method: string; url: string; body: unknown; headers: Record<string, string> }>;
   /** Set to make the read fail with this business error instead. */
@@ -274,9 +278,11 @@ export function setupTencentDocsMock(
     records: options.records ?? [],
     pageSize: undefined,
     added: [],
+    deleted: [],
     calls: [],
     readFailure: undefined,
     writeFailure: undefined,
+    deleteFailure: undefined,
     sheets: options.sheets ?? [{ sheetID: SHEET_ID, title: '智能表1' }],
     sheetListFailure: undefined,
     userInfoFailure: undefined,
@@ -370,6 +376,15 @@ export function setupTencentDocsMock(
         });
       }
 
+      if (body !== undefined && 'deleteRecords' in body) {
+        if (state.deleteFailure !== undefined) return failureReply(state.deleteFailure);
+
+        const ids = (body.deleteRecords as { recordIDs: string[] }).recordIDs;
+        state.deleted.push(...ids);
+        state.records = state.records.filter((record) => !ids.includes(record.recordID));
+        return mockReply(200, { ret: 0, msg: 'Succeed' });
+      }
+
       if (body !== undefined && 'addRecords' in body) {
         if (state.writeFailure !== undefined) return failureReply(state.writeFailure);
 
@@ -396,9 +411,11 @@ export function setupTencentDocsMock(
     },
     reset: () => {
       state.added.length = 0;
+      state.deleted.length = 0;
       state.calls.length = 0;
       state.readFailure = undefined;
       state.writeFailure = undefined;
+      state.deleteFailure = undefined;
       state.pageSize = undefined;
       state.sheets = initialSheets;
       state.sheetListFailure = undefined;

@@ -4,7 +4,7 @@
 import { captureLogs, loadTestConfig, resetRedis, testEnv } from '@test/helpers.ts';
 import RedisMock from 'ioredis-mock';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { closeRedis, getRedis, redisCommandSender, setRedis } from '@/services/redis.ts';
+import { closeRedis, getRedis, redisCommandSender, setRedis } from '@/stores/redis.ts';
 
 /**
  * The Redis client is built from the configuration, like the undici pool, and everything that talks

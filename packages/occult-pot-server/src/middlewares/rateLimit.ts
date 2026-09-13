@@ -4,7 +4,7 @@ import { RedisStore } from 'rate-limit-redis';
 import type { SendCommandFn } from 'rate-limit-redis';
 import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
-import { redisCommandSender } from '@/services/redis.ts';
+import { redisCommandSender } from '@/stores/redis.ts';
 
 /** Where the callers' counters live; the same `user:` namespace `stores/user.ts` writes to. */
 const RATE_LIMIT_KEY_PREFIX = 'occult-pot:user:rate-limit:';

@@ -1,13 +1,13 @@
 import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { addRecords, getRecords, getSheetList } from '@/services/upstream/api/sheet.ts';
+import { addRecords, deleteRecords, getRecords, getSheetList } from '@/services/upstream/api/sheet.ts';
 import type { ClientOptions } from '@/services/upstream/client.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 
 /**
  * The sub-sheet endpoints: one function per Tencent Docs call, and what each puts on the wire.
  * Nothing here is about policy — retries and error classification belong to the interceptors, and
- * paging and row mapping belong to the store (`stores/pot.spec.ts`).
+ * paging, row mapping and the sweep belong to the pot service (`services/pot.spec.ts`).
  */
 
 const FILE_ID = '300000000$ExAmPlEfIlEiD';
@@ -83,6 +83,18 @@ describe('addRecords', () => {
 
     expect(docs.state.calls[0]?.body).toEqual({ addRecords: { records: [{ values: { 区服: '鸟', 地图: '北岛', ID: '60-0-4000ABCD' } }] } });
     expect(docs.state.added).toHaveLength(1);
+  });
+});
+
+describe('deleteRecords', () => {
+  it('sends the record ids under the documented keyword', async () => {
+    await useApi();
+
+    await deleteRecords(['rMW8vK', 'rABC12']);
+
+    expect(docs.state.calls[0]?.method).toBe('POST');
+    expect(docs.state.calls[0]?.body).toEqual({ deleteRecords: { recordIDs: ['rMW8vK', 'rABC12'] } });
+    expect(docs.state.calls[0]?.headers).toMatchObject({ 'access-token': 'test-access-token-value' });
   });
 });
 

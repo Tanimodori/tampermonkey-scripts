@@ -1,10 +1,10 @@
 import { getLogger } from '@logtape/logtape';
 import { createApp } from './app.ts';
-import { getConfig, loadConfig, loadEnv, publishEnv } from './config.ts';
+import { describeConfig, loadConfig, loadEnv, publishEnv, readLoggingOptions } from './config.ts';
 import { ConfigError } from './errors.ts';
-import { configureLogging, LOG_CATEGORY } from './logger.ts';
+import { configureLogging, flushLogging, LOG_CATEGORIES, LOG_CATEGORY } from './logger.ts';
 import { startServer } from './server.ts';
-import { getRedis } from './stores/redis.ts';
+import { getRedis, traced } from './stores/redis.ts';
 import { upstreamStore } from './stores/upstream.ts';
 
 async function main(): Promise<void> {
@@ -16,17 +16,46 @@ async function main(): Promise<void> {
     // Names the environment did not have yet reach `process.env` as well, for anything that reads it
     // directly.
     publishEnv(env);
-    loadConfig(env);
   } catch (error) {
-    const message = error instanceof ConfigError ? error.message : `Failed to load configuration: ${String(error)}`;
-    process.stderr.write(`${message}\n`);
+    // Nothing could be read, so not even the log destination is known: stderr is all there is.
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
     process.exitCode = 1;
     return;
   }
 
-  const config = getConfig();
+  // Logging comes before the configuration, from the same variables it reads and tolerantly: a
+  // configuration that fails validation still has to say *why*, and if it named a log file, that
+  // reason belongs in the file. A logging variable that does not parse simply reads as unset here —
+  // the strict load below is what reports it.
+  const logging = readLoggingOptions(env);
+  try {
+    configureLogging(logging.level, { file: logging.file, rotatingFile: logging.rotatingFile });
+  } catch (error) {
+    // A destination that cannot be opened is fatal and has nowhere else to go.
+    process.stderr.write(`Could not open the log destination: ${error instanceof Error ? error.message : String(error)}\n`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const configLogger = getLogger(LOG_CATEGORIES.config);
+  let config;
+  try {
+    config = loadConfig(env);
+  } catch (error) {
+    const problems = error instanceof ConfigError ? error.problems : [error instanceof Error ? error.message : String(error)];
+    // The log record is the durable copy; stderr is what a container's log collector shows even when
+    // the configured destination is the thing that is broken.
+    configLogger.error('Configuration is invalid', { problems });
+    process.stderr.write(`Invalid configuration:\n  - ${problems.join('\n  - ')}\n`);
+    flushLogging();
+    process.exitCode = 1;
+    return;
+  }
+
+  // What the service decided to run with, and which files answered — one record, no credentials.
+  configLogger.info('Configuration resolved', describeConfig(config));
+
   // The one place logging is set up: from here on every module reads the same logger by category.
-  configureLogging(config.server.logLevel);
   const logger = getLogger(LOG_CATEGORY);
   logger.info('Starting occult-pot-server', {
     host: config.server.host,
@@ -40,10 +69,11 @@ async function main(): Promise<void> {
   // Redis holds the state the service serves, so it is as much a startup dependency as the document
   // the state comes from — and a mock never fails this.
   try {
-    await getRedis().ping();
+    await traced('PING', [], getRedis().ping());
   } catch (error) {
     logger.error('Could not reach Redis; refusing to start', { error: error instanceof Error ? error.message : String(error) });
     await created.close().catch(() => undefined);
+    flushLogging();
     process.exitCode = 1;
     return;
   }
@@ -55,6 +85,7 @@ async function main(): Promise<void> {
       error: error instanceof Error ? error.message : String(error),
     });
     await created.close().catch(() => undefined);
+    flushLogging();
     process.exitCode = 1;
     return;
   }
@@ -70,6 +101,7 @@ async function main(): Promise<void> {
   } catch (error) {
     logger.error('Could not bind the HTTP listener', { error: error instanceof Error ? error.message : String(error) });
     await created.close().catch(() => undefined);
+    flushLogging();
     process.exitCode = 1;
     return;
   }
@@ -84,9 +116,12 @@ async function main(): Promise<void> {
     try {
       await running.close();
       logger.info('Shutdown complete');
+      // Before the process goes: a file sink buffers, and this is the record an operator looks for.
+      flushLogging();
       process.exit(0);
     } catch (error) {
       logger.error('Shutdown failed', { error: error instanceof Error ? error.message : String(error) });
+      flushLogging();
       process.exit(1);
     }
   };

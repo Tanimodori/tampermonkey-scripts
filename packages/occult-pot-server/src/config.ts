@@ -1,8 +1,11 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { parseEnv } from 'node:util';
 import { defu } from 'defu';
+import type { z } from 'zod';
 import { ConfigError } from './errors.ts';
-import { appConfigSchema, appEnvConfigSchema } from './validation/config.ts';
+import { LOG_LEVELS } from './logger.ts';
+import type { LogLevel } from './logger.ts';
+import { appConfigSchema, appEnvConfigSchema, logFileSchema, logRotatingFileSchema } from './validation/config.ts';
 import type { AppConfig, AppEnvConfig } from './validation/config.ts';
 
 /**
@@ -61,13 +64,30 @@ export function loadEnv(mode: string = MODE, native: NodeJS.ProcessEnv = process
 
   // Ascending priority: each source overrides the one before it, and `defu` keeps the first value.
   const named = extra === undefined ? [] : [extra, `${extra}.local`];
+  const candidates = [...envFilesFor(mode), ...named];
+  // Remembered for the startup log record: which of the candidates a run actually read is the first
+  // thing an operator needs when a value did not come out the way they expected.
+  readFrom = candidates.filter((file) => existsSync(file));
   // `defu` only walks plain objects and the live `process.env` is not one, so it is copied in: the
   // ambient environment really is the base layer, and not silently dropped.
-  const sources: NodeJS.ProcessEnv[] = [{ ...native }, ...envFilesFor(mode).map(readEnvFile), ...named.map(readEnvFile)];
+  const sources: NodeJS.ProcessEnv[] = [{ ...native }, ...candidates.map(readEnvFile)];
 
   let merged: NodeJS.ProcessEnv = {};
   for (const source of sources) merged = defu(source, merged);
   return merged;
+}
+
+/** The env files the last `loadEnv()` found. Names only: a file's contents never leave the loader. */
+let readFrom: readonly string[] = [];
+
+/**
+ * The environment files that existed on the last `loadEnv()`, least specific first.
+ *
+ * Only names, so this is safe to log: an operator can see which layer answered without the log line
+ * carrying a value from any of them.
+ */
+export function envSources(): readonly string[] {
+  return readFrom;
 }
 
 /**
@@ -131,6 +151,15 @@ const ENV_PATHS = [
   'upstream.timeoutMs',
   'upstream.cacheTtl',
   'upstream.staleAfterMs',
+  'logFile.path',
+  'logFile.lazy',
+  'logFile.bufferSize',
+  'logFile.flushIntervalMs',
+  'logRotatingFile.path',
+  'logRotatingFile.maxSize',
+  'logRotatingFile.maxFiles',
+  'logRotatingFile.bufferSize',
+  'logRotatingFile.flushIntervalMs',
 ] as const;
 
 /**
@@ -180,6 +209,10 @@ function getDefaultConfig(): AppEnvConfig {
       cacheTtl: 30_000,
       staleAfterMs: 3 * 60 * 60 * 1000,
     },
+    // No `path` in either group: stdout is the destination until a deployment names a file. The sink
+    // option defaults are the library's and are deliberately not restated here.
+    logFile: {},
+    logRotatingFile: {},
   };
 }
 
@@ -277,4 +310,109 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
 export function getConfig(): AppConfig {
   if (cached === undefined) throw new Error('Configuration has not been loaded; call loadConfig() first');
   return cached;
+}
+
+/**
+ * The configuration as one log record: what the service decided to run with, plus the env files that
+ * answered. It is what makes "配置解析" observable — every value here is one an operator set or should
+ * know about, and `null` where nothing was set.
+ *
+ * Nothing that could be a credential is included. The Redis address is the one value that has to be
+ * taken apart by hand, because its password rides *inside* the URL — no field-name redaction can see
+ * it there — so only the host, port, database and "was a password given" survive.
+ */
+export function describeConfig(config: AppConfig): Record<string, unknown> {
+  return {
+    mode: MODE,
+    sources: readFrom,
+    level: config.server.logLevel,
+    host: config.server.host,
+    port: config.server.port,
+    trustProxy: config.server.trustProxy,
+    corsOrigins: config.server.corsOrigins,
+    jsonBodyLimit: config.server.jsonBodyLimit,
+    rateLimit: { ...config.rateLimit },
+    upstream: { ...config.upstream },
+    redis: describeRedis(config.server.redisUrl),
+    log: describeLogDestination(config),
+  };
+}
+
+/** The Redis target as `{ configured, host, port, db, password }`; the URL never leaves this function. */
+function describeRedis(url: string | undefined): Record<string, unknown> {
+  if (url === undefined) return { configured: false };
+
+  try {
+    const parsed = new URL(url);
+    const database = parsed.pathname.replace(/^\//, '');
+    return {
+      configured: true,
+      host: parsed.hostname,
+      port: parsed.port === '' ? 6379 : Number(parsed.port),
+      db: database === '' ? 0 : Number(database),
+      password: parsed.password !== '',
+    };
+  } catch {
+    // The schema rejects an unparseable URL long before this runs; the shape still has to hold.
+    return { configured: true };
+  }
+}
+
+/** Which sink the log records end up in, with the destination the operator named. */
+function describeLogDestination(config: AppConfig): Record<string, unknown> {
+  const rotating = config.logRotatingFile;
+  if (rotating.path !== undefined) {
+    return {
+      sink: 'rotating-file',
+      path: rotating.path,
+      maxSize: rotating.maxSize ?? null,
+      maxFiles: rotating.maxFiles ?? null,
+    };
+  }
+
+  const file = config.logFile;
+  if (file.path !== undefined) return { sink: 'file', path: file.path, lazy: file.lazy ?? false };
+
+  return { sink: 'console' };
+}
+
+/** What the logging variables say, as `configureLogging` takes them. */
+export interface LoggingOptions {
+  readonly level: LogLevel;
+  readonly file?: z.infer<typeof logFileSchema>;
+  readonly rotatingFile?: z.infer<typeof logRotatingFileSchema>;
+}
+
+/**
+ * The logging variables, read *tolerantly* from an environment that may be invalid everywhere else.
+ *
+ * `loadConfig()` is strict and reports every problem at once; this exists for the moment before it.
+ * A configuration that fails validation still has to say why — and if the (broken) configuration
+ * named a log file, that reason belongs in the file. So each variable is parsed on its own and an
+ * unparseable one falls back to "not set" rather than throwing: a typo in, say, the document id can
+ * never stop the service from reporting the typo.
+ */
+export function readLoggingOptions(env: NodeJS.ProcessEnv = process.env): LoggingOptions {
+  const level = LOG_LEVELS.find((candidate) => candidate === readEnv(env, 'server.logLevel')) ?? 'info';
+  const file = readGroup(logFileSchema, 'logFile', env);
+  const rotatingFile = readGroup(logRotatingFileSchema, 'logRotatingFile', env);
+  return { level, file, rotatingFile };
+}
+
+/** One variable, with the empty string reading as absent — the same rule the strict path applies. */
+function readEnv(env: NodeJS.ProcessEnv, path: string): string | undefined {
+  const raw = env[envName(path)];
+  return raw === undefined || raw === '' ? undefined : raw;
+}
+
+/** Reads one two-level group out of the environment, or answers `undefined` when it does not parse. */
+function readGroup<Schema extends z.ZodTypeAny>(schema: Schema, group: string, env: NodeJS.ProcessEnv): z.output<Schema> | undefined {
+  const candidate: Record<string, string | undefined> = {};
+  for (const path of ENV_PATHS) {
+    const [owner, field] = path.split('.') as [string, string];
+    if (owner === group && field !== undefined) candidate[field] = readEnv(env, path);
+  }
+
+  const parsed = schema.safeParse(candidate);
+  return parsed.success ? parsed.data : undefined;
 }

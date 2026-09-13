@@ -31,12 +31,35 @@ process.env  <  .env  <  .env.<mode>  <  .env.local  <  .env.<mode>.local  <  OP
 ## 部署
 
 ```bash
-# 构建上下文是整个 monorepo（Dockerfile 要用仓库的 Rush/pnpm 装依赖），所以在仓库根目录执行：
-docker build -f packages/occult-pot-server/Dockerfile -t occult-pot-server .
-docker compose up -d --build      # 变量由 compose 注入：.env、.env.production.local（都可选）
+# 构建上下文是整个 monorepo（Dockerfile 要用仓库的 Rush/pnpm 装依赖），所以先到包目录：
+cd packages/occult-pot-server
+REDIS_PASSWORD=… docker compose up -d --build
 ```
 
-compose 里还有一个 `redis` 服务（`redis:7-alpine`，AOF 持久化 + 命名卷），server 通过 `OPS_SERVER_REDIS_URL=redis://:<密码>@redis:6379` 连它；密码从 shell 的 `REDIS_PASSWORD` 读（`REDIS_PASSWORD=… docker compose up -d`），compose 文件里不写明文（密码含 `@`/`:`/`#` 时需要百分号编码）。
+三个容器，一张 `occult-pot` 网络：
+
+| 服务 | 镜像 | 宿主端口 | 说明 |
+| --- | --- | --- | --- |
+| `nginx` | `nginx:1.30-alpine` | `${OPS_NGINX_PORT:-8080}:80` | **唯一对外暴露的端口**；反代到 app，配置是仓库里的 [`nginx/default.conf`](nginx/default.conf)（只读挂载） |
+| `occult-pot-server` | 本仓构建 | 不发布 | 只在这张网络里以 `occult-pot-server:3000` 可达 |
+| `redis` | `redis:7-alpine` | 不发布 | AOF 持久化 + 命名卷 |
+
+`OPS_NGINX_PORT` 的插值只读 shell 与**项目目录的 `.env`**（不是 `env_file` 里的 `.env.production*`）。改完 nginx 配置执行 `docker compose exec nginx nginx -s reload`，`docker compose exec nginx nginx -t` 先验语法。TLS 请在前面一层终止（云 LB、CDN 或宿主上的另一个反代）：这份 compose 只跑 HTTP，并把 `X-Forwarded-Proto` 透传下去。
+
+三个服务在同一张用户自建网络上按**服务名**互相解析；app 与 redis 一个宿主端口都不发布，所以宿主上已有的 6379/3000 不会冲突。注意 Linux 上宿主仍可经容器 IP 直连（bridge 的固有行为），因此 compose 把 `OPS_SERVER_TRUST_PROXY` 固定为 `1`（恰好一个 nginx 跳），应用的按 IP 限流据此取真实客户端地址。
+
+redis 的密码从 shell 的 `REDIS_PASSWORD` 读，compose 文件里不写明文（密码含 `@`/`:`/`#` 时需要百分号编码）。
+
+**日志**：完整说明见 [日志](docs/logging.md)。stdout 始终有全部记录（`docker compose logs occult-pot-server`）；生产模板另外让 rotating file sink 写到容器内 `/var/log/occult-pot-server/occult-pot-server.log`，compose 把它绑定挂载到仓库的 `./logs`：
+
+```bash
+ls -l logs/                                  # 宿主侧直接看
+docker compose exec occult-pot-server tail -f /var/log/occult-pot-server/occult-pot-server.log
+```
+
+运行用户是 uid 1000（镜像里的 `node`），绑定挂载的目录要它能写：原生 Linux 上 `mkdir -p logs && chown 1000:1000 logs` 一次即可，WSL/DrvFs 上通常不用。`logs/` 本身入库（放一个 `.gitkeep`），内容被 ignore。轮转文件名是 `occult-pot-server.log.1`、`.2`…，由 `OPS_LOG_ROTATING_FILE_MAX_SIZE` / `_MAX_FILES` 控制。
+
+nginx 用 `$request_id` 覆盖 `X-Request-Id`，所以 `docker compose logs nginx` 里的 `requestId` 与 app 日志（以及上面的文件）是同一个，两边可以对着追一次请求。
 
 镜像是多阶段的 `node:24-slim` 构建：运行时依赖（express、helmet、cors、express-rate-limit、body-parser、morgan、defu、zod、undici、ioredis、rate-limit-redis）都被 vite 打进自包含的 `dist/`，所以运行阶段只带 `dist/`，以非 root 的 `node` 用户运行，健康检查打 `/healthz`。收到 `SIGTERM` 会优雅停机：停止接受连接、等在途请求结束，然后退出；写入都在请求路径上，没有需要另外排空的队列。
 
@@ -51,11 +74,15 @@ compose 里还有一个 `redis` 服务（`redis:7-alpine`，AOF 持久化 + 命�
 | `.env.development`        | 模板：全 mock（Redis 用进程内 mock，上游 origin 指向本地），也是变量清单 | 是         |
 | `.env.test-redis(.local)` | `test:redis` 的 Redis 地址；`.local` 放本机自己的地址                    | 示例是，否 |
 | `.env.test-api(.local)`   | `test:api` 的测试文档坐标与凭据；`.local` 放真实值                       | 示例是，否 |
-| `.env.production`         | 生产变量模板（占位值，故意过不了校验），也是变量清单                     | 是         |
+| `.env.production`         | 生产变量模板（占位值，故意过不了校验），**会被 compose 读取**（中间层）  | 是         |
 | `.env.production.local`   | 生产文档的真实坐标与凭据；`production` 模式读在模板之上                  | 否         |
 | `.env`                    | compose 注入的部署值                                                     | 否         |
 
-compose 的 `env_file` 用 `required: false`（Docker Compose v2.24+），所以两个文件都可以不存在；容器只读 `.env` 与 `.env.production.local`，**不读入库的 `.env.production`**，这样模板里的占位值永远不会进容器。
+compose 的 `env_file` 按顺序层叠——`.env` → `.env.production` → `.env.production.local`，后面的覆盖前面的——三项都是 `required: false`（Docker Compose v2.24+），所以缺哪个都行。只填 `.env.production`（没有 `.local`）时，模板里的占位值就是它拿到的值，于是启动即失败：这是故意的，配置错误会被一次性列出来，并写进 stderr 与（配了的话）日志文件。`environment:` 里由 compose 固定的三项（`OPS_SERVER_PORT`、`OPS_SERVER_TRUST_PROXY`、`OPS_SERVER_REDIS_URL`）优先于任何 env 文件。
+
+**`$` 不会被吃掉**：`env_file` 三项都写了 `format: raw`（实测：不加就会被 compose 插值，文档 id 的 `$` 连同后半段一起消失）。raw 表示"值按原样传给容器"，与宿主机上应用自己读这个文件的结果一致，所以文档 id 就按平台的写法（`300000000$…`）填。代价是这三份文件不能用 dotenv 的糖：值后面跟 ` # 注释` 会把注释算进值里，值两边的引号也会被保留。这条要求依赖 Compose ≥ 2.30。
+
+镜像构建的忽略文件是 `Dockerfile.dockerignore`（BuildKit 按 Dockerfile 命名的约定）：构建上下文是仓库根，那里没有 `.dockerignore`，所以旧名字从来没生效过；改名前上下文里带着 `common/temp`（本机约 967MB）与 `.env*`。
 
 ## 开发
 
@@ -98,4 +125,5 @@ rushx test:api
 | [API 端点](docs/api/endpoints.md)      | 端点和请求/响应约定、写入的同步落表语义、入站限流                             |
 | [错误处理](docs/api/errors.md)         | 错误信封、错误码与状态码、校验失败结构、日志策略                              |
 | [与腾讯文档通讯](docs/api/upstream.md) | 文档坐标与协议、既有做法与现做法、节流与重试、token 解析与更新                |
+| [日志](docs/logging.md)                | 格式与去处、分类与级别、七类记录的覆盖面、脱敏、缓冲与退出前 flush            |
 | [外部文档](docs/reference.md)          | 腾讯文档开放平台、依赖库与工具链的链接                                        |

@@ -29,7 +29,8 @@ Redis 本身的文档见 [redis.io/docs](https://redis.io/docs/latest/)，命令
 | --- | --- |
 | [express](https://expressjs.com) | HTTP 服务与路由 |
 | [@logtape/logtape](https://logtape.org) | 日志：`configure()` + `getLogger()`（provider/consumer）、JSON Lines sink、meta 诊断 |
-| [@logtape/redaction](https://logtape.org/manual/redaction) | 按字段名脱敏日志里的凭据 |
+| [@logtape/file](https://logtape.org/sinks/file) | 文件 sink 与轮转文件 sink（`getFileSink()` / `getRotatingFileSink()`），以及 `disposeSync()` 在退出前刷盘 |
+| [@logtape/redaction](https://logtape.org/manual/redaction) | 按字段名脱敏日志里的凭据（每个 sink 各套一层） |
 | [zod](https://zod.dev) | 配置与请求校验 |
 | [undici](https://undici.nodejs.org) | 出站连接池与超时，以及注入其中的拦截器（[`interceptors.retry`](https://undici.nodejs.org/api/Interceptors) 负责重试、一个自写的分类拦截器负责错误解析）；测试用它的 [`MockAgent`](https://undici.nodejs.org/#/docs/api/MockAgent) 拦截上游 |
 | [throttled-queue](https://github.com/shaunpersad/throttled-queue) | 出站调用的节流（只排节奏，重试归 undici 的拦截器） |
@@ -43,7 +44,22 @@ Redis 本身的文档见 [redis.io/docs](https://redis.io/docs/latest/)，命令
 | [ioredis-mock](https://github.com/stipsan/ioredis-mock) | 没有 `OPS_SERVER_REDIS_URL` 时的进程内 Redis（同样的命令面，进程退出即消失） |
 | [rate-limit-redis](https://github.com/express-rate-limit/rate-limit-redis) | `express-rate-limit` 的 Redis store，让限流窗口跨实例 |
 
-## 3. 工具链
+## 3. 部署与反向代理
+
+- [NGINX Reverse Proxy 指南](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/)（转发头、缓冲）
+- [`ngx_http_proxy_module`](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)（`proxy_set_header`、超时、`proxy_http_version`）
+- [`ngx_http_upstream_module`](https://nginx.org/en/docs/http/ngx_http_upstream_module.html)（`keepalive`、`server … resolve` 与 `zone`）
+- [`ngx_http_limit_req_module`](https://nginx.org/en/docs/http/ngx_http_limit_req_module.html)（`limit_req_zone`、空 key 不计入、`limit_req_status`）
+- [`ngx_http_gzip_module`](https://nginx.org/en/docs/http/ngx_http_gzip_module.html)（`gzip_proxied`、`gzip_min_length`）
+- [nginx 命令行参数](https://nginx.org/en/docs/switches.html)（`-t`、`-T`、`-s reload`）
+- [官方 nginx 镜像](https://hub.docker.com/_/nginx)（只读挂载配置、`/etc/nginx/templates` 的 envsubst、read-only 模式要挂的目录）
+- [Docker Compose 网络](https://docs.docker.com/compose/how-tos/networking/)（用户自建网络按服务名解析、容器重建换 IP）
+- [Docker 容器网络概览](https://docs.docker.com/manuals/engine/network/)（bridge 上哪些端口宿主可见、内嵌 DNS 是 `127.0.0.11`）
+- [构建上下文与 `.dockerignore`](https://docs.docker.com/manuals/build/concepts/context/)（忽略文件按 Dockerfile 命名的约定、`**/` 匹配）
+- [Express behind proxies](https://expressjs.com/en/guide/behind-proxies.html)（`trust proxy` 的跳数语义）
+- [LogTape 文件 sink](https://logtape.org/sinks/file)（缓冲、轮转、`flushInterval`）
+
+## 4. 工具链
 
 | 工具 | 用途 |
 | --- | --- |
@@ -54,9 +70,10 @@ Redis 本身的文档见 [redis.io/docs](https://redis.io/docs/latest/)，命令
 | [cross-env](https://github.com/kentcdodds/cross-env) | `test:redis` / `test:api` 任务跨平台地提供 `OPS_ENV_PATH` |
 | [TypeScript](https://www.typescriptlang.org) | 类型检查 |
 
-## 4. 本仓库内的文档
+## 5. 本仓库内的文档
 
 - [仓库根 README](../../../README.md)（Packages 一览）
 - [occult-pot-server README](../README.md)
 - [Pot 数据](data/pot.md) · [存储设计](data/store.md)
 - [API 端点](api/endpoints.md) · [错误处理](api/errors.md) · [与腾讯文档通讯](api/upstream.md)
+- [日志](logging.md)

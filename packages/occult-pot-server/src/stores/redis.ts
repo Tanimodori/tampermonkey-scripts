@@ -3,7 +3,9 @@ import { getLogger } from '@logtape/logtape';
 import Redis from 'ioredis';
 import RedisMock from 'ioredis-mock';
 import { getConfig } from '@/config.ts';
-import { LOG_CATEGORY } from '@/logger.ts';
+import { LOG_CATEGORIES } from '@/logger.ts';
+import type { LogLevel } from '@/logger.ts';
+import { now } from '@/services/time.ts';
 import type { AppConfig } from '@/validation/index.ts';
 
 /**
@@ -75,7 +77,10 @@ export async function closeRedis(): Promise<void> {
 function buildMock(): Redis {
   if (process.env.NODE_ENV === 'production' && !warnedAboutMock) {
     warnedAboutMock = true;
-    getLogger(LOG_CATEGORY).warning('No OPS_SERVER_REDIS_URL is set, so state lives in an in-process Redis and nothing written here survives the process', {});
+    getLogger(LOG_CATEGORIES.redis).warning(
+      'No OPS_SERVER_REDIS_URL is set, so state lives in an in-process Redis and nothing written here survives the process',
+      {},
+    );
   }
   return new RedisMock();
 }
@@ -85,6 +90,47 @@ function buildServer(config: AppConfig): Redis {
   if (url === undefined) throw new Error('No OPS_SERVER_REDIS_URL is set; the mock is built instead');
   // Credentials, when the server wants them, are part of the URL: `redis://user:password@host:port/db`.
   return new Redis(url);
+}
+
+// ---------------------------------------------------------------------------
+// Every command, recorded: what ran, which key it touched, how long it took.
+// ---------------------------------------------------------------------------
+
+/** The two levels a successful command is recorded at: the service's own at `info`, the limiter's at `debug`. */
+type CommandLevel = Extract<LogLevel, 'info' | 'debug'>;
+
+/**
+ * Runs one Redis command and records it.
+ *
+ * The command is handed in as the promise the call already is (`traced('GET', [KEY],redis.get(KEY))`),
+ * so a call site gains a wrapper and no restructuring. The keys are recorded; a *value* never is —
+ * the cached pot list and the caller records are not something a log line should carry.
+ */
+export function traced<T>(command: string, keys: readonly string[], pending: Promise<T>): Promise<T> {
+  return traceCommand('info', command, keys, pending);
+}
+
+/**
+ * The one place a command is timed and reported.
+ *
+ * `level` is what separates the service's own commands — reading and writing the cached list, the
+ * credential, a caller's record, which an operator wants at the configured level — from the limiter's
+ * bookkeeping, which is one or two commands per request and belongs at `debug`.
+ */
+async function traceCommand<T>(level: CommandLevel, command: string, keys: readonly string[], pending: Promise<T>): Promise<T> {
+  const startedAt = now();
+  const logger = getLogger(LOG_CATEGORIES.redis);
+  try {
+    const answer = await pending;
+    const fields = { command, keys, durationMs: now() - startedAt };
+    if (level === 'debug') logger.debug('Redis command answered', fields);
+    else logger.info('Redis command answered', fields);
+    return answer;
+  } catch (error) {
+    // A failed command is always worth recording, whatever level the successes are kept at.
+    logger.warning('Redis command failed', { command, keys, durationMs: now() - startedAt, reason: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -101,10 +147,16 @@ const mockScripts = new Map<string, string>();
  * implement — `SCRIPT LOAD` and `EVALSHA`, which the library uses to keep its increment atomic —
  * translated into the `EVAL` the mock does implement. The Lua itself is unchanged, so the counter
  * behaves the same way on both.
+ *
+ * These commands are the limiter's own bookkeeping rather than something the service asked for, so
+ * they are recorded at `debug`; a caller actually being refused is already a `Request rejected`
+ * record from the error handler.
  */
 export function redisCommandSender(): (...args: string[]) => Promise<unknown> {
   const redis = getRedis();
-  if (!usesMock(getConfig())) return (...args: string[]) => redis.call(args[0] ?? '', ...args.slice(1));
+  const trace = <T>(command: string, pending: Promise<T>): Promise<T> => traceCommand('debug', command, [], pending);
+
+  if (!usesMock(getConfig())) return (...args: string[]) => trace((args[0] ?? '').toUpperCase(), redis.call(args[0] ?? '', ...args.slice(1)));
 
   return async (...args: string[]): Promise<unknown> => {
     const [command, ...rest] = args;
@@ -114,17 +166,17 @@ export function redisCommandSender(): (...args: string[]) => Promise<unknown> {
       const lua = rest[1] ?? '';
       const sha = createHash('sha1').update(lua).digest('hex');
       mockScripts.set(sha, lua);
-      return sha;
+      return trace(name, Promise.resolve(sha));
     }
 
     if (name === 'EVALSHA') {
       const [sha, numKeys, ...keysAndArgs] = rest;
       const lua = mockScripts.get(sha ?? '');
       if (lua === undefined) throw new Error(`NOSCRIPT No matching script. Please use EVAL.`);
-      return mockCommand(redis, 'EVAL', [lua, numKeys ?? '0', ...keysAndArgs]);
+      return trace(name, mockCommand(redis, 'EVAL', [lua, numKeys ?? '0', ...keysAndArgs]));
     }
 
-    return mockCommand(redis, name, rest);
+    return trace(name, mockCommand(redis, name, rest));
   };
 }
 

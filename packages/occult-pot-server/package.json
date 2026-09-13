@@ -30,6 +30,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@logtape/file": "^2.3.4",
     "@logtape/logtape": "^2.3.4",
     "@logtape/redaction": "^2.3.4",
     "body-parser": "^2.3.0",

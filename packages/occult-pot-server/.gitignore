@@ -7,3 +7,7 @@ dist/
 .env.production.local
 rush-logs/
 *.tsbuildinfo
+# The container's log directory is a compose bind mount: the directory itself is tracked (so the
+# mount target exists with sane ownership), what lands in it is not.
+logs/*
+!logs/.gitkeep

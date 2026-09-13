@@ -1,7 +1,7 @@
 import { getLogger } from '@logtape/logtape';
 import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
-import { LOG_CATEGORY } from '@/logger.ts';
+import { LOG_CATEGORIES } from '@/logger.ts';
 import { now } from '@/services/time.ts';
 import { addRecords, deleteRecords, getRecords } from '@/services/upstream/api/sheet.ts';
 import type { RawRecordDto } from '@/services/upstream/api/sheet.ts';
@@ -138,7 +138,7 @@ export function usePotService(): PotService {
     const doomed = [...staleRows, ...unusableRows];
     if (doomed.length === 0) return kept;
 
-    const logger = getLogger(LOG_CATEGORY);
+    const logger = getLogger(LOG_CATEGORIES.pots);
     try {
       await deleteRecords(doomed.map((row) => row.recordID));
       logger.info('Deleted unusable pots from the sheet', {
@@ -149,6 +149,9 @@ export function usePotService(): PotService {
     } catch (error) {
       logger.warning('Could not delete unusable pots; they stay out of every answer until the next refresh', {
         rows: doomed.length,
+        // Which rows were meant to go: without this the next attempt cannot tell whether the same
+        // ones are stuck, or new ones have joined them.
+        potIds: doomed.map((row) => row.pot.potId).filter((potId) => potId !== ''),
         reason: error instanceof Error ? error.message : String(error),
       });
     }
@@ -176,7 +179,7 @@ export function usePotService(): PotService {
         data = await sweep(await readRows(), at);
       } catch (error) {
         if (cached.updateTime === 0) throw error;
-        getLogger(LOG_CATEGORY).warning('Served a stale pot list; the sheet read failed', {
+        getLogger(LOG_CATEGORIES.pots).warning('Served a stale pot list; the sheet read failed', {
           reason: error instanceof Error ? error.message : String(error),
           ageMs: at - cached.updateTime,
           pots: cached.data.length,
@@ -231,7 +234,7 @@ export function usePotService(): PotService {
       } catch (error) {
         // The row is in the sheet, so this is not a failed write. Dropping the cached list is what
         // makes the next read rebuild it from the authority.
-        getLogger(LOG_CATEGORY).warning('Appended a pot but could not update the cached list; dropped the cache', {
+        getLogger(LOG_CATEGORIES.pots).warning('Appended a pot but could not update the cached list; dropped the cache', {
           potId: pot.potId,
           reason: error instanceof Error ? error.message : String(error),
         });

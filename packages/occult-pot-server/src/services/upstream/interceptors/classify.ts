@@ -1,7 +1,9 @@
+import { getLogger } from '@logtape/logtape';
 import type { Dispatcher } from 'undici';
 import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
 import type { AppErrorOptions, ErrorCode } from '@/errors.ts';
+import { LOG_CATEGORIES } from '@/logger.ts';
 import { now } from '@/services/time.ts';
 
 /**
@@ -109,15 +111,26 @@ export function classify(dispatch: Dispatcher.Dispatch): Dispatcher.Dispatch {
 /**
  * Buffers one response so it can be classified before anything else reads it, then either reports
  * the failure upwards or replays the response — headers, body and end — to the next handler.
+ *
+ * Every attempt is also the one record an operator gets about this call: what was asked, how long it
+ * took, what came back. A retried attempt passes through here again, so a call that took three tries
+ * leaves three records. Only the envelope's business code and the classifier's verdict are recorded —
+ * never the body itself (a read's body is the whole sheet) and never a request header (the credential
+ * travels in one).
  */
 function classifier(handler: Dispatcher.DispatchHandler, call: CallContext): Dispatcher.DispatchHandler {
+  const logger = getLogger(LOG_CATEGORIES.upstream);
   let status = 0;
   let statusMessage: string | undefined;
   let headers: ResponseHeaders = {};
   let chunks: Buffer[] = [];
+  let startedAt = now();
 
   return {
-    onRequestStart: (controller, context) => handler.onRequestStart?.(controller, context),
+    onRequestStart: (controller, context) => {
+      startedAt = now();
+      handler.onRequestStart?.(controller, context);
+    },
     onRequestUpgrade: (controller, statusCode, responseHeaders, socket) => handler.onRequestUpgrade?.(controller, statusCode, responseHeaders, socket),
     onResponseStart: (_controller, statusCode, responseHeaders, message) => {
       status = statusCode;
@@ -129,20 +142,46 @@ function classifier(handler: Dispatcher.DispatchHandler, call: CallContext): Dis
       chunks.push(chunk);
     },
     onResponseEnd: (controller, trailers) => {
-      const failure = classifyResponse({ status, body: parseBody(Buffer.concat(chunks).toString('utf8')), headers }, call);
+      const body = parseBody(Buffer.concat(chunks).toString('utf8'));
+      const durationMs = now() - startedAt;
+      const failure = classifyResponse({ status, body, headers }, call);
       if (failure !== undefined) {
+        logger.warning('Tencent Docs call failed', {
+          ...describeCall(call),
+          status,
+          ret: retOf(body),
+          code: failure.code,
+          retryable: failure.plan.retryable,
+          durationMs,
+        });
         handler.onResponseError?.(controller, failure);
         return;
       }
 
+      logger.info('Tencent Docs call answered', { ...describeCall(call), status, ret: retOf(body), durationMs });
       handler.onResponseStart?.(controller, status, headers, statusMessage);
       for (const chunk of chunks) handler.onResponseData?.(controller, chunk);
       handler.onResponseEnd?.(controller, trailers);
     },
     onResponseError: (controller, error) => {
-      handler.onResponseError?.(controller, error instanceof UpstreamError ? error : transportFailure(error, call));
+      const failure = error instanceof UpstreamError ? error : transportFailure(error, call);
+      // The upstream never answered (or answered with something unreadable): the classifier's failure
+      // already carries the reason, and no body was read at all.
+      logger.warning('Tencent Docs call could not be sent', { ...describeCall(call), durationMs: now() - startedAt, reason: failure.message });
+      handler.onResponseError?.(controller, failure);
     },
   };
+}
+
+/** The words every record about a call carries: what was asked for, and where. */
+function describeCall(call: CallContext): Record<string, unknown> {
+  return { operation: call.operation ?? 'request', method: call.method, path: call.path };
+}
+
+/** The smartsheet envelope's business code, when the response carried one. */
+function retOf(body: unknown): number | null {
+  const ret = asRecord(body).ret;
+  return typeof ret === 'number' ? ret : null;
 }
 
 /** The response's `Retry-After` in milliseconds, when it carries a usable one. */

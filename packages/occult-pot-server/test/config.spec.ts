@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { envFilesFor, getConfig, loadConfig, loadEnv, publishEnv } from '@/config.ts';
+import { describeConfig, envFilesFor, envSources, getConfig, loadConfig, loadEnv, publishEnv, readLoggingOptions } from '@/config.ts';
 import { ConfigError } from '@/errors.ts';
 import { appConfigSchema, appEnvConfigSchema } from '@/validation/config.ts';
 
@@ -140,6 +140,8 @@ describe('loadConfig and getConfig', () => {
         OPS_UPSTREAM_RETRY_BACKOFF_MS: '10',
         OPS_UPSTREAM_TIMEOUT_MS: '2000',
         OPS_SERVER_REDIS_URL: 'redis://cache.example:6379/1',
+        OPS_LOG_ROTATING_FILE_PATH: './logs/app.log',
+        OPS_LOG_ROTATING_FILE_MAX_SIZE: '2048',
       }),
     );
 
@@ -156,6 +158,8 @@ describe('loadConfig and getConfig', () => {
       docs: { tokenExpiryWarnMs: 60_000 },
       rateLimit: { ipWindowMs: 1000, ipMax: 5, writeMax: 2 },
       upstream: { maxPerInterval: 7, intervalMs: 2000, maxRetries: 3, retryBackoffMs: 10, timeoutMs: 2000, cacheTtl: 1000, staleAfterMs: 7_200_000 },
+      // A camelCase segment in a two-level group: `logRotatingFile.maxSize` → `OPS_LOG_ROTATING_FILE_MAX_SIZE`.
+      logRotatingFile: { path: './logs/app.log', maxSize: 2048 },
     });
   });
 
@@ -382,5 +386,114 @@ describe('loadEnv', () => {
         expect(config.server.redisUrl).toBeUndefined();
       },
     );
+  });
+});
+
+describe('the logging configuration', () => {
+  it('leaves both destinations off when the environment names none', () => {
+    const config = loadConfig(baseEnv());
+
+    expect(config.logFile).toEqual({});
+    expect(config.logRotatingFile).toEqual({});
+    expect(describeConfig(config).log).toEqual({ sink: 'console' });
+  });
+
+  it('reads the plain file sink and its options from their variables', () => {
+    const config = loadConfig(
+      baseEnv({
+        OPS_LOG_FILE_PATH: './logs/app.log',
+        OPS_LOG_FILE_LAZY: 'true',
+        OPS_LOG_FILE_BUFFER_SIZE: '0',
+        OPS_LOG_FILE_FLUSH_INTERVAL_MS: '500',
+      }),
+    );
+
+    expect(config.logFile).toEqual({ path: './logs/app.log', lazy: true, bufferSize: 0, flushIntervalMs: 500 });
+    expect(describeConfig(config).log).toEqual({ sink: 'file', path: './logs/app.log', lazy: true });
+  });
+
+  it('reads the rotating file sink, including the size bound', () => {
+    const config = loadConfig(
+      baseEnv({
+        OPS_LOG_ROTATING_FILE_PATH: '/var/log/occult-pot-server/app.log',
+        OPS_LOG_ROTATING_FILE_MAX_SIZE: '1048576',
+        OPS_LOG_ROTATING_FILE_MAX_FILES: '5',
+      }),
+    );
+
+    expect(config.logRotatingFile).toEqual({ path: '/var/log/occult-pot-server/app.log', maxSize: 1_048_576, maxFiles: 5 });
+    expect(describeConfig(config).log).toMatchObject({ sink: 'rotating-file', maxSize: 1_048_576, maxFiles: 5 });
+  });
+
+  it('refuses two destinations at once', () => {
+    expect(() => loadConfig(baseEnv({ OPS_LOG_FILE_PATH: 'a.log', OPS_LOG_ROTATING_FILE_PATH: 'b.log' }))).toThrow(
+      expect.objectContaining({
+        problems: expect.arrayContaining([expect.stringContaining('OPS_LOG_ROTATING_FILE_PATH must not be set when OPS_LOG_FILE_PATH is')]),
+      }) as Error,
+    );
+  });
+
+  it('refuses an option whose destination is missing', () => {
+    expect(() => loadConfig(baseEnv({ OPS_LOG_FILE_BUFFER_SIZE: '0' }))).toThrow(
+      expect.objectContaining({ problems: ['OPS_LOG_FILE_BUFFER_SIZE is set but OPS_LOG_FILE_PATH is not'] }) as Error,
+    );
+    expect(() => loadConfig(baseEnv({ OPS_LOG_ROTATING_FILE_MAX_FILES: '3' }))).toThrow(
+      expect.objectContaining({ problems: ['OPS_LOG_ROTATING_FILE_MAX_FILES is set but OPS_LOG_ROTATING_FILE_PATH is not'] }) as Error,
+    );
+  });
+
+  it('bounds the rotating options the way the library does', () => {
+    const withMaxFiles = (value: string): unknown => loadConfig(baseEnv({ OPS_LOG_ROTATING_FILE_PATH: 'a.log', OPS_LOG_ROTATING_FILE_MAX_FILES: value }));
+
+    expect(() => withMaxFiles('1001')).toThrow(
+      expect.objectContaining({ problems: ['OPS_LOG_ROTATING_FILE_MAX_FILES must be <= 1000, received 1001'] }) as Error,
+    );
+    expect(() => withMaxFiles('0')).toThrow(expect.objectContaining({ problems: ['OPS_LOG_ROTATING_FILE_MAX_FILES must be >= 1, received 0'] }) as Error);
+    expect(() => withMaxFiles('many')).toThrow(
+      expect.objectContaining({ problems: ['OPS_LOG_ROTATING_FILE_MAX_FILES must be an integer, received "many"'] }) as Error,
+    );
+  });
+
+  it('refuses a switch that is not a switch', () => {
+    expect(() => loadConfig(baseEnv({ OPS_LOG_FILE_PATH: 'a.log', OPS_LOG_FILE_LAZY: 'maybe' }))).toThrow(
+      expect.objectContaining({ problems: ['OPS_LOG_FILE_LAZY must be true or false'] }) as Error,
+    );
+  });
+
+  it('describes the resolved configuration without carrying the Redis password', () => {
+    const config = loadConfig(baseEnv({ OPS_SERVER_REDIS_URL: 'redis://:hunter2@cache.example:6380/3' }));
+    const described = describeConfig(config);
+
+    expect(described.redis).toEqual({ configured: true, host: 'cache.example', port: 6380, db: 3, password: true });
+    expect(JSON.stringify(described)).not.toContain('hunter2');
+    // Everything an operator needs to see at a glance, and nothing that is a credential.
+    expect(described).toMatchObject({ level: 'info', port: 3000, host: '0.0.0.0', rateLimit: { ipMax: 120 }, upstream: { maxPerInterval: 10 } });
+  });
+
+  it('names the env files that existed, and only those', () => {
+    withEnvFiles({ '.env': 'A=a1\n', '.env.test': 'B=b2\n' }, (dir) => {
+      const named = join(dir, 'custom.env');
+      writeFileSync(named, 'C=c3\n', 'utf8');
+
+      inDirectory(dir, () => loadEnv('test', {}));
+      expect(envSources()).toEqual(['.env', '.env.test']);
+
+      inDirectory(dir, () => loadEnv('test', { OPS_ENV_PATH: named }));
+      expect(envSources()).toEqual(['.env', '.env.test', named]);
+    });
+  });
+
+  it('reads the logging variables tolerantly, so a broken configuration can still say why', () => {
+    // The strict path rejects the whole group; the bootstrap path keeps what parsed and drops the rest.
+    expect(readLoggingOptions({ OPS_SERVER_LOG_LEVEL: 'warning', OPS_LOG_FILE_PATH: 'a.log', OPS_LOG_FILE_BUFFER_SIZE: '0' })).toEqual({
+      level: 'warning',
+      file: { path: 'a.log', bufferSize: 0 },
+      rotatingFile: {},
+    });
+    expect(readLoggingOptions({ OPS_SERVER_LOG_LEVEL: 'nonsense', OPS_LOG_FILE_PATH: 'a.log', OPS_LOG_FILE_LAZY: 'maybe' })).toEqual({
+      level: 'info',
+      file: undefined,
+      rotatingFile: {},
+    });
   });
 });

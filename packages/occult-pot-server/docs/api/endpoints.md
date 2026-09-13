@@ -173,3 +173,5 @@ curl -X POST http://127.0.0.1:3000/v1/pots \
 被限流时返回 `429` `ERR_RATE_LIMITED`（错误结构见 `errors.md`），并带 `RateLimit-*` 与 `Retry-After` 响应头。
 
 `OPS_SERVER_TRUST_PROXY` 必须与部署拓扑一致：躲在没配置好的反向代理后面时，所有请求共用代理的 IP，限流既过严又无用。
+
+交付的 compose 里 nginx 在前面还有一道**更松**的 `limit_req` 闸（每 IP 20r/s，POST 2r/s，burst 之上才拒），它只挡洪水，应用这两个限流器才是实际生效的那一层；被 nginx 拒掉同样是 429 与 `ERR_RATE_LIMITED` 信封，但没有 `RateLimit-*`（那一层不维护窗口），所以客户端应按 `code` 判断而不是按响应头。compose 同时把 `OPS_SERVER_TRUST_PROXY` 固定为 `1`（恰好一个 nginx 跳，且 app 自己的端口不发布），应用的 `req.ip` 因此仍是真实客户端地址。

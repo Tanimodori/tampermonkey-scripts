@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { LOG_LEVELS } from '@/logger.ts';
-import { booleanOrNumberFromString, integerFrom, oneOf, originListFromString } from './utils.ts';
+import { booleanFromString, booleanOrNumberFromString, integerFrom, oneOf, originListFromString } from './utils.ts';
 
 /**
  * The configuration, as schemas and types — nothing else.
@@ -90,13 +90,91 @@ const upstreamSchema = z.object({
   staleAfterMs: integerFrom({ min: 0 }),
 });
 
-/** A complete configuration: what `loadConfig()` hands out. */
-export const appConfigSchema = z.object({
-  server: serverSchema,
-  docs: docsSchema,
-  rateLimit: rateLimitSchema,
-  upstream: upstreamSchema,
+/** A log file that must be named; the sink is off when it is left out. */
+function optionalPath(error = 'must be a file path'): z.ZodType<string | undefined> {
+  return z
+    .string()
+    .optional()
+    .refine((value) => value === undefined || value.trim().length > 0, { error }) as unknown as z.ZodType<string | undefined>;
+}
+
+/**
+ * The plain file sink: one file, appended to, no rotation.
+ *
+ * Only `path` turns it on. The option defaults (buffer size 8192, flush interval 5000ms) are
+ * LogTape's and deliberately not restated here, so they cannot drift from the library's.
+ */
+export const logFileSchema = z.object({
+  path: optionalPath(),
+  /** Open the file on the first write instead of at startup. */
+  lazy: booleanFromString().optional(),
+  /** Characters buffered before a write; `0` writes every record straight through. */
+  bufferSize: integerFrom({ min: 0 }).optional(),
+  /** Milliseconds after which a partial buffer is flushed anyway; `0` disables the timer. */
+  flushIntervalMs: integerFrom({ min: 0 }).optional(),
 });
+
+/** The rotating file sink: same options plus the size bound, and no `lazy` (the library has none). */
+export const logRotatingFileSchema = z.object({
+  path: optionalPath(),
+  /** Bytes the active file may reach before it rotates; 1 MiB is the library's default. */
+  maxSize: integerFrom({ min: 1 }).optional(),
+  /** Rotated files to keep, `.1` being the newest; the library throws above 1000. */
+  maxFiles: integerFrom({ min: 1, max: 1000 }).optional(),
+  bufferSize: integerFrom({ min: 0 }).optional(),
+  flushIntervalMs: integerFrom({ min: 0 }).optional(),
+});
+
+/** A complete configuration: what `loadConfig()` hands out. */
+export const appConfigSchema = z
+  .object({
+    server: serverSchema,
+    docs: docsSchema,
+    rateLimit: rateLimitSchema,
+    upstream: upstreamSchema,
+    logFile: logFileSchema,
+    logRotatingFile: logRotatingFileSchema,
+  })
+  // Cross-field rules, checked once the whole configuration is in hand.
+  .superRefine((config, ctx) => {
+    const file = config.logFile;
+    const rotating = config.logRotatingFile;
+
+    if (file.path !== undefined && rotating.path !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['logRotatingFile', 'path'],
+        message: 'must not be set when OPS_LOG_FILE_PATH is: the two destinations are exclusive',
+      });
+    }
+
+    // An option without a destination is a configuration that reads as if it did something. Each
+    // variable is reported against its own name, which is what `describeIssue` prints.
+    const orphans: Array<[string, string | number | boolean | undefined]> = [
+      ['lazy', file.lazy],
+      ['bufferSize', file.bufferSize],
+      ['flushIntervalMs', file.flushIntervalMs],
+    ];
+    if (file.path === undefined) {
+      for (const [field, value] of orphans) {
+        if (value !== undefined) ctx.addIssue({ code: 'custom', path: ['logFile', field], message: 'is set but OPS_LOG_FILE_PATH is not' });
+      }
+    }
+
+    const rotatingOrphans: Array<[string, string | number | boolean | undefined]> = [
+      ['maxSize', rotating.maxSize],
+      ['maxFiles', rotating.maxFiles],
+      ['bufferSize', rotating.bufferSize],
+      ['flushIntervalMs', rotating.flushIntervalMs],
+    ];
+    if (rotating.path === undefined) {
+      for (const [field, value] of rotatingOrphans) {
+        if (value !== undefined) {
+          ctx.addIssue({ code: 'custom', path: ['logRotatingFile', field], message: 'is set but OPS_LOG_ROTATING_FILE_PATH is not' });
+        }
+      }
+    }
+  });
 
 export type AppConfig = Readonly<z.infer<typeof appConfigSchema>>;
 
@@ -113,6 +191,8 @@ export const appEnvConfigSchema = z
     docs: docsSchema.partial(),
     rateLimit: rateLimitSchema.partial(),
     upstream: upstreamSchema.partial(),
+    logFile: logFileSchema.partial(),
+    logRotatingFile: logRotatingFileSchema.partial(),
   })
   // The groups are optional as well: a caller may supply the one field it cares about.
   .partial();

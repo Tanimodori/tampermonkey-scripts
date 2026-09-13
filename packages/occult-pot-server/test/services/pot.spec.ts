@@ -293,7 +293,8 @@ describe('writes', () => {
     expect(rowsWritten()).toBe(0);
     expect((await service.state()).data).toEqual(before);
     // A failed append is the caller's failure; it is not this service's to retry or to log as one.
-    expect(logs.some((entry) => entry.level === 'warning')).toBe(false);
+    // The one warning on the record is the transport reporting the refused call — nothing here.
+    expect(logs.filter((entry) => entry.level === 'warning').map((entry) => entry.message)).toEqual(['Tencent Docs call failed']);
   });
 
   it('does not let a write refresh the read TTL', async () => {

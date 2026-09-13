@@ -63,6 +63,26 @@ export function integerFrom(options: { min?: number; max?: number } = {}): z.Zod
   });
 }
 
+/**
+ * Builds a switch: `true`/`false` (and `1`/`0`), trimmed and case-insensitive, and nothing else.
+ *
+ * Unlike `booleanOrNumberFromString`, which exists for Express's `trust proxy` where a number and a
+ * named subnet list are meaningful, a value that is not a switch is an error here — a sink is either
+ * lazy or it is not.
+ */
+export function booleanFromString(): z.ZodType<boolean> {
+  return z.preprocess(
+    (value) => {
+      if (typeof value !== 'string') return value;
+      const trimmed = value.trim().toLowerCase();
+      if (trimmed === 'true' || trimmed === '1') return true;
+      if (trimmed === 'false' || trimmed === '0') return false;
+      return value;
+    },
+    z.boolean({ error: 'must be true or false' }),
+  ) as unknown as z.ZodType<boolean>;
+}
+
 /** Builds a string schema restricted to a fixed set; the failure names the allowed values. */
 export function oneOf<T extends string>(allowed: readonly T[]): z.ZodType<T> {
   return z

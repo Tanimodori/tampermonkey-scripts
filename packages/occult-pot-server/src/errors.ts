@@ -72,9 +72,13 @@ export function isAppError(value: unknown): value is AppError {
 
 /** `loadConfig` collects every problem and reports them together. */
 export class ConfigError extends AppError {
+  /** The individual problems, in the order they were found; the message renders them as a list. */
+  readonly problems: readonly string[];
+
   constructor(messages: readonly string[]) {
     super('ERR_CONFIG_INVALID', `Invalid configuration:\n  - ${messages.join('\n  - ')}`);
     this.name = 'ConfigError';
+    this.problems = [...messages];
   }
 }
 

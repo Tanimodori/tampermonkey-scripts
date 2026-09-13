@@ -23,6 +23,14 @@ export default defineConfig({
         entryFileNames: 'index.js',
         chunkFileNames: '[name]-[hash].js',
       },
+      // Rollup drops an annotation it cannot map and warns once per occurrence; zod's source carries a
+      // few (`@__PURE__` on an IIFE argument). It is nothing this build can act on — and Rush treats a
+      // warning as a failed operation, so an unfiltered one fails `rush build` and with it the image
+      // build. Filtered by code, so every other warning still surfaces.
+      onwarn(warning, warn) {
+        if (warning.code === 'INVALID_ANNOTATION') return;
+        warn(warning);
+      },
     },
   },
   ssr: {

@@ -2,7 +2,7 @@ import { getLogger } from '@logtape/logtape';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { AppError, isAppError } from '@/errors.ts';
 import type { ErrorCode } from '@/errors.ts';
-import { LOG_CATEGORY } from '@/logger.ts';
+import { LOG_CATEGORIES } from '@/logger.ts';
 import { getRequestId } from './requestId.ts';
 
 /**
@@ -53,7 +53,7 @@ export interface ErrorHandlerDeps {
 }
 
 export function errorHandler(deps: ErrorHandlerDeps): (error: unknown, req: Request, res: Response, next: NextFunction) => void {
-  const logger = getLogger(LOG_CATEGORY);
+  const logger = getLogger(LOG_CATEGORIES.http);
 
   return (error, req, res, next) => {
     if (res.headersSent) {

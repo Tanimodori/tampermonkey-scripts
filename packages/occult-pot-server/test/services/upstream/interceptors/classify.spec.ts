@@ -1,4 +1,4 @@
-import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
+import { apiOrigin, captureLogs, loadTestConfig, rawRecord, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { classify } from '@/services/upstream/interceptors/classify.ts';
 import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
@@ -150,5 +150,76 @@ describe('a failure', () => {
     expect((error as Error).message).toContain('status=200');
     expect((error as Error).message).toContain('unexpected');
     expect(callsMatching('getRecords')).toBe(1);
+  });
+});
+
+describe('what it records about an attempt', () => {
+  it('records an answered call: operation, status, business code, duration', async () => {
+    loadTestConfig();
+    const records = captureLogs();
+
+    await client().request(options());
+
+    expect(records).toEqual([
+      expect.objectContaining({
+        level: 'info',
+        message: 'Tencent Docs call answered',
+        operation: 'getRecords',
+        method: 'POST',
+        path: options().path,
+        status: 200,
+        ret: 0,
+        durationMs: expect.any(Number),
+      }),
+    ]);
+  });
+
+  it('records a classified failure at warning, with the code and whether it will be retried', async () => {
+    loadTestConfig();
+    docs.state.readFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
+    const records = captureLogs();
+
+    await client()
+      .request(options())
+      .catch(() => undefined);
+
+    expect(records).toContainEqual(
+      expect.objectContaining({
+        level: 'warning',
+        message: 'Tencent Docs call failed',
+        operation: 'getRecords',
+        status: 429,
+        ret: 400007,
+        code: 'ERR_UPSTREAM_RATE_LIMITED',
+        retryable: true,
+      }),
+    );
+  });
+
+  it('records a call that never got an answer, without inventing a status', async () => {
+    loadTestConfig();
+    docs.state.networkFailures = 1;
+    const records = captureLogs();
+
+    await client()
+      .request(options())
+      .catch(() => undefined);
+
+    expect(records).toContainEqual(
+      expect.objectContaining({ level: 'warning', message: 'Tencent Docs call could not be sent', operation: 'getRecords', reason: expect.any(String) }),
+    );
+  });
+
+  it('never records the response body, which for a read is the whole sheet', async () => {
+    loadTestConfig();
+    docs.state.records = [rawRecord({})];
+    const records = captureLogs();
+
+    await client().request(options());
+
+    // The record carries the envelope's business code, and not the records the answer was made of.
+    expect(JSON.stringify(records)).not.toContain('54-1-4000E8F3');
+    expect(records[0]).not.toHaveProperty('body');
+    expect(records[0]).not.toHaveProperty('data');
   });
 });

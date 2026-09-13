@@ -1,4 +1,4 @@
-import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
+import { apiOrigin, captureLogs, loadTestConfig, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { classify } from '@/services/upstream/interceptors/classify.ts';
 import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
@@ -116,5 +116,27 @@ describe('what a second attempt cannot fix', () => {
 
     await expect(client().request(options())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
     expect(readCalls()).toBe(1);
+  });
+});
+
+describe('what it records about a retry', () => {
+  it('records the decision to try again, with the budget and the wait', async () => {
+    loadTestConfig({ OPS_UPSTREAM_MAX_RETRIES: '1' });
+    docs.state.networkFailures = 1;
+    const records = captureLogs();
+
+    await client().request(options());
+
+    // The count comes straight from undici's own retry state, so the case pins the fields rather
+    // than a particular numbering.
+    expect(records).toContainEqual(
+      expect.objectContaining({
+        level: 'info',
+        message: 'Retrying a failed Tencent Docs call',
+        maxRetries: 1,
+        retries: expect.any(Number),
+        delayMs: expect.any(Number),
+      }),
+    );
   });
 });

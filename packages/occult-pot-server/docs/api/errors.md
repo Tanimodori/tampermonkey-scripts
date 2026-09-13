@@ -22,34 +22,34 @@
 
 ## 2. 错误码
 
-| code                         | HTTP | 何时出现                                                                                         |
-| ---------------------------- | ---- | ------------------------------------------------------------------------------------------------ |
-| `ERR_BAD_REQUEST`            | 400  | 请求体或路径参数不合规；请求体不是合法 JSON                                                      |
-| `ERR_NOT_FOUND`              | 404  | 未知的罐子 ID，或没有匹配的路径 / `v1` 子路径                                                    |
-| `ERR_METHOD_NOT_ALLOWED`     | 405  | 路径存在但不支持该方法（响应带 `Allow`）                                                         |
-| `ERR_UNSUPPORTED_MEDIA_TYPE` | 415  | 请求体没有声明 `application/json`，或编码不支持                                                  |
-| `ERR_PAYLOAD_TOO_LARGE`      | 413  | 请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`                                                          |
-| `ERR_RATE_LIMITED`           | 429  | 按 IP 的入站限流                                                                                 |
-| `ERR_NOT_READY`              | 503  | `/readyz` 判为不可用（凭据过期、坐标未核对、Redis 读不到）                                       |
-| `ERR_UPSTREAM_AUTH_FAILED`   | 503  | 腾讯文档拒绝凭据（HTTP 401/403，或业务码 `10007`/`10302`/`10303`/`10313`/`37019`），或凭据已过期 |
-| `ERR_UPSTREAM_RATE_LIMITED`  | 503  | 腾讯文档返回 429 或业务码 `400007`；带 `retryAfterSeconds`                                       |
-| `ERR_UPSTREAM_BAD_REQUEST`   | 400  | 腾讯文档以参数类业务码拒绝请求（`400000 ≤ ret < 500000`，或其他非零 `ret`）                      |
-| `ERR_UPSTREAM_FAILED`        | 502  | 传输失败、HTTP 5xx，或响应信封无法解析                                                           |
-| `ERR_CONFIG_INVALID`         | 500  | 配置非法（启动即退出）、配置的子表不在该文档里，或凭据校验失败、Open-Id 与 token 不符            |
-| `ERR_INTERNAL_ERROR`         | 500  | 其他未预期的服务端错误                                                                           |
+| code                         | HTTP | 何时出现                                                                                                 |
+| ---------------------------- | ---- | -------------------------------------------------------------------------------------------------------- |
+| `ERR_BAD_REQUEST`            | 400  | 请求体或路径参数不合规；请求体不是合法 JSON                                                              |
+| `ERR_NOT_FOUND`              | 404  | 未知的罐子 ID，或没有匹配的路径 / `v1` 子路径                                                            |
+| `ERR_METHOD_NOT_ALLOWED`     | 405  | 路径存在但不支持该方法（响应带 `Allow`）                                                                 |
+| `ERR_UNSUPPORTED_MEDIA_TYPE` | 415  | 请求体没有声明 `application/json`，或编码不支持                                                          |
+| `ERR_PAYLOAD_TOO_LARGE`      | 413  | 请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`                                                                  |
+| `ERR_RATE_LIMITED`           | 429  | 按 IP 的入站限流；也可能是前置 nginx 的 `limit_req` 直接挡下（同样的 code 与信封，但没有 `RateLimit-*`） |
+| `ERR_NOT_READY`              | 503  | `/readyz` 判为不可用（凭据过期、坐标未核对、Redis 读不到）                                               |
+| `ERR_UPSTREAM_AUTH_FAILED`   | 503  | 腾讯文档拒绝凭据（HTTP 401/403，或业务码 `10007`/`10302`/`10303`/`10313`/`37019`），或凭据已过期         |
+| `ERR_UPSTREAM_RATE_LIMITED`  | 503  | 腾讯文档返回 429 或业务码 `400007`；带 `retryAfterSeconds`                                               |
+| `ERR_UPSTREAM_BAD_REQUEST`   | 400  | 腾讯文档以参数类业务码拒绝请求（`400000 ≤ ret < 500000`，或其他非零 `ret`）                              |
+| `ERR_UPSTREAM_FAILED`        | 502  | 传输失败、HTTP 5xx，或响应信封无法解析                                                                   |
+| `ERR_CONFIG_INVALID`         | 500  | 配置非法（启动即退出）、配置的子表不在该文档里，或凭据校验失败、Open-Id 与 token 不符                    |
+| `ERR_INTERNAL_ERROR`         | 500  | 其他未预期的服务端错误                                                                                   |
 
 ## 3. HTTP 状态码一览
 
-| 状态码    | 何时                                                                     |
-| --------- | ------------------------------------------------------------------------ |
-| 200       | 一切成功：读取、写入、`/healthz`、`/readyz` 可用                         |
-| 400       | 请求体或参数非法，`message` 逐字段说明（见 §4）                          |
-| 404       | 未知罐子或未知路径                                                       |
-| 405       | 路径已知、方法不支持（带 `Allow`）                                       |
-| 413       | 请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`                                  |
-| 415       | 请求体未声明 `Content-Type: application/json`                            |
-| 429       | 按 IP 限流（带 `RateLimit-*` 与 `Retry-After`）                          |
-| 502 / 503 | 上游失败（读与写都是），或凭据过期、被上游限流；`/readyz` 不可用也是 503 |
+| 状态码    | 何时                                                                                              |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| 200       | 一切成功：读取、写入、`/healthz`、`/readyz` 可用                                                  |
+| 400       | 请求体或参数非法，`message` 逐字段说明（见 §4）                                                   |
+| 404       | 未知罐子或未知路径                                                                                |
+| 405       | 路径已知、方法不支持（带 `Allow`）                                                                |
+| 413       | 请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`                                                           |
+| 415       | 请求体未声明 `Content-Type: application/json`                                                     |
+| 429       | 按 IP 限流（应用带 `RateLimit-*` 与 `Retry-After`；前置 nginx 的 `limit_req` 只带 `Retry-After`） |
+| 502 / 503 | 上游失败（读与写都是），或凭据过期、被上游限流；`/readyz` 不可用也是 503                          |
 
 `/v1` 下的未知路径与不支持的方法也被当作普通错误抛出，由同一个错误处理器应答（同样是 `ERR_NOT_FOUND` / `ERR_METHOD_NOT_ALLOWED` 信封，`405` 带 `Allow`，并照常进日志）；`/v1` 之外的任何路径由全局兜底抛 `ERR_NOT_FOUND`。
 

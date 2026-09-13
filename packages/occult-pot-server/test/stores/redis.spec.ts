@@ -4,7 +4,7 @@
 import { captureLogs, loadTestConfig, resetRedis, testEnv } from '@test/testUtils/helpers.ts';
 import RedisMock from 'ioredis-mock';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { closeRedis, getRedis, redisCommandSender, setRedis } from '@/stores/redis.ts';
+import { closeRedis, getRedis, redisCommandSender, setRedis, traced } from '@/stores/redis.ts';
 
 /**
  * The Redis client is built from the configuration, like the undici pool, and everything that talks
@@ -121,5 +121,49 @@ describe('redisCommandSender', () => {
     await getRedis().set('occult-pot:test:count', '3');
 
     await expect(send('DECR', 'occult-pot:test:count')).resolves.toBe(2);
+  });
+});
+
+describe('the command records', () => {
+  it('records a command the service issued at info, with its key and duration', async () => {
+    loadTestConfig();
+    const records = captureLogs();
+
+    await traced('GET', ['occult-pot:pots'], Promise.resolve('value'));
+
+    expect(records).toEqual([
+      expect.objectContaining({
+        level: 'info',
+        message: 'Redis command answered',
+        command: 'GET',
+        keys: ['occult-pot:pots'],
+        durationMs: expect.any(Number),
+      }),
+    ]);
+  });
+
+  it('records a failed command at warning and lets the failure through', async () => {
+    loadTestConfig();
+    const records = captureLogs();
+
+    await expect(traced('SET', ['occult-pot:pots'], Promise.reject(new Error('connection reset')))).rejects.toThrow('connection reset');
+
+    expect(records).toEqual([expect.objectContaining({ level: 'warning', message: 'Redis command failed', command: 'SET', reason: 'connection reset' })]);
+  });
+
+  it('keeps the limiter scripts at debug, so one request does not flood the file', async () => {
+    loadTestConfig();
+    const send = redisCommandSender();
+    const records = captureLogs('debug');
+
+    const sha = await send('SCRIPT', 'LOAD', 'return 1');
+    await send('EVALSHA', String(sha), '0');
+
+    // Visible when the level asks for it...
+    expect(records.filter((entry) => entry.message === 'Redis command answered').map((entry) => entry.command)).toEqual(['SCRIPT', 'EVALSHA']);
+    // ...and nothing at the level production runs at, where a record only matters if it failed.
+    const atInfo = captureLogs('info');
+    await send('SCRIPT', 'LOAD', 'return 1');
+    expect(atInfo).toEqual([]);
   });
 });

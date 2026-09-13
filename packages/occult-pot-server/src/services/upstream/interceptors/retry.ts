@@ -1,5 +1,7 @@
+import { getLogger } from '@logtape/logtape';
 import { interceptors } from 'undici';
 import { getConfig } from '@/config.ts';
+import { LOG_CATEGORIES } from '@/logger.ts';
 import { UpstreamError } from './classify.ts';
 
 /**
@@ -29,6 +31,17 @@ function retryPolicy(error: Error, { state }: { state: { counter: number } }, ca
     callback(error);
     return;
   }
+
+  // The attempt that failed has already been recorded by the classifier; this is the "and we try
+  // again" half, which is what makes an upstream that is flaky rather than broken visible.
+  getLogger(LOG_CATEGORIES.upstream).info('Retrying a failed Tencent Docs call', {
+    // Undici's own retry counter, passed through untouched: the same value the budget above is
+    // compared against.
+    retries: state.counter,
+    maxRetries: getConfig().upstream.maxRetries,
+    delayMs: plan.delayMs,
+    reason: error.message,
+  });
   setTimeout(() => callback(null), plan.delayMs);
 }
 

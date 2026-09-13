@@ -80,6 +80,9 @@ importers:
 
   ../../packages/occult-pot-server:
     dependencies:
+      '@logtape/file':
+        specifier: ^2.3.4
+        version: 2.3.4(@logtape/logtape@2.3.4)
       '@logtape/logtape':
         specifier: ^2.3.4
         version: 2.3.4
@@ -745,6 +748,11 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
+
+  '@logtape/file@2.3.4':
+    resolution: {integrity: sha512-4jXkntOowasyo5qrAjV1RdL9iEbP80xYLcSgnorRgBaxkBVtN0kiYdtMC/975Sj6ATmCuuTrnWlvcO0tyrY/9w==}
+    peerDependencies:
+      '@logtape/logtape': ^2.3.4
 
   '@logtape/logtape@2.3.4':
     resolution: {integrity: sha512-oW5Q6EOdjemL94c324j2fUn+2nRGuODwmOKmrwY6YAVkjqNWYVgkzpfbckFc4CKmDDCMk+GiwNfPybMZB3QqNQ==}
@@ -2780,6 +2788,10 @@ snapshots:
   '@ioredis/commands@1.11.0': {}
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
+
+  '@logtape/file@2.3.4(@logtape/logtape@2.3.4)':
+    dependencies:
+      '@logtape/logtape': 2.3.4
 
   '@logtape/logtape@2.3.4': {}
 

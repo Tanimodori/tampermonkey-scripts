@@ -1,7 +1,10 @@
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { getLogger } from '@logtape/logtape';
 import { captureLogs } from '@test/testUtils/helpers.ts';
-import { describe, expect, it } from 'vitest';
-import { formatInstant, LOG_CATEGORY } from '@/logger.ts';
+import { afterEach, describe, expect, it } from 'vitest';
+import { configureLogging, flushLogging, formatInstant, LOG_CATEGORY, LOG_CATEGORIES } from '@/logger.ts';
 
 /**
  * These pin this service's logging conventions: the level an operator writes in `OPS_SERVER_LOG_LEVEL`, the
@@ -85,5 +88,82 @@ describe('formatInstant', () => {
   it('renders an epoch instant as ISO 8601 UTC for operator-facing fields', () => {
     expect(formatInstant(1_791_732_693_000)).toBe('2026-10-11T15:31:33.000Z');
     expect(formatInstant(0)).toBe('1970-01-01T00:00:00.000Z');
+  });
+});
+
+describe('the file sinks', () => {
+  const directories: string[] = [];
+
+  /** A throwaway directory per case; the sink writes real files, and nothing may land in the repo. */
+  function temporaryDirectory(): string {
+    const dir = mkdtempSync(join(tmpdir(), 'occult-pot-log-'));
+    directories.push(dir);
+    return dir;
+  }
+
+  /** One JSON Lines record per line, as the file sink writes them. */
+  function recordsIn(file: string): Array<Record<string, unknown>> {
+    return readFileSync(file, 'utf8')
+      .split('\n')
+      .filter((line) => line.trim() !== '')
+      .map((line) => JSON.parse(line) as Record<string, unknown>);
+  }
+
+  afterEach(() => {
+    flushLogging();
+    for (const dir of directories.splice(0)) rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('writes the same JSON Lines to a file as to the console, credentials redacted', () => {
+    const path = join(temporaryDirectory(), 'nested', 'app.log');
+
+    // The directory does not exist yet: the sink creates it rather than failing at startup. The
+    // console sink is silenced so the case says nothing on stdout.
+    configureLogging('info', { sink: () => undefined, file: { path, bufferSize: 0 } });
+    getLogger(LOG_CATEGORIES.redis).info('Redis command answered', { command: 'GET', accessToken: 'secret-value' });
+
+    const [record] = recordsIn(path);
+    expect(record).toMatchObject({
+      // LogTape's own fields, in its own vocabulary: the level is uppercase and the category is the
+      // dot-joined `logger`.
+      level: 'INFO',
+      logger: 'occult-pot-server.redis',
+      message: 'Redis command answered',
+      command: 'GET',
+      accessToken: '[redacted]',
+    });
+    expect(readFileSync(path, 'utf8')).not.toContain('secret-value');
+  });
+
+  it('rotates once the active file reaches its size bound', () => {
+    const dir = temporaryDirectory();
+    const path = join(dir, 'rotating.log');
+
+    configureLogging('info', { sink: () => undefined, rotatingFile: { path, maxSize: 400, maxFiles: 2, bufferSize: 0 } });
+    const logger = getLogger(LOG_CATEGORIES.upstream);
+    for (let index = 0; index < 20; index += 1) logger.info('Tencent Docs call answered', { operation: 'getRecords', index, padding: 'x'.repeat(80) });
+
+    // `maxFiles` bounds the backups: the active file plus `.1` and `.2`, however many rotations ran.
+    expect(readdirSync(dir).sort()).toEqual(['rotating.log', 'rotating.log.1', 'rotating.log.2']);
+  });
+
+  it('flushes what is still buffered when the process is about to stop', () => {
+    const path = join(temporaryDirectory(), 'buffered.log');
+
+    // Default buffering: a record larger than LogTape's small-record fast path stays in the buffer,
+    // which is exactly the window `flushLogging()` closes before `process.exit()`.
+    configureLogging('info', { sink: () => undefined, file: { path } });
+    getLogger(LOG_CATEGORY).info('Starting occult-pot-server', { padding: 'x'.repeat(500) });
+    flushLogging();
+
+    expect(recordsIn(path)).toHaveLength(1);
+  });
+
+  it('creates no file when no destination is configured', () => {
+    const dir = temporaryDirectory();
+
+    configureLogging('info', { sink: () => undefined });
+
+    expect(readdirSync(dir)).toEqual([]);
   });
 });

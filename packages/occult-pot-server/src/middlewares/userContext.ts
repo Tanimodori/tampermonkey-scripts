@@ -1,6 +1,6 @@
 import { getLogger } from '@logtape/logtape';
 import type { RequestHandler } from 'express';
-import { LOG_CATEGORY } from '@/logger.ts';
+import { LOG_CATEGORIES } from '@/logger.ts';
 import { touchUser } from '@/stores/user.ts';
 import { getRequestId } from './requestId.ts';
 
@@ -12,7 +12,7 @@ import { getRequestId } from './requestId.ts';
  * its freshness — the rate limiters are the enforcement, and they report their own failures.
  */
 export function userContext(): RequestHandler {
-  const logger = getLogger(LOG_CATEGORY);
+  const logger = getLogger(LOG_CATEGORIES.redis);
 
   return (req, _res, next) => {
     void touchUser(req.ip ?? 'unknown', getRequestId(req)).catch((error: unknown) => {

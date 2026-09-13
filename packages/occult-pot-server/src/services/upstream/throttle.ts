@@ -1,5 +1,8 @@
+import { getLogger } from '@logtape/logtape';
 import { throttledQueue } from 'throttled-queue';
 import { getConfig } from '@/config.ts';
+import { LOG_CATEGORIES } from '@/logger.ts';
+import { now } from '@/services/time.ts';
 import type { AppConfig } from '@/validation/index.ts';
 
 /**
@@ -38,5 +41,19 @@ export function throttle<Return>(task: () => Promise<Return>): Promise<Return> {
       }),
     };
   }
-  return queued.throttle(task);
+  // How long a call sat in the queue is the difference between "the upstream was slow" and "we paced
+  // ourselves into being slow", so it is recorded when it happened — at `debug`, because a busy
+  // window would otherwise say more about the queue than about the service.
+  const queuedAt = now();
+  return queued.throttle(async () => {
+    const waitMs = now() - queuedAt;
+    if (waitMs > 0) {
+      getLogger(LOG_CATEGORIES.upstream).debug('Tencent Docs call waited in the pacing queue', {
+        waitMs,
+        maxPerInterval: config.upstream.maxPerInterval,
+        intervalMs: config.upstream.intervalMs,
+      });
+    }
+    return task();
+  });
 }

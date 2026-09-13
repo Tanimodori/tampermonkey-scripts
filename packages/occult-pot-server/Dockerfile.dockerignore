@@ -1,0 +1,19 @@
+# Read by BuildKit as `<dockerfile>.dockerignore`, which takes precedence over a `.dockerignore` at
+# the root of the build context. The build context here is the repository root (`context: ../..` in
+# docker-compose.yml), which is why this file is named after the Dockerfile instead of being a plain
+# `.dockerignore` — a plain one at this path is never read.
+#
+# Patterns without a slash only match at the context root, so anything nested needs `**/`.
+**/node_modules
+**/dist
+**/rush-logs
+**/*.tsbuildinfo
+**/.env*
+# Rush's workspace temp dir holds the pnpm store: about 967MB on this machine, and rebuilt inside the
+# image from the lockfile anyway.
+common/temp
+# The host side of the compose log bind mount.
+**/logs
+# The image build only needs to produce dist/. `test/**` is still typechecked by `rushx typecheck` on
+# the host; drop this line if you would rather have the container's `tsc --noEmit` cover it too.
+**/test

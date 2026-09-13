@@ -1,7 +1,7 @@
 import { getLogger } from '@logtape/logtape';
 import type { Request, RequestHandler, Response } from 'express';
 import morgan from 'morgan';
-import { LOG_CATEGORY } from '@/logger.ts';
+import { LOG_CATEGORIES } from '@/logger.ts';
 import { getRequestId } from './requestId.ts';
 
 /**
@@ -20,7 +20,7 @@ import { getRequestId } from './requestId.ts';
  * 404) are logged too.
  */
 export function requestLogger(): RequestHandler {
-  const logger = getLogger(LOG_CATEGORY);
+  const logger = getLogger(LOG_CATEGORIES.http);
 
   return morgan<Request, Response>((tokens, req, res) => {
     logger.info('request', {

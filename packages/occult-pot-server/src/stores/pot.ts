@@ -1,4 +1,4 @@
-import { getRedis } from '@/stores/redis.ts';
+import { getRedis, traced } from '@/stores/redis.ts';
 import type { Pot, PotState } from '@/validation/index.ts';
 
 /**
@@ -34,15 +34,15 @@ function parseState(raw: string | null): PotState {
 
 /** The cached list, or the empty state when the key is missing or holds something unreadable. */
 export async function readPotState(): Promise<PotState> {
-  return parseState(await getRedis().get(STATE_KEY));
+  return parseState(await traced('GET', [STATE_KEY], getRedis().get(STATE_KEY)));
 }
 
 /** Replaces the cached list. */
 export async function writePotState(state: PotState): Promise<void> {
-  await getRedis().set(STATE_KEY, JSON.stringify(state));
+  await traced('SET', [STATE_KEY], getRedis().set(STATE_KEY, JSON.stringify(state)));
 }
 
 /** Drops the cached list, so the next read rebuilds it from the sheet. */
 export async function clearPotState(): Promise<void> {
-  await getRedis().del(STATE_KEY);
+  await traced('DEL', [STATE_KEY], getRedis().del(STATE_KEY));
 }

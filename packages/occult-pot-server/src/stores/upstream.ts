@@ -1,12 +1,12 @@
 import { getLogger } from '@logtape/logtape';
 import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
-import { formatInstant, LOG_CATEGORY } from '@/logger.ts';
+import { formatInstant, LOG_CATEGORIES } from '@/logger.ts';
 import { now } from '@/services/time.ts';
 import { getSheetList } from '@/services/upstream/api/sheet.ts';
 import { getUserInfo, refreshAccessToken } from '@/services/upstream/api/token.ts';
 import { asRecord, describeBody } from '@/services/upstream/interceptors/classify.ts';
-import { getRedis } from '@/stores/redis.ts';
+import { getRedis, traced } from '@/stores/redis.ts';
 import type { AppConfig } from '@/validation/index.ts';
 
 /**
@@ -168,13 +168,13 @@ export function useUpstreamStore(): UpstreamStore {
 
   /** The credential fields Redis holds; `clientSecret` is never among them. */
   async function storedCredential(): Promise<Record<string, string>> {
-    return getRedis().hgetall(CREDENTIAL_KEY);
+    return traced('HGETALL', [CREDENTIAL_KEY], getRedis().hgetall(CREDENTIAL_KEY));
   }
 
   /** Writes only the fields it was given, so a partial refresh never drops the rest. */
   async function rememberCredential(fields: Record<string, string | undefined>): Promise<void> {
     const entries = Object.entries(fields).filter((entry): entry is [string, string] => typeof entry[1] === 'string' && entry[1].length > 0);
-    if (entries.length > 0) await getRedis().hset(CREDENTIAL_KEY, Object.fromEntries(entries));
+    if (entries.length > 0) await traced('HSET', [CREDENTIAL_KEY], getRedis().hset(CREDENTIAL_KEY, Object.fromEntries(entries)));
   }
 
   /**
@@ -255,7 +255,7 @@ export function useUpstreamStore(): UpstreamStore {
     // Startup is worth one line about the coordinates, and one about a credential that is expired or
     // about to be. The logger is taken here rather than held, so a replaced LogTape configuration is
     // picked up.
-    const logger = getLogger(LOG_CATEGORY);
+    const logger = getLogger(LOG_CATEGORIES.upstream);
     logger.info('Verified the Tencent Docs document', { fileIdLength: fileIdValue.length, sheetId: sheetIdValue });
     const report = readiness();
     if (report.tokenExpired) {

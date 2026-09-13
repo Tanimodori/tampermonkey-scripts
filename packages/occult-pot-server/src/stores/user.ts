@@ -1,5 +1,5 @@
 import { now } from '@/services/time.ts';
-import { getRedis } from '@/stores/redis.ts';
+import { getRedis, traced } from '@/stores/redis.ts';
 
 /**
  * What the service remembers about a caller.
@@ -33,11 +33,17 @@ export async function touchUser(ip: string, requestId: string): Promise<void> {
   const at = String(now());
   const key = userKey(ip);
 
-  await getRedis()
-    .multi()
-    .hsetnx(key, 'firstSeenAt', at)
-    .hset(key, { lastSeenAt: at, lastRequestId: requestId })
-    .hincrby(key, 'requests', 1)
-    .pexpire(key, USER_TTL_MS)
-    .exec();
+  // One record for the whole pipeline: the four commands are one write from the service's point of
+  // view, and the key is what an operator would look up either way.
+  await traced(
+    'MULTI/EXEC',
+    [key],
+    getRedis()
+      .multi()
+      .hsetnx(key, 'firstSeenAt', at)
+      .hset(key, { lastSeenAt: at, lastRequestId: requestId })
+      .hincrby(key, 'requests', 1)
+      .pexpire(key, USER_TTL_MS)
+      .exec(),
+  );
 }

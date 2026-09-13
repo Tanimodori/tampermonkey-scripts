@@ -36,6 +36,12 @@ cd packages/occult-pot-server
 docker compose up -d --build
 ```
 
+构建阶段默认走国内镜像，两者都是 Dockerfile 顶部的 build arg（值是**主机名**，协议由各自工具决定）：apt 用 [TUNA](https://mirrors.tuna.tsinghua.edu.cn/help/debian/)（把基础镜像自带的 `deb.debian.org` 换掉，走 http —— `ca-certificates` 正是这一步才装上的包），npm 用 [npmmirror](https://npmmirror.com)（构建阶段的 `/root/.npmrc` 覆盖 Rush/pnpm 自举时读不到项目配置的那一段，`common/config/rush/.npmrc` 供其后的 pnpm 用，二者都取自同一个 arg）。境外网络构建：
+
+```bash
+docker compose build --build-arg APT_MIRROR=deb.debian.org --build-arg NPM_MIRROR=registry.npmjs.org
+```
+
 三个容器，一张 `occult-pot` 网络：
 
 | 服务 | 镜像 | 宿主端口 | 说明 |

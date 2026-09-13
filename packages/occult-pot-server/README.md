@@ -33,7 +33,7 @@ process.env  <  .env  <  .env.<mode>  <  .env.local  <  .env.<mode>.local  <  OP
 ```bash
 # 构建上下文是整个 monorepo（Dockerfile 要用仓库的 Rush/pnpm 装依赖），所以先到包目录：
 cd packages/occult-pot-server
-REDIS_PASSWORD=… docker compose up -d --build
+docker compose up -d --build
 ```
 
 三个容器，一张 `occult-pot` 网络：
@@ -44,11 +44,11 @@ REDIS_PASSWORD=… docker compose up -d --build
 | `occult-pot-server` | 本仓构建 | 不发布 | 只在这张网络里以 `occult-pot-server:3000` 可达 |
 | `redis` | `redis:7-alpine` | 不发布 | AOF 持久化 + 命名卷 |
 
-`OPS_NGINX_PORT` 的插值只读 shell 与**项目目录的 `.env`**（不是 `env_file` 里的 `.env.production*`）。改完 nginx 配置执行 `docker compose exec nginx nginx -s reload`，`docker compose exec nginx nginx -t` 先验语法。TLS 请在前面一层终止（云 LB、CDN 或宿主上的另一个反代）：这份 compose 只跑 HTTP，并把 `X-Forwarded-Proto` 透传下去。
+`OPS_NGINX_PORT` 由 compose 插值，只读 shell 或 `--env-file`（不是 `env_file` 里的那些文件，也不是入库的 `.env` —— 它是纯文档、不生效），例如 `OPS_NGINX_PORT=9000 docker compose up -d`。改完 nginx 配置执行 `docker compose exec nginx nginx -s reload`，`docker compose exec nginx nginx -t` 先验语法。TLS 请在前面一层终止（云 LB、CDN 或宿主上的另一个反代）：这份 compose 只跑 HTTP，并把 `X-Forwarded-Proto` 透传下去。
 
 三个服务在同一张用户自建网络上按**服务名**互相解析；app 与 redis 一个宿主端口都不发布，所以宿主上已有的 6379/3000 不会冲突。注意 Linux 上宿主仍可经容器 IP 直连（bridge 的固有行为），因此 compose 把 `OPS_SERVER_TRUST_PROXY` 固定为 `1`（恰好一个 nginx 跳），应用的按 IP 限流据此取真实客户端地址。
 
-redis 的密码从 shell 的 `REDIS_PASSWORD` 读，compose 文件里不写明文（密码含 `@`/`:`/`#` 时需要百分号编码）。
+redis 的密码走 `OPS_SERVER_REDIS_PASSWORD`（应用配置字段是 `server.redisPassword`，变量名照例由路径推出）：compose 里两个服务都读同一批 env 文件，app 用它连 Redis，redis 服务把它交给 `--requirepass`。因此**不需要任何 shell 变量**，也不需要在 compose 文件或 URL 里写明文；不设（或留空）就是"两边都没有密码"，`Configuration resolved` 那条启动记录里的 `redis.password` 会告诉你当前是哪种。密码要放到被忽略的 `.env.local`（本机）或 `.env.production.local`（部署）里，模板 `.env` / `.env.production` 只留空值或占位。
 
 **日志**：完整说明见 [日志](docs/logging.md)。stdout 始终有全部记录（`docker compose logs occult-pot-server`）；生产模板另外让 rotating file sink 写到容器内 `/var/log/occult-pot-server/occult-pot-server.log`，compose 把它绑定挂载到仓库的 `./logs`：
 
@@ -67,18 +67,19 @@ nginx 用 `$request_id` 覆盖 `X-Request-Id`，所以 `docker compose logs ngin
 
 ## 配置
 
-所有配置都来自**一个合并后的环境**：变量名是配置路径加 `OPS_` 前缀（`server.port` → `OPS_SERVER_PORT`，`docs.fileId` → `OPS_DOCS_FILE_ID`，`upstream.cacheTtl` → `OPS_UPSTREAM_CACHE_TTL`），加上只从原生环境读取的 `OPS_ENV_PATH`。完整清单、默认值与注释以 [`.env.development`](.env.development) 为准；`loadConfig()` 在启动时读取一次并缓存，之后各模块用 `getConfig()` 取用；有缺失或非法的变量时会一次性列出全部问题并退出。各子文档只解释自己涉及的那几个变量。
+所有配置都来自**一个合并后的环境**：变量名是配置路径加 `OPS_` 前缀（`server.port` → `OPS_SERVER_PORT`，`docs.fileId` → `OPS_DOCS_FILE_ID`，`upstream.cacheTtl` → `OPS_UPSTREAM_CACHE_TTL`），加上只从原生环境读取的 `OPS_ENV_PATH`。完整清单、默认值与「可选 / 必填」以 [`.env`](.env) 为准（那份文件全部注释掉、**不生效**，只作文档）；`loadConfig()` 在启动时读取一次并缓存，之后各模块用 `getConfig()` 取用；有缺失或非法的变量时会一次性列出全部问题并退出。各子文档只解释自己涉及的那几个变量。
 
-| 文件                      | 用途                                                                     | 是否入库   |
-| ------------------------- | ------------------------------------------------------------------------ | ---------- |
-| `.env.development`        | 模板：全 mock（Redis 用进程内 mock，上游 origin 指向本地），也是变量清单 | 是         |
-| `.env.test-redis(.local)` | `test:redis` 的 Redis 地址；`.local` 放本机自己的地址                    | 示例是，否 |
-| `.env.test-api(.local)`   | `test:api` 的测试文档坐标与凭据；`.local` 放真实值                       | 示例是，否 |
-| `.env.production`         | 生产变量模板（占位值，故意过不了校验），**会被 compose 读取**（中间层）  | 是         |
-| `.env.production.local`   | 生产文档的真实坐标与凭据；`production` 模式读在模板之上                  | 否         |
-| `.env`                    | compose 注入的部署值                                                     | 否         |
+| 文件                      | 用途                                                                                                           | 是否入库   |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------- |
+| `.env`                    | **变量参考**：逐项注明可选性与默认值，全部注释掉、不生效（`OPS_NGINX_PORT` 因此要从 shell 或 `--env-file` 给） | 是         |
+| `.env.local`              | 本机自己的共享值（上面那份的忽略覆盖）                                                                         | 否         |
+| `.env.development`        | `development` 的值：全 mock（Redis 用进程内 mock，上游 origin 指向本地）                                       | 是         |
+| `.env.test-redis(.local)` | `test:redis` 的 Redis 地址；`.local` 放本机自己的地址                                                          | 示例是，否 |
+| `.env.test-api(.local)`   | `test:api` 的测试文档坐标与凭据；`.local` 放真实值                                                             | 示例是，否 |
+| `.env.production`         | 生产变量模板（占位值，故意过不了校验），**会被 compose 读取**（中间层）                                        | 是         |
+| `.env.production.local`   | 生产文档的真实坐标与凭据；`production` 模式读在模板之上                                                        | 否         |
 
-compose 的 `env_file` 按顺序层叠——`.env` → `.env.production` → `.env.production.local`，后面的覆盖前面的——三项都是 `required: false`（Docker Compose v2.24+），所以缺哪个都行。只填 `.env.production`（没有 `.local`）时，模板里的占位值就是它拿到的值，于是启动即失败：这是故意的，配置错误会被一次性列出来，并写进 stderr 与（配了的话）日志文件。`environment:` 里由 compose 固定的三项（`OPS_SERVER_PORT`、`OPS_SERVER_TRUST_PROXY`、`OPS_SERVER_REDIS_URL`）优先于任何 env 文件。
+compose 的 `env_file` 按顺序层叠——`.env.production` → `.env.local` → `.env.production.local`（与 app 自己的加载顺序一致），后面的覆盖前面的——三项都是 `required: false`（Docker Compose v2.24+），所以缺哪个都行；入库的 `.env` **不在**这个列表里，它是纯文档。只填 `.env.production`（没有 `.local`）时，模板里的占位值就是它拿到的值，于是启动即失败：这是故意的，配置错误会被一次性列出来，并写进 stderr 与（配了的话）日志文件。`environment:` 里由 compose 固定的三项（`OPS_SERVER_PORT`、`OPS_SERVER_TRUST_PROXY`、`OPS_SERVER_REDIS_URL`）优先于任何 env 文件。
 
 **`$` 不会被吃掉**：`env_file` 三项都写了 `format: raw`（实测：不加就会被 compose 插值，文档 id 的 `$` 连同后半段一起消失）。raw 表示"值按原样传给容器"，与宿主机上应用自己读这个文件的结果一致，所以文档 id 就按平台的写法（`300000000$…`）填。代价是这三份文件不能用 dotenv 的糖：值后面跟 ` # 注释` 会把注释算进值里，值两边的引号也会被保留。这条要求依赖 Compose ≥ 2.30。
 

@@ -1,10 +1,11 @@
 node_modules/
 dist/
-# Real values stay local: `.env` and `.env.production.local` are what docker-compose injects, and the
-# `.env.<mode>.local` overrides (ignored by the repo root) beat the committed templates
-# (`.env.development`, `.env.production`).
-.env
-.env.production.local
+# Templates are tracked (`.env`, `.env.development`, `.env.production`, `.env.test-*`); the values
+# that belong to one machine or one deployment are not. Both the app's loader and docker-compose read
+# a `.local` file on top of the template it names, so a secret only ever lives there — and the
+# `.env.production` template's placeholders are what a deployment overrides.
+.env.local
+.env.*.local
 rush-logs/
 *.tsbuildinfo
 # The container's log directory is a compose bind mount: the directory itself is tracked (so the

@@ -240,10 +240,23 @@ describe('loadConfig and getConfig', () => {
     // No address is not an error: that is what selects the in-process mock.
     expect(loadConfig(baseEnv()).server.redisUrl).toBeUndefined();
     expect(loadConfig(baseEnv({ OPS_SERVER_REDIS_URL: 'redis://127.0.0.1:6379' })).server.redisUrl).toBe('redis://127.0.0.1:6379');
-    // Credentials are part of the address, so a password never needs a variable of its own.
+    // A credential inside the address still works.
     expect(loadConfig(baseEnv({ OPS_SERVER_REDIS_URL: 'redis://user:secret@cache.example:6379/2' })).server.redisUrl).toBe(
       'redis://user:secret@cache.example:6379/2',
     );
+  });
+
+  it('takes the Redis password beside the address, which is what keeps it out of a URL', () => {
+    const separate = loadConfig(baseEnv({ OPS_SERVER_REDIS_URL: 'redis://redis:6379', OPS_SERVER_REDIS_PASSWORD: 'hunter2' }));
+
+    expect(separate.server.redisPassword).toBe('hunter2');
+    // The address stays a plain, loggable value, and the description says only that one was given.
+    expect(describeConfig(separate).redis).toEqual({ configured: true, host: 'redis', port: 6379, db: 0, passwordConfigured: true });
+
+    // Absent, and an empty value, both read as "no password".
+    expect(loadConfig(baseEnv({ OPS_SERVER_REDIS_URL: 'redis://redis:6379' })).server.redisPassword).toBeUndefined();
+    expect(loadConfig(baseEnv({ OPS_SERVER_REDIS_PASSWORD: '' })).server.redisPassword).toBeUndefined();
+    expect(describeConfig(loadConfig(baseEnv({ OPS_SERVER_REDIS_URL: 'redis://redis:6379' }))).redis).toMatchObject({ passwordConfigured: false });
   });
 
   it('rejects a Redis address that is not a URL', () => {
@@ -464,7 +477,7 @@ describe('the logging configuration', () => {
     const config = loadConfig(baseEnv({ OPS_SERVER_REDIS_URL: 'redis://:hunter2@cache.example:6380/3' }));
     const described = describeConfig(config);
 
-    expect(described.redis).toEqual({ configured: true, host: 'cache.example', port: 6380, db: 3, password: true });
+    expect(described.redis).toEqual({ configured: true, host: 'cache.example', port: 6380, db: 3, passwordConfigured: true });
     expect(JSON.stringify(described)).not.toContain('hunter2');
     // Everything an operator needs to see at a glance, and nothing that is a credential.
     expect(described).toMatchObject({ level: 'info', port: 3000, host: '0.0.0.0', rateLimit: { ipMax: 120 }, upstream: { maxPerInterval: 10 } });

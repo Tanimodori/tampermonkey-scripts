@@ -42,6 +42,14 @@ describe('getRedis', () => {
     else expect(second).toBe(first);
   });
 
+  it('carries the password given beside the address into the client', () => {
+    loadTestConfig({ OPS_SERVER_REDIS_URL: 'redis://127.0.0.1:6379', OPS_SERVER_REDIS_PASSWORD: 'hunter2' });
+
+    // The option, not the URL: that is what keeps the secret out of the address the service logs.
+    expect((getRedis() as unknown as { options: { password?: string } }).options.password).toBe('hunter2');
+    expect(loadTestConfig({ OPS_SERVER_REDIS_URL: 'redis://127.0.0.1:6379' }).server.redisPassword).toBeUndefined();
+  });
+
   it('uses an injected client, and closeRedis leaves it alone', async () => {
     loadTestConfig();
     const injected = new RedisMock();

@@ -53,6 +53,17 @@ const serverSchema = z.object({
     .string()
     .optional()
     .refine((value) => value === undefined || isUrl(value), { error: 'must be a valid Redis URL' }),
+  /**
+   * The Redis password, when the address does not carry it.
+   *
+   * Keeping it beside the URL rather than inside it is what lets a deployment put the secret in an
+   * ignored env file: the address stays a plain, loggable value and the password arrives as its own
+   * variable. Empty reads as absent, like every other value here.
+   */
+  redisPassword: z
+    .string()
+    .optional()
+    .refine((value) => value === undefined || value.length > 0, { error: 'must not be empty' }),
 });
 
 const docsSchema = z.object({

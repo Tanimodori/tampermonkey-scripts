@@ -49,7 +49,7 @@
 
 写进日志的**没有**：请求头（凭据在 `Authorization` 里）、腾讯文档的响应体（一次读就是整张表）、Redis 的值（缓存与调用者记录）。凭据按字段名脱敏（名字以 `token`/`secret`/`password`/`cookie`/`apiKey` 等结尾的字段值替换成 `[redacted]`），文件与 stdout 各自套一层，所以两条流一样干净。
 
-`Configuration resolved` 里的 `redis` 是唯一需要手工拆开的字段：密码藏在 URL 里，字段名脱敏看不到它，所以只记 `{ configured, host, port, db, password }`。
+`Configuration resolved` 里的 `redis` 是唯一需要手工拆开的字段：密码藏在 URL 里，字段名脱敏看不到它，所以只记 `{ configured, host, port, db, passwordConfigured }`（`passwordConfigured` 而不是 `password`：按字段名的脱敏会把 `password` 的值换成 `[redacted]`，恰好抹掉这个信号）。
 
 ## 4. 缓冲与退出
 

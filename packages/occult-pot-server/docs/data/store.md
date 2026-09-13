@@ -53,11 +53,12 @@
 
 ## 6. 相关配置
 
-| 变量                          | 默认值     | 作用                                                                                                 |
-| ----------------------------- | ---------- | ---------------------------------------------------------------------------------------------------- |
-| `OPS_SERVER_REDIS_URL`        | —          | `redis://[user:password@]host:port/db`；**没给就用进程内的 mock**（生产会告警）；用户名/密码写进 URL |
-| `OPS_UPSTREAM_CACHE_TTL`      | `30000`    | 缓存多久之内直接由 Redis 回答；过期才回表                                                            |
-| `OPS_UPSTREAM_STALE_AFTER_MS` | `10800000` | 回表时，`最后一次进岛时间` 超过这个时长的行走不到下游：从表与缓存里都删掉（3 小时）                  |
+| 变量 | 默认值 | 作用 |
+| --- | --- | --- |
+| `OPS_SERVER_REDIS_URL` | — | `redis://[user:password@]host:port/db`；**没给就用进程内的 mock**（生产会告警）；用户名/口令可以写进 URL，也可以单独给（见下一行） |
+| `OPS_SERVER_REDIS_PASSWORD` | — | 与地址分开给的口令（配置字段 `server.redisPassword`）；显式给定时优先于 URL 里那一个。compose 里同一个变量也交给 redis 服务的 `--requirepass` |
+| `OPS_UPSTREAM_CACHE_TTL` | `30000` | 缓存多久之内直接由 Redis 回答；过期才回表 |
+| `OPS_UPSTREAM_STALE_AFTER_MS` | `10800000` | 回表时，`最后一次进岛时间` 超过这个时长的行走不到下游：从表与缓存里都删掉（3 小时） |
 
 出站调用的节流与重试参数见 [与腾讯文档通讯](../api/upstream.md)，入站限流见 [API 端点](../api/endpoints.md)。
 

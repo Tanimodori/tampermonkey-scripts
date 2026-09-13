@@ -56,15 +56,12 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-.env
-.env.development.local
-.env.test.local
-.env.production.local
+# dotenv: the templates are tracked (`.env`, `.env.development`, `.env.production`, `.env.test-*`),
+# the values that belong to one machine or one deployment are not. Every reader — the app's own
+# loader and docker compose — layers a `.local` file on top of the template it names, so that is the
+# only place a secret has to live.
 .env.local
-# The task files `OPS_ENV_PATH` names read their ignored `.local` sibling on top.
-.env.test-redis.local
-.env.test-api.local
+.env.*.local
 
 # next.js build output
 .next/

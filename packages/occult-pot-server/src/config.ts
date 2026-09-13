@@ -132,6 +132,7 @@ const ENV_PATHS = [
   'server.jsonBodyLimit',
   'server.logLevel',
   'server.redisUrl',
+  'server.redisPassword',
   'docs.apiBase',
   'docs.fileId',
   'docs.sheetId',
@@ -194,7 +195,8 @@ function describeIssue(issue: { path: PropertyKey[]; message: string }): string 
 /** Everything the environment may leave out, in the form a resolved configuration holds it. */
 function getDefaultConfig(): AppEnvConfig {
   return {
-    // No `redisUrl`: leaving it out is what selects the in-process Redis.
+    // No `redisUrl`: leaving it out is what selects the in-process Redis. No `redisPassword` either:
+    // a server that wants one is told so by the deployment, not by a default.
     server: { port: 3000, host: '0.0.0.0', trustProxy: false, corsOrigins: '*', jsonBodyLimit: '64kb', logLevel: 'info' },
     docs: { apiBase: 'https://docs.qq.com', tokenExpiryWarnMs: 3 * DAY_MS },
     rateLimit: { ipWindowMs: 60_000, ipMax: 120, writeMax: 20 },
@@ -333,13 +335,19 @@ export function describeConfig(config: AppConfig): Record<string, unknown> {
     jsonBodyLimit: config.server.jsonBodyLimit,
     rateLimit: { ...config.rateLimit },
     upstream: { ...config.upstream },
-    redis: describeRedis(config.server.redisUrl),
+    redis: describeRedis(config.server.redisUrl, config.server.redisPassword),
     log: describeLogDestination(config),
   };
 }
 
-/** The Redis target as `{ configured, host, port, db, password }`; the URL never leaves this function. */
-function describeRedis(url: string | undefined): Record<string, unknown> {
+/**
+ * The Redis target as `{ configured, host, port, db, password }`.
+ *
+ * Neither the URL nor the password leaves this function: the address may carry a password of its own,
+ * and `password` reports whether one is configured at all — from the URL or from
+ * `OPS_SERVER_REDIS_PASSWORD` — which is the one thing an operator wants from a log line.
+ */
+function describeRedis(url: string | undefined, password: string | undefined): Record<string, unknown> {
   if (url === undefined) return { configured: false };
 
   try {
@@ -350,7 +358,9 @@ function describeRedis(url: string | undefined): Record<string, unknown> {
       host: parsed.hostname,
       port: parsed.port === '' ? 6379 : Number(parsed.port),
       db: database === '' ? 0 : Number(database),
-      password: parsed.password !== '',
+      // `passwordConfigured`, not `password`: the redaction matches a field *named* `password` and
+      // would replace this boolean with `[redacted]`, which is exactly the signal an operator wants.
+      passwordConfigured: parsed.password !== '' || password !== undefined,
     };
   } catch {
     // The schema rejects an unparseable URL long before this runs; the shape still has to hold.

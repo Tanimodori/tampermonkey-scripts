@@ -30,20 +30,25 @@ services:
         condition: service_healthy
     env_file:
       # Least specific first: files are evaluated in order, and a later one overrides an earlier one.
-      # All three are optional (`required:` needs Docker Compose v2.24 or newer).
-      #   .env                    shared/deployment values, and what compose interpolates from
-      #   .env.production         the committed production template — part of the delivery
-      #   .env.production.local   the ignored, deployment-specific values (win over both)
+      # The order is the one the app's own loader uses on the host, so a value lands the same way
+      # either side:
+      #   .env.production         the tracked production template — part of the delivery
+      #   .env.local              this machine's own shared values, ignored
+      #   .env.production.local   the deployment's values, ignored; wins over everything above
+      #
+      # `.env` is deliberately not here: it is the variable reference (all of it commented out), and a
+      # documentation file has no business being a source of values. What it documents about these
+      # three applies: values go in the files, and only the ignored ones hold secrets.
       #
       # `format: raw` on every one of them: without it compose interpolates `$` in the values, which
       # would eat the `$` of a document id (`300000000$…`). Raw passes each value through as written —
       # the same reading the app's own loader gives the file on the host — so the id is spelled
       # normally here. The trade is that these files must not rely on dotenv sugar: an inline ` # …`
       # after a value would become part of it, and surrounding quotes would be kept.
-      - path: .env
+      - path: .env.production
         required: false
         format: raw
-      - path: .env.production
+      - path: .env.local
         required: false
         format: raw
       - path: .env.production.local
@@ -61,10 +66,11 @@ services:
       # bridge networking, not a hole here.) If it is ever published directly again, set this back to
       # false.
       OPS_SERVER_TRUST_PROXY: 1
-      # The state store is the `redis` service below. Its password rides in the address, and comes
-      # from the shell as `REDIS_PASSWORD`, so it never has to be written into this file. A password
-      # with `@`, `:` or `#` in it would have to be percent-encoded here.
-      OPS_SERVER_REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD in the environment}@redis:6379
+      # The state store is the `redis` service below, by service name on this network. The address
+      # carries no credential and no compose variable: the password, when there is one, arrives as
+      # `OPS_SERVER_REDIS_PASSWORD` from the env files above — one value, read by both this service
+      # and Redis itself, never written into this file or into a URL that could reach a log line.
+      OPS_SERVER_REDIS_URL: redis://redis:6379
     volumes:
       # Where the rotating file sink writes (OPS_LOG_ROTATING_FILE_PATH); the bind mount keeps the JSON
       # Lines files on the host. uid 1000 — the runtime `node` user — must be able to write here: on
@@ -80,8 +86,25 @@ services:
 
   redis:
     image: redis:7-alpine
+    env_file:
+      # The same files the app reads, because `OPS_SERVER_REDIS_PASSWORD` is the one value this service
+      # wants from them. `${VAR:+…}` leaves the flag out when the variable is empty, so a deployment
+      # that sets no password gets an unauthenticated Redis — which is exactly what the app then
+      # connects to. Both sides read one variable, so they cannot disagree.
+      - path: .env.production
+        required: false
+        format: raw
+      - path: .env.local
+        required: false
+        format: raw
+      - path: .env.production.local
+        required: false
+        format: raw
     # Append-only persistence: the pot list, the pending writes and the credential survive a restart.
-    command: ['redis-server', '--appendonly', 'yes', '--requirepass', '${REDIS_PASSWORD:?set REDIS_PASSWORD in the environment}']
+    command:
+      - sh
+      - -c
+      - exec redis-server --appendonly yes $${OPS_SERVER_REDIS_PASSWORD:+--requirepass "$$OPS_SERVER_REDIS_PASSWORD"}
     volumes:
       - redis-data:/data
     # No `ports` either: nothing outside this network (or on another one) can reach Redis, so a host
@@ -89,7 +112,7 @@ services:
     networks: [occult-pot]
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:?set REDIS_PASSWORD in the environment}', 'ping']
+      test: ['CMD-SHELL', 'redis-cli $${OPS_SERVER_REDIS_PASSWORD:+-a "$$OPS_SERVER_REDIS_PASSWORD"} --no-auth-warning ping']
       interval: 10s
       timeout: 3s
       retries: 5

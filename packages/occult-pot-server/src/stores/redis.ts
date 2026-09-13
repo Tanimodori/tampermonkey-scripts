@@ -88,8 +88,13 @@ function buildMock(): Redis {
 function buildServer(config: AppConfig): Redis {
   const url = config.server.redisUrl;
   if (url === undefined) throw new Error('No OPS_SERVER_REDIS_URL is set; the mock is built instead');
-  // Credentials, when the server wants them, are part of the URL: `redis://user:password@host:port/db`.
-  return new Redis(url);
+
+  // Credentials, when the server wants them, are either part of the URL
+  // (`redis://user:password@host:port/db`) or supplied beside it as `OPS_SERVER_REDIS_PASSWORD`. The
+  // second is what lets a deployment keep the secret in an ignored env file — and an explicitly given
+  // password wins over one embedded in the address, so the URL never has to carry it.
+  const password = config.server.redisPassword;
+  return password === undefined ? new Redis(url) : new Redis(url, { password });
 }
 
 // ---------------------------------------------------------------------------

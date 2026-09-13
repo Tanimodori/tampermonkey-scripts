@@ -36,6 +36,25 @@ cd packages/occult-pot-server
 docker compose up -d --build
 ```
 
+**更新已部署的实例**：`--build` 不能省 —— 不带它时 compose 看到 `occult-pot-server:latest` 已经存在就直接复用那个镜像，容器不会重建，现象就是"代码改了却没生效"。构建上下文是仓库根，所以远程要先拿到新代码：
+
+```bash
+git pull                          # 在仓库根
+cd packages/occult-pot-server
+docker compose up -d --build      # 重新构建镜像并重建容器
+```
+
+镜像重建后 `up -d` 会自行重建容器（想强制就再加 `--force-recreate`）；只重建不启动是 `docker compose build occult-pot-server`。"镜像里带着旧代码"这一种可能排除了：`Dockerfile.dockerignore` 排除了 `**/dist`，运行阶段的 `dist/` 只可能是在容器里从容器内的源码编出来的，而 `COPY . .` 之后每一层都随源码失效，所以一般也用不着 `--no-cache`。确认线上跑的是哪一份：
+
+```bash
+curl -sS localhost:8080/api/v1 | head -c 120                        # routes 应全是 /api/v1/...
+curl -sS -o /dev/null -w '%{http_code}\n' localhost:8080/v1/pots    # 旧路径应为 404
+docker compose exec occult-pot-server grep -c '"/v1' dist/index.js  # 必须输出 0
+docker images occult-pot-server --format '{{.CreatedAt}} {{.ID}}'   # 镜像时间应刚刚构建
+```
+
+这个 compose 用的是本地构建的 `occult-pot-server:latest`（没有任何 registry），所以 `docker compose pull` 在它身上什么也不做；若是改成在别处构建、推送到 registry 再拉取，那一侧的命令才是 `docker compose pull && docker compose up -d`。前面还有 CDN 或云 LB 时记得刷缓存 —— 404 同样会被缓存。
+
 构建阶段默认走国内镜像，两者都是 Dockerfile 顶部的 build arg（值是**主机名**，协议由各自工具决定）：apt 用 [TUNA](https://mirrors.tuna.tsinghua.edu.cn/help/debian/)（把基础镜像自带的 `deb.debian.org` 换掉，走 http —— `ca-certificates` 正是这一步才装上的包），npm 用 [npmmirror](https://npmmirror.com)（构建阶段的 `/root/.npmrc` 覆盖 Rush/pnpm 自举时读不到项目配置的那一段，`common/config/rush/.npmrc` 供其后的 pnpm 用，二者都取自同一个 arg）。境外网络构建：
 
 ```bash

@@ -22,7 +22,7 @@ services:
       # The state store is the `redis` service below. Its password rides in the address, and comes
       # from the shell as `REDIS_PASSWORD`, so it never has to be written into this file. A password
       # with `@`, `:` or `#` in it would have to be percent-encoded here.
-      OPS_REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD in the environment}@redis:6379
+      OPS_SERVER_REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD in the environment}@redis:6379
     ports:
       - '3000:3000'
     restart: unless-stopped

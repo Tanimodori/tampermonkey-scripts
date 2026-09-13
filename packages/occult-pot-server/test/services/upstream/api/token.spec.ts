@@ -1,4 +1,4 @@
-import { loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
+import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getUserInfo, refreshAccessToken } from '@/services/upstream/api/token.ts';
 import type { ClientOptions } from '@/services/upstream/client.ts';
@@ -36,7 +36,7 @@ describe('getUserInfo', () => {
     const data = await getUserInfo('some-access-token');
 
     expect(data).toMatchObject({ openID: 'test-open-id' });
-    expect(docs.state.calls[0]?.url).toBe('https://docs.qq.com/oauth/v2/userinfo?access_token=some-access-token');
+    expect(docs.state.calls[0]?.url).toBe(`${apiOrigin()}/oauth/v2/userinfo?access_token=some-access-token`);
     // The credential travels in the URL, so this call carries no header triple of its own.
     expect(docs.state.calls[0]?.headers['access-token']).toBeUndefined();
   });

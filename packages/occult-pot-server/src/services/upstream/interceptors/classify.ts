@@ -58,8 +58,11 @@ export class UpstreamError extends AppError {
   }
 }
 
-/** Business return codes that mean "the configured credential is unusable". */
-const AUTH_RET_CODES = new Set([10302, 10303, 10313, 37019]);
+/**
+ * Business return codes that mean "the configured credential is unusable": a rejected token, the
+ * wrong Open-Id, and `10007` — the credential has no permission on this document at all.
+ */
+const AUTH_RET_CODES = new Set([10007, 10302, 10303, 10313, 37019]);
 /** The business return code that means "too many calls"; HTTP 429 says the same thing. */
 const RATE_LIMIT_RET_CODES = new Set([400007]);
 

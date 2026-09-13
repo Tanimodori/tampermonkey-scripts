@@ -1,4 +1,4 @@
-import { loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
+import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { classify } from '@/services/upstream/interceptors/classify.ts';
 import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
@@ -20,7 +20,7 @@ const client = () => docs.agent.compose(classify);
 /** One request as `api/sheet.ts` builds it. */
 function options(overrides: Partial<CallOptions> = {}): CallOptions {
   return {
-    origin: 'https://docs.qq.com',
+    origin: apiOrigin(),
     path: '/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets/tXXXXXX',
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -117,6 +117,16 @@ describe('a failure', () => {
 
     expect(error).toMatchObject({ code: 'ERR_UPSTREAM_RATE_LIMITED', status: 503, retryAfterSeconds: 30 });
     expect((error as Error).message).toContain('ret=400007');
+    expect(callsMatching('getRecords')).toBe(1);
+  });
+
+  it('maps a credential that has no permission on the document to UPSTREAM_AUTH_FAILED', async () => {
+    // The upstream answers this one with HTTP 200 and `ret=10007`, which says nothing a status code
+    // could: it is the credential that is unusable here, not the request.
+    loadTestConfig();
+    docs.state.readFailure = { status: 200, ret: 10007, msg: 'No corresponding permissions required' };
+
+    await expect(client().request(options())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_AUTH_FAILED', status: 503 });
     expect(callsMatching('getRecords')).toBe(1);
   });
 

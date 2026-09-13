@@ -11,7 +11,7 @@ import type { AppConfig } from '@/validation/index.ts';
  * per-user counters all go through here.
  *
  * Built from the loaded configuration on first use and kept until the configuration is replaced,
- * exactly like the undici pool in `services/upstream/client.ts`. With no `OPS_REDIS_URL` this is an
+ * exactly like the undici pool in `services/upstream/client.ts`. With no `OPS_SERVER_REDIS_URL` this is an
  * in-process `ioredis-mock` instead of a server — the same command surface, no durability — which
  * the service says out loud when it happens in production.
  */
@@ -30,7 +30,7 @@ let warnedAboutMock = false;
 
 /** No address means no server: the mock answers instead. */
 function usesMock(config: AppConfig): boolean {
-  return config.redis.url === undefined;
+  return config.server.redisUrl === undefined;
 }
 
 /** The client to use, built from the loaded configuration on first use. */
@@ -75,14 +75,14 @@ export async function closeRedis(): Promise<void> {
 function buildMock(): Redis {
   if (process.env.NODE_ENV === 'production' && !warnedAboutMock) {
     warnedAboutMock = true;
-    getLogger(LOG_CATEGORY).warning('No OPS_REDIS_URL is set, so state lives in an in-process Redis and nothing written here survives the process', {});
+    getLogger(LOG_CATEGORY).warning('No OPS_SERVER_REDIS_URL is set, so state lives in an in-process Redis and nothing written here survives the process', {});
   }
   return new RedisMock();
 }
 
 function buildServer(config: AppConfig): Redis {
-  const url = config.redis.url;
-  if (url === undefined) throw new Error('No OPS_REDIS_URL is set; the mock is built instead');
+  const url = config.server.redisUrl;
+  if (url === undefined) throw new Error('No OPS_SERVER_REDIS_URL is set; the mock is built instead');
   // Credentials, when the server wants them, are part of the URL: `redis://user:password@host:port/db`.
   return new Redis(url);
 }

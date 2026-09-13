@@ -14,7 +14,7 @@
 
 两个 id 都不出现在浏览器地址栏里：`OPS_DOCS_FILE_ID` 是 API 自己的 `fileID`（`300000000$…` 形态），`OPS_DOCS_SHEET_ID` 是子表，二者都能从一条已授权的调用（`…/files/{fileID}/sheets/{sheetID}`）或官方工具里读到。**别把表格链接粘进来**（`OPS_DOCS_FILE_ID` 的字符集校验会拒绝）；旧版本是粘贴表格链接、由服务用 converter 换算 `fileID`，那条路径已经不在启动流程里了（接口本身仍见 §2）。
 
-真实文档属于部署数据：只写在环境变量里 —— 本机是 git-ignored 的 `.env.development.local`，容器里由 compose 注入 —— 不进版本库。
+真实文档属于部署数据：只写在环境变量里 —— 本机是 git-ignored 的 `.env.production.local`（生产）与 `.env.test-api.local`（测试文档），容器里由 compose 注入 —— 不进版本库。它的 `fileID` 可由分享链接里的 encodedID 经 `GET /openapi/drive/v2/util/converter?type=2&value=…` 换算。
 
 ## 2. 协议
 
@@ -47,7 +47,7 @@
 ## 4. 现在的做法（本服务）
 
 - **只读整表**：`getRecords` 按 `limit = 100` 一页页读到 `hasMore` 为假（没有页数上限），再经 `fromSheetValues` 映射成 `Pot`，不满足规则的行走不到下游（规则见 `../data/pot.md`）。
-- **只追加**：`addRecords` 是唯一会发出的写。`overwrite` 与 `remove` 直接抛 `INTERNAL_ERROR`（表没有可用的按 id 更新/删除语义），`update` 为空时不发请求；文本列以裸字符串写入（见 `../data/pot.md`）。
+- **只追加**：`addRecords` 是唯一会发出的写。`overwrite` 与 `remove` 直接抛 `INTERNAL_ERROR`（表没有可用的按 id 更新/删除语义），`update` 为空时不发请求；文本列写成 `[{"type":"text","text":…}]`（见 `../data/pot.md`：裸字符串会被上游静默丢弃）。
 - **不解析时间**：服务不解析日期文本，也不推算刷新时刻；两个时刻原样存取。
 - **凭据来自环境变量，并保存在 Redis 里**（`occult-pot:docs:credential`，见 [存储设计](../data/store.md)）：环境变量是种子，刷新出来的 token 写回 Redis 供重启后继续使用；`OPS_DOCS_CLIENT_SECRET` 永不入库。
 - **文档坐标由配置给出、由 `stores/upstream.ts` 分发**：`OPS_DOCS_FILE_ID`/`OPS_DOCS_SHEET_ID` 就是调用路径里的两个 id，没有 converter、没有子表回退，也不再有 `viewId`（记录接口不接受它）。启动时 store 做两件事：用「查子表列表」核对子表确实在这份文档里，再用 `userinfo` **校验凭据**；任一步失败就拒绝启动，而不是等到第一个请求。两件都通过后记一条 `Verified the Tencent Docs document`（带 `fileIdLength`/`sheetId`），凭据已过期或临近过期时再记一条 warning。
@@ -66,7 +66,7 @@
 | `src/stores/upstream.ts` | 身份与凭据：`useUpstreamStore()` 工厂 + 默认实例 `upstreamStore`，分发配置里的 `fileId`/`sheetId` 与凭据三元组，启动时核对子表并校验 token、按需刷新，自报核对结果与到期告警，并给出 `/readyz` 的就绪判断（见 §7） |
 | `src/stores/pot.ts` | pot 状态：`usePotStore()` 工厂 + 默认实例 `potStore`，翻页读整张表、把行映射成 `Pot`，并把读缓存与写透（先表后 Redis）都收在这里（见 [存储设计](../data/store.md)） |
 | `src/services/pot.ts` | pot 服务：路由要的三件事（列表、按 ID 取一个、接受一个），只做取用与「不存在」的判定 |
-| `src/services/redis.ts` | Redis 连接：唯一客户端（跟随配置、可注入、可关闭）；没有 `OPS_REDIS_URL` 时改用进程内 mock 并告警，同时给 `rate-limit-redis` 提供命令发送器（mock 下把 `SCRIPT LOAD`/`EVALSHA` 翻译成 `EVAL`） |
+| `src/services/redis.ts` | Redis 连接：唯一客户端（跟随配置、可注入、可关闭）；没有 `OPS_SERVER_REDIS_URL` 时改用进程内 mock 并告警，同时给 `rate-limit-redis` 提供命令发送器（mock 下把 `SCRIPT LOAD`/`EVALSHA` 翻译成 `EVAL`） |
 | `src/stores/user.ts` | 调用者记录：`touchUser()` 写 `occult-pot:user:<ip>`（首次/最近出现、请求数、latest request id） |
 | `src/services/time.ts` | 唯一的时钟：`now()`；TTL、时间戳、凭据到期都由它读，测试 mock 这个模块来钉住时间 |
 
@@ -136,7 +136,7 @@ GET https://docs.qq.com/oauth/v2/token?client_id=…&client_secret=…&grant_typ
 - 官方规定 Access Token 30 天、Refresh Token 1 年、授权码 5 分钟且一次性，并且**换取与刷新都必须由后台服务发起**。
 - 刷新成功后写入 Redis 的只有 `clientId`/`openId`/`refreshToken`/`accessToken` 四项；`clientSecret` 只从环境读，绝不落库。
 
-**仍待做的部分**（计划）：进程内定时器在剩余寿命低于阈值时自动调用 `refresh()`；把刷新结果写入外部 Redis（单键 JSON，取用前读取、Redis 不可用时回退环境变量，测试用 redis mock），以便重启与多实例共享。届时会新增 `OPS_REDIS_URL`（`OPS_DOCS_CLIENT_SECRET` 与 `OPS_DOCS_REFRESH_TOKEN` 已经是现有配置项）。
+**仍待做的部分**（计划）：进程内定时器在剩余寿命低于阈值时自动调用 `refresh()`；把刷新结果写入外部 Redis（单键 JSON，取用前读取、Redis 不可用时回退环境变量，测试用 redis mock），以便重启与多实例共享。届时会新增 `OPS_SERVER_REDIS_URL`（`OPS_DOCS_CLIENT_SECRET` 与 `OPS_DOCS_REFRESH_TOKEN` 已经是现有配置项）。
 
 ### 7.3 安全提示
 

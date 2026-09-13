@@ -1,3 +1,6 @@
+/**
+ * @module-tag redis
+ */
 import { clock } from '@test/clock.ts';
 import { captureLogs, loadTestConfig, rawRecord, resetRedis, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -44,7 +47,7 @@ function ids(value: PotState): string[] {
 
 /** A store over the mocked upstream and the mock Redis. */
 function useStore(overrides: Record<string, string | undefined> = {}): PotStore {
-  loadTestConfig({ OPS_CACHE_READ_TTL_MS: String(TTL), ...overrides });
+  loadTestConfig({ OPS_UPSTREAM_CACHE_TTL: String(TTL), ...overrides });
   return usePotStore();
 }
 
@@ -203,9 +206,9 @@ describe('writes', () => {
 
     expect(appendCalls()).toBe(1);
     expect(docs.state.added[0]).toEqual({
-      区服: '鸟',
-      地图: '北岛',
-      ID: '60-0-4000ABCD',
+      区服: [{ type: 'text', text: '鸟' }],
+      地图: [{ type: 'text', text: '北岛' }],
+      ID: [{ type: 'text', text: '60-0-4000ABCD' }],
       北罐刷新时间: '1789200960000',
       最后一次进岛时间: '1789199460000',
     });
@@ -261,7 +264,7 @@ describe('writes', () => {
     await store.put(pot('61-0-4000FFFF'));
 
     expect(appendCalls()).toBe(2);
-    expect(docs.state.added.map((row) => row['ID'])).toEqual(['60-0-4000ABCD', '61-0-4000FFFF']);
+    expect(docs.state.added.map((row) => row['ID'])).toEqual([[{ type: 'text', text: '60-0-4000ABCD' }], [{ type: 'text', text: '61-0-4000FFFF' }]]);
     expect(ids(await store.state())).toEqual(['54-1-4000E8F3', '44-1-4000AE40', '60-0-4000ABCD', '61-0-4000FFFF']);
   });
 

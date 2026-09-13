@@ -22,21 +22,21 @@
 
 ## 2. 错误码
 
-| code                         | HTTP | 何时出现                                                                                 |
-| ---------------------------- | ---- | ---------------------------------------------------------------------------------------- |
-| `ERR_BAD_REQUEST`            | 400  | 请求体或路径参数不合规；请求体不是合法 JSON                                              |
-| `ERR_NOT_FOUND`              | 404  | 未知的罐子 ID，或没有匹配的路径 / `v1` 子路径                                            |
-| `ERR_METHOD_NOT_ALLOWED`     | 405  | 路径存在但不支持该方法（响应带 `Allow`）                                                 |
-| `ERR_UNSUPPORTED_MEDIA_TYPE` | 415  | 请求体没有声明 `application/json`，或编码不支持                                          |
-| `ERR_PAYLOAD_TOO_LARGE`      | 413  | 请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`                                                  |
-| `ERR_RATE_LIMITED`           | 429  | 按 IP 的入站限流                                                                         |
-| `ERR_NOT_READY`              | 503  | `/readyz` 判为不可用（凭据过期、坐标未核对、Redis 读不到）                               |
-| `ERR_UPSTREAM_AUTH_FAILED`   | 503  | 腾讯文档拒绝凭据（HTTP 401/403，或业务码 `10302`/`10303`/`10313`/`37019`），或凭据已过期 |
-| `ERR_UPSTREAM_RATE_LIMITED`  | 503  | 腾讯文档返回 429 或业务码 `400007`；带 `retryAfterSeconds`                               |
-| `ERR_UPSTREAM_BAD_REQUEST`   | 400  | 腾讯文档以参数类业务码拒绝请求（`400000 ≤ ret < 500000`，或其他非零 `ret`）              |
-| `ERR_UPSTREAM_FAILED`        | 502  | 传输失败、HTTP 5xx，或响应信封无法解析                                                   |
-| `ERR_CONFIG_INVALID`         | 500  | 配置非法（启动即退出）、配置的子表不在该文档里，或凭据校验失败、Open-Id 与 token 不符    |
-| `ERR_INTERNAL_ERROR`         | 500  | 其他未预期的服务端错误                                                                   |
+| code                         | HTTP | 何时出现                                                                                         |
+| ---------------------------- | ---- | ------------------------------------------------------------------------------------------------ |
+| `ERR_BAD_REQUEST`            | 400  | 请求体或路径参数不合规；请求体不是合法 JSON                                                      |
+| `ERR_NOT_FOUND`              | 404  | 未知的罐子 ID，或没有匹配的路径 / `v1` 子路径                                                    |
+| `ERR_METHOD_NOT_ALLOWED`     | 405  | 路径存在但不支持该方法（响应带 `Allow`）                                                         |
+| `ERR_UNSUPPORTED_MEDIA_TYPE` | 415  | 请求体没有声明 `application/json`，或编码不支持                                                  |
+| `ERR_PAYLOAD_TOO_LARGE`      | 413  | 请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`                                                          |
+| `ERR_RATE_LIMITED`           | 429  | 按 IP 的入站限流                                                                                 |
+| `ERR_NOT_READY`              | 503  | `/readyz` 判为不可用（凭据过期、坐标未核对、Redis 读不到）                                       |
+| `ERR_UPSTREAM_AUTH_FAILED`   | 503  | 腾讯文档拒绝凭据（HTTP 401/403，或业务码 `10007`/`10302`/`10303`/`10313`/`37019`），或凭据已过期 |
+| `ERR_UPSTREAM_RATE_LIMITED`  | 503  | 腾讯文档返回 429 或业务码 `400007`；带 `retryAfterSeconds`                                       |
+| `ERR_UPSTREAM_BAD_REQUEST`   | 400  | 腾讯文档以参数类业务码拒绝请求（`400000 ≤ ret < 500000`，或其他非零 `ret`）                      |
+| `ERR_UPSTREAM_FAILED`        | 502  | 传输失败、HTTP 5xx，或响应信封无法解析                                                           |
+| `ERR_CONFIG_INVALID`         | 500  | 配置非法（启动即退出）、配置的子表不在该文档里，或凭据校验失败、Open-Id 与 token 不符            |
+| `ERR_INTERNAL_ERROR`         | 500  | 其他未预期的服务端错误                                                                           |
 
 ## 3. HTTP 状态码一览
 
@@ -118,7 +118,7 @@ body-parser 的失败由同一个错误处理器映射：
 | --- | --- | --- | --- |
 | 传输错误 / HTTP 5xx | `ERR_UPSTREAM_FAILED` (502) | 是（`OPS_UPSTREAM_MAX_RETRIES` 次） | — |
 | HTTP 429 或 `ret = 400007` | `ERR_UPSTREAM_RATE_LIMITED` (503) | 是（按 `Retry-After` 或退避值等待） | `retryAfterSeconds` → `Retry-After` |
-| HTTP 401/403 或鉴权类业务码 | `ERR_UPSTREAM_AUTH_FAILED` (503) | 否 | — |
+| HTTP 401/403 或鉴权类业务码（含 `10007`：凭据对该文档无权限） | `ERR_UPSTREAM_AUTH_FAILED` (503) | 否 | — |
 | 参数类业务码 / 无法解析的信封 | `ERR_UPSTREAM_BAD_REQUEST` (400) / `ERR_UPSTREAM_FAILED` (502) | 否 | `message` 里带 `ret`/`msg`/`status` |
 | 文档/子表 ID 解析失败 | `ERR_CONFIG_INVALID` (500) | 否 | 启动时就失败 |
 | 凭据校验或刷新被拒绝 | `ERR_UPSTREAM_AUTH_FAILED` (503) / `ERR_CONFIG_INVALID` (500) | 否 | 启动时校验；`refresh()` 缺配置也是 500 |

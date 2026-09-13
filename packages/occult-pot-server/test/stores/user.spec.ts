@@ -1,3 +1,6 @@
+/**
+ * @module-tag redis
+ */
 import { clock } from '@test/clock.ts';
 import { loadTestConfig, resetRedis } from '@test/helpers.ts';
 import type Redis from 'ioredis';

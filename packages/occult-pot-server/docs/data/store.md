@@ -1,8 +1,8 @@
 # 存储设计
 
-服务需要留住三类东西：pot 列表、腾讯文档凭据、以及每个调用者的计数与后续扩展信息。它们全部放在 Redis 里，键统一带 `occult-pot:` 前缀（`OPS_REDIS_URL` 里的 db 之外再有一层命名空间，便于和其他服务共用一个实例）。
+服务需要留住三类东西：pot 列表、腾讯文档凭据、以及每个调用者的计数与后续扩展信息。它们全部放在 Redis 里，键统一带 `occult-pot:` 前缀（`OPS_SERVER_REDIS_URL` 里的 db 之外再有一层命名空间，便于和其他服务共用一个实例）。
 
-**腾讯表仍然是权威**，但 Redis 不再只是「读缓存 + 待写队列」：读只在缓存过期（`OPS_CACHE_READ_TTL_MS`）时回表，回表成功就整份覆盖；写先落到表里，成功之后才折进缓存。于是表不可达时服务仍然能读 —— 只要缓存还没过期，或者回表失败而缓存里还有上次读过的东西。
+**腾讯表仍然是权威**，但 Redis 不再只是「读缓存 + 待写队列」：读只在缓存过期（`OPS_UPSTREAM_CACHE_TTL`）时回表，回表成功就整份覆盖；写先落到表里，成功之后才折进缓存。于是表不可达时服务仍然能读 —— 只要缓存还没过期，或者回表失败而缓存里还有上次读过的东西。
 
 ## 1. 键布局
 
@@ -18,7 +18,7 @@
 
 ## 2. 读路径
 
-- `get()` 先读 `occult-pot:pots`：`updateTime` 距今不到 `OPS_CACHE_READ_TTL_MS` 就直接返回，不碰表。
+- `get()` 先读 `occult-pot:pots`：`updateTime` 距今不到 `OPS_UPSTREAM_CACHE_TTL` 就直接返回，不碰表。
 - 过期才回表：`getRecords` 翻页取整张表（`limit = 100`，跟着 `hasMore`/`next` 走），映射成 `Pot`（规则见 [Pot 数据](pot.md)），然后**整份覆盖**写回，`updateTime` 打的是这次读取到达的时刻。
 - **回表失败**（网络、鉴权、5xx 都算）：缓存里已经有读过的东西（`updateTime !== 0`）时，返回旧缓存并记一条 warning（`Served a stale pot list; the sheet read failed`，带原因、`ageMs` 与罐子数）；`updateTime === 0`（从未读过）时没有可服务的东西，错误照旧抛给调用方（502/503）。
 - 并发读取单飞：第一个调用者回表，其余复用同一个 Promise，N 个并发读只产生一次上游请求。
@@ -44,15 +44,15 @@
 
 - 标识用 `req.ip`（受 `OPS_SERVER_TRUST_PROXY` 影响）；请求 id 一起记进 `lastRequestId`，用于把一次请求追回它触碰过的用户记录。
 - `occult-pot:user:<ip>` 由 `userContext()` 中间件**异步**写（fire-and-forget）：请求不等它，写失败只记一条 warning —— 强制项是限流，它由限流器自己报错。
-- 限流计数就是 `occult-pot:user:rate-limit:<limiter>:<ip>`：官方 `rate-limit-redis` store 落在 Redis 里，因此多实例共享同一份窗口计数。用 mock（没有 `OPS_REDIS_URL`）时，`services/redis.ts` 里的命令垫片把该 store 用到的 `SCRIPT LOAD`/`EVALSHA` 翻译成 mock 支持的 `EVAL`，Lua 本身不变。
+- 限流计数就是 `occult-pot:user:rate-limit:<limiter>:<ip>`：官方 `rate-limit-redis` store 落在 Redis 里，因此多实例共享同一份窗口计数。用 mock（没有 `OPS_SERVER_REDIS_URL`）时，`services/redis.ts` 里的命令垫片把该 store 用到的 `SCRIPT LOAD`/`EVALSHA` 翻译成 mock 支持的 `EVAL`，Lua 本身不变。
 - pow 尚未实现：约定好的键是 `occult-pot:user:pow:<ip>`，字段见 §1 表格，等接口落地再写。
 
 ## 6. 相关配置
 
-| 变量                    | 默认值  | 作用                                                                                                 |
-| ----------------------- | ------- | ---------------------------------------------------------------------------------------------------- |
-| `OPS_REDIS_URL`         | —       | `redis://[user:password@]host:port/db`；**没给就用进程内的 mock**（生产会告警）；用户名/密码写进 URL |
-| `OPS_CACHE_READ_TTL_MS` | `30000` | 缓存多久之内直接由 Redis 回答；过期才回表                                                            |
+| 变量                     | 默认值  | 作用                                                                                                 |
+| ------------------------ | ------- | ---------------------------------------------------------------------------------------------------- |
+| `OPS_SERVER_REDIS_URL`   | —       | `redis://[user:password@]host:port/db`；**没给就用进程内的 mock**（生产会告警）；用户名/密码写进 URL |
+| `OPS_UPSTREAM_CACHE_TTL` | `30000` | 缓存多久之内直接由 Redis 回答；过期才回表                                                            |
 
 出站调用的节流与重试参数见 [与腾讯文档通讯](../api/upstream.md)，入站限流见 [API 端点](../api/endpoints.md)。
 

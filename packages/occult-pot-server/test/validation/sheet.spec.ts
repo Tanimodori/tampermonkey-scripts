@@ -16,11 +16,12 @@ const validPot: Pot = {
 };
 
 describe('toSheetValues', () => {
-  it('maps the five fields onto the sheet column titles as plain values', () => {
+  it('maps the five fields onto the sheet column titles in the shape the API stores', () => {
+    // Text columns need the typed cell: a bare string is accepted with `ret: 0` and then dropped.
     expect(toSheetValues(validPot)).toEqual({
-      区服: '鸟',
-      地图: '北岛',
-      ID: '54-1-4000E8F3',
+      区服: [{ type: 'text', text: '鸟' }],
+      地图: [{ type: 'text', text: '北岛' }],
+      ID: [{ type: 'text', text: '54-1-4000E8F3' }],
       北罐刷新时间: '1789200960000',
       最后一次进岛时间: '1789199460000',
     });

@@ -3,7 +3,7 @@ import Redis from 'ioredis';
 import RedisMock from 'ioredis-mock';
 import { MockAgent } from 'undici';
 import type { Dispatcher } from 'undici';
-import { loadConfig } from '@/config.ts';
+import { loadConfig, loadEnv } from '@/config.ts';
 import { configureLogging } from '@/logger.ts';
 import type { LogLevel } from '@/logger.ts';
 import type { RawRecordDto } from '@/services/upstream/api/sheet.ts';
@@ -35,34 +35,35 @@ const TEST_DEFAULTS: NodeJS.ProcessEnv = {
 };
 
 /** The one name that decides where the tests' Redis lives: no address means the mock. */
-const REDIS_URL = 'OPS_REDIS_URL';
+const REDIS_URL = 'OPS_SERVER_REDIS_URL';
 
-/** Everything a case may take from the real environment: its own defaults, plus the address. */
-const NATIVE_NAMES = [...Object.keys(TEST_DEFAULTS), REDIS_URL];
+/** The address this run is configured with, wherever it came from — a file, the shell, or nothing. */
+function redisUrl(): string | undefined {
+  return testEnv()[REDIS_URL];
+}
 
-/** Whether the environment points at a real Redis; `test:redis` is what sets the address. */
+/** Whether the run points at a real Redis; the `test:redis` task is what configures the address. */
 function redisIsReal(): boolean {
-  return (process.env[REDIS_URL] ?? '') !== '';
+  return (redisUrl() ?? '') !== '';
 }
 
 /**
- * The environment a test app runs with: the variables the configuration requires, a fast flush
- * interval, and the credential the upstream mock expects.
+ * The environment a test app runs with: the variables the configuration requires, the mock upstream
+ * and the credential the upstream mock expects.
  *
- * Highest priority first: an explicit override in the case, then the real environment, then the
- * defaults. Nothing in the defaults names a Redis, so a run without `OPS_REDIS_URL` gets the
- * in-process mock and a run with one talks to that server — the same rule the service uses.
+ * Highest priority first: an explicit override in the case, then **the env files** (the `test` mode
+ * chain, plus whatever `OPS_ENV_PATH` names and its `.local`), then the real environment, then the
+ * defaults. Files beating the ambient environment is the service's own rule, and it is what lets a
+ * task hand the suite another Redis or another document from a committed file.
+ *
+ * Nothing in the defaults names a Redis, so a run without an address gets the in-process mock.
  */
 export function testEnv(overrides: Record<string, string | undefined> = {}): NodeJS.ProcessEnv {
-  const native: NodeJS.ProcessEnv = {};
-  for (const name of NATIVE_NAMES) {
-    const value = process.env[name];
-    if (value !== undefined && value !== '') native[name] = value;
-  }
+  // `loadEnv` already puts the real environment underneath the files.
+  const merged = defu(overrides, loadEnv('test'), TEST_DEFAULTS);
 
   // An override set to `undefined` says "this one is not configured", which `defu` cannot express
   // (it reads `undefined` as "absent, use the next source"), so those names come out again.
-  const merged = defu(overrides, native, TEST_DEFAULTS);
   for (const [name, value] of Object.entries(overrides)) {
     if (value === undefined) delete merged[name];
   }
@@ -82,7 +83,7 @@ export function loadTestConfig(overrides: Record<string, string | undefined> = {
  * real server is shared by everything, which is why `test:redis` runs without file parallelism.
  */
 export async function resetRedis(): Promise<void> {
-  const url = process.env[REDIS_URL];
+  const url = redisUrl();
   const client = redisIsReal() && url !== undefined ? new Redis(url) : new RedisMock();
   await client.flushall();
   await client.quit();
@@ -207,9 +208,16 @@ export interface TencentDocsMock {
   close(): Promise<void>;
 }
 
-/** The origin of the configured upstream; the mock only ever intercepts this one. */
-const API_ORIGIN = 'https://docs.qq.com';
 const JSON_HEADERS = { 'content-type': 'application/json' };
+
+/**
+ * The origin of the configured upstream: the mock only ever intercepts this one, so it is whatever
+ * the run's configuration points at — the local mock origin the vitest config supplies, unless a
+ * task's env file names a real service. Specs build their requests on it too.
+ */
+export function apiOrigin(): string {
+  return process.env.OPS_DOCS_API_BASE ?? 'https://docs.qq.com';
+}
 
 /** The slice of undici's mock callback this file needs. */
 interface MockRequest {
@@ -286,12 +294,13 @@ export function setupTencentDocsMock(
   /** The transport `client` hands out, built once and reused for every request of this mock. */
   let custom: Dispatcher | undefined;
 
+  const origin = apiOrigin();
   const agent = new MockAgent();
   agent.disableNetConnect();
-  const pool = agent.get(API_ORIGIN);
+  const pool = agent.get(origin);
 
   const record = (request: MockRequest, body: unknown): void => {
-    state.calls.push({ method: request.method, url: `${API_ORIGIN}${request.path}`, body, headers: lowerHeaders(request.headers) });
+    state.calls.push({ method: request.method, url: `${origin}${request.path}`, body, headers: lowerHeaders(request.headers) });
   };
 
   // `查询子表`: the document's sub-sheets, which the store checks its configured id against.

@@ -62,6 +62,9 @@ jspm_packages/
 .env.test.local
 .env.production.local
 .env.local
+# The task files `OPS_ENV_PATH` names read their ignored `.local` sibling on top.
+.env.test-redis.local
+.env.test-api.local
 
 # next.js build output
 .next/

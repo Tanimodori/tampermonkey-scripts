@@ -1,3 +1,6 @@
+/**
+ * @module-tag redis
+ */
 import { clock } from '@test/clock.ts';
 import { loadTestConfig, rawRecord, resetRedis, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -108,9 +111,9 @@ describe('createPot', () => {
     expect(accepted).toEqual(pot('60-0-4000ABCD'));
     expect(docs.state.added).toEqual([
       {
-        区服: '鸟',
-        地图: '北岛',
-        ID: '60-0-4000ABCD',
+        区服: [{ type: 'text', text: '鸟' }],
+        地图: [{ type: 'text', text: '北岛' }],
+        ID: [{ type: 'text', text: '60-0-4000ABCD' }],
         北罐刷新时间: '1789200960000',
         最后一次进岛时间: '1789199460000',
       },

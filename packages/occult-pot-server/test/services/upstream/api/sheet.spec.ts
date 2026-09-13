@@ -1,4 +1,4 @@
-import { loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
+import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { addRecords, getRecords, getSheetList } from '@/services/upstream/api/sheet.ts';
 import type { ClientOptions } from '@/services/upstream/client.ts';
@@ -49,7 +49,7 @@ describe('getRecords', () => {
 
     await getRecords({ offset: 0, limit: 100 });
 
-    expect(docs.state.calls[0]?.url).toBe(`https://docs.qq.com/openapi/smartbook/v2/files/${FILE_ID}/sheets/${SHEET_ID}`);
+    expect(docs.state.calls[0]?.url).toBe(`${apiOrigin()}/openapi/smartbook/v2/files/${FILE_ID}/sheets/${SHEET_ID}`);
     expect(docs.state.calls[0]?.method).toBe('POST');
     expect(docs.state.calls[0]?.body).toEqual({ getRecords: { offset: 0, limit: 100 } });
     expect(docs.state.calls[0]?.headers).toMatchObject({
@@ -97,7 +97,7 @@ describe('getSheetList', () => {
     const sheets = await getSheetList(FILE_ID);
 
     expect(sheets.map((entry) => entry.sheetID)).toEqual([SHEET_ID, 'tYYYYYY']);
-    expect(docs.state.calls[0]?.url).toBe(`https://docs.qq.com/openapi/smartbook/v2/files/${FILE_ID}/sheets`);
+    expect(docs.state.calls[0]?.url).toBe(`${apiOrigin()}/openapi/smartbook/v2/files/${FILE_ID}/sheets`);
     expect(docs.state.calls[0]?.method).toBe('GET');
   });
 });

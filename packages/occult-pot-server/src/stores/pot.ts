@@ -15,7 +15,7 @@ import type { Pot, PotState } from '@/validation/index.ts';
  *     occult-pot:pots    `{ data, updateTime }` — the list, and when the sheet was last read into it
  *
  * A read is answered from Redis, and goes back to the sheet only once the cached read is older than
- * `OPS_CACHE_READ_TTL_MS`; a successful read overwrites the cache. A write appends one row to the
+ * `OPS_UPSTREAM_CACHE_TTL`; a successful read overwrites the cache. A write appends one row to the
  * sheet **first** — when that fails the caller's request fails too and the cache is untouched — and
  * then folds the pot into the cached list. So a machine with Redis and an unreachable sheet still
  * serves reads, as long as what it cached is recent enough.
@@ -127,7 +127,7 @@ export function usePotStore(): PotStore {
 
   /** Whether the cached list is old enough to be worth reading the sheet again. */
   function expired(state: PotState): boolean {
-    return now() - state.updateTime >= getConfig().cache.readTtlMs;
+    return now() - state.updateTime >= getConfig().upstream.cacheTtl;
   }
 
   /**

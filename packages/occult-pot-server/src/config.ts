@@ -40,13 +40,17 @@ function readEnvFile(file: string): Partial<Record<string, string>> {
 
 /**
  * The environment a run reads: the real environment, then each file in ascending priority, then the
- * file `OPS_ENV_PATH` names — later sources override earlier ones.
+ * file `OPS_ENV_PATH` names and its `.local` sibling — later sources override earlier ones.
  *
  * Files beating the ambient environment is the point of the `OPS_` prefix: a variable that some
  * other application exported under the same name can always be overridden from a file. `OPS_ENV_PATH`
  * itself is read from the real environment only, because it decides what gets read at all.
  *
- * @throws `Error` when `OPS_ENV_PATH` names a file that is not there.
+ * The named file comes as a pair, so a task can commit a template and keep the machine's own values
+ * in the ignored `<file>.local` beside it — `OPS_ENV_PATH=.env.test-redis` reads `.env.test-redis`
+ * and then `.env.test-redis.local`.
+ *
+ * @throws `Error` when `OPS_ENV_PATH` names a file that is not there (`<file>.local` may be absent).
  */
 export function loadEnv(mode: string = MODE, native: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   const explicit = native[ENV_PATH_VAR];
@@ -56,7 +60,10 @@ export function loadEnv(mode: string = MODE, native: NodeJS.ProcessEnv = process
   }
 
   // Ascending priority: each source overrides the one before it, and `defu` keeps the first value.
-  const sources: NodeJS.ProcessEnv[] = [native, ...envFilesFor(mode).map(readEnvFile), ...(extra === undefined ? [] : [readEnvFile(extra)])];
+  const named = extra === undefined ? [] : [extra, `${extra}.local`];
+  // `defu` only walks plain objects and the live `process.env` is not one, so it is copied in: the
+  // ambient environment really is the base layer, and not silently dropped.
+  const sources: NodeJS.ProcessEnv[] = [{ ...native }, ...envFilesFor(mode).map(readEnvFile), ...named.map(readEnvFile)];
 
   let merged: NodeJS.ProcessEnv = {};
   for (const source of sources) merged = defu(source, merged);
@@ -104,6 +111,7 @@ const ENV_PATHS = [
   'server.corsOrigins',
   'server.jsonBodyLimit',
   'server.logLevel',
+  'server.redisUrl',
   'docs.apiBase',
   'docs.fileId',
   'docs.sheetId',
@@ -113,7 +121,6 @@ const ENV_PATHS = [
   'docs.openId',
   'docs.accessToken',
   'docs.tokenExpiryWarnMs',
-  'cache.readTtlMs',
   'rateLimit.ipWindowMs',
   'rateLimit.ipMax',
   'rateLimit.writeMax',
@@ -122,7 +129,7 @@ const ENV_PATHS = [
   'upstream.maxRetries',
   'upstream.retryBackoffMs',
   'upstream.timeoutMs',
-  'redis.url',
+  'upstream.cacheTtl',
 ] as const;
 
 /**
@@ -157,12 +164,11 @@ function describeIssue(issue: { path: PropertyKey[]; message: string }): string 
 /** Everything the environment may leave out, in the form a resolved configuration holds it. */
 function getDefaultConfig(): AppEnvConfig {
   return {
+    // No `redisUrl`: leaving it out is what selects the in-process Redis.
     server: { port: 3000, host: '0.0.0.0', trustProxy: false, corsOrigins: '*', jsonBodyLimit: '64kb', logLevel: 'info' },
     docs: { apiBase: 'https://docs.qq.com', tokenExpiryWarnMs: 3 * DAY_MS },
-    cache: { readTtlMs: 30_000 },
     rateLimit: { ipWindowMs: 60_000, ipMax: 120, writeMax: 20 },
-    upstream: { maxPerInterval: 120, intervalMs: 60_000, maxRetries: 2, retryBackoffMs: 500, timeoutMs: 10_000 },
-    redis: {},
+    upstream: { maxPerInterval: 120, intervalMs: 60_000, maxRetries: 2, retryBackoffMs: 500, timeoutMs: 10_000, cacheTtl: 30_000 },
   };
 }
 

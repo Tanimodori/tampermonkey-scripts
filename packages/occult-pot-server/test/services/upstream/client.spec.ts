@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
+import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import { useClient } from '@/services/upstream/client.ts';
 import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
@@ -33,7 +33,7 @@ async function listen(handler: Parameters<typeof createServer>[1]): Promise<stri
 /** One request as `api/sheet.ts` builds it. */
 function options(overrides: Partial<CallOptions> = {}): CallOptions {
   return {
-    origin: 'https://docs.qq.com',
+    origin: apiOrigin(),
     path: '/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets/tXXXXXX',
     method: 'POST',
     headers: { 'content-type': 'application/json' },

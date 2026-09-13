@@ -16,18 +16,26 @@ const FIELD_NORTH_REFRESH = '北罐刷新时间';
 const FIELD_LAST_VISIT = '最后一次进岛时间';
 
 /**
+ * One text cell, in the shape the API both accepts and returns: a text column written as a bare
+ * string is accepted with `ret: 0` and then **silently dropped**, which leaves a row without its
+ * `区服`/`地图`/`ID` (measured against the live document).
+ */
+function textCell(value: string): readonly { type: 'text'; text: string }[] {
+  return [{ type: 'text', text: value }];
+}
+
+/**
  * Builds the `values` Object for `addRecords`: the sheet's own column titles mapped to the five
- * fields, as plain values — bare strings for the three text columns, and the two instants as
- * millisecond strings.
+ * fields — the three text columns as typed cells, the two instants as 13 digit millisecond strings.
  *
- * Reading is more forgiving than writing (see `parseCellText`): a text column comes back as
- * `[{type:'text',text}]`, which is unwrapped on the way in.
+ * Reading is more forgiving than writing (see `parseCellText`): a text column may come back as a
+ * typed cell, a bare string or even a link cell, and all of them unwrap on the way in.
  */
 export function toSheetValues(pot: Pot): Record<string, unknown> {
   return {
-    [FIELD_WORLD]: pot.world,
-    [FIELD_MAP]: pot.map,
-    [FIELD_POT_ID]: pot.potId,
+    [FIELD_WORLD]: textCell(pot.world),
+    [FIELD_MAP]: textCell(pot.map),
+    [FIELD_POT_ID]: textCell(pot.potId),
     [FIELD_NORTH_REFRESH]: String(pot.northRefreshAtMs),
     [FIELD_LAST_VISIT]: String(pot.lastVisitAtMs),
   };

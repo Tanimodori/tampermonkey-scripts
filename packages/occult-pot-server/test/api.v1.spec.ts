@@ -1,3 +1,6 @@
+/**
+ * @module-tag redis
+ */
 import { clock } from '@test/clock.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '@/app.ts';
@@ -373,9 +376,9 @@ describe('POST /v1/pots', () => {
     // The row reached the sheet before the response did; there is no queue behind this.
     expect(docs.state.added).toHaveLength(1);
     expect(docs.state.added[0]).toEqual({
-      区服: '鸟',
-      地图: '北岛',
-      ID: '60-0-4000ABCD',
+      区服: [{ type: 'text', text: '鸟' }],
+      地图: [{ type: 'text', text: '北岛' }],
+      ID: [{ type: 'text', text: '60-0-4000ABCD' }],
       北罐刷新时间: String(sheetInstant('2026-09-12 16:20')),
       最后一次进岛时间: String(NOW),
     });

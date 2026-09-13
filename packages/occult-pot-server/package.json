@@ -23,8 +23,10 @@
     "format:check": "oxfmt --check",
     "lint": "oxlint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest --run --passWithNoTests",
-    "test:redis": "cross-env OPS_REDIS_URL=redis://127.0.0.1:6399 vitest --run --no-file-parallelism",
+    "test": "npm run test:unit && npm run test:redis && npm run test:api",
+    "test:unit": "vitest --run --passWithNoTests",
+    "test:redis": "cross-env OPS_ENV_PATH=.env.test-redis vitest --run --no-file-parallelism --tags-filter=redis",
+    "test:api": "cross-env OPS_ENV_PATH=.env.test-api vitest --run --tags-filter=api",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -57,7 +59,7 @@
     "tsx": "^4.19.2",
     "typescript": "~5.6.2",
     "vite": "^6.0.5",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.11"
   },
   "optionalDependencies": {
     "@oxfmt/binding-win32-x64-msvc": "^0.67.0",

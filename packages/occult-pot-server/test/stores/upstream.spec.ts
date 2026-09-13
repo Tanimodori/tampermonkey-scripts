@@ -1,3 +1,6 @@
+/**
+ * @module-tag redis
+ */
 import { clock } from '@test/clock.ts';
 import { captureLogs, FILE_ID, loadTestConfig, resetRedis, SHEET_ID, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

@@ -48,6 +48,11 @@ const serverSchema = z.object({
   corsOrigins: originListFromString(),
   jsonBodyLimit: requiredString(),
   logLevel: oneOf(LOG_LEVELS),
+  /** `redis://[username:password@]host:port/db`. Leaving it out is what selects the in-process mock. */
+  redisUrl: z
+    .string()
+    .optional()
+    .refine((value) => value === undefined || isUrl(value), { error: 'must be a valid Redis URL' }),
 });
 
 const docsSchema = z.object({
@@ -66,8 +71,6 @@ const docsSchema = z.object({
   tokenExpiryWarnMs: integerFrom({ min: 0 }),
 });
 
-const cacheSchema = z.object({ readTtlMs: integerFrom({ min: 0 }) });
-
 const rateLimitSchema = z.object({
   ipWindowMs: integerFrom({ min: 1000 }),
   ipMax: integerFrom({ min: 1 }),
@@ -81,25 +84,16 @@ const upstreamSchema = z.object({
   maxRetries: integerFrom({ min: 0, max: 10 }),
   retryBackoffMs: integerFrom({ min: 0 }),
   timeoutMs: integerFrom({ min: 1 }),
-});
-
-/** Where the shared state lives: the address of a server, or nothing at all for the in-process mock. */
-const redisSchema = z.object({
-  /** `redis://[username:password@]host:port/db`. Leaving it out is what selects the mock. */
-  url: z
-    .string()
-    .optional()
-    .refine((value) => value === undefined || isUrl(value), { error: 'must be a valid Redis URL' }),
+  /** How long a read is answered from the cached pot list before the sheet is read again. */
+  cacheTtl: integerFrom({ min: 0 }),
 });
 
 /** A complete configuration: what `loadConfig()` hands out. */
 export const appConfigSchema = z.object({
   server: serverSchema,
   docs: docsSchema,
-  cache: cacheSchema,
   rateLimit: rateLimitSchema,
   upstream: upstreamSchema,
-  redis: redisSchema,
 });
 
 export type AppConfig = Readonly<z.infer<typeof appConfigSchema>>;
@@ -115,10 +109,8 @@ export const appEnvConfigSchema = z
   .object({
     server: serverSchema.partial(),
     docs: docsSchema.partial(),
-    cache: cacheSchema.partial(),
     rateLimit: rateLimitSchema.partial(),
     upstream: upstreamSchema.partial(),
-    redis: redisSchema.partial(),
   })
   // The groups are optional as well: a caller may supply the one field it cares about.
   .partial();

@@ -1,3 +1,6 @@
+/**
+ * @module-tag redis
+ */
 import type { NextFunction, Request, Response } from 'express';
 import type Redis from 'ioredis';
 import { afterEach, describe, expect, it, vi } from 'vitest';

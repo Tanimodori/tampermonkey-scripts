@@ -1,4 +1,4 @@
-import { loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
+import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { classify } from '@/services/upstream/interceptors/classify.ts';
 import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
@@ -18,7 +18,7 @@ const client = () => docs.agent.compose(classify, retry);
 /** One request as `api/sheet.ts` builds it. */
 function options(overrides: Partial<CallOptions> = {}): CallOptions {
   return {
-    origin: 'https://docs.qq.com',
+    origin: apiOrigin(),
     path: '/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets/tXXXXXX',
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -97,6 +97,14 @@ describe('what a second attempt cannot fix', () => {
   it('is not retried when the credential was rejected', async () => {
     loadTestConfig({ OPS_UPSTREAM_MAX_RETRIES: '2' });
     docs.state.readFailure = { status: 401, ret: 10303, msg: 'token 无效' };
+
+    await expect(client().request(options())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_AUTH_FAILED' });
+    expect(readCalls()).toBe(1);
+  });
+
+  it('is not retried when the credential has no permission on the document', async () => {
+    loadTestConfig({ OPS_UPSTREAM_MAX_RETRIES: '2' });
+    docs.state.readFailure = { status: 200, ret: 10007, msg: 'No corresponding permissions required' };
 
     await expect(client().request(options())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_AUTH_FAILED' });
     expect(readCalls()).toBe(1);

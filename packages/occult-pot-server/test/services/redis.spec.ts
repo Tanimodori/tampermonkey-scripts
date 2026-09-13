@@ -1,4 +1,7 @@
-import { captureLogs, loadTestConfig, resetRedis } from '@test/helpers.ts';
+/**
+ * @module-tag redis
+ */
+import { captureLogs, loadTestConfig, resetRedis, testEnv } from '@test/helpers.ts';
 import RedisMock from 'ioredis-mock';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { closeRedis, getRedis, redisCommandSender, setRedis } from '@/services/redis.ts';
@@ -10,7 +13,7 @@ import { closeRedis, getRedis, redisCommandSender, setRedis } from '@/services/r
  */
 
 /** A server follows the configuration it was built from; the in-process mock serves them all. */
-const usesRealRedis = (): boolean => (process.env.OPS_REDIS_URL ?? '') !== '';
+const usesRealRedis = (): boolean => (testEnv().OPS_SERVER_REDIS_URL ?? '') !== '';
 
 beforeEach(async () => {
   setRedis(undefined);
@@ -62,7 +65,7 @@ describe('getRedis', () => {
   it('says so when no address means the mock in production, and says nothing elsewhere', async () => {
     const records = captureLogs();
     // No address, so the mock — whatever the rest of the environment says.
-    loadTestConfig({ OPS_REDIS_URL: undefined });
+    loadTestConfig({ OPS_SERVER_REDIS_URL: undefined });
     getRedis();
     expect(records.some((entry) => entry.level === 'warning')).toBe(false);
 
@@ -70,10 +73,10 @@ describe('getRedis', () => {
     // as far as the module is concerned, and it is the first build made in production.
     await closeRedis();
     vi.stubEnv('NODE_ENV', 'production');
-    loadTestConfig({ OPS_REDIS_URL: undefined });
+    loadTestConfig({ OPS_SERVER_REDIS_URL: undefined });
     getRedis();
 
-    expect(records.find((entry) => entry.level === 'warning')?.message).toContain('No OPS_REDIS_URL is set');
+    expect(records.find((entry) => entry.level === 'warning')?.message).toContain('No OPS_SERVER_REDIS_URL is set');
   });
 });
 

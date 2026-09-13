@@ -108,7 +108,7 @@ describe('loadConfig and getConfig', () => {
   it('applies defaults when only the required variables are present', () => {
     const config = loadConfig(baseEnv());
     expect(config.server.port).toBe(3000);
-    expect(config.cache.readTtlMs).toBe(30_000);
+    expect(config.upstream.cacheTtl).toBe(30_000);
     expect(config.upstream.maxPerInterval).toBe(120);
     expect(config.upstream.intervalMs).toBe(60_000);
     expect(config.upstream.maxRetries).toBe(2);
@@ -127,7 +127,7 @@ describe('loadConfig and getConfig', () => {
         OPS_SERVER_JSON_BODY_LIMIT: '32kb',
         OPS_SERVER_LOG_LEVEL: 'warning',
         OPS_DOCS_TOKEN_EXPIRY_WARN_MS: '60000',
-        OPS_CACHE_READ_TTL_MS: '1000',
+        OPS_UPSTREAM_CACHE_TTL: '1000',
         OPS_RATE_LIMIT_IP_WINDOW_MS: '1000',
         OPS_RATE_LIMIT_IP_MAX: '5',
         OPS_RATE_LIMIT_WRITE_MAX: '2',
@@ -136,17 +136,23 @@ describe('loadConfig and getConfig', () => {
         OPS_UPSTREAM_MAX_RETRIES: '3',
         OPS_UPSTREAM_RETRY_BACKOFF_MS: '10',
         OPS_UPSTREAM_TIMEOUT_MS: '2000',
-        OPS_REDIS_URL: 'redis://cache.example:6379/1',
+        OPS_SERVER_REDIS_URL: 'redis://cache.example:6379/1',
       }),
     );
 
     expect(config).toMatchObject({
-      server: { port: 3100, host: '10.0.0.1', trustProxy: 1, corsOrigins: ['https://a.example'], jsonBodyLimit: '32kb', logLevel: 'warning' },
+      server: {
+        port: 3100,
+        host: '10.0.0.1',
+        trustProxy: 1,
+        corsOrigins: ['https://a.example'],
+        jsonBodyLimit: '32kb',
+        logLevel: 'warning',
+        redisUrl: 'redis://cache.example:6379/1',
+      },
       docs: { tokenExpiryWarnMs: 60_000 },
-      cache: { readTtlMs: 1000 },
       rateLimit: { ipWindowMs: 1000, ipMax: 5, writeMax: 2 },
-      upstream: { maxPerInterval: 7, intervalMs: 2000, maxRetries: 3, retryBackoffMs: 10, timeoutMs: 2000 },
-      redis: { url: 'redis://cache.example:6379/1' },
+      upstream: { maxPerInterval: 7, intervalMs: 2000, maxRetries: 3, retryBackoffMs: 10, timeoutMs: 2000, cacheTtl: 1000 },
     });
   });
 
@@ -178,7 +184,7 @@ describe('loadConfig and getConfig', () => {
   it('rejects out-of-range integers and non-numeric values', () => {
     expect(() => loadConfig(baseEnv({ OPS_SERVER_PORT: 'nope' }))).toThrow(/OPS_SERVER_PORT must be an integer/);
     expect(() => loadConfig(baseEnv({ OPS_SERVER_PORT: '99999' }))).toThrow(/OPS_SERVER_PORT must be <= 65535/);
-    expect(() => loadConfig(baseEnv({ OPS_CACHE_READ_TTL_MS: '-5' }))).toThrow(/OPS_CACHE_READ_TTL_MS must be >= 0/);
+    expect(() => loadConfig(baseEnv({ OPS_UPSTREAM_CACHE_TTL: '-5' }))).toThrow(/OPS_UPSTREAM_CACHE_TTL must be >= 0/);
   });
 
   it('validates the upstream queue options', () => {
@@ -225,14 +231,16 @@ describe('loadConfig and getConfig', () => {
 
   it('leaves Redis without an address when the environment names no server', () => {
     // No address is not an error: that is what selects the in-process mock.
-    expect(loadConfig(baseEnv()).redis).toEqual({});
-    expect(loadConfig(baseEnv({ OPS_REDIS_URL: 'redis://127.0.0.1:6379' })).redis).toEqual({ url: 'redis://127.0.0.1:6379' });
+    expect(loadConfig(baseEnv()).server.redisUrl).toBeUndefined();
+    expect(loadConfig(baseEnv({ OPS_SERVER_REDIS_URL: 'redis://127.0.0.1:6379' })).server.redisUrl).toBe('redis://127.0.0.1:6379');
     // Credentials are part of the address, so a password never needs a variable of its own.
-    expect(loadConfig(baseEnv({ OPS_REDIS_URL: 'redis://user:secret@cache.example:6379/2' })).redis.url).toBe('redis://user:secret@cache.example:6379/2');
+    expect(loadConfig(baseEnv({ OPS_SERVER_REDIS_URL: 'redis://user:secret@cache.example:6379/2' })).server.redisUrl).toBe(
+      'redis://user:secret@cache.example:6379/2',
+    );
   });
 
   it('rejects a Redis address that is not a URL', () => {
-    expect(() => loadConfig(baseEnv({ OPS_REDIS_URL: 'not a url' }))).toThrow(/OPS_REDIS_URL must be a valid Redis URL/);
+    expect(() => loadConfig(baseEnv({ OPS_SERVER_REDIS_URL: 'not a url' }))).toThrow(/OPS_SERVER_REDIS_URL must be a valid Redis URL/);
   });
 
   it('parses trust proxy and CORS origin lists', () => {
@@ -279,6 +287,22 @@ describe('loadEnv', () => {
         expect(env.D).toBe('modeLocal'); // the most specific file wins
         expect(env.E).toBe('explicit'); // `OPS_ENV_PATH` beats every file
         expect(env.F).toBe('native'); // the environment is still the base layer
+      },
+    );
+  });
+
+  it('reads the `.local` sibling of the file OPS_ENV_PATH names, on top of it', () => {
+    withEnvFiles(
+      {
+        'extra.env': 'A=explicit\nB=explicit\n',
+        'extra.env.local': 'B=explicitLocal\n',
+      },
+      (dir) => {
+        const env = inDirectory(dir, () => loadEnv('development', { A: 'native', B: 'native', OPS_ENV_PATH: join(dir, 'extra.env') }));
+
+        // The named file is a pair: the committed template first, the machine's own values after it.
+        expect(env.A).toBe('explicit');
+        expect(env.B).toBe('explicitLocal');
       },
     );
   });
@@ -352,7 +376,7 @@ describe('loadEnv', () => {
 
         expect(config.docs.clientId).toBe('file-client');
         expect(config.docs.accessToken).toBe('from-environment');
-        expect(config.redis).toEqual({});
+        expect(config.server.redisUrl).toBeUndefined();
       },
     );
   });

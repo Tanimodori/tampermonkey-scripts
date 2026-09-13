@@ -30,15 +30,15 @@
 
 ## 4. `GET /readyz`
 
-`200` 表示可以服务；不可用时返回 `503`（凭据已过期，或文档坐标还没解析出来）。凭据临近过期只标记为 degraded，仍然返回 `200`。启动时会用 `GET /oauth/v2/userinfo` 校验一次凭据，校验结果反映在 `tokenValidated` 与 `credential.validated` 上。这一组值由 upstream store 给出（`readiness()` / `describe()`），探针只负责组装。
+`200` 表示可以服务；不可用时返回 `503`（凭据已过期，或配置的文档坐标还没核对过）。凭据临近过期只标记为 degraded，仍然返回 `200`。启动时会核对一次子表（`DOCS_SHEET_ID` 在不在 `DOCS_FILE_ID` 里）并用 `GET /oauth/v2/userinfo` 校验一次凭据，校验结果反映在 `tokenValidated` 与 `credential.validated` 上。这一组值由 upstream store 给出（`readiness()` / `describe()`），探针只负责组装。
 
 | 字段 | 含义 |
 | --- | --- |
 | `ready` | 为 `true` 时才返回 200 |
-| `fileIdResolved` | 启动时是否已解析出文档坐标（`fileID` + 子表） |
+| `fileIdResolved` | 启动时是否已核对过文档坐标（配置的 `fileID` + 子表） |
 | `tokenValidated` | 启动时那次凭据校验是否成功 |
 | `tokenExpiresAt` / `tokenExpiresInMs` | 凭据到期时刻（epoch 毫秒）与剩余毫秒；未知为 `null` |
-| `tokenWarning` / `tokenExpired` | 是否进入 `TOKEN_EXPIRY_WARN_MS` 告警窗口 / 是否已过期 |
+| `tokenWarning` / `tokenExpired` | 是否进入 `DOCS_TOKEN_EXPIRY_WARN_MS` 告警窗口 / 是否已过期 |
 | `reasons[]` | 不可用（或降级）的原因，直接可读 |
 | `credential` | 凭据健康度：`tokenLength`、`expiresAt`（ISO 8601 或 `null`）、`expired`（`null` 表示未知）、`validated`、`validatedAt`（ISO 8601 或 `null`）；**永远不含 token 本身** |
 | `cache.updateTime` / `ageMs` / `pots` | 状态被读到的时刻（ISO 8601）、距今多久、持有多少个罐子；**从未读过时三者都是 `null`** |
@@ -147,7 +147,7 @@ curl -X POST http://127.0.0.1:3000/v1/pots \
 值得知道的几件事：
 
 - **没有幂等头、没有内容哈希、也不对着表做唯一性检查。** 服务端不会为了去重而读表，所以同一个 body 落在两个不同的 flush 窗口里会写出两行 —— 即使表里已经有那个 `区服|地图|ID`。清理重复是客户端脚本的事。不过在**同一个** flush 窗口内，接受是按 `区服|地图|ID` 合并的，两次相同接受只会写一次（见 `../data/store.md`）。
-- 追加是批量的（`addRecords`）：队列每个 `WRITE_FLUSH_INTERVAL_MS` 把它持有的东西一次写出去，且同一时刻只有一批在途，所以表里的行序等于到达顺序。没有批量大小可调，也没有积压上限 —— 客户端一次写一个罐子。
+- 追加是批量的（`addRecords`）：队列每个 `WRITE_QUEUE_FLUSH_INTERVAL_MS` 把它持有的东西一次写出去，且同一时刻只有一批在途，所以表里的行序等于到达顺序。没有批量大小可调，也没有积压上限 —— 客户端一次写一个罐子。
 - 走 `writes` 限流（见 §9）。
 
 ## 9. 限流
@@ -162,4 +162,4 @@ curl -X POST http://127.0.0.1:3000/v1/pots \
 
 被限流时返回 `429` `RATE_LIMITED`（错误结构见 `errors.md`），并带 `RateLimit-*` 与 `Retry-After` 响应头。
 
-`TRUST_PROXY` 必须与部署拓扑一致：躲在没配置好的反向代理后面时，所有请求共用代理的 IP，限流既过严又无用。
+`SERVER_TRUST_PROXY` 必须与部署拓扑一致：躲在没配置好的反向代理后面时，所有请求共用代理的 IP，限流既过严又无用。

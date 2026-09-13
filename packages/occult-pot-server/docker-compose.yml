@@ -13,8 +13,8 @@ services:
         required: false
     environment:
       # Keep the container's healthcheck/port in sync with the published port.
-      PORT: 3000
-      # Behind a reverse proxy set TRUST_PROXY (env_file or here) so per-IP throttling works.
+      SERVER_PORT: 3000
+      # Behind a reverse proxy set SERVER_TRUST_PROXY (env_file or here) so per-IP throttling works.
     ports:
       - '3000:3000'
     restart: unless-stopped

@@ -3,42 +3,30 @@ import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
 import { formatInstant, LOG_CATEGORY } from '@/logger.ts';
 import { now } from '@/services/time.ts';
-import { apiUrl, asArray, asRecord, call, describeBody, getEnvelope, postSheet, sheetUrl } from '@/services/upstream/client.ts';
-import { parseSheetUrl } from '@/validation/index.ts';
+import { apiUrl, asArray, asRecord, call, describeBody, getEnvelope, sheetUrl } from '@/services/upstream/client.ts';
 import type { AppConfig } from '@/validation/index.ts';
 
 /**
  * Which document this service talks to, and with which credential.
  *
- * Three ids identify the data, and each has two possible sources — the sheet URL the operator
- * configured, or the upstream itself:
+ * The coordinates are configuration, not something to work out: `DOCS_FILE_ID` is the API's `fileID`
+ * and `DOCS_SHEET_ID` the sub-sheet (`sheetID`) inside it, exactly the two ids a smartsheet call
+ * path carries.
  *
- *     encodedId  the sheet URL's path segment; the API wants the `fileID` it converts to
- *     tabId      the URL's `tab` parameter, i.e. the smartsheet sub-sheet ID (`sheetID`)
- *     viewId     the URL's `viewId` parameter, i.e. a view inside that sub-sheet
- *
- * `resolve()` fills in whatever the URL does not carry (fileID always needs the converter; a missing
- * tab falls back to the first visible sub-sheet, a missing view to the first view) and then checks the
- * credential once against the upstream. Everything downstream asks this store for an id or for the
- * request headers instead of reading the configuration itself.
+ * `resolve()` is therefore a check rather than a lookup — it confirms the configured sub-sheet
+ * exists in the configured document, then checks the credential once against the upstream — and
+ * everything downstream asks this store for an id or for the request headers instead of reading the
+ * configuration itself.
  *
  * `useUpstreamStore()` builds one of these and the module's default instance is `upstreamStore`. The
  * store follows the loaded configuration: a configuration that gets replaced (a reload, or a test
- * loading another one) resets the ids, the credential and the resolved flag.
+ * loading another one) resets the ids, the credential and the verified flag.
  */
 
-/** The document coordinates, once known: `resolve()` always hands back a file and a sub-sheet. */
+/** The two ids a sub-sheet call needs, both taken from the configuration. */
 export interface UpstreamIds {
-  readonly encodedId: string;
   readonly fileId: string;
-  readonly tabId: string;
-  readonly viewId: string | undefined;
-}
-
-/** The pair a sub-sheet call needs. */
-export interface UpstreamSheetIds {
-  readonly fileId: string;
-  readonly tabId: string;
+  readonly sheetId: string;
 }
 
 /**
@@ -47,13 +35,13 @@ export interface UpstreamSheetIds {
  */
 export interface UpstreamReadiness {
   readonly ready: boolean;
-  /** The document coordinates have been resolved (the ids the record calls need are known). */
+  /** The configured coordinates were checked against the upstream, so the record calls can run. */
   readonly fileIdResolved: boolean;
   /** The credential has been accepted by the upstream at least once. */
   readonly tokenValidated: boolean;
   readonly tokenExpiresAt: number | undefined;
   readonly tokenExpiresInMs: number | undefined;
-  /** Inside `TOKEN_EXPIRY_WARN_MS` of the expiry, but not expired yet. */
+  /** Inside `DOCS_TOKEN_EXPIRY_WARN_MS` of the expiry, but not expired yet. */
   readonly tokenWarning: boolean;
   readonly tokenExpired: boolean;
   readonly reasons: readonly string[];
@@ -63,10 +51,8 @@ export interface UpstreamStore {
   // ---------------------------------------------------------------------------------------------
   // Distribute the ids and the credential
   // ---------------------------------------------------------------------------------------------
-  readonly encodedId: string;
-  readonly fileId: string | undefined;
-  readonly tabId: string | undefined;
-  readonly viewId: string | undefined;
+  readonly fileId: string;
+  readonly sheetId: string;
   readonly accessToken: string;
   /** The credential triple every Open API call carries; throws when no Open-Id can be determined. */
   headers(): Promise<Record<string, string>>;
@@ -74,12 +60,12 @@ export interface UpstreamStore {
   expiresAt(): number | undefined;
   /** True once `resolve()` has run for the current configuration. */
   resolved(): boolean;
-  /** The ids a sub-sheet call needs, resolving them first when that has not happened yet. */
-  ids(): Promise<UpstreamSheetIds>;
+  /** The configured ids, checking them against the upstream first when that has not happened yet. */
+  ids(): Promise<UpstreamIds>;
   // ---------------------------------------------------------------------------------------------
   // Talk to the upstream
   // ---------------------------------------------------------------------------------------------
-  /** Fills in whatever the sheet URL does not carry, then validates the credential. */
+  /** Checks the configured coordinates and the credential against the upstream. */
   resolve(): Promise<UpstreamIds>;
   /** Checks the credential against the upstream (`GET /oauth/v2/userinfo`). */
   validate(): Promise<{ readonly openId: string }>;
@@ -133,25 +119,12 @@ function readAccessTokenExpiresAt(token: string): number | undefined {
   return Math.round(claims.exp * 1000);
 }
 
-/** The first entry of a list whose key holds a non-empty string. */
-function firstString(list: readonly unknown[], key: string, visibleOnly = false): string | undefined {
-  for (const entry of list) {
-    const record = asRecord(entry);
-    if (visibleOnly && record.isVibile === false) continue;
-    const value = record[key];
-    if (typeof value === 'string' && value.length > 0) return value;
-  }
-  return undefined;
-}
-
 export function useUpstreamStore(): UpstreamStore {
   /** The configuration these values were read from; a different one reloads them. */
   let bound: AppConfig | undefined;
 
-  let encodedIdValue = '';
-  let fileIdValue: string | undefined;
-  let tabIdValue: string | undefined;
-  let viewIdValue: string | undefined;
+  let fileIdValue = '';
+  let sheetIdValue = '';
   let accessTokenValue = '';
   let clientIdValue = '';
   let openIdValue: string | undefined;
@@ -159,7 +132,7 @@ export function useUpstreamStore(): UpstreamStore {
   let openIdFromEnv = false;
   let expiresAtValue: number | undefined;
   let validatedAtValue: number | undefined;
-  let resolvedIds: UpstreamIds | undefined;
+  let checkedIds: UpstreamIds | undefined;
   let resolving: Promise<UpstreamIds> | undefined;
 
   /** Reads the configuration, once per configuration object. */
@@ -167,21 +140,18 @@ export function useUpstreamStore(): UpstreamStore {
     const config = getConfig();
     if (bound === config) return;
 
-    const address = parseSheetUrl(config.docs.sheetUrl);
     const claims = readAccessTokenClaims(config.docs.accessToken);
 
     bound = config;
-    encodedIdValue = address.encodedId;
-    fileIdValue = undefined;
-    tabIdValue = address.tabId;
-    viewIdValue = address.viewId;
+    fileIdValue = config.docs.fileId;
+    sheetIdValue = config.docs.sheetId;
     accessTokenValue = config.docs.accessToken;
     clientIdValue = config.docs.clientId;
     openIdFromEnv = config.docs.openId !== undefined;
     openIdValue = config.docs.openId ?? (typeof claims?.sub === 'string' && claims.sub.length > 0 ? claims.sub : undefined);
     expiresAtValue = readAccessTokenExpiresAt(config.docs.accessToken);
     validatedAtValue = undefined;
-    resolvedIds = undefined;
+    checkedIds = undefined;
     resolving = undefined;
   }
 
@@ -189,7 +159,7 @@ export function useUpstreamStore(): UpstreamStore {
   function requireOpenId(): string {
     const openId = openIdValue;
     if (openId === undefined) {
-      throw new AppError('CONFIG_INVALID', 'TENCENT_DOCS_OPEN_ID is required unless the access token carries a `sub` claim');
+      throw new AppError('CONFIG_INVALID', 'DOCS_OPEN_ID is required unless the access token carries a `sub` claim');
     }
     return openId;
   }
@@ -206,71 +176,38 @@ export function useUpstreamStore(): UpstreamStore {
     };
   }
 
-  /** The converter: the sheet URL's `encodedID` in, the API's `fileID` out. */
-  async function convertEncodedId(): Promise<string> {
-    const url = apiUrl('/openapi/drive/v2/util/converter', { type: '2', value: encodedIdValue });
-    const response = await call(url, { method: 'GET', headers: await headers(), operation: 'converter', expectsEnvelope: false });
-    const body = asRecord(response.body);
-    const ret = typeof body.ret === 'number' ? body.ret : undefined;
-
-    if (ret !== 0) {
-      const msg = typeof body.msg === 'string' ? body.msg : '';
-      throw new AppError(
-        'CONFIG_INVALID',
-        `Could not resolve the document ID from encodedID ${encodedIdValue} (ret=${ret ?? 'n/a'}${msg ? `, msg=${msg}` : ''})`,
-        {
-          details: { ret, msg, status: response.status },
-        },
-      );
-    }
-
-    const fileId = asRecord(body.data).fileID;
-    if (typeof fileId !== 'string' || fileId.length === 0) {
-      throw new AppError('CONFIG_INVALID', `Converter returned no fileID for encodedID ${encodedIdValue}`, { details: { body: describeBody(response.body) } });
-    }
-    return fileId;
-  }
-
-  /** The sub-sheet the URL did not name: the first one the document marks as visible. */
-  async function resolveTabId(fileId: string): Promise<string> {
+  /**
+   * Confirms the configured sub-sheet exists in the configured document, so a typo in either id is
+   * a startup failure rather than the first request's problem. The ids themselves are configuration:
+   * there is nothing to look up.
+   */
+  async function checkSheet(fileId: string, sheetId: string): Promise<void> {
     const data = await getEnvelope(sheetUrl(fileId), 'getSheet', await headers());
-    const tabId = firstString(asArray(data), 'sheetID', true);
-    if (tabId === undefined) {
-      throw new AppError('CONFIG_INVALID', `Document ${fileId} has no visible sub-sheet and the sheet URL names none (add ?tab=…)`, {
-        details: { body: describeBody(data) },
-      });
-    }
-    return tabId;
-  }
+    const available = asArray(data)
+      .map((entry) => asRecord(entry).sheetID)
+      .filter((id): id is string => typeof id === 'string' && id.length > 0);
 
-  /** The view the URL did not name. A sub-sheet without views is not an error: nothing consumes it. */
-  async function resolveViewId(fileId: string, tabId: string): Promise<string | undefined> {
-    const data = await postSheet({ fileId, tabId }, { getViews: { offset: 0, limit: 1 } }, await headers());
-    return firstString(asArray(asRecord(data).views), 'viewID');
+    if (!available.includes(sheetId)) {
+      const known = available.length > 0 ? ` (available: ${available.join(', ')})` : '';
+      throw new AppError('CONFIG_INVALID', `Document ${fileId} has no sub-sheet ${sheetId}${known}`, { details: { body: describeBody(data) } });
+    }
   }
 
   async function doResolve(): Promise<UpstreamIds> {
     load();
 
-    const fileId = await convertEncodedId();
-    const tabId = tabIdValue ?? (await resolveTabId(fileId));
-    const viewId = viewIdValue ?? (await resolveViewId(fileId, tabId));
-
-    fileIdValue = fileId;
-    tabIdValue = tabId;
-    viewIdValue = viewId;
-
+    await checkSheet(fileIdValue, sheetIdValue);
     await validate();
-    resolvedIds = { encodedId: encodedIdValue, fileId, tabId, viewId };
+    checkedIds = { fileId: fileIdValue, sheetId: sheetIdValue };
 
-    // Resolving is a startup event, so what it learned is worth one line each: the coordinates, and
-    // a credential that is expired or about to be. The logger is taken here rather than held, so a
-    // replaced LogTape configuration is picked up.
+    // Startup is worth one line about the coordinates, and one about a credential that is expired or
+    // about to be. The logger is taken here rather than held, so a replaced LogTape configuration is
+    // picked up.
     const logger = getLogger(LOG_CATEGORY);
-    logger.info('Resolved the Tencent Docs document', { encodedId: encodedIdValue, fileIdLength: fileId.length, tabId, viewId });
+    logger.info('Verified the Tencent Docs document', { fileIdLength: fileIdValue.length, sheetId: sheetIdValue });
     const report = readiness();
     if (report.tokenExpired) {
-      logger.warning('Access token has expired; Tencent Docs calls will fail until TENCENT_DOCS_ACCESS_TOKEN is refreshed', {
+      logger.warning('Access token has expired; Tencent Docs calls will fail until DOCS_ACCESS_TOKEN is refreshed', {
         tokenExpiresAt: report.tokenExpiresAt,
       });
     } else if (report.tokenWarning) {
@@ -280,7 +217,7 @@ export function useUpstreamStore(): UpstreamStore {
       });
     }
 
-    return resolvedIds;
+    return checkedIds;
   }
 
   /**
@@ -298,7 +235,7 @@ export function useUpstreamStore(): UpstreamStore {
     // A configured Open-Id is authoritative: every Open API call would fail with 10303 if it
     // disagreed with the token, so disagreeing at startup is worth a hard failure.
     if (openIdFromEnv && openIdValue !== openId) {
-      throw new AppError('CONFIG_INVALID', `TENCENT_DOCS_OPEN_ID (${openIdValue}) does not belong to the configured access token (${openId})`);
+      throw new AppError('CONFIG_INVALID', `DOCS_OPEN_ID (${openIdValue}) does not belong to the configured access token (${openId})`);
     }
 
     openIdValue = openId;
@@ -317,14 +254,14 @@ export function useUpstreamStore(): UpstreamStore {
     const { tokenExpiryWarnMs } = getConfig().docs;
     const at = now();
     const expiresAt = expiresAtValue;
-    const fileIdResolved = resolvedIds !== undefined;
+    const fileIdResolved = checkedIds !== undefined;
     const tokenExpired = expiresAt !== undefined && expiresAt <= at;
     const tokenExpiresInMs = expiresAt === undefined ? undefined : expiresAt - at;
     const tokenWarning = expiresAt !== undefined && !tokenExpired && expiresAt - at <= tokenExpiryWarnMs;
     const reasons: string[] = [];
 
-    if (!fileIdResolved) reasons.push('document ID has not been resolved yet');
-    if (tokenExpired) reasons.push('access token has expired; refresh TENCENT_DOCS_ACCESS_TOKEN');
+    if (!fileIdResolved) reasons.push('the document coordinates have not been checked yet');
+    if (tokenExpired) reasons.push('access token has expired; refresh DOCS_ACCESS_TOKEN');
     else if (tokenWarning) reasons.push(`access token expires soon (${new Date(expiresAt!).toISOString()})`);
 
     return {
@@ -339,10 +276,10 @@ export function useUpstreamStore(): UpstreamStore {
     };
   }
 
-  /** Resolves once per configuration; concurrent callers share the same promise. */
+  /** Checks the coordinates once per configuration; concurrent callers share the same promise. */
   async function resolveIds(): Promise<UpstreamIds> {
     load();
-    if (resolvedIds !== undefined) return resolvedIds;
+    if (checkedIds !== undefined) return checkedIds;
 
     resolving ??= doResolve().finally(() => {
       resolving = undefined;
@@ -350,28 +287,14 @@ export function useUpstreamStore(): UpstreamStore {
     return resolving;
   }
 
-  /** The ids a sub-sheet call needs. */
-  async function ids(): Promise<UpstreamSheetIds> {
-    const resolved = await resolveIds();
-    return { fileId: resolved.fileId, tabId: resolved.tabId };
-  }
-
   return {
-    get encodedId(): string {
-      load();
-      return encodedIdValue;
-    },
-    get fileId(): string | undefined {
+    get fileId(): string {
       load();
       return fileIdValue;
     },
-    get tabId(): string | undefined {
+    get sheetId(): string {
       load();
-      return tabIdValue;
-    },
-    get viewId(): string | undefined {
-      load();
-      return viewIdValue;
+      return sheetIdValue;
     },
     get accessToken(): string {
       load();
@@ -384,9 +307,9 @@ export function useUpstreamStore(): UpstreamStore {
     },
     resolved(): boolean {
       load();
-      return resolvedIds !== undefined;
+      return checkedIds !== undefined;
     },
-    ids,
+    ids: resolveIds,
     resolve: resolveIds,
     validate,
     readiness,
@@ -399,7 +322,7 @@ export function useUpstreamStore(): UpstreamStore {
       load();
       const { clientSecret, refreshToken } = getConfig().docs;
       if (clientSecret === undefined || refreshToken === undefined) {
-        throw new AppError('CONFIG_INVALID', 'Refreshing the access token needs TENCENT_DOCS_CLIENT_SECRET and TENCENT_DOCS_REFRESH_TOKEN');
+        throw new AppError('CONFIG_INVALID', 'Refreshing the access token needs DOCS_CLIENT_SECRET and DOCS_REFRESH_TOKEN');
       }
 
       const url = apiUrl('/oauth/v2/token', {

@@ -3,7 +3,7 @@
  *
  * - `pot.ts`     — the pot's rules, as a request body (zod) and as a sheet row.
  * - `potState.ts` — the vocabulary upstream talks in: a `PotState` and the `PotModify` that changes it.
- * - `sheet.ts`   — the sheet address, and how a `Pot` maps onto a smartsheet row.
+ * - `sheet.ts`   — how a `Pot` maps onto a smartsheet row.
  * - `config.ts`  — the environment.
  * - `utils.ts`   — the shared parsing and error-shaping helpers.
  *

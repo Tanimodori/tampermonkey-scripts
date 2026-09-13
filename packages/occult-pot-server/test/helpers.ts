@@ -5,7 +5,9 @@ import type { LogLevel } from '@/logger.ts';
 import type { RawRecordDto } from '@/services/upstream/api.ts';
 import type { AppConfig } from '@/validation/index.ts';
 
-const SHEET_URL = 'https://docs.qq.com/sheet/DXXXXXXXXXXXXXXX?tab=tXXXXXX';
+/** The document coordinates every test app is configured with; the mock reports the same ids. */
+export const FILE_ID = '300000000$ExAmPlEfIlEiD';
+export const SHEET_ID = 'tXXXXXX';
 
 /**
  * The environment a test app runs with: the variables the configuration requires, a fast flush
@@ -14,17 +16,18 @@ const SHEET_URL = 'https://docs.qq.com/sheet/DXXXXXXXXXXXXXXX?tab=tXXXXXX';
  */
 export function testEnv(overrides: Record<string, string | undefined> = {}): NodeJS.ProcessEnv {
   return {
-    HOST: '127.0.0.1',
-    LOG_LEVEL: 'error',
-    TENCENT_DOCS_SHEET_URL: SHEET_URL,
-    TENCENT_DOCS_ACCESS_TOKEN: 'test-access-token-value',
-    TENCENT_DOCS_CLIENT_ID: 'test-client-id',
-    TENCENT_DOCS_OPEN_ID: 'test-open-id',
-    WRITE_FLUSH_INTERVAL_MS: '50',
+    SERVER_HOST: '127.0.0.1',
+    SERVER_LOG_LEVEL: 'error',
+    DOCS_FILE_ID: FILE_ID,
+    DOCS_SHEET_ID: SHEET_ID,
+    DOCS_ACCESS_TOKEN: 'test-access-token-value',
+    DOCS_CLIENT_ID: 'test-client-id',
+    DOCS_OPEN_ID: 'test-open-id',
+    WRITE_QUEUE_FLUSH_INTERVAL_MS: '50',
     // The throttled queue is effectively unthrottled and never waits between attempts: these tests
     // assert behaviour, not pacing, and a 500 ms wait per retry would only make them slow.
-    UPSTREAM_RATE_LIMIT_MAX_PER_INTERVAL: '10000',
-    UPSTREAM_RATE_LIMIT_INTERVAL_MS: '1',
+    UPSTREAM_MAX_PER_INTERVAL: '10000',
+    UPSTREAM_INTERVAL_MS: '1',
     UPSTREAM_MAX_RETRIES: '0',
     UPSTREAM_RETRY_BACKOFF_MS: '0',
     ...overrides,
@@ -127,16 +130,10 @@ export interface TencentDocsMockState {
   readFailure: MockFailure | undefined;
   /** Set to make `addRecords` answer with this business error instead. */
   writeFailure: MockFailure | undefined;
-  /** Set to make the converter endpoint fail. */
-  converterFailure: { ret: number; msg: string } | undefined;
-  /** The document's sub-sheets, as `查询子表` reports them; `isVibile: false` is hidden. */
+  /** The document's sub-sheets, as `查询子表` reports them; the store checks its `sheetId` against them. */
   sheets: Array<{ sheetID: string; title: string; isVibile?: boolean }>;
-  /** The sub-sheet's views, as `查询视图` reports them. */
-  views: Array<{ viewID: string; viewTitle: string; viewType?: number }>;
   /** Set to make the sub-sheet list fail. */
   sheetListFailure: MockFailure | undefined;
-  /** Set to make the view list fail. */
-  viewListFailure: MockFailure | undefined;
   /** Set to make `userinfo` fail (a rejected credential, for instance). */
   userInfoFailure: MockFailure | undefined;
   /** The Open-Id `userinfo` reports; must match the configured one unless a test says otherwise. */
@@ -149,7 +146,6 @@ export interface TencentDocsMockState {
   rawReadReply: { status: number; body: Record<string, unknown> } | undefined;
   /** Fails this many sheet calls before any response exists, as a dropped connection would. */
   networkFailures: number;
-  fileId: string;
 }
 
 export interface TencentDocsMock {
@@ -205,10 +201,8 @@ function lowerHeaders(headers: unknown): Record<string, string> {
  */
 export function setupTencentDocsMock(
   options: {
-    fileId?: string;
     records?: RawRecordDto[];
     sheets?: Array<{ sheetID: string; title: string; isVibile?: boolean }>;
-    views?: Array<{ viewID: string; viewTitle: string; viewType?: number }>;
     userInfoOpenId?: string;
   } = {},
 ): TencentDocsMock {
@@ -219,19 +213,18 @@ export function setupTencentDocsMock(
     calls: [],
     readFailure: undefined,
     writeFailure: undefined,
-    converterFailure: undefined,
-    sheets: options.sheets ?? [{ sheetID: 'tXXXXXX', title: '智能表1' }],
-    views: options.views ?? [{ viewID: 'vXXXXXX', viewTitle: '表格视图', viewType: 2 }],
+    sheets: options.sheets ?? [{ sheetID: SHEET_ID, title: '智能表1' }],
     sheetListFailure: undefined,
-    viewListFailure: undefined,
     userInfoFailure: undefined,
     userInfoOpenId: options.userInfoOpenId ?? 'test-open-id',
     refresh: undefined,
     refreshFailure: undefined,
     rawReadReply: undefined,
     networkFailures: 0,
-    fileId: options.fileId ?? '300000000$ExAmPlEfIlEiD',
   };
+
+  /** What `reset()` restores the sub-sheet list to; cases that need another one mutate the state. */
+  const initialSheets = state.sheets;
 
   let nextRecordId = 1;
 
@@ -243,16 +236,7 @@ export function setupTencentDocsMock(
     state.calls.push({ method: request.method, url: `${API_ORIGIN}${request.path}`, body, headers: lowerHeaders(request.headers) });
   };
 
-  pool
-    .intercept({ path: (path) => path.startsWith('/openapi/drive/v2/util/converter'), method: 'GET' })
-    .reply((request) => {
-      record(request, undefined);
-      if (state.converterFailure !== undefined) return mockReply(200, { ret: state.converterFailure.ret, msg: state.converterFailure.msg });
-      return mockReply(200, { ret: 0, msg: 'Succeed', data: { fileID: state.fileId } });
-    })
-    .persist();
-
-  // `查询子表`: the document's sub-sheets. Only reached when the sheet URL names no `tab`.
+  // `查询子表`: the document's sub-sheets, which the store checks its configured id against.
   pool
     .intercept({ path: (path) => path.startsWith('/openapi/smartbook/v2/files/') && path.endsWith('/sheets'), method: 'GET' })
     .reply((request) => {
@@ -319,21 +303,6 @@ export function setupTencentDocsMock(
         });
       }
 
-      if (body !== undefined && 'getViews' in body) {
-        if (state.viewListFailure !== undefined) return failureReply(state.viewListFailure);
-
-        const payload = body.getViews as { offset?: number; limit?: number };
-        const offset = payload.offset ?? 0;
-        const limit = payload.limit ?? state.views.length;
-        const page = state.views.slice(offset, offset + limit);
-        const nextOffset = offset + page.length;
-        return mockReply(200, {
-          ret: 0,
-          msg: 'Succeed',
-          data: { getViews: { total: state.views.length, hasMore: nextOffset < state.views.length, next: nextOffset, views: page } },
-        });
-      }
-
       if (body !== undefined && 'addRecords' in body) {
         if (state.writeFailure !== undefined) return failureReply(state.writeFailure);
 
@@ -359,9 +328,8 @@ export function setupTencentDocsMock(
       state.readFailure = undefined;
       state.writeFailure = undefined;
       state.pageSize = undefined;
-      state.converterFailure = undefined;
+      state.sheets = initialSheets;
       state.sheetListFailure = undefined;
-      state.viewListFailure = undefined;
       state.userInfoFailure = undefined;
       state.userInfoOpenId = 'test-open-id';
       state.refresh = undefined;

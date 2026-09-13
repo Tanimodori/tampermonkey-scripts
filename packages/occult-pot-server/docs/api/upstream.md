@@ -4,17 +4,17 @@
 
 ## 1. 文档坐标
 
-下表是坐标的**形态**（占位值）：真实文档属于部署数据，只写在环境变量里 —— 本机是 git-ignored 的 `.env.development.local`，容器里由 compose 注入 —— 不进版本库。
+坐标是**配置项**，不是服务去猜或去换算的东西 —— 就是智能表调用路径里的那两个 id：
 
-| 项目                                              | 值（占位）                                                              |
-| ------------------------------------------------- | ----------------------------------------------------------------------- |
-| 表格链接                                          | `https://docs.qq.com/sheet/DXXXXXXXXXXXXXXX?tab=tXXXXXX&viewId=vXXXXXX` |
-| `encodedID`（URL 路径段，`encodedId`）            | `DXXXXXXXXXXXXXXX`                                                      |
-| `fileID`（API 使用，由 converter 解析，`fileId`） | `300000000$ExAmPlEfIlEiD`                                               |
-| `sheetID`（智能表子表，即 `tab` 参数，`tabId`）   | `tXXXXXX`                                                               |
-| `viewID`（视图，即 `viewId` 参数）                | `vXXXXXX`                                                               |
+| 配置项          | 项目                                               | 值（占位）                |
+| --------------- | -------------------------------------------------- | ------------------------- |
+| `DOCS_FILE_ID`  | `fileID`，API 寻址用                               | `300000000$ExAmPlEfIlEiD` |
+| `DOCS_SHEET_ID` | `sheetID`，智能表子表                              | `tXXXXXX`                 |
+| `DOCS_API_BASE` | 接口 origin，只取 origin（多余的路径与查询串丢弃） | `https://docs.qq.com`     |
 
-`TENCENT_DOCS_SHEET_URL` 既可以写完整链接，也可以只写 `encodedID`；**URL 里写了的就用 URL 的**，没写的由服务在启动时问上游（见 §4）。`TENCENT_DOCS_API_BASE` 只取 origin，配置里多余的路径或查询串会被丢弃。
+两个 id 都不出现在浏览器地址栏里：`DOCS_FILE_ID` 是 API 自己的 `fileID`（`300000000$…` 形态），`DOCS_SHEET_ID` 是子表，二者都能从一条已授权的调用（`…/files/{fileID}/sheets/{sheetID}`）或官方工具里读到。**别把表格链接粘进来**（`DOCS_FILE_ID` 的字符集校验会拒绝）；旧版本是粘贴表格链接、由服务用 converter 换算 `fileID`，那条路径已经不在启动流程里了（接口本身仍见 §2）。
+
+真实文档属于部署数据：只写在环境变量里 —— 本机是 git-ignored 的 `.env.development.local`，容器里由 compose 注入 —— 不进版本库。
 
 ## 2. 协议
 
@@ -22,9 +22,8 @@
 
 | 用途 | 请求 |
 | --- | --- |
-| 解析文档 ID | `GET /openapi/drive/v2/util/converter?type=2&value={encodedID}` → `data.fileID` |
-| 查子表列表 | `GET /openapi/smartbook/v2/files/{fileID}/sheets` → `data.getSheet[]`（每项带 `sheetID`、`title`、`isVibile`） |
-| 查视图列表 | `POST …/files/{fileID}/sheets/{sheetID}`，body `{"getViews":{"offset":0,"limit":1}}` → `data.getViews.views[]`（每项带 `viewID`、`viewTitle`、`viewType`） |
+| 查子表列表 | `GET /openapi/smartbook/v2/files/{fileID}/sheets` → `data.getSheet[]`（每项带 `sheetID`、`title`、`isVibile`）；启动时用它核对 `DOCS_SHEET_ID` |
+| 换算文档 ID（本服务已不用） | `GET /openapi/drive/v2/util/converter?type=2&value={encodedID}` → `data.fileID`；`type=1` 可反向由 `fileID` 得到 `encodedID` |
 | 校验凭据 | `GET /oauth/v2/userinfo?access_token={token}` → `data.openID`（官方说明该接口即用于校验 Access Token） |
 | 刷新凭据 | `GET /oauth/v2/token?client_id&client_secret&grant_type=refresh_token&refresh_token` → `{access_token, expires_in, user_id}`（无 `ret` 信封） |
 | 读记录 | `{"getRecords":{"offset":0,"limit":100}}` |
@@ -51,7 +50,7 @@
 - **只追加**：`addRecords` 是唯一会发出的写。`overwrite` 与 `remove` 直接抛 `INTERNAL_ERROR`（表没有可用的按 id 更新/删除语义），`update` 为空时不发请求；文本列以裸字符串写入（见 `../data/pot.md`）。
 - **不解析时间**：服务不解析日期文本，也不推算刷新时刻；两个时刻原样存取。
 - **凭据来自环境变量**，不再硬编码。
-- **文档坐标由 `stores/upstream.ts` 解析并分发**：`fileId` 一定经 converter；URL 没写 `tab` 就取「查子表列表」里第一个可见子表，没写 `viewId` 就取「查视图列表」里的第一个视图（`viewId` 目前只保存与分发，记录接口不接受它）。启动时还会调一次 `userinfo` **校验凭据**，失败就拒绝启动。解析成功后由 store 自己记一条 `Resolved the Tencent Docs document`（带 `tabId`/`viewId`），凭据已过期或临近过期时再记一条 warning。
+- **文档坐标由配置给出、由 `stores/upstream.ts` 分发**：`DOCS_FILE_ID`/`DOCS_SHEET_ID` 就是调用路径里的两个 id，没有 converter、没有子表回退，也不再有 `viewId`（记录接口不接受它）。启动时 store 做两件事：用「查子表列表」核对子表确实在这份文档里，再用 `userinfo` **校验凭据**；任一步失败就拒绝启动，而不是等到第一个请求。两件都通过后记一条 `Verified the Tencent Docs document`（带 `fileIdLength`/`sheetId`），凭据已过期或临近过期时再记一条 warning。
 - 读路径与写路径共用同一个出站队列（见 §6），所以读取的节流与写入的重试是同一套。
 
 ## 5. 代码分工
@@ -59,22 +58,22 @@
 | 文件 | 职责 |
 | --- | --- |
 | `src/services/upstream/client.ts` | 传输层：唯一的 undici 连接池、唯一的节流队列、重试与错误分类，以及 URL 拼装；不含业务语义 |
-| `src/stores/upstream.ts` | 身份与凭据：`useUpstreamStore()` 工厂 + 默认实例 `upstreamStore`，解析并分发 `fileId`/`tabId`/`viewId`/凭据三元组，校验与刷新 token，自报解析结果与到期告警，并给出 `/readyz` 的就绪判断（见 §7） |
+| `src/stores/upstream.ts` | 身份与凭据：`useUpstreamStore()` 工厂 + 默认实例 `upstreamStore`，分发配置里的 `fileId`/`sheetId` 与凭据三元组，启动时核对子表并校验 token、按需刷新，自报核对结果与到期告警，并给出 `/readyz` 的就绪判断（见 §7） |
 | `src/services/upstream/api.ts` | 记录层：`getRecords`/`getAllRecords`/`getPot`/`modify`，向 upstream store 要 id 与请求头 |
 | `src/stores/pot.ts` | pot 状态与写队列：`usePotStore()` 工厂 + 默认实例 `potStore`，通过 `read`/`commit` 回调与 `api.ts` 解耦（见 `../data/store.md`） |
 | `src/services/time.ts` | 唯一的时钟：`now()`；TTL、时间戳、凭据到期都由它读，测试 mock 这个模块来钉住时间 |
 
 ## 6. 节流与重试
 
-所有出站调用（记录读写、id 解析、凭据校验与刷新）都经过 `client.ts` 里的**一个** [`throttled-queue`](https://github.com/shaunpersad/throttled-queue)，它同时负责限速与重试。
+所有出站调用（记录读写、启动核对、凭据校验与刷新）都经过 `client.ts` 里的**一个** [`throttled-queue`](https://github.com/shaunpersad/throttled-queue)，它同时负责限速与重试。
 
 **限速**
 
-| 变量                                   | 默认值  | 说明                                 |
-| -------------------------------------- | ------- | ------------------------------------ |
-| `UPSTREAM_RATE_LIMIT_MAX_PER_INTERVAL` | `120`   | 每个窗口允许的调用数                 |
-| `UPSTREAM_RATE_LIMIT_INTERVAL_MS`      | `60000` | 窗口长度                             |
-| `UPSTREAM_TIMEOUT_MS`                  | `10000` | 单次尝试的超时（连接、响应头、正文） |
+| 变量                        | 默认值  | 说明                                 |
+| --------------------------- | ------- | ------------------------------------ |
+| `UPSTREAM_MAX_PER_INTERVAL` | `120`   | 每个窗口允许的调用数                 |
+| `UPSTREAM_INTERVAL_MS`      | `60000` | 窗口长度                             |
+| `UPSTREAM_TIMEOUT_MS`       | `10000` | 单次尝试的超时（连接、响应头、正文） |
 
 窗口内的调用会**均匀铺开**，而不是先打满再等：上游的配额是按分钟计的，突发只会更容易触发限流。默认值 120/分钟留在官方上限（每 `fileID` 150 次/分钟、每 `openID` 300 次/分钟）之下。重试同样计入这个配额，超时则由连接池统一施加。
 
@@ -102,10 +101,10 @@
 
 ### 7.1 现状（已实现）
 
-- 凭据从 `TENCENT_DOCS_ACCESS_TOKEN` 读入，配合 `TENCENT_DOCS_CLIENT_ID` 与 `TENCENT_DOCS_OPEN_ID` 组成请求头三元组；`TENCENT_DOCS_OPEN_ID` 可以省略，此时用 Access Token 的 `sub` 声明兜底（两者都没有则启动失败）。
+- 凭据从 `DOCS_ACCESS_TOKEN` 读入，配合 `DOCS_CLIENT_ID` 与 `DOCS_OPEN_ID` 组成请求头三元组；`DOCS_OPEN_ID` 可以省略，此时用 Access Token 的 `sub` 声明兜底（两者都没有则启动失败）。
 - 服务会**本地解码 JWT 的 payload**（不验签 —— 有效性由腾讯文档判定），只取 `exp` 与 `sub`：`exp` 推算出到期时刻，`sub` 补 Open-Id。
-- 启动时（`resolve()` 里）调一次 `GET /oauth/v2/userinfo?access_token=…` **校验凭据**：被拒绝（`ret` 为 `10313`/`10303`/`10302`/`37019` 等）就拒绝启动；返回的 `openID` 与显式配置的 `TENCENT_DOCS_OPEN_ID` 不一致同样拒绝启动。
-- `TOKEN_EXPIRY_WARN_MS`（默认 3 天）之内：`resolve()` 时由 store 记一条 warning（`Access token expires soon; schedule a credential rotation`，带到期时刻与剩余毫秒），`/readyz` 标 degraded（`tokenWarning: true`），但仍然返回 200；已过期则记 `Access token has expired; …` 并把 `ready`/`tokenExpired` 置为不可用。
+- 启动时（`resolve()` 里）先 `GET …/files/{fileID}/sheets` 核对配置的 `DOCS_SHEET_ID` 确实在这份文档里（不在就报 `CONFIG_INVALID`，并列出可用子表），再调 `GET /oauth/v2/userinfo?access_token=…` **校验凭据**：被拒绝（`ret` 为 `10313`/`10303`/`10302`/`37019` 等）就拒绝启动；返回的 `openID` 与显式配置的 `DOCS_OPEN_ID` 不一致同样拒绝启动。
+- `DOCS_TOKEN_EXPIRY_WARN_MS`（默认 3 天）之内：`resolve()` 时由 store 记一条 warning（`Access token expires soon; schedule a credential rotation`，带到期时刻与剩余毫秒），`/readyz` 标 degraded（`tokenWarning: true`），但仍然返回 200；已过期则记 `Access token has expired; …` 并把 `ready`/`tokenExpired` 置为不可用。
 - 过期之后：上游调用返回 `UPSTREAM_AUTH_FAILED`（503），`/readyz` 返回 503，`reasons` 里写明原因。
 - **轮换方式是改环境变量并重启**（或调用 `refresh()`，见下）；日志与 `/readyz` 只暴露 token 长度、到期时刻与校验结果，绝不输出 token 本身。
 
@@ -117,11 +116,11 @@
 GET https://docs.qq.com/oauth/v2/token?client_id=…&client_secret=…&grant_type=refresh_token&refresh_token=…
 ```
 
-- 需要 `TENCENT_DOCS_CLIENT_SECRET` 与 `TENCENT_DOCS_REFRESH_TOKEN`（两个可选的配置项）；缺任一个就抛 `CONFIG_INVALID`。
+- 需要 `DOCS_CLIENT_SECRET` 与 `DOCS_REFRESH_TOKEN`（两个可选的配置项）；缺任一个就抛 `CONFIG_INVALID`。
 - 成功后只更新**进程内存**里的 Access Token、到期时刻（`expires_in` 秒；响应没带就用新 token 的 `exp`）与 Open-Id；刷新结果没有校验过，`/readyz` 的 `credential.validated` 会回到 `false` 直到下一次 `validate()`。
 - 官方规定 Access Token 30 天、Refresh Token 1 年、授权码 5 分钟且一次性，并且**换取与刷新都必须由后台服务发起**。
 
-**仍待做的部分**（计划）：进程内定时器在剩余寿命低于阈值时自动调用 `refresh()`；把刷新结果写入外部 Redis（单键 JSON，取用前读取、Redis 不可用时回退环境变量，测试用 redis mock），以便重启与多实例共享。届时会新增 `REDIS_URL`（`TENCENT_DOCS_CLIENT_SECRET` 与 `TENCENT_DOCS_REFRESH_TOKEN` 已经是现有配置项）。
+**仍待做的部分**（计划）：进程内定时器在剩余寿命低于阈值时自动调用 `refresh()`；把刷新结果写入外部 Redis（单键 JSON，取用前读取、Redis 不可用时回退环境变量，测试用 redis mock），以便重启与多实例共享。届时会新增 `REDIS_URL`（`DOCS_CLIENT_SECRET` 与 `DOCS_REFRESH_TOKEN` 已经是现有配置项）。
 
 ### 7.3 安全提示
 

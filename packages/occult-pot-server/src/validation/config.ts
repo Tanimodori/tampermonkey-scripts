@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { LOG_LEVELS } from '@/logger.ts';
-import { parseSheetUrl } from './sheet.ts';
 import { booleanOrNumberFromString, integerFrom, oneOf, originListFromString } from './utils.ts';
 
 /**
@@ -25,16 +24,6 @@ function requiredString(error = 'is required'): z.ZodType<string> {
   return z.preprocess((value) => value, z.string({ error })).refine((value) => value.trim().length > 0, { error }) as unknown as z.ZodType<string>;
 }
 
-/** The sheet address must carry the encoded document ID the API is addressed by. */
-function parsesAsSheetUrl(value: string): boolean {
-  try {
-    parseSheetUrl(value);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 /** The API base must be an absolute URL; resolving keeps only its origin. */
 function isUrl(value: string): boolean {
   try {
@@ -45,8 +34,12 @@ function isUrl(value: string): boolean {
   }
 }
 
-const SHEET_URL_ERROR = 'must be a Tencent Docs sheet URL with an encoded document ID';
+/** Both ids travel in a request path, so they carry the documented characters and nothing else. */
+const ID_CHARS = /^[0-9A-Za-z$_-]+$/;
+
 const API_BASE_ERROR = 'must be a valid URL';
+const FILE_ID_ERROR = 'must be the API fileID (e.g. 300000000$abcdefghijkl), not a sheet URL';
+const SHEET_ID_ERROR = 'must be a smartsheet sub-sheet ID (sheetID)';
 
 const serverSchema = z.object({
   port: integerFrom({ min: 1, max: 65535 }),
@@ -59,15 +52,17 @@ const serverSchema = z.object({
 
 const docsSchema = z.object({
   apiBase: requiredString(API_BASE_ERROR).refine(isUrl, { error: API_BASE_ERROR }),
-  /** Page URL (or bare encoded ID) as configured; kept verbatim for diagnostics. */
-  sheetUrl: requiredString(SHEET_URL_ERROR).refine(parsesAsSheetUrl, { error: SHEET_URL_ERROR }),
-  accessToken: requiredString(),
+  /** The API's `fileID`, the one a smartsheet call path carries. */
+  fileId: requiredString(FILE_ID_ERROR).refine((value) => ID_CHARS.test(value), { error: FILE_ID_ERROR }),
+  /** The `sheetID` of the sub-sheet the records live in. */
+  sheetId: requiredString(SHEET_ID_ERROR).refine((value) => ID_CHARS.test(value), { error: SHEET_ID_ERROR }),
   clientId: requiredString(),
-  /** Optional: the access token's `sub` claim supplies it when this is left out. */
-  openId: z.string().optional(),
   /** Only needed to refresh the access token; the store refuses to refresh without both. */
   clientSecret: z.string().optional(),
   refreshToken: z.string().optional(),
+  /** Optional: the access token's `sub` claim supplies it when this is left out. */
+  openId: z.string().optional(),
+  accessToken: requiredString(),
   tokenExpiryWarnMs: integerFrom({ min: 0 }),
 });
 

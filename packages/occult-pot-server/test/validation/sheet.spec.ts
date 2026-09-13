@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { fromSheetValues, isValidPot, parseSheetUrl, toSheetValues } from '@/validation/index.ts';
+import { fromSheetValues, isValidPot, toSheetValues } from '@/validation/index.ts';
 import type { Pot } from '@/validation/index.ts';
 
 /**
- * The sheet itself: the address the operator configures, and how a pot maps onto a row.
+ * The sheet itself: how a pot maps onto a row. Where the sheet lives is configuration
+ * (`DOCS_FILE_ID` / `DOCS_SHEET_ID`), not something parsed here.
  */
-
-const SHEET_URL = 'https://docs.qq.com/sheet/DXXXXXXXXXXXXXXX?tab=tXXXXXX';
 
 const validPot: Pot = {
   world: '鸟',
@@ -15,37 +14,6 @@ const validPot: Pot = {
   northRefreshAtMs: 1_789_200_960_000,
   lastVisitAtMs: 1_789_199_460_000,
 };
-
-describe('parseSheetUrl', () => {
-  it('extracts the encoded ID and the sub-sheet from a full sheet URL', () => {
-    expect(parseSheetUrl(SHEET_URL)).toEqual({ encodedId: 'DXXXXXXXXXXXXXXX', tabId: 'tXXXXXX', viewId: undefined });
-  });
-
-  it('extracts the view ID as well', () => {
-    expect(parseSheetUrl(`${SHEET_URL}&viewId=vXXXXXX`)).toEqual({ encodedId: 'DXXXXXXXXXXXXXXX', tabId: 'tXXXXXX', viewId: 'vXXXXXX' });
-  });
-
-  it('accepts a bare encoded ID', () => {
-    expect(parseSheetUrl('DXXXXXXXXXXXXXXX')).toEqual({ encodedId: 'DXXXXXXXXXXXXXXX', tabId: undefined, viewId: undefined });
-  });
-
-  it('rejects an empty value', () => {
-    expect(() => parseSheetUrl('   ')).toThrow(/sheet URL is empty/);
-  });
-
-  it('rejects a URL without an ID segment', () => {
-    expect(() => parseSheetUrl('https://docs.qq.com/sheet')).toThrow(/could not extract an encoded document ID/);
-    expect(() => parseSheetUrl('https://docs.qq.com/')).toThrow(/could not extract an encoded document ID/);
-  });
-
-  it('rejects a value that is neither a URL nor an encoded ID', () => {
-    expect(() => parseSheetUrl('not a url at all')).toThrow(/could not extract an encoded document ID/);
-  });
-
-  it('rejects query parameters that are not usable IDs', () => {
-    expect(() => parseSheetUrl(`${SHEET_URL}&viewId=not%20an%20id`)).toThrow(/invalid viewId parameter/);
-  });
-});
 
 describe('toSheetValues', () => {
   it('maps the five fields onto the sheet column titles as plain values', () => {

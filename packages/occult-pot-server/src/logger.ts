@@ -11,7 +11,7 @@ import { redactByField } from '@logtape/redaction';
  * format and the credential redaction all come from the library, so nothing here is hand-rolled.
  */
 
-/** The levels `LOG_LEVEL` accepts, in LogTape's own vocabulary; the config schema reuses this list. */
+/** The levels `SERVER_LOG_LEVEL` accepts, in LogTape's own vocabulary; the config schema reuses this list. */
 export const LOG_LEVELS = ['debug', 'info', 'warning', 'error'] as const;
 
 export type LogLevel = (typeof LOG_LEVELS)[number];

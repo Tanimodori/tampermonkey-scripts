@@ -28,7 +28,7 @@ async function main(): Promise<void> {
     host: config.server.host,
     port: config.server.port,
     apiBase: config.docs.apiBase,
-    encodedId: upstreamStore.encodedId,
+    fileIdLength: upstreamStore.fileId.length,
   });
 
   const created = createApp();

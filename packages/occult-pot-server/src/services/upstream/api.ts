@@ -14,7 +14,7 @@ import { asArray, asRecord, postSheet } from './client.ts';
  * See https://docs.qq.com/open/document/app/openapi/v2/smartsheet/record/params.html
  */
 
-/** One row as the sheet sends it, before the shared converter turns it into a `Pot`. */
+/** One row as the sheet sends it, before `fromSheetValues` turns it into a `Pot`. */
 export interface RawRecordDto {
   readonly recordID: string;
   readonly createTime?: unknown;

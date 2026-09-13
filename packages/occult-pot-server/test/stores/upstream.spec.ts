@@ -1,5 +1,5 @@
 import { clock } from '@test/clock.ts';
-import { captureLogs, loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
+import { captureLogs, FILE_ID, loadTestConfig, SHEET_ID, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
 import { setClient } from '@/services/upstream/client.ts';
@@ -9,9 +9,6 @@ import { upstreamStore } from '@/stores/upstream.ts';
 // the same pinned instant, so nothing here depends on the machine's wall clock.
 vi.mock('@/services/time.ts', () => import('@test/clock.ts'));
 
-const FILE_ID = '300000000$ExAmPlEfIlEiD';
-const ENCODED_ID = 'DXXXXXXXXXXXXXXX';
-const SHEET_URL = `https://docs.qq.com/sheet/${ENCODED_ID}?tab=tXXXXXX`;
 /** The instant every case starts from; the token lifetimes below are offsets from it. */
 const NOW = 1_789_140_693_000;
 
@@ -33,13 +30,13 @@ function makeTokenExpiringIn(seconds: number): string {
 
 /**
  * Points the store at the mocked upstream and gives it a configuration of its own — which is also
- * what resets its ids, credential and resolved flag between cases — and puts the clock back on the
- * instant the cases' tokens are minted from.
+ * what resets its coordinates, credential and verified flag between cases — and puts the clock back
+ * on the instant the cases' tokens are minted from.
  */
 function useStore(overrides: Record<string, string | undefined> = {}): typeof upstreamStore {
   setClient(docs.agent);
   clock.set(NOW);
-  loadTestConfig({ TENCENT_DOCS_SHEET_URL: SHEET_URL, ...overrides });
+  loadTestConfig({ DOCS_FILE_ID: FILE_ID, DOCS_SHEET_ID: SHEET_ID, ...overrides });
   return upstreamStore;
 }
 
@@ -59,69 +56,42 @@ afterEach(() => {
 });
 
 describe('upstreamStore ids', () => {
-  it('hands out what the sheet URL carries before anything is resolved', () => {
+  it('hands out the configured coordinates before anything is checked', () => {
     const store = useStore();
 
-    expect(store.encodedId).toBe(ENCODED_ID);
-    expect(store.tabId).toBe('tXXXXXX');
-    expect(store.viewId).toBeUndefined();
-    expect(store.fileId).toBeUndefined();
+    expect(store.fileId).toBe(FILE_ID);
+    expect(store.sheetId).toBe(SHEET_ID);
     expect(store.resolved()).toBe(false);
   });
 
-  it('resolves the file id through the converter and the view through the upstream', async () => {
+  it('checks the sub-sheet and the credential against the upstream', async () => {
     const store = useStore();
 
     const ids = await store.resolve();
 
-    expect(ids).toEqual({ encodedId: ENCODED_ID, fileId: FILE_ID, tabId: 'tXXXXXX', viewId: 'vXXXXXX' });
+    expect(ids).toEqual({ fileId: FILE_ID, sheetId: SHEET_ID });
     expect(store.resolved()).toBe(true);
-    expect(store.fileId).toBe(FILE_ID);
-    expect(store.viewId).toBe('vXXXXXX');
-    // The URL named the tab, so the sub-sheet list (a GET on the files path) is never asked for.
-    expect(docs.state.calls.filter((call) => call.method === 'GET' && call.url.includes('/openapi/smartbook/v2/files/'))).toHaveLength(0);
+    expect(called(`/files/${FILE_ID}/sheets`)).toBe(true);
     expect(called('/oauth/v2/userinfo')).toBe(true);
   });
 
-  it('takes the ids from the URL and asks the upstream for nothing it already knows', async () => {
-    const store = useStore({ TENCENT_DOCS_SHEET_URL: `${SHEET_URL}&viewId=vvvvvv` });
-
-    await store.resolve();
-
-    expect(store.viewId).toBe('vvvvvv');
-    expect(docs.state.calls.filter((call) => call.body !== undefined && 'getViews' in (call.body as object))).toHaveLength(0);
-  });
-
-  it('falls back to the first visible sub-sheet when the URL names no tab', async () => {
+  it('rejects a sub-sheet the document does not have, naming the ones it does', async () => {
     docs.state.sheets = [
-      { sheetID: 'hidden1', title: '隐藏表', isVibile: false },
       { sheetID: 'first1', title: '智能表1' },
       { sheetID: 'second', title: '智能表2' },
     ];
-    const store = useStore({ TENCENT_DOCS_SHEET_URL: `https://docs.qq.com/sheet/${ENCODED_ID}` });
-
-    const ids = await store.resolve();
-
-    expect(ids.tabId).toBe('first1');
-    expect(called(`/files/${FILE_ID}/sheets`)).toBe(true);
-  });
-
-  it('fails when the document has no visible sub-sheet and the URL names none', async () => {
-    docs.state.sheets = [{ sheetID: 'hidden1', title: '隐藏表', isVibile: false }];
-    const store = useStore({ TENCENT_DOCS_SHEET_URL: `https://docs.qq.com/sheet/${ENCODED_ID}` });
-
-    await expect(store.resolve()).rejects.toMatchObject({ code: 'CONFIG_INVALID' });
-  });
-
-  it('fails with CONFIG_INVALID when the converter rejects the encoded ID', async () => {
-    docs.state.converterFailure = { ret: 10003, msg: 'Background RPC service call failed' };
     const store = useStore();
 
-    await expect(store.resolve()).rejects.toMatchObject({ code: 'CONFIG_INVALID' });
+    const error = await store.resolve().catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(AppError);
+    expect(error).toMatchObject({ code: 'CONFIG_INVALID' });
+    expect((error as Error).message).toContain(SHEET_ID);
+    expect((error as Error).message).toContain('first1, second');
     expect(store.resolved()).toBe(false);
   });
 
-  it('resolves once: later calls reuse the ids and touch no endpoint again', async () => {
+  it('checks once: later calls reuse the result and touch no endpoint again', async () => {
     const store = useStore();
     await store.resolve();
     const after = docs.state.calls.length;
@@ -129,23 +99,23 @@ describe('upstreamStore ids', () => {
     await store.resolve();
     const ids = await store.ids();
 
-    expect(ids).toEqual({ fileId: FILE_ID, tabId: 'tXXXXXX' });
+    expect(ids).toEqual({ fileId: FILE_ID, sheetId: SHEET_ID });
     expect(docs.state.calls).toHaveLength(after);
-    expect(countCalls('/openapi/drive/v2/util/converter')).toBe(1);
+    expect(countCalls('/oauth/v2/userinfo')).toBe(1);
   });
 
-  it('shares one resolution between concurrent callers', async () => {
+  it('shares one check between concurrent callers', async () => {
     const store = useStore();
 
     await Promise.all([store.resolve(), store.ids(), store.resolve()]);
 
-    expect(countCalls('/openapi/drive/v2/util/converter')).toBe(1);
+    expect(countCalls('/oauth/v2/userinfo')).toBe(1);
   });
 
-  it('resolves on demand for a caller that only wants the ids', async () => {
+  it('checks on demand for a caller that only wants the ids', async () => {
     const store = useStore();
 
-    await expect(store.ids()).resolves.toEqual({ fileId: FILE_ID, tabId: 'tXXXXXX' });
+    await expect(store.ids()).resolves.toEqual({ fileId: FILE_ID, sheetId: SHEET_ID });
   });
 });
 
@@ -189,7 +159,7 @@ describe('upstreamStore credential', () => {
 
   it('falls back to the token sub claim for the Open-Id', async () => {
     const token = makeToken({ exp: 1_791_732_693, sub: 'open-id-from-token' });
-    const store = useStore({ TENCENT_DOCS_ACCESS_TOKEN: token, TENCENT_DOCS_OPEN_ID: undefined });
+    const store = useStore({ DOCS_ACCESS_TOKEN: token, DOCS_OPEN_ID: undefined });
     docs.state.userInfoOpenId = 'open-id-from-token';
 
     await expect(store.headers()).resolves.toMatchObject({ 'Open-Id': 'open-id-from-token', 'Access-Token': token });
@@ -197,16 +167,16 @@ describe('upstreamStore credential', () => {
   });
 
   it('requires an explicit Open-Id when the token carries no sub claim', async () => {
-    const store = useStore({ TENCENT_DOCS_ACCESS_TOKEN: 'opaque-token', TENCENT_DOCS_OPEN_ID: undefined });
+    const store = useStore({ DOCS_ACCESS_TOKEN: 'opaque-token', DOCS_OPEN_ID: undefined });
 
     await expect(store.headers()).rejects.toMatchObject({ code: 'CONFIG_INVALID' });
   });
 
   it('decodes the token expiry and tolerates opaque tokens', () => {
-    const expiring = useStore({ TENCENT_DOCS_ACCESS_TOKEN: makeToken({ exp: 1_791_732_693.5 }) });
+    const expiring = useStore({ DOCS_ACCESS_TOKEN: makeToken({ exp: 1_791_732_693.5 }) });
     expect(expiring.expiresAt()).toBe(1_791_732_693_500);
 
-    const opaque = useStore({ TENCENT_DOCS_ACCESS_TOKEN: 'opaque', TENCENT_DOCS_OPEN_ID: 'test-open-id' });
+    const opaque = useStore({ DOCS_ACCESS_TOKEN: 'opaque', DOCS_OPEN_ID: 'test-open-id' });
     expect(opaque.expiresAt()).toBeUndefined();
   });
 
@@ -222,7 +192,7 @@ describe('upstreamStore credential', () => {
   });
 
   it('uses null rather than false for an unknown expiry', () => {
-    const store = useStore({ TENCENT_DOCS_ACCESS_TOKEN: 'opaque', TENCENT_DOCS_OPEN_ID: 'test-open-id' });
+    const store = useStore({ DOCS_ACCESS_TOKEN: 'opaque', DOCS_OPEN_ID: 'test-open-id' });
 
     expect(store.describe()).toMatchObject({ expiresAt: null, expired: null, validated: false, validatedAt: null });
   });
@@ -231,7 +201,7 @@ describe('upstreamStore credential', () => {
 describe('upstreamStore refresh', () => {
   it('exchanges the refresh token and hands out the new credential', async () => {
     docs.state.refresh = { accessToken: 'a-brand-new-token', expiresIn: 3600, userId: 'test-open-id' };
-    const store = useStore({ TENCENT_DOCS_CLIENT_SECRET: 'client-secret', TENCENT_DOCS_REFRESH_TOKEN: 'refresh-token' });
+    const store = useStore({ DOCS_CLIENT_SECRET: 'client-secret', DOCS_REFRESH_TOKEN: 'refresh-token' });
 
     await store.refresh();
 
@@ -246,7 +216,7 @@ describe('upstreamStore refresh', () => {
   it('falls back to the new token’s exp when the response carries no lifetime', async () => {
     const token = makeToken({ exp: 1_800_000_000 });
     docs.state.refresh = { accessToken: token, expiresIn: undefined };
-    const store = useStore({ TENCENT_DOCS_CLIENT_SECRET: 'client-secret', TENCENT_DOCS_REFRESH_TOKEN: 'refresh-token' });
+    const store = useStore({ DOCS_CLIENT_SECRET: 'client-secret', DOCS_REFRESH_TOKEN: 'refresh-token' });
 
     await store.refresh();
 
@@ -262,14 +232,14 @@ describe('upstreamStore refresh', () => {
 
   it('treats a response without a token as an authentication failure', async () => {
     docs.state.refreshFailure = { status: 200, body: { error: 'invalid_grant', error_description: 'refresh token expired' } };
-    const store = useStore({ TENCENT_DOCS_CLIENT_SECRET: 'client-secret', TENCENT_DOCS_REFRESH_TOKEN: 'refresh-token' });
+    const store = useStore({ DOCS_CLIENT_SECRET: 'client-secret', DOCS_REFRESH_TOKEN: 'refresh-token' });
 
     await expect(store.refresh()).rejects.toMatchObject({ code: 'UPSTREAM_AUTH_FAILED', status: 503 });
     expect(store.accessToken).toBe('test-access-token-value');
   });
 
   it('clears the validation stamp, because the new token has not been checked yet', async () => {
-    const store = useStore({ TENCENT_DOCS_CLIENT_SECRET: 'client-secret', TENCENT_DOCS_REFRESH_TOKEN: 'refresh-token' });
+    const store = useStore({ DOCS_CLIENT_SECRET: 'client-secret', DOCS_REFRESH_TOKEN: 'refresh-token' });
     await store.resolve();
     expect(store.describe().validated).toBe(true);
 
@@ -281,7 +251,7 @@ describe('upstreamStore refresh', () => {
 
 describe('upstreamStore errors', () => {
   it('is an AppError from our taxonomy in every failure path', async () => {
-    docs.state.converterFailure = { ret: 10003, msg: 'nope' };
+    docs.state.sheetListFailure = { status: 200, ret: 10003, msg: 'nope' };
     const store = useStore();
 
     const error = await store.resolve().catch((caught: unknown) => caught);
@@ -292,16 +262,16 @@ describe('upstreamStore errors', () => {
 });
 
 describe('upstreamStore readiness', () => {
-  it('is not ready before the document coordinates are known', () => {
+  it('is not ready before the coordinates have been checked', () => {
     const store = useStore();
 
     const report = store.readiness();
 
     expect(report).toMatchObject({ ready: false, fileIdResolved: false, tokenValidated: false, tokenExpired: false });
-    expect(report.reasons).toEqual(['document ID has not been resolved yet']);
+    expect(report.reasons).toEqual(['the document coordinates have not been checked yet']);
   });
 
-  it('is ready once the ids are known and the credential has been accepted', async () => {
+  it('is ready once the coordinates are checked and the credential has been accepted', async () => {
     const store = useStore();
     await store.resolve();
 
@@ -313,7 +283,7 @@ describe('upstreamStore readiness', () => {
 
   it('warns inside the expiry window and calls an expired credential unusable', async () => {
     const expiresAtMs = 1_789_200_000_000;
-    const store = useStore({ TENCENT_DOCS_ACCESS_TOKEN: makeToken({ exp: expiresAtMs / 1000 }) });
+    const store = useStore({ DOCS_ACCESS_TOKEN: makeToken({ exp: expiresAtMs / 1000 }) });
     await store.resolve();
 
     clock.set(expiresAtMs - 1_000);
@@ -324,30 +294,28 @@ describe('upstreamStore readiness', () => {
     clock.set(expiresAtMs + 1);
     const expired = store.readiness();
     expect(expired).toMatchObject({ ready: false, tokenWarning: false, tokenExpired: true });
-    expect(expired.reasons).toEqual(['access token has expired; refresh TENCENT_DOCS_ACCESS_TOKEN']);
+    expect(expired.reasons).toEqual(['access token has expired; refresh DOCS_ACCESS_TOKEN']);
   });
 });
 
 describe('upstreamStore startup log', () => {
-  it('reports the coordinates it resolved, and no warning for a healthy credential', async () => {
+  it('reports the coordinates it checked, and no warning for a healthy credential', async () => {
     const records = captureLogs();
     const store = useStore();
 
     await store.resolve();
 
-    expect(records.find((entry) => entry.message === 'Resolved the Tencent Docs document')).toMatchObject({
+    expect(records.find((entry) => entry.message === 'Verified the Tencent Docs document')).toMatchObject({
       level: 'info',
-      encodedId: ENCODED_ID,
       fileIdLength: FILE_ID.length,
-      tabId: 'tXXXXXX',
-      viewId: 'vXXXXXX',
+      sheetId: SHEET_ID,
     });
     expect(records.some((entry) => entry.level === 'warning')).toBe(false);
   });
 
   it('warns when the credential is about to lapse', async () => {
     const records = captureLogs();
-    const store = useStore({ TENCENT_DOCS_ACCESS_TOKEN: makeTokenExpiringIn(3_600) });
+    const store = useStore({ DOCS_ACCESS_TOKEN: makeTokenExpiringIn(3_600) });
 
     await store.resolve();
 
@@ -358,12 +326,12 @@ describe('upstreamStore startup log', () => {
 
   it('warns when the credential has already expired', async () => {
     const records = captureLogs();
-    const store = useStore({ TENCENT_DOCS_ACCESS_TOKEN: makeTokenExpiringIn(-10) });
+    const store = useStore({ DOCS_ACCESS_TOKEN: makeTokenExpiringIn(-10) });
 
     await store.resolve();
 
     expect(records.find((entry) => entry.level === 'warning')).toMatchObject({
-      message: 'Access token has expired; Tencent Docs calls will fail until TENCENT_DOCS_ACCESS_TOKEN is refreshed',
+      message: 'Access token has expired; Tencent Docs calls will fail until DOCS_ACCESS_TOKEN is refreshed',
     });
   });
 });

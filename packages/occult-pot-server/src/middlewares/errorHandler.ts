@@ -27,7 +27,7 @@ function describe(error: unknown): { status: number; code: string; message: stri
   const candidate = error as BodyParserError | undefined;
   const type = candidate?.type;
   if (type === 'entity.too.large') {
-    return { status: 413, code: 'PAYLOAD_TOO_LARGE', message: 'Request body exceeds the configured JSON_BODY_LIMIT' };
+    return { status: 413, code: 'PAYLOAD_TOO_LARGE', message: 'Request body exceeds the configured SERVER_JSON_BODY_LIMIT' };
   }
   if (type === 'entity.parse.failed') {
     return { status: 400, code: 'BAD_REQUEST', message: 'Request body is not valid JSON' };

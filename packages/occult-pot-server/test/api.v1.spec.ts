@@ -371,7 +371,7 @@ describe('POST /v1/pots', () => {
 
   it('serves an accepted pot before the write reaches the sheet', async () => {
     // A long flush interval makes "nothing written yet" deterministic.
-    const { client } = await startApp({ WRITE_FLUSH_INTERVAL_MS: '60000' });
+    const { client } = await startApp({ WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000' });
     await client.post('/v1/pots').send(newPot).expect(202);
 
     const list = (await client.get('/v1/pots').expect(200)).body as { data: Pot[] };
@@ -558,7 +558,7 @@ describe('POST /v1/pots', () => {
   });
 
   it('merges identical accepts within one flush window into one write', async () => {
-    const { client, created } = await startApp({ WRITE_FLUSH_INTERVAL_MS: '60000' });
+    const { client, created } = await startApp({ WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000' });
 
     await client
       .post('/v1/pots')
@@ -577,7 +577,7 @@ describe('POST /v1/pots', () => {
   });
 
   it('writes one row per flush window for the same pot', async () => {
-    const { client, created } = await startApp({ WRITE_FLUSH_INTERVAL_MS: '60000' });
+    const { client, created } = await startApp({ WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000' });
 
     await client
       .post('/v1/pots')
@@ -667,7 +667,7 @@ describe('POST /v1/pots', () => {
   });
 
   it('rejects a body over the configured limit with 413', async () => {
-    const { client } = await startApp({ JSON_BODY_LIMIT: '1kb' });
+    const { client } = await startApp({ SERVER_JSON_BODY_LIMIT: '1kb' });
 
     const response = await client
       .post('/v1/pots')
@@ -679,7 +679,7 @@ describe('POST /v1/pots', () => {
   it('rate limits anonymous writes per IP', async () => {
     // `loopback` makes Express/express-rate-limit resolve the client IP from X-Forwarded-For,
     // which lets this test drive two distinct client IPs over the same socket.
-    const { client } = await startApp({ TRUST_PROXY: 'loopback', RATE_LIMIT_WRITE_MAX: '1' });
+    const { client } = await startApp({ SERVER_TRUST_PROXY: 'loopback', RATE_LIMIT_WRITE_MAX: '1' });
 
     await client
       .post('/v1/pots')
@@ -703,7 +703,7 @@ describe('POST /v1/pots', () => {
   });
 
   it('reports an upstream write failure through /readyz rather than failing the accept', async () => {
-    const { client, created, logs } = await startApp({ WRITE_FLUSH_INTERVAL_MS: '50' });
+    const { client, created, logs } = await startApp({ WRITE_QUEUE_FLUSH_INTERVAL_MS: '50' });
     docs.state.writeFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
 
     // The accept cannot know the outcome, so it still answers 202.

@@ -14,7 +14,7 @@ export interface RateLimiters {
  * - `general` covers the whole anonymous API surface.
  * - `writes` is tighter because every write consumes outbound Tencent Docs quota.
  *
- * `TRUST_PROXY` must match the deployment topology; behind an unconfigured reverse proxy
+ * `SERVER_TRUST_PROXY` must match the deployment topology; behind an unconfigured reverse proxy
  * every request shares the proxy's IP and the limiter becomes both too strict and useless.
  */
 export function createRateLimiters(): RateLimiters {

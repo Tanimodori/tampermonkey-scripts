@@ -3,7 +3,7 @@
 腾讯文档在线智能表（魔法罐刷新时间表）的**只读 + 只追加**代理 API 服务：客户端不持有凭据，只通过本服务读取整张表、提交新观察到的罐子。
 
 - 匿名访问、无鉴权：防护是按客户端 IP 的限流，加上一条独立的出站腾讯文档调用预算。
-- 读取缓存在内存里（TTL 内不重复读表），写入合并成一个变更、每 `WRITE_FLUSH_INTERVAL_MS` 以一次 `addRecords` 写回。
+- 读取缓存在内存里（TTL 内不重复读表），写入合并成一个变更、每 `WRITE_QUEUE_FLUSH_INTERVAL_MS` 以一次 `addRecords` 写回。
 - REST 风格，路径版本化（`/v1`）。
 
 ## 快速开始
@@ -17,7 +17,7 @@ node dist/index.js
 
 启动时进程按 vite 的 mode（`import.meta.env.MODE`）读环境文件：`.env.<mode>.local` → `.env.<mode>` → `.env`（`rushx dev` 与源码运行是 `development`，vite 打出的 `dist/` 是 `production`，vitest 是 `test`）。越具体越优先，且 shell 里已设的变量优先于所有文件；生产容器里这些文件都不存在，变量由 compose 注入。
 
-服务在启动时就把 `TENCENT_DOCS_SHEET_URL` 解析成文档坐标（`fileID`，必要时连子表与视图一起向上游查），并用一次 `userinfo` 校验凭据；任何一步失败都会直接拒绝启动并退出，而不是等到第一个请求才失败。
+文档坐标由 `DOCS_FILE_ID` / `DOCS_SHEET_ID` 直接给出（就是调用路径里的 `fileID` 与子表 id，不是浏览器里的表格链接）；服务在启动时核对子表确实在这份文档里，并用一次 `userinfo` 校验凭据，任何一步失败都会直接拒绝启动并退出，而不是等到第一个请求才失败。
 
 ## 部署
 
@@ -33,7 +33,7 @@ docker compose up -d --build      # 变量由 compose 注入：.env、.env.produ
 
 ## 配置
 
-所有配置都来自环境变量，完整清单、默认值与注释以 [`.env.development`](.env.development) 为准。`loadConfig()` 在启动时读取一次并缓存，之后各模块用 `getConfig()` 取用；有缺失或非法的变量时会一次性列出全部问题并退出。各子文档只解释自己涉及的那几个变量。
+所有配置都来自环境变量，**变量名就是配置路径**（`server.port` → `SERVER_PORT`，`docs.fileId` → `DOCS_FILE_ID`，`cache.readTtlMs` → `CACHE_READ_TTL_MS`）。完整清单、默认值与注释以 [`.env.development`](.env.development) 为准；`loadConfig()` 在启动时读取一次并缓存，之后各模块用 `getConfig()` 取用；有缺失或非法的变量时会一次性列出全部问题并退出。各子文档只解释自己涉及的那几个变量。
 
 | 文件                      | 用途                                      | 是否入库 |
 | ------------------------- | ----------------------------------------- | -------- |

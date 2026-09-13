@@ -4,7 +4,7 @@ import { formatInstant, LOG_CATEGORY } from '@/logger.ts';
 import { captureLogs } from './helpers.ts';
 
 /**
- * These pin this service's logging conventions: the level an operator writes in `LOG_LEVEL`, the
+ * These pin this service's logging conventions: the level an operator writes in `SERVER_LOG_LEVEL`, the
  * category every record carries, and which fields must never reach a line. The transport itself
  * (sinks, the JSON Lines format, the meta logger) is LogTape's, not ours to test.
  */

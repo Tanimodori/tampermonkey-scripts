@@ -34,7 +34,7 @@ export interface CallRequest {
   readonly method: Dispatcher.HttpMethod;
   readonly headers: Record<string, string>;
   readonly body?: string;
-  /** The payload keyword (`getRecords`, `addRecords`, `converter`, `userinfo`), for diagnostics. */
+  /** The payload keyword (`getRecords`, `addRecords`, `getSheet`, `userinfo`), for diagnostics. */
   readonly operation: string;
   /** Whether the response carries the smartsheet envelope the classifier understands. */
   readonly expectsEnvelope: boolean;
@@ -173,7 +173,7 @@ function encodePathSegment(value: string): string {
   return encodeURIComponent(value).replace(/%24/g, '$').replace(/%3A/gi, ':');
 }
 
-/** An absolute URL on the configured origin, e.g. the converter or an OAuth endpoint. */
+/** An absolute URL on the configured origin, e.g. the user-info or token endpoint. */
 export function apiUrl(pathname: string, params: Record<string, string> = {}): string {
   const url = new URL(pathname, getConfig().docs.apiBase);
   for (const [name, value] of Object.entries(params)) url.searchParams.set(name, value);
@@ -181,9 +181,9 @@ export function apiUrl(pathname: string, params: Record<string, string> = {}): s
 }
 
 /** The smartsheet path for one document, with or without its sub-sheet. */
-export function sheetUrl(fileId: string, tabId?: string): string {
+export function sheetUrl(fileId: string, sheetId?: string): string {
   const base = `${getConfig().docs.apiBase}/openapi/smartbook/v2/files/${encodePathSegment(fileId)}/sheets`;
-  return tabId === undefined ? base : `${base}/${encodePathSegment(tabId)}`;
+  return sheetId === undefined ? base : `${base}/${encodePathSegment(sheetId)}`;
 }
 
 /**
@@ -245,8 +245,8 @@ async function perform(url: string, init: CallRequest): Promise<JsonResponse> {
  *
  * Transport-level statuses are judged first and for every endpoint — `400010` (service internal
  * error) arrives with HTTP 500, and a 429 is a rate limit whichever endpoint said it. Only then
- * does the smartsheet envelope apply, and only to the calls that carry one: the converter and the
- * OAuth endpoints have their own vocabulary, which their callers read themselves.
+ * does the smartsheet envelope apply, and only to the calls that carry one: the OAuth endpoints
+ * have their own vocabulary, which their callers read themselves.
  */
 function classify(response: JsonResponse, request: CallRequest): Failure | undefined {
   const body = asRecord(response.body);
@@ -323,12 +323,12 @@ function rateLimitHintSeconds(): number {
 
 /** Posts one keyword-wrapped payload to a sub-sheet and returns its `data` section. */
 export async function postSheet(
-  ids: { readonly fileId: string; readonly tabId: string },
+  ids: { readonly fileId: string; readonly sheetId: string },
   payload: Record<string, unknown>,
   headers: Record<string, string>,
 ): Promise<unknown> {
   const operation = Object.keys(payload)[0] ?? 'request';
-  return unwrap(sheetUrl(ids.fileId, ids.tabId), operation, { method: 'POST', headers, body: JSON.stringify(payload) });
+  return unwrap(sheetUrl(ids.fileId, ids.sheetId), operation, { method: 'POST', headers, body: JSON.stringify(payload) });
 }
 
 /** Reads one envelope-returning endpoint (the sub-sheet list, the user info) and returns its `data`. */

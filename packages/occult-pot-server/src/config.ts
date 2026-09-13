@@ -47,39 +47,58 @@ export function loadEnvFiles(files: readonly string[] = envFilesFor(MODE)): void
  *     loadConfig()         runs all three and caches the result; getConfig() reads it back
  *
  * The shapes themselves live in `validation/config.ts`; this module owns the policy — which values
- * are defaults, which variable carries which field, and what can only be checked once the whole
- * configuration is in hand.
+ * are defaults, which paths the environment may set (and under which name), and what can only be
+ * checked once the whole configuration is in hand.
  */
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Schema path → the environment variable it came from. */
-const ENV_BY_PATH: Record<string, string> = {
-  'server.port': 'PORT',
-  'server.host': 'HOST',
-  'server.trustProxy': 'TRUST_PROXY',
-  'server.corsOrigins': 'CORS_ORIGINS',
-  'server.jsonBodyLimit': 'JSON_BODY_LIMIT',
-  'server.logLevel': 'LOG_LEVEL',
-  'docs.apiBase': 'TENCENT_DOCS_API_BASE',
-  'docs.sheetUrl': 'TENCENT_DOCS_SHEET_URL',
-  'docs.accessToken': 'TENCENT_DOCS_ACCESS_TOKEN',
-  'docs.clientId': 'TENCENT_DOCS_CLIENT_ID',
-  'docs.openId': 'TENCENT_DOCS_OPEN_ID',
-  'docs.clientSecret': 'TENCENT_DOCS_CLIENT_SECRET',
-  'docs.refreshToken': 'TENCENT_DOCS_REFRESH_TOKEN',
-  'docs.tokenExpiryWarnMs': 'TOKEN_EXPIRY_WARN_MS',
-  'cache.readTtlMs': 'READ_CACHE_TTL_MS',
-  'writeQueue.flushIntervalMs': 'WRITE_FLUSH_INTERVAL_MS',
-  'rateLimit.ipWindowMs': 'RATE_LIMIT_IP_WINDOW_MS',
-  'rateLimit.ipMax': 'RATE_LIMIT_IP_MAX',
-  'rateLimit.writeMax': 'RATE_LIMIT_WRITE_MAX',
-  'upstream.maxPerInterval': 'UPSTREAM_RATE_LIMIT_MAX_PER_INTERVAL',
-  'upstream.intervalMs': 'UPSTREAM_RATE_LIMIT_INTERVAL_MS',
-  'upstream.maxRetries': 'UPSTREAM_MAX_RETRIES',
-  'upstream.retryBackoffMs': 'UPSTREAM_RETRY_BACKOFF_MS',
-  'upstream.timeoutMs': 'UPSTREAM_TIMEOUT_MS',
-};
+/**
+ * Every variable the environment may set, as the schema path it fills — the order is the schema's,
+ * and the variable name is derived from the path by `envName`.
+ */
+const ENV_PATHS = [
+  'server.port',
+  'server.host',
+  'server.trustProxy',
+  'server.corsOrigins',
+  'server.jsonBodyLimit',
+  'server.logLevel',
+  'docs.apiBase',
+  'docs.fileId',
+  'docs.sheetId',
+  'docs.clientId',
+  'docs.clientSecret',
+  'docs.refreshToken',
+  'docs.openId',
+  'docs.accessToken',
+  'docs.tokenExpiryWarnMs',
+  'cache.readTtlMs',
+  'writeQueue.flushIntervalMs',
+  'rateLimit.ipWindowMs',
+  'rateLimit.ipMax',
+  'rateLimit.writeMax',
+  'upstream.maxPerInterval',
+  'upstream.intervalMs',
+  'upstream.maxRetries',
+  'upstream.retryBackoffMs',
+  'upstream.timeoutMs',
+] as const;
+
+/**
+ * The variable a field is read from: the schema path in SCREAMING_SNAKE_CASE, so `server.port` is
+ * `SERVER_PORT` and `docs.tokenExpiryWarnMs` is `DOCS_TOKEN_EXPIRY_WARN_MS`.
+ *
+ * One rule, so a name can never drift from the field it fills and the same mapping words both the
+ * reads below and the failures `describeIssue` reports.
+ */
+function envName(path: string): string {
+  return path
+    .split('.')
+    .join('_')
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .toUpperCase();
+}
 
 /**
  * Reports a failed field against the environment variable the operator set.
@@ -88,8 +107,7 @@ const ENV_BY_PATH: Record<string, string> = {
  * the variable name.
  */
 function describeIssue(issue: { path: PropertyKey[]; message: string }): string {
-  const path = issue.path.map(String).join('.');
-  return `${ENV_BY_PATH[path] ?? path} ${issue.message}`;
+  return `${envName(issue.path.map(String).join('.'))} ${issue.message}`;
 }
 
 /** Everything the environment may leave out, in the form a resolved configuration holds it. */
@@ -105,7 +123,8 @@ function getDefaultConfig(): AppEnvConfig {
 }
 
 /**
- * Reads the environment into the config shape.
+ * Reads the environment into the config shape: every path in `ENV_PATHS`, read from the variable
+ * `envName` derives for it.
  *
  * An unset variable and an empty one are the same thing here: absent, so the default applies. The
  * values keep their string form and let the schema convert them, which is what keeps failures
@@ -114,46 +133,15 @@ function getDefaultConfig(): AppEnvConfig {
  * @throws `ConfigError` listing every invalid variable at once.
  */
 function loadConfigFromEnv(env: NodeJS.ProcessEnv): AppEnvConfig {
-  const value = (name: string): string | undefined => {
-    const raw = env[name];
-    return raw === undefined || raw === '' ? undefined : raw;
-  };
+  const candidate: Record<string, Record<string, string | undefined>> = {};
 
-  const result = appEnvConfigSchema.safeParse({
-    server: {
-      port: value('PORT'),
-      host: value('HOST'),
-      trustProxy: value('TRUST_PROXY'),
-      corsOrigins: value('CORS_ORIGINS'),
-      jsonBodyLimit: value('JSON_BODY_LIMIT'),
-      logLevel: value('LOG_LEVEL'),
-    },
-    docs: {
-      apiBase: value('TENCENT_DOCS_API_BASE'),
-      sheetUrl: value('TENCENT_DOCS_SHEET_URL'),
-      accessToken: value('TENCENT_DOCS_ACCESS_TOKEN'),
-      clientId: value('TENCENT_DOCS_CLIENT_ID'),
-      openId: value('TENCENT_DOCS_OPEN_ID'),
-      clientSecret: value('TENCENT_DOCS_CLIENT_SECRET'),
-      refreshToken: value('TENCENT_DOCS_REFRESH_TOKEN'),
-      tokenExpiryWarnMs: value('TOKEN_EXPIRY_WARN_MS'),
-    },
-    cache: { readTtlMs: value('READ_CACHE_TTL_MS') },
-    writeQueue: { flushIntervalMs: value('WRITE_FLUSH_INTERVAL_MS') },
-    rateLimit: {
-      ipWindowMs: value('RATE_LIMIT_IP_WINDOW_MS'),
-      ipMax: value('RATE_LIMIT_IP_MAX'),
-      writeMax: value('RATE_LIMIT_WRITE_MAX'),
-    },
-    upstream: {
-      maxPerInterval: value('UPSTREAM_RATE_LIMIT_MAX_PER_INTERVAL'),
-      intervalMs: value('UPSTREAM_RATE_LIMIT_INTERVAL_MS'),
-      maxRetries: value('UPSTREAM_MAX_RETRIES'),
-      retryBackoffMs: value('UPSTREAM_RETRY_BACKOFF_MS'),
-      timeoutMs: value('UPSTREAM_TIMEOUT_MS'),
-    },
-  });
+  for (const path of ENV_PATHS) {
+    const [group, field] = path.split('.') as [string, string];
+    const raw = env[envName(path)];
+    (candidate[group] ??= {})[field] = raw === undefined || raw === '' ? undefined : raw;
+  }
 
+  const result = appEnvConfigSchema.safeParse(candidate);
   if (!result.success) throw new ConfigError(result.error.issues.map(describeIssue));
   return result.data;
 }
@@ -166,9 +154,9 @@ function loadConfigFromEnv(env: NodeJS.ProcessEnv): AppEnvConfig {
  * schema in step 3 is what turns that into an error. The guards are therefore defensive: the
  * environment schema has already rejected anything unparseable.
  *
- * The document ids and the credential's lifetime are **not** derived here: the sheet URL, the token
- * and everything read out of them belong to `src/stores/upstream.ts`, which the service asks for
- * them. This step only normalises what the operator wrote.
+ * The document ids and the credential's lifetime are **not** derived here: the configured `fileId`
+ * / `sheetId`, the token and everything read out of them belong to `src/stores/upstream.ts`, which
+ * the service asks for them. This step only normalises what the operator wrote.
  */
 function deriveFromEnv(fromEnv: AppEnvConfig): void {
   const docs = (fromEnv.docs ??= {});

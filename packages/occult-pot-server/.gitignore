@@ -1,0 +1,8 @@
+node_modules/
+dist/
+# Real values stay local: `.env` and `.env.production` are injected by docker-compose, and the
+# `.env.<mode>.local` overrides (ignored by the repo root) beat the committed `.env.development`.
+.env
+.env.production
+rush-logs/
+*.tsbuildinfo

@@ -1,0 +1,60 @@
+{
+  "name": "occult-pot-server",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Express API server proxying the Tencent Docs smartsheet that tracks occult pot refresh times.",
+  "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
+  "bugs": {
+    "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tanimodori/tampermonkey-scripts.git"
+  },
+  "license": "MIT",
+  "author": "Tanimodori",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --run --passWithNoTests",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@logtape/logtape": "^2.3.4",
+    "@logtape/redaction": "^2.3.4",
+    "body-parser": "^2.3.0",
+    "cors": "^2.8.6",
+    "defu": "^6.1.7",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "morgan": "^1.12.1",
+    "throttled-queue": "^3.0.0",
+    "undici": "^7.16.0",
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.6",
+    "@types/cors": "^2.8.19",
+    "@types/morgan": "^1.9.10",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.10.5",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
+    "tsx": "^4.19.2",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.5",
+    "vitest": "^2.1.8"
+  },
+  "optionalDependencies": {
+    "@oxfmt/binding-win32-x64-msvc": "^0.67.0",
+    "@oxlint/binding-win32-x64-msvc": "^1.82.0"
+  }
+}

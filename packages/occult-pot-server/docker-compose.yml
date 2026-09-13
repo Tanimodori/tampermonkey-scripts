@@ -1,0 +1,23 @@
+services:
+  occult-pot-server:
+    build:
+      context: ../..
+      dockerfile: packages/occult-pot-server/Dockerfile
+    image: occult-pot-server:latest
+    env_file:
+      # Both optional: `.env` for the shared values, `.env.production` to override them.
+      # `required:` needs Docker Compose v2.24 or newer.
+      - path: .env
+        required: false
+      - path: .env.production
+        required: false
+    environment:
+      # Keep the container's healthcheck/port in sync with the published port.
+      PORT: 3000
+      # Behind a reverse proxy set TRUST_PROXY (env_file or here) so per-IP throttling works.
+    ports:
+      - '3000:3000'
+    restart: unless-stopped
+    # Give the graceful shutdown path time to flush the write queue.
+    stop_grace_period: 30s
+    init: true

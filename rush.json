@@ -440,6 +440,10 @@
     {
       "packageName": "feishu-download",
       "projectFolder": "packages/feishu-download"
+    },
+    {
+      "packageName": "occult-pot-server",
+      "projectFolder": "packages/occult-pot-server"
     }
   ]
 }

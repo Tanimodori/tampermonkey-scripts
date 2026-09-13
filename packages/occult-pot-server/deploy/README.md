@@ -56,6 +56,16 @@ sudo iptables -S DOCKER-USER
 
 **为什么 ban 必须落在 `DOCKER-USER`**：Docker 发布端口靠 DNAT，数据包在 nat 表改写后走 FORWARD 路径上的 `DOCKER-USER` 链，**不经过宿主机的 INPUT 链**。fail2ban 默认的 `iptables-allports` 动作插的是 INPUT，对容器端口等于什么都没做（却会显示"已封禁"）。jail 里的 `action = iptables-allports[chain="DOCKER-USER", name=occult-pot-nginx]` 就是为此。
 
+**改完配置用 `systemctl restart fail2ban`，不要用 `fail2ban-client reload`**：本机 fail2ban 1.1.0 上 `reload` 之后这个 jail 会从列表里消失（后续命令报 `UnknownJailException`），只有整进程重启才会稳定加载。重启后 `sudo fail2ban-client status` 的 `Jail list` 里必须能看到 `occult-pot-nginx`。
+
+**验证 ban 真的生效**（`203.0.113.0/24` 是 TEST-NET-3，永远不会是真实客户端）：
+
+```bash
+sudo fail2ban-client set occult-pot-nginx banip 203.0.113.7
+sudo iptables -S f2b-occult-pot-nginx     # 应出现 -s 203.0.113.7/32 -j REJECT
+sudo fail2ban-client set occult-pot-nginx unbanip 203.0.113.7
+```
+
 只封某个 IP 时也可以用 nginx 自己拦，但既然是同一个入口，交给 fail2ban 更省事；被 ban 的 IP 仍会出现在访问日志里（包的丢弃发生在 nginx 之前）。
 
 ## logrotate

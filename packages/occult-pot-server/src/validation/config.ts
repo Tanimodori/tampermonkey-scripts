@@ -88,6 +88,15 @@ const upstreamSchema = z.object({
   timeoutMs: integerFrom({ min: 1 }),
 });
 
+/** Where the shared state lives: the address of a server, or nothing at all for the in-process mock. */
+const redisSchema = z.object({
+  /** `redis://[username:password@]host:port/db`. Leaving it out is what selects the mock. */
+  url: z
+    .string()
+    .optional()
+    .refine((value) => value === undefined || isUrl(value), { error: 'must be a valid Redis URL' }),
+});
+
 /** A complete configuration: what `loadConfig()` hands out. */
 export const appConfigSchema = z.object({
   server: serverSchema,
@@ -96,6 +105,7 @@ export const appConfigSchema = z.object({
   writeQueue: writeQueueSchema,
   rateLimit: rateLimitSchema,
   upstream: upstreamSchema,
+  redis: redisSchema,
 });
 
 export type AppConfig = Readonly<z.infer<typeof appConfigSchema>>;
@@ -115,6 +125,7 @@ export const appEnvConfigSchema = z
     writeQueue: writeQueueSchema.partial(),
     rateLimit: rateLimitSchema.partial(),
     upstream: upstreamSchema.partial(),
+    redis: redisSchema.partial(),
   })
   // The groups are optional as well: a caller may supply the one field it cares about.
   .partial();

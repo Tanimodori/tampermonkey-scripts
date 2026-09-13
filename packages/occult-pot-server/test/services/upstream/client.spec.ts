@@ -37,7 +37,7 @@ describe('getClient', () => {
 
     expect(getClient()).toBe(first);
 
-    loadTestConfig({ UPSTREAM_TIMEOUT_MS: '5000' });
+    loadTestConfig({ OPS_UPSTREAM_TIMEOUT_MS: '5000' });
     expect(getClient()).not.toBe(first);
 
     await closeClient();
@@ -62,7 +62,7 @@ describe('getClient', () => {
     const origin = await listen(() => {
       // Deliberately never responds.
     });
-    loadTestConfig({ UPSTREAM_TIMEOUT_MS: '50' });
+    loadTestConfig({ OPS_UPSTREAM_TIMEOUT_MS: '50' });
 
     const client = getClient();
     const startedAt = Date.now();

@@ -24,7 +24,7 @@ const docs = setupTencentDocsMock();
 async function useApi(options: { maxRetries?: number; env?: Record<string, string> } = {}): Promise<void> {
   setClient(docs.agent);
   loadTestConfig({
-    UPSTREAM_MAX_RETRIES: String(options.maxRetries ?? 0),
+    OPS_UPSTREAM_MAX_RETRIES: String(options.maxRetries ?? 0),
     ...options.env,
   });
   // The store resolves the document ids and validates the credential up front, exactly as the
@@ -115,7 +115,7 @@ describe('getRecords and getAllRecords', () => {
 
   it('maps the rate limit business code to UPSTREAM_RATE_LIMITED with a retry hint', async () => {
     // The hint is the pacing window itself, so a 30 s window is a 30 s wait.
-    await useApi({ env: { UPSTREAM_INTERVAL_MS: '30000' } });
+    await useApi({ env: { OPS_UPSTREAM_INTERVAL_MS: '30000' } });
     docs.state.readFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
 
     try {

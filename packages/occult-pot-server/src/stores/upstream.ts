@@ -2,6 +2,7 @@ import { getLogger } from '@logtape/logtape';
 import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
 import { formatInstant, LOG_CATEGORY } from '@/logger.ts';
+import { getRedis } from '@/services/redis.ts';
 import { now } from '@/services/time.ts';
 import { apiUrl, asArray, asRecord, call, describeBody, getEnvelope, sheetUrl } from '@/services/upstream/client.ts';
 import type { AppConfig } from '@/validation/index.ts';
@@ -9,8 +10,8 @@ import type { AppConfig } from '@/validation/index.ts';
 /**
  * Which document this service talks to, and with which credential.
  *
- * The coordinates are configuration, not something to work out: `DOCS_FILE_ID` is the API's `fileID`
- * and `DOCS_SHEET_ID` the sub-sheet (`sheetID`) inside it, exactly the two ids a smartsheet call
+ * The coordinates are configuration, not something to work out: `OPS_DOCS_FILE_ID` is the API's `fileID`
+ * and `OPS_DOCS_SHEET_ID` the sub-sheet (`sheetID`) inside it, exactly the two ids a smartsheet call
  * path carries.
  *
  * `resolve()` is therefore a check rather than a lookup — it confirms the configured sub-sheet
@@ -41,7 +42,7 @@ export interface UpstreamReadiness {
   readonly tokenValidated: boolean;
   readonly tokenExpiresAt: number | undefined;
   readonly tokenExpiresInMs: number | undefined;
-  /** Inside `DOCS_TOKEN_EXPIRY_WARN_MS` of the expiry, but not expired yet. */
+  /** Inside `OPS_DOCS_TOKEN_EXPIRY_WARN_MS` of the expiry, but not expired yet. */
   readonly tokenWarning: boolean;
   readonly tokenExpired: boolean;
   readonly reasons: readonly string[];
@@ -119,6 +120,12 @@ function readAccessTokenExpiresAt(token: string): number | undefined {
   return Math.round(claims.exp * 1000);
 }
 
+/**
+ * Where the credential lives between restarts. The client **secret** is deliberately not part of
+ * it: that one stays in the environment, and only the environment.
+ */
+const CREDENTIAL_KEY = 'occult-pot:docs:credential';
+
 export function useUpstreamStore(): UpstreamStore {
   /** The configuration these values were read from; a different one reloads them. */
   let bound: AppConfig | undefined;
@@ -127,6 +134,7 @@ export function useUpstreamStore(): UpstreamStore {
   let sheetIdValue = '';
   let accessTokenValue = '';
   let clientIdValue = '';
+  let refreshTokenValue: string | undefined;
   let openIdValue: string | undefined;
   /** Whether the Open-Id came from the environment (then it is authoritative) or from the token. */
   let openIdFromEnv = false;
@@ -147,6 +155,7 @@ export function useUpstreamStore(): UpstreamStore {
     sheetIdValue = config.docs.sheetId;
     accessTokenValue = config.docs.accessToken;
     clientIdValue = config.docs.clientId;
+    refreshTokenValue = config.docs.refreshToken;
     openIdFromEnv = config.docs.openId !== undefined;
     openIdValue = config.docs.openId ?? (typeof claims?.sub === 'string' && claims.sub.length > 0 ? claims.sub : undefined);
     expiresAtValue = readAccessTokenExpiresAt(config.docs.accessToken);
@@ -155,11 +164,53 @@ export function useUpstreamStore(): UpstreamStore {
     resolving = undefined;
   }
 
+  /** The credential fields Redis holds; `clientSecret` is never among them. */
+  async function storedCredential(): Promise<Record<string, string>> {
+    return getRedis().hgetall(CREDENTIAL_KEY);
+  }
+
+  /** Writes only the fields it was given, so a partial refresh never drops the rest. */
+  async function rememberCredential(fields: Record<string, string | undefined>): Promise<void> {
+    const entries = Object.entries(fields).filter((entry): entry is [string, string] => typeof entry[1] === 'string' && entry[1].length > 0);
+    if (entries.length > 0) await getRedis().hset(CREDENTIAL_KEY, Object.fromEntries(entries));
+  }
+
+  /**
+   * Prefers the credential Redis holds over the configured one, because a token that was refreshed
+   * while the process was running is newer than the environment's.
+   *
+   * Redis only wins while its access token is still usable: an expired one would leave the service
+   * worse off than the configured token, so the configured credential is written over it instead.
+   */
+  async function adoptCredential(): Promise<void> {
+    const stored = await storedCredential();
+    const storedToken = stored.accessToken;
+    const storedExpiresAt = storedToken === undefined ? undefined : readAccessTokenExpiresAt(storedToken);
+    const usable = storedToken !== undefined && storedToken.length > 0 && (storedExpiresAt === undefined || storedExpiresAt > now());
+
+    if (!usable) {
+      await rememberCredential({
+        clientId: clientIdValue,
+        accessToken: accessTokenValue,
+        openId: openIdValue,
+        refreshToken: refreshTokenValue,
+      });
+      return;
+    }
+
+    accessTokenValue = storedToken;
+    expiresAtValue = storedExpiresAt ?? readAccessTokenExpiresAt(storedToken);
+    if (stored.clientId !== undefined && stored.clientId.length > 0) clientIdValue = stored.clientId;
+    // A configured Open-Id stays authoritative: it is what every call has to agree with.
+    if (!openIdFromEnv && stored.openId !== undefined && stored.openId.length > 0) openIdValue = stored.openId;
+    if (stored.refreshToken !== undefined && stored.refreshToken.length > 0) refreshTokenValue = stored.refreshToken;
+  }
+
   /** The Open-Id an Open API call needs: configured, or read off the token's `sub` claim. */
   function requireOpenId(): string {
     const openId = openIdValue;
     if (openId === undefined) {
-      throw new AppError('CONFIG_INVALID', 'DOCS_OPEN_ID is required unless the access token carries a `sub` claim');
+      throw new AppError('CONFIG_INVALID', 'OPS_DOCS_OPEN_ID is required unless the access token carries a `sub` claim');
     }
     return openId;
   }
@@ -196,6 +247,7 @@ export function useUpstreamStore(): UpstreamStore {
   async function doResolve(): Promise<UpstreamIds> {
     load();
 
+    await adoptCredential();
     await checkSheet(fileIdValue, sheetIdValue);
     await validate();
     checkedIds = { fileId: fileIdValue, sheetId: sheetIdValue };
@@ -207,7 +259,7 @@ export function useUpstreamStore(): UpstreamStore {
     logger.info('Verified the Tencent Docs document', { fileIdLength: fileIdValue.length, sheetId: sheetIdValue });
     const report = readiness();
     if (report.tokenExpired) {
-      logger.warning('Access token has expired; Tencent Docs calls will fail until DOCS_ACCESS_TOKEN is refreshed', {
+      logger.warning('Access token has expired; Tencent Docs calls will fail until OPS_DOCS_ACCESS_TOKEN is refreshed', {
         tokenExpiresAt: report.tokenExpiresAt,
       });
     } else if (report.tokenWarning) {
@@ -235,11 +287,13 @@ export function useUpstreamStore(): UpstreamStore {
     // A configured Open-Id is authoritative: every Open API call would fail with 10303 if it
     // disagreed with the token, so disagreeing at startup is worth a hard failure.
     if (openIdFromEnv && openIdValue !== openId) {
-      throw new AppError('CONFIG_INVALID', `DOCS_OPEN_ID (${openIdValue}) does not belong to the configured access token (${openId})`);
+      throw new AppError('CONFIG_INVALID', `OPS_DOCS_OPEN_ID (${openIdValue}) does not belong to the configured access token (${openId})`);
     }
 
     openIdValue = openId;
     validatedAtValue = now();
+    // Keep the stored record in step with what the upstream just confirmed.
+    await rememberCredential({ openId, clientId: clientIdValue });
     return { openId };
   }
 
@@ -261,7 +315,7 @@ export function useUpstreamStore(): UpstreamStore {
     const reasons: string[] = [];
 
     if (!fileIdResolved) reasons.push('the document coordinates have not been checked yet');
-    if (tokenExpired) reasons.push('access token has expired; refresh DOCS_ACCESS_TOKEN');
+    if (tokenExpired) reasons.push('access token has expired; refresh OPS_DOCS_ACCESS_TOKEN');
     else if (tokenWarning) reasons.push(`access token expires soon (${new Date(expiresAt!).toISOString()})`);
 
     return {
@@ -316,13 +370,15 @@ export function useUpstreamStore(): UpstreamStore {
     /**
      * Exchanges the refresh token for a new access token
      * (docs.qq.com/open/document/app/oauth2/refresh_token.html). The result lives in memory only:
-     * nothing schedules this yet, and nothing persists it across restarts.
+     * The result is written to Redis, so a restart keeps using the refreshed token instead of the
+     * stale one the environment still carries. Nothing schedules this yet.
      */
     async refresh(): Promise<void> {
       load();
-      const { clientSecret, refreshToken } = getConfig().docs;
+      const { clientSecret } = getConfig().docs;
+      const refreshToken = refreshTokenValue;
       if (clientSecret === undefined || refreshToken === undefined) {
-        throw new AppError('CONFIG_INVALID', 'Refreshing the access token needs DOCS_CLIENT_SECRET and DOCS_REFRESH_TOKEN');
+        throw new AppError('CONFIG_INVALID', 'Refreshing the access token needs OPS_DOCS_CLIENT_SECRET and OPS_DOCS_REFRESH_TOKEN');
       }
 
       const url = apiUrl('/oauth/v2/token', {
@@ -348,8 +404,17 @@ export function useUpstreamStore(): UpstreamStore {
           ? now() + Math.round(expiresIn * 1000)
           : readAccessTokenExpiresAt(accessToken);
       if (!openIdFromEnv && typeof body.user_id === 'string' && body.user_id.length > 0) openIdValue = body.user_id;
+      // Some flows hand back a rotated refresh token; keeping it is what makes the next refresh work.
+      if (typeof body.refresh_token === 'string' && body.refresh_token.length > 0) refreshTokenValue = body.refresh_token;
       // The new token has not been checked yet; the next `validate()` will stamp it again.
       validatedAtValue = undefined;
+
+      await rememberCredential({
+        clientId: clientIdValue,
+        accessToken,
+        openId: openIdValue,
+        refreshToken: refreshTokenValue,
+      });
     },
     describe(): Record<string, unknown> {
       load();

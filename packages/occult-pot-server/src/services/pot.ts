@@ -10,10 +10,10 @@ import type { Pot } from '@/validation/index.ts';
  * stamp a change carries comes from the clock service rather than from a caller.
  */
 
-/** Every pot the store serves, read-your-writes included (see `PotStore.pendingState`). */
+/** Every pot the store serves. What has been accepted is already part of the state it reads. */
 export async function listPots(): Promise<readonly Pot[]> {
-  await potStore.get();
-  return potStore.pendingState.data;
+  const state = await potStore.get();
+  return state.data;
 }
 
 export async function getPot(potId: string): Promise<Pot> {
@@ -28,9 +28,9 @@ export async function getPot(potId: string): Promise<Pot> {
  * validate here; `update` is the only list this service ever fills in, and the change is stamped
  * with the current instant.
  *
- * @returns a confirmation message; the write itself is fire-and-forget.
+ * @returns a confirmation message; what happens next is the store's queue.
  */
 export async function createPot(input: Pot): Promise<string> {
-  potStore.enqueue({ overwrite: [], remove: [], update: [input], updateTime: now() });
+  await potStore.enqueue({ overwrite: [], remove: [], update: [input], updateTime: now() });
   return `occult pot ${input.potId} queued for writing to the sheet`;
 }

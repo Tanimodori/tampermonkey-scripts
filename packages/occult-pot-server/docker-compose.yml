@@ -4,6 +4,9 @@ services:
       context: ../..
       dockerfile: packages/occult-pot-server/Dockerfile
     image: occult-pot-server:latest
+    depends_on:
+      redis:
+        condition: service_healthy
     env_file:
       # Both optional: `.env` for the shared values, `.env.production` to override them.
       # `required:` needs Docker Compose v2.24 or newer.
@@ -13,11 +16,32 @@ services:
         required: false
     environment:
       # Keep the container's healthcheck/port in sync with the published port.
-      SERVER_PORT: 3000
-      # Behind a reverse proxy set SERVER_TRUST_PROXY (env_file or here) so per-IP throttling works.
+      OPS_SERVER_PORT: 3000
+      # Behind a reverse proxy set OPS_SERVER_TRUST_PROXY (env_file or here) so per-IP throttling works.
+      #
+      # The state store is the `redis` service below. Its password rides in the address, and comes
+      # from the shell as `REDIS_PASSWORD`, so it never has to be written into this file. A password
+      # with `@`, `:` or `#` in it would have to be percent-encoded here.
+      OPS_REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD in the environment}@redis:6379
     ports:
       - '3000:3000'
     restart: unless-stopped
     # Give the graceful shutdown path time to flush the write queue.
     stop_grace_period: 30s
     init: true
+
+  redis:
+    image: redis:7-alpine
+    # Append-only persistence: the pot list, the pending writes and the credential survive a restart.
+    command: ['redis-server', '--appendonly', 'yes', '--requirepass', '${REDIS_PASSWORD:?set REDIS_PASSWORD in the environment}']
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:?set REDIS_PASSWORD in the environment}', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redis-data:

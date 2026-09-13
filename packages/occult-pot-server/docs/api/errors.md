@@ -21,7 +21,7 @@
 | `NOT_FOUND`              | 404  | 未知的罐子 ID，或没有匹配的路径                                                          |
 | `METHOD_NOT_ALLOWED`     | 405  | 路径存在但不支持该方法（响应带 `Allow`）                                                 |
 | `UNSUPPORTED_MEDIA_TYPE` | 415  | 请求体没有声明 `application/json`，或编码不支持                                          |
-| `PAYLOAD_TOO_LARGE`      | 413  | 请求体超过 `SERVER_JSON_BODY_LIMIT`                                                      |
+| `PAYLOAD_TOO_LARGE`      | 413  | 请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`                                                  |
 | `RATE_LIMITED`           | 429  | 按 IP 的入站限流                                                                         |
 | `UPSTREAM_AUTH_FAILED`   | 503  | 腾讯文档拒绝凭据（HTTP 401/403，或业务码 `10302`/`10303`/`10313`/`37019`），或凭据已过期 |
 | `UPSTREAM_RATE_LIMITED`  | 503  | 腾讯文档返回 429 或业务码 `400007`；带 `retryAfterSeconds`                               |
@@ -39,7 +39,7 @@
 | 400       | 请求体或参数非法，`error.details` 是 `{ source, issues: [{ path, message }] }` |
 | 404       | 未知罐子或未知路径                                                             |
 | 405       | 路径已知、方法不支持（带 `Allow`）                                             |
-| 413       | 请求体超过 `SERVER_JSON_BODY_LIMIT`                                            |
+| 413       | 请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`                                        |
 | 415       | 请求体未声明 `Content-Type: application/json`                                  |
 | 429       | 按 IP 限流（带 `RateLimit-*` 与 `Retry-After`）                                |
 | 502 / 503 | **读**在上游失败，或凭据过期、被上游限流                                       |
@@ -75,11 +75,11 @@
 
 body-parser 的失败由同一个错误处理器映射：
 
-| 类型                                           | 状态码 | 文案                                                         |
-| ---------------------------------------------- | ------ | ------------------------------------------------------------ |
-| `entity.too.large`                             | 413    | `Request body exceeds the configured SERVER_JSON_BODY_LIMIT` |
-| `entity.parse.failed`                          | 400    | `Request body is not valid JSON`                             |
-| `encoding.unsupported` / `charset.unsupported` | 415    | `Unsupported request body encoding; send UTF-8 JSON`         |
+| 类型                                           | 状态码 | 文案                                                             |
+| ---------------------------------------------- | ------ | ---------------------------------------------------------------- |
+| `entity.too.large`                             | 413    | `Request body exceeds the configured OPS_SERVER_JSON_BODY_LIMIT` |
+| `entity.parse.failed`                          | 400    | `Request body is not valid JSON`                                 |
+| `encoding.unsupported` / `charset.unsupported` | 415    | `Unsupported request body encoding; send UTF-8 JSON`             |
 
 `415` 的另一个来源是 `requireJsonForBody`：声明了别的 `Content-Type`（或什么都没声明）时直接拒绝，免得 body-parser 悄悄跳过解析、让下游把 `req.body === undefined` 当成一个业务错误。
 
@@ -88,7 +88,7 @@ body-parser 的失败由同一个错误处理器映射：
 日志由 [LogTape](https://logtape.org) 提供，**只在组合根配置一次**：`index.ts` 在 `loadConfig()` 之后调用 `configureLogging(config.server.logLevel)`，任何模块用 `getLogger(['occult-pot-server'])` 取同一个 logger（provider/consumer：配置提供 sink，模块消费 logger）。运行时的形态：
 
 - 一行一条 JSON（`@timestamp`、`level`、`logger`、`message` 与扁平化的字段），`warning` 及以上写 stderr，其余写 stdout；行里的级别按 LogTape 的写法渲染为大写（`INFO`/`WARN`/`ERROR`），而 sink 拿到的记录字段是 `info`/`warning`/`error`；
-- `SERVER_LOG_LEVEL` 的四档 `debug | info | warning | error` 就是 LogTape 的级别名，原样传给 `lowestLevel`；
+- `OPS_SERVER_LOG_LEVEL` 的四档 `debug | info | warning | error` 就是 LogTape 的级别名，原样传给 `lowestLevel`；
 - LogTape 自己的 meta logger 也接到同一个 sink、只收 `warning` 及以上：配置缺失或 sink 出错时能看到它的诊断，而“loggers are configured”那条 info 不会出现；
 - 兜底行为：**没有任何 sink 接收某条记录时，它会被丢弃**，由上面的 meta 诊断兜底（不抛错）。
 
@@ -103,8 +103,10 @@ body-parser 的失败由同一个错误处理器映射：
 请求路径之外有三处（都在 store 里，记在启动路径上）：
 
 - **启动期失败**：配置非法（列出全部问题后退出），或子表核对/凭据校验失败（记 error 后拒绝启动）—— 见 `../README.md` 的快速开始。
-- **凭据告警**：子表核对与凭据校验都通过时记一条 info（`Verified the Tencent Docs document`）；凭据已过期或进入 `DOCS_TOKEN_EXPIRY_WARN_MS` 时记一条 warning（`Access token has expired; …` / `Access token expires soon; schedule a credential rotation`）。
-- **写回丢弃**：一次失败的写入没有调用方在等结果，pot store 自己记 `Dropped a pending modify after a failed write`，带 `overwrite`/`remove`/`update` 的长度与失败原因。
+- **凭据告警**：子表核对与凭据校验都通过时记一条 info（`Verified the Tencent Docs document`）；凭据已过期或进入 `OPS_DOCS_TOKEN_EXPIRY_WARN_MS` 时记一条 warning（`Access token has expired; …` / `Access token expires soon; schedule a credential rotation`）。
+- **写回失败**：一次 `addRecords` 失败不再丢弃变更，而是留在 Redis 里下个周期重试，并记一条 warning（`Kept a pending modify after a failed write; it will be retried`，带三个列表的长度与原因）。
+- **Redis 不可用**：启动时 `ping` 失败会记 error 并拒绝启动；运行期限流/状态读写失败会成为 `500`，`/readyz` 则返回 `503` 并在 `reasons` 里写明 `state store is unavailable: …`。调用者记录（`touchUser`）失败只记一条 warning，不影响请求。
+- **写回重试**：一次失败的写入没有调用方在等结果，pot store 把它留在 Redis 的 `committing` 里、下个周期再写，并记一条 `Kept a pending modify after a failed write; it will be retried`（带 `overwrite`/`remove`/`update` 的长度与失败原因）。
 
 凭据字段由 [`@logtape/redaction`](https://logtape.org/manual/redaction) 处理：字段名以 `token`/`secret`/`password` 结尾，或正好是 `authorization`/`auth`/`credential(s)`/`cookie`/`set-cookie`/`api key` 时，值被替换成 `[redacted]`；凭据的**元数据**（如 `accessTokenLength`、`tokenExpiresInDays`）不匹配这些模式，是安全的、故意放行，好让运维看到 token 健康度。
 

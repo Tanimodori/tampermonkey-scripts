@@ -1,59 +1,67 @@
 # 存储设计
 
-`src/stores/pot.ts` 里的 **pot store** 在内存里只保留两样东西：**pot 状态**（表最后一次被读到的样子）与**待写入的变更**（已被接受、还没写回表里的追加）。两者都不持久化，进程退出即丢失；这也是本服务只能单实例部署的原因 —— 多副本会各自持有一份状态、把出站调用翻倍，还会把写队列拆成互不知情的几份。
+服务需要留住四类东西：pot 状态、还没写回腾讯表的变更、腾讯文档凭据、以及每个调用者的计数与后续扩展信息。它们全部放在 Redis 里，键统一带 `occult-pot:` 前缀（`OPS_REDIS_URL` 里的 db 之外再有一层命名空间，便于和其他服务共用一个实例）。
 
-它由工厂 `usePotStore(options)` 构造，模块还导出一个默认实例 `potStore`，服务、路由与测试都用它；**一个选项都不传的 store 跟随当前配置**，配置对象被替换（重载，或测试又加载了一份）时它会从零开始：状态与队列都属于产生它们的配置。
+**腾讯表仍然是权威**：读路径会按 `OPS_CACHE_READ_TTL_MS` 回表刷新，Redis 是共享缓存；写路径先把变更落进 Redis（立刻对读可见），再由定时 flush 写回表。人工在表里改的行，只要超过 TTL 就会被读到。
 
-## 1. 状态
+## 1. 键布局
 
-`PotState = { data, updateTime }`。
+| 键                                          | 类型         | 内容                                                                              | 过期     |
+| ------------------------------------------- | ------------ | --------------------------------------------------------------------------------- | -------- |
+| `occult-pot:pots`                           | string(JSON) | `PotState = { data: Pot[], updateTime }`                                          | 无       |
+| `occult-pot:pots:pending`                   | string(JSON) | 已接受、待写回表的变更（合并后只有一个 `PotModify`）                              | 无       |
+| `occult-pot:pots:committing`                | string(JSON) | 正在写回表的那个变更（崩溃恢复用）                                                | 无       |
+| `occult-pot:docs:credential`                | hash         | `clientId`、`openId`、`refreshToken`、`accessToken`                               | 无       |
+| `occult-pot:user:<ip>`                      | hash         | `firstSeenAt`、`lastSeenAt`、`requests`、`lastRequestId`                          | 7 天滑动 |
+| `occult-pot:user:rate-limit:<limiter>:<ip>` | string       | 限流窗口计数（`general` / `writes`）                                              | 窗口长度 |
+| `occult-pot:user:pow:<ip>`                  | hash         | **保留**：pow 接口的 `challenge`、`difficulty`、`issuedAt`、`credits`（尚未实现） | —        |
 
-- 一次读取会把整张表原样覆盖进 `data`（没有记录数上限），`updateTime` 是这次读取到达的时刻，由 store 自己打戳。
-- `CACHE_READ_TTL_MS`（默认 `30000`）是唯一的新鲜度控制：TTL 内所有读取都由 store 里缓存的状态回答，没有调用方触发的强制刷新。
-- 并发读取会单飞：第一个调用者去上游读，其余调用者复用同一个 Promise，所以 N 个并发读只产生一次上游请求。
-- 写入成功后状态就地折叠，不会为此再读一次表。
+`clientSecret` **不在其中**：它只在 `refresh()` 时从环境读，任何路径都不会写进 Redis。
 
-## 2. 三层视图
+## 2. 读路径
 
-| 视图              | 内容                                             |
-| ----------------- | ------------------------------------------------ |
-| `currentState`    | 表最后一次确认的状态（一次读取，或一次写入成功） |
-| `committingState` | `currentState` + 正在写入的变更                  |
-| `pendingState`    | `committingState` + 仍在排队的变更               |
+- `get()` 先读 `occult-pot:pots`；状态的 `updateTime` 距今不到 `OPS_CACHE_READ_TTL_MS` 就直接返回，不碰表。
+- 过期才回表：`getRecords` 翻页取整张表，映射成 `Pot`（规则见 [Pot 数据](pot.md)），然后写回 Redis，`updateTime` 打的是这次读取到达的时刻。
+- **回表时会重新叠加 `pending` 与 `committing`**：已经接受但还没写回的罐子不会被表里的旧内容盖掉（读己所写）。
+- 并发读取单飞：第一个调用者回表，其余复用同一个 Promise，N 个并发读只产生一次上游请求。
+- `/readyz` 的 `cache.*`（`updateTime`/`ageMs`/`pots`）来自 `state()`，它只读 Redis，不触发回表；键不存在时三项都是 `null`，与"还没读过"同一个含义。
 
-读取一律从 `pendingState` 回答，所以一个罐子在它被接受的瞬间就可见（读己所写），不必等写回上游。
+## 3. 写路径与队列
 
-## 3. 变更与合并
+1. `enqueue`：把变更用 `mergeModify` 折进 `pending`（三个列表 id 互斥、保持首次出现的位置，也就是到达顺序），同时把数据就地应用到 `pots` —— 于是罐子在**被接受的瞬间**就对读可见，而上游还没被碰过。接受不会推进 `pots` 的 `updateTime`，所以 TTL 仍从"上次读取或上次成功写回"算起。
+2. 定时（`OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS`）与停机走同一个 `flush()`：它幂等，第二次调用搭上正在进行的 flush，队列为空时立即返回。
+3. flush 先**取走**队列头：`RENAME occult-pot:pots:pending occult-pot:pots:committing`。`RENAME` 是原子的，谁改名成功谁拥有这个变更，所以两个实例同时 flush 也不会把同一批写两遍。取不到就是队空。
+4. 取到后调一次 `addRecords`（重试由 `api.ts` 的节流队列负责）。成功后删除 `committing`，并把变更再应用到 `pots`（这一次会推进 `updateTime`，与"表已确认"一致）。
+5. **失败不丢**：`committing` 留着，记一条 warning（`Kept a pending modify after a failed write; it will be retried`，见 [错误处理](../api/errors.md)），下一个周期开头的恢复步骤把它并回 `pending` 再试。
+6. **崩溃恢复**：进程在"取走"与"写回"之间退出时，`committing` 会留在 Redis 里，下一次 flush 的第一步就把它合并回队列。因此重启不再丢已经接受的写入。
+7. 重试的代价：如果请求其实已经到达、只是响应丢了，重试会写出**重复行**。表只追加，服务不持有幂等键，去重仍由客户端按 `区服|地图|ID` 兜底。
 
-变更的完整形态是 `PotModify = { overwrite, remove, update, updateTime }`，按唯一键 `区服|地图|ID` 逐 id 解析，优先级 `overwrite` > `remove` > `update`：
+队列没有容量上限：写入是一个一个来的，下游的节流队列已经限制了排空速度。
 
-- 出现在 `overwrite` 里的 id 取该值；
-- 出现在 `remove` 里的 id 被删除；
-- 出现在 `update` 里的 id 取该值（upsert —— 视图里一个 id 只有一行）；
-- 其余 id 保持原值。
+## 4. 腾讯文档凭据
 
-`updateTime` 只会前进：一次迟到的变更不会让状态看起来比实际更旧。
+- 启动核对（`upstreamStore.resolve()`）时先读 `occult-pot:docs:credential`：Redis 里的 access token **仍然有效**就用它（连同其中的 `clientId`/`openId`/`refreshToken`），因为那可能比环境变量里的更新（进程外刷新过）；已过期或不存在，就用环境变量的值，并把它写进 Redis。
+- 显式配置的 `OPS_DOCS_OPEN_ID` 始终优先：它是每次调用都要对得上的那个 id。
+- `refresh()` 成功后把新的 access token（以及流程返回的新 refresh token、`user_id`）写回 Redis，所以重启后继续用刷新过的凭据，而不是环境里那份旧的。
+- 凭据的健康度只通过 `/readyz` 的 `credential`（长度、到期时刻、校验结果）暴露，token 本身永不打印，也永不写日志。
 
-`applyModify` 保留位置：已存在的 id 保持原位置，新 id 追加到末尾，表里重复的 id 由第一行代表。**读取不是变更** —— 一次读取是原样赋值，所以表里的重复行会原样返回，直到某个变更触及它。
+## 5. 调用者数据
 
-## 4. 写队列
-
-- `enqueue` 把每个被接受的变更用 `mergeModify` 折进当前排队的那一个 `PotModify`：三个列表始终 id 互斥，同一列表里后到的值覆盖先到的，但 id 保持首次出现的位置（也就是到达顺序）。因此 store 里的队列**永远只有一个变更**，一次 flush 永远是**一次**上游调用。
-- 队列没有容量上限：写入是一个一个来的，而下游的节流队列已经限制了排空速度；在上游持续失败时限制接受量并不能帮上忙。
-- 同一时刻只有一个变更在途，所以表里的行序等于到达顺序。
-- `WRITE_QUEUE_FLUSH_INTERVAL_MS`（默认 `2000`）决定刷写节奏。定时器与停机走同一个 `flush()`：它幂等、可加入（第二次调用复用正在进行的 flush），队列为空时立即返回。
-
-## 5. 失败与重试归属
-
-store 对一次 flush 只调用一次写入。**重试是写入方的职责**（`api.ts` 里的节流队列会重试），因此一次「请求其实已经到达、只是响应丢了」的写入会写出重复行：表只追加，服务端不持有幂等键、也不比对内容，去重由客户端脚本兜底。
-
-写入失败时这个变更被丢弃（不再出现在 `pendingState` 里），并交给 `onFailure` —— 默认上报就是记一条 `Dropped a pending modify after a failed write`（文案见 `../api/errors.md`）；测试可以用 `usePotStore({ onFailure })` 换成自己的观察方式。失败的写入没有调用方在等结果。
+- 标识用 `req.ip`（受 `OPS_SERVER_TRUST_PROXY` 影响）；请求 id 一起记进 `lastRequestId`，用于把一次请求追回它触碰过的用户记录。
+- `occult-pot:user:<ip>` 由 `userContext()` 中间件**异步**写（fire-and-forget）：请求不等它，写失败只记一条 warning —— 强制项是限流，它由限流器自己报错。
+- 限流计数就是 `occult-pot:user:rate-limit:<limiter>:<ip>`：官方 `rate-limit-redis` store 落在 Redis 里，因此多实例共享同一份窗口计数。用 mock（没有 `OPS_REDIS_URL`）时，`services/redis.ts` 里的命令垫片把该 store 用到的 `SCRIPT LOAD`/`EVALSHA` 翻译成 mock 支持的 `EVAL`，Lua 本身不变。
+- pow 尚未实现：约定好的键是 `occult-pot:user:pow:<ip>`，字段见 §1 表格，等接口落地再写。
 
 ## 6. 相关配置
 
-| 变量                            | 默认值  | 作用                          |
-| ------------------------------- | ------- | ----------------------------- |
-| `CACHE_READ_TTL_MS`             | `30000` | 状态在多久内直接由 store 回答 |
-| `WRITE_QUEUE_FLUSH_INTERVAL_MS` | `2000`  | 排队中的变更多久写一次        |
+| 变量                                | 默认值  | 作用                                                                                                 |
+| ----------------------------------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| `OPS_REDIS_URL`                     | —       | `redis://[user:password@]host:port/db`；**没给就用进程内的 mock**（生产会告警）；用户名/密码写进 URL |
+| `OPS_CACHE_READ_TTL_MS`             | `30000` | 状态在多久内直接由 Redis 回答                                                                        |
+| `OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS` | `2000`  | 排队中的变更多久写一次                                                                               |
 
-出站调用的节流与重试参数见 `../api/upstream.md`，入站限流见 `../api/endpoints.md`。
+出站调用的节流与重试参数见 [与腾讯文档通讯](../api/upstream.md)，入站限流见 [API 端点](../api/endpoints.md)。
+
+## 7. 单实例还是多实例
+
+状态、队列、凭据和限流计数都在 Redis 里，所以重启不丢数据、多副本看到同一份 pot 列表、限流也是全局的。仍然建议**单实例**部署，原因是出站调用：节流队列是每进程一份，多副本会把腾讯文档的调用量成倍放大（官方配额按 `fileID`/`openID` 计）。写入的读-改-写（`enqueue`）没有跨实例的比较交换，两个实例同时接受写入时，理论上可能丢掉其中一个的**合并结果**（数据仍会写进 `pots`，只是并发窗口极窄）。

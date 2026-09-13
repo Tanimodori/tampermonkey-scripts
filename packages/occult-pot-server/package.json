@@ -24,6 +24,7 @@
     "lint": "oxlint",
     "typecheck": "tsc --noEmit",
     "test": "vitest --run --passWithNoTests",
+    "test:redis": "cross-env OPS_REDIS_URL=redis://127.0.0.1:6399 vitest --run --no-file-parallelism",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -35,7 +36,10 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "helmet": "^8.3.0",
+    "ioredis": "^5.8.0",
+    "ioredis-mock": "^8.13.1",
     "morgan": "^1.12.1",
+    "rate-limit-redis": "^6.0.1",
     "throttled-queue": "^3.0.0",
     "undici": "^7.16.0",
     "zod": "^4.6.2"
@@ -43,9 +47,11 @@
   "devDependencies": {
     "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.19",
+    "@types/ioredis-mock": "^8",
     "@types/morgan": "^1.9.10",
     "@types/express": "^5.0.6",
     "@types/node": "^22.10.5",
+    "cross-env": "^10.1.0",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",
     "tsx": "^4.19.2",

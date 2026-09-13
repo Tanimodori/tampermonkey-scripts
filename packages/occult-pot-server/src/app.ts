@@ -10,6 +10,8 @@ import { jsonBody, requireJsonForBody } from './middlewares/jsonBody.ts';
 import { createRateLimiters } from './middlewares/rateLimit.ts';
 import { requestId } from './middlewares/requestId.ts';
 import { requestLogger } from './middlewares/requestLogger.ts';
+import { userContext } from './middlewares/userContext.ts';
+import { closeRedis } from './services/redis.ts';
 import { now } from './services/time.ts';
 import { closeClient } from './services/upstream/client.ts';
 import { potStore } from './stores/pot.ts';
@@ -43,6 +45,8 @@ export function createApp(): CreatedApp {
   app.use(requestId());
   // Before the body and router middleware, so short-circuited responses are logged as well.
   app.use(requestLogger());
+  // Records the caller by IP and request id; nothing downstream waits on it.
+  app.use(userContext());
   app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(jsonBody(config.server.jsonBodyLimit));
   app.use(requireJsonForBody());
@@ -56,8 +60,9 @@ export function createApp(): CreatedApp {
     app,
     store: potStore,
     async close(): Promise<void> {
-      // Write out what is queued first: it still needs the pool.
+      // Write out what is queued first: it still needs the pool and Redis.
       await potStore.flush();
+      await closeRedis();
       await closeClient();
     },
   };

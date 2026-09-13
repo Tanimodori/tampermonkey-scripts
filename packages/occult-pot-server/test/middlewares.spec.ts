@@ -1,8 +1,11 @@
 import type { NextFunction, Request, Response } from 'express';
-import { describe, expect, it } from 'vitest';
+import type Redis from 'ioredis';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
 import { errorHandler, methodNotAllowed, notFoundHandler } from '@/middlewares/errorHandler.ts';
-import { captureLogs } from './helpers.ts';
+import { userContext } from '@/middlewares/userContext.ts';
+import { setRedis } from '@/services/redis.ts';
+import { captureLogs, loadTestConfig } from './helpers.ts';
 
 /**
  * The error handler is the only place a request-scoped error is recorded, so these tests pin both
@@ -113,6 +116,46 @@ describe('errorHandler', () => {
 
     expect(forwarded).toBe(error);
     expect(records).toEqual([]);
+  });
+});
+
+describe('userContext', () => {
+  afterEach(() => {
+    setRedis(undefined);
+  });
+
+  it('hands the request on without waiting for the record to be written', () => {
+    loadTestConfig();
+    const response = makeResponse();
+    let forwarded = false;
+
+    userContext()({ ...request, ip: '10.0.0.1', requestId: 'req-1' } as unknown as Request, response.res, (() => {
+      forwarded = true;
+    }) as NextFunction);
+
+    // The write is fire-and-forget: `next()` has already run by the time it settles.
+    expect(forwarded).toBe(true);
+  });
+
+  it('reports a Redis failure instead of failing the request', async () => {
+    loadTestConfig();
+    const records = captureLogs();
+    setRedis({
+      multi: () => {
+        throw new Error('redis is down');
+      },
+    } as unknown as Redis);
+    const response = makeResponse();
+    let forwarded = false;
+
+    userContext()({ ...request, ip: '10.0.0.1', requestId: 'req-1' } as unknown as Request, response.res, (() => {
+      forwarded = true;
+    }) as NextFunction);
+
+    expect(forwarded).toBe(true);
+    await vi.waitFor(() => {
+      expect(records.find((entry) => entry.message === 'Could not record the caller in Redis')?.reason).toBe('redis is down');
+    });
   });
 });
 

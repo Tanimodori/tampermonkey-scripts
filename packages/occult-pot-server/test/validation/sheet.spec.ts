@@ -4,7 +4,7 @@ import type { Pot } from '@/validation/index.ts';
 
 /**
  * The sheet itself: how a pot maps onto a row. Where the sheet lives is configuration
- * (`DOCS_FILE_ID` / `DOCS_SHEET_ID`), not something parsed here.
+ * (`OPS_DOCS_FILE_ID` / `OPS_DOCS_SHEET_ID`), not something parsed here.
  */
 
 const validPot: Pot = {

@@ -1,3 +1,6 @@
+import { defu } from 'defu';
+import Redis from 'ioredis';
+import RedisMock from 'ioredis-mock';
 import { MockAgent } from 'undici';
 import { loadConfig } from '@/config.ts';
 import { configureLogging } from '@/logger.ts';
@@ -10,33 +13,78 @@ export const FILE_ID = '300000000$ExAmPlEfIlEiD';
 export const SHEET_ID = 'tXXXXXX';
 
 /**
+ * What a test app sets for itself. The real environment may override any of it, which is how the
+ * `test:redis` task hands the suite a server instead of the in-process mock.
+ */
+const TEST_DEFAULTS: NodeJS.ProcessEnv = {
+  OPS_SERVER_HOST: '127.0.0.1',
+  OPS_SERVER_LOG_LEVEL: 'error',
+  OPS_DOCS_FILE_ID: FILE_ID,
+  OPS_DOCS_SHEET_ID: SHEET_ID,
+  OPS_DOCS_ACCESS_TOKEN: 'test-access-token-value',
+  OPS_DOCS_CLIENT_ID: 'test-client-id',
+  OPS_DOCS_OPEN_ID: 'test-open-id',
+  OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: '50',
+  // The throttled queue is effectively unthrottled and never waits between attempts: these tests
+  // assert behaviour, not pacing, and a 500 ms wait per retry would only make them slow.
+  OPS_UPSTREAM_MAX_PER_INTERVAL: '10000',
+  OPS_UPSTREAM_INTERVAL_MS: '1',
+  OPS_UPSTREAM_MAX_RETRIES: '0',
+  OPS_UPSTREAM_RETRY_BACKOFF_MS: '0',
+};
+
+/** The one name that decides where the tests' Redis lives: no address means the mock. */
+const REDIS_URL = 'OPS_REDIS_URL';
+
+/** Everything a case may take from the real environment: its own defaults, plus the address. */
+const NATIVE_NAMES = [...Object.keys(TEST_DEFAULTS), REDIS_URL];
+
+/** Whether the environment points at a real Redis; `test:redis` is what sets the address. */
+function redisIsReal(): boolean {
+  return (process.env[REDIS_URL] ?? '') !== '';
+}
+
+/**
  * The environment a test app runs with: the variables the configuration requires, a fast flush
- * interval, and the credential the upstream mock expects. Overrides are environment variables too,
- * because `loadConfig()` is the only way in.
+ * interval, and the credential the upstream mock expects.
+ *
+ * Highest priority first: an explicit override in the case, then the real environment, then the
+ * defaults. Nothing in the defaults names a Redis, so a run without `OPS_REDIS_URL` gets the
+ * in-process mock and a run with one talks to that server — the same rule the service uses.
  */
 export function testEnv(overrides: Record<string, string | undefined> = {}): NodeJS.ProcessEnv {
-  return {
-    SERVER_HOST: '127.0.0.1',
-    SERVER_LOG_LEVEL: 'error',
-    DOCS_FILE_ID: FILE_ID,
-    DOCS_SHEET_ID: SHEET_ID,
-    DOCS_ACCESS_TOKEN: 'test-access-token-value',
-    DOCS_CLIENT_ID: 'test-client-id',
-    DOCS_OPEN_ID: 'test-open-id',
-    WRITE_QUEUE_FLUSH_INTERVAL_MS: '50',
-    // The throttled queue is effectively unthrottled and never waits between attempts: these tests
-    // assert behaviour, not pacing, and a 500 ms wait per retry would only make them slow.
-    UPSTREAM_MAX_PER_INTERVAL: '10000',
-    UPSTREAM_INTERVAL_MS: '1',
-    UPSTREAM_MAX_RETRIES: '0',
-    UPSTREAM_RETRY_BACKOFF_MS: '0',
-    ...overrides,
-  };
+  const native: NodeJS.ProcessEnv = {};
+  for (const name of NATIVE_NAMES) {
+    const value = process.env[name];
+    if (value !== undefined && value !== '') native[name] = value;
+  }
+
+  // An override set to `undefined` says "this one is not configured", which `defu` cannot express
+  // (it reads `undefined` as "absent, use the next source"), so those names come out again.
+  const merged = defu(overrides, native, TEST_DEFAULTS);
+  for (const [name, value] of Object.entries(overrides)) {
+    if (value === undefined) delete merged[name];
+  }
+  return merged;
 }
 
 /** Loads and caches the configuration for a test app; `getConfig()` reads it back. */
 export function loadTestConfig(overrides: Record<string, string | undefined> = {}): AppConfig {
   return loadConfig(testEnv(overrides));
+}
+
+/**
+ * Empties the Redis the tests use.
+ *
+ * `ioredis-mock` shares one store between every instance built with the same host and port, so a
+ * case that wants to start from nothing has to say so — a fresh client is not a fresh database. A
+ * real server is shared by everything, which is why `test:redis` runs without file parallelism.
+ */
+export async function resetRedis(): Promise<void> {
+  const url = process.env[REDIS_URL];
+  const client = redisIsReal() && url !== undefined ? new Redis(url) : new RedisMock();
+  await client.flushall();
+  await client.quit();
 }
 
 /**

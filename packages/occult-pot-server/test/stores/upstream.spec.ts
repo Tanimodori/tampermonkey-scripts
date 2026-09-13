@@ -1,7 +1,8 @@
 import { clock } from '@test/clock.ts';
-import { captureLogs, FILE_ID, loadTestConfig, SHEET_ID, setupTencentDocsMock } from '@test/helpers.ts';
+import { captureLogs, FILE_ID, loadTestConfig, resetRedis, SHEET_ID, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
+import { getRedis } from '@/services/redis.ts';
 import { setClient } from '@/services/upstream/client.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 
@@ -36,7 +37,7 @@ function makeTokenExpiringIn(seconds: number): string {
 function useStore(overrides: Record<string, string | undefined> = {}): typeof upstreamStore {
   setClient(docs.agent);
   clock.set(NOW);
-  loadTestConfig({ DOCS_FILE_ID: FILE_ID, DOCS_SHEET_ID: SHEET_ID, ...overrides });
+  loadTestConfig({ OPS_DOCS_FILE_ID: FILE_ID, OPS_DOCS_SHEET_ID: SHEET_ID, ...overrides });
   return upstreamStore;
 }
 
@@ -47,8 +48,10 @@ afterAll(async () => {
   await docs.close();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   docs.reset();
+  // The credential is persisted, so a case must not inherit the one an earlier case stored.
+  await resetRedis();
 });
 
 afterEach(() => {
@@ -159,7 +162,7 @@ describe('upstreamStore credential', () => {
 
   it('falls back to the token sub claim for the Open-Id', async () => {
     const token = makeToken({ exp: 1_791_732_693, sub: 'open-id-from-token' });
-    const store = useStore({ DOCS_ACCESS_TOKEN: token, DOCS_OPEN_ID: undefined });
+    const store = useStore({ OPS_DOCS_ACCESS_TOKEN: token, OPS_DOCS_OPEN_ID: undefined });
     docs.state.userInfoOpenId = 'open-id-from-token';
 
     await expect(store.headers()).resolves.toMatchObject({ 'Open-Id': 'open-id-from-token', 'Access-Token': token });
@@ -167,16 +170,16 @@ describe('upstreamStore credential', () => {
   });
 
   it('requires an explicit Open-Id when the token carries no sub claim', async () => {
-    const store = useStore({ DOCS_ACCESS_TOKEN: 'opaque-token', DOCS_OPEN_ID: undefined });
+    const store = useStore({ OPS_DOCS_ACCESS_TOKEN: 'opaque-token', OPS_DOCS_OPEN_ID: undefined });
 
     await expect(store.headers()).rejects.toMatchObject({ code: 'CONFIG_INVALID' });
   });
 
   it('decodes the token expiry and tolerates opaque tokens', () => {
-    const expiring = useStore({ DOCS_ACCESS_TOKEN: makeToken({ exp: 1_791_732_693.5 }) });
+    const expiring = useStore({ OPS_DOCS_ACCESS_TOKEN: makeToken({ exp: 1_791_732_693.5 }) });
     expect(expiring.expiresAt()).toBe(1_791_732_693_500);
 
-    const opaque = useStore({ DOCS_ACCESS_TOKEN: 'opaque', DOCS_OPEN_ID: 'test-open-id' });
+    const opaque = useStore({ OPS_DOCS_ACCESS_TOKEN: 'opaque', OPS_DOCS_OPEN_ID: 'test-open-id' });
     expect(opaque.expiresAt()).toBeUndefined();
   });
 
@@ -192,7 +195,7 @@ describe('upstreamStore credential', () => {
   });
 
   it('uses null rather than false for an unknown expiry', () => {
-    const store = useStore({ DOCS_ACCESS_TOKEN: 'opaque', DOCS_OPEN_ID: 'test-open-id' });
+    const store = useStore({ OPS_DOCS_ACCESS_TOKEN: 'opaque', OPS_DOCS_OPEN_ID: 'test-open-id' });
 
     expect(store.describe()).toMatchObject({ expiresAt: null, expired: null, validated: false, validatedAt: null });
   });
@@ -201,7 +204,7 @@ describe('upstreamStore credential', () => {
 describe('upstreamStore refresh', () => {
   it('exchanges the refresh token and hands out the new credential', async () => {
     docs.state.refresh = { accessToken: 'a-brand-new-token', expiresIn: 3600, userId: 'test-open-id' };
-    const store = useStore({ DOCS_CLIENT_SECRET: 'client-secret', DOCS_REFRESH_TOKEN: 'refresh-token' });
+    const store = useStore({ OPS_DOCS_CLIENT_SECRET: 'client-secret', OPS_DOCS_REFRESH_TOKEN: 'refresh-token' });
 
     await store.refresh();
 
@@ -216,7 +219,7 @@ describe('upstreamStore refresh', () => {
   it('falls back to the new token’s exp when the response carries no lifetime', async () => {
     const token = makeToken({ exp: 1_800_000_000 });
     docs.state.refresh = { accessToken: token, expiresIn: undefined };
-    const store = useStore({ DOCS_CLIENT_SECRET: 'client-secret', DOCS_REFRESH_TOKEN: 'refresh-token' });
+    const store = useStore({ OPS_DOCS_CLIENT_SECRET: 'client-secret', OPS_DOCS_REFRESH_TOKEN: 'refresh-token' });
 
     await store.refresh();
 
@@ -232,20 +235,70 @@ describe('upstreamStore refresh', () => {
 
   it('treats a response without a token as an authentication failure', async () => {
     docs.state.refreshFailure = { status: 200, body: { error: 'invalid_grant', error_description: 'refresh token expired' } };
-    const store = useStore({ DOCS_CLIENT_SECRET: 'client-secret', DOCS_REFRESH_TOKEN: 'refresh-token' });
+    const store = useStore({ OPS_DOCS_CLIENT_SECRET: 'client-secret', OPS_DOCS_REFRESH_TOKEN: 'refresh-token' });
 
     await expect(store.refresh()).rejects.toMatchObject({ code: 'UPSTREAM_AUTH_FAILED', status: 503 });
     expect(store.accessToken).toBe('test-access-token-value');
   });
 
   it('clears the validation stamp, because the new token has not been checked yet', async () => {
-    const store = useStore({ DOCS_CLIENT_SECRET: 'client-secret', DOCS_REFRESH_TOKEN: 'refresh-token' });
+    const store = useStore({ OPS_DOCS_CLIENT_SECRET: 'client-secret', OPS_DOCS_REFRESH_TOKEN: 'refresh-token' });
     await store.resolve();
     expect(store.describe().validated).toBe(true);
 
     await store.refresh();
 
     expect(store.describe()).toMatchObject({ validated: false, validatedAt: null });
+  });
+});
+
+describe('upstreamStore credentials in Redis', () => {
+  const KEY = 'occult-pot:docs:credential';
+
+  it('writes the configured credential, and never the client secret', async () => {
+    const store = useStore({ OPS_DOCS_CLIENT_SECRET: 'the-secret' });
+
+    await store.resolve();
+
+    const stored = await getRedis().hgetall(KEY);
+    expect(stored.clientId).toBe('test-client-id');
+    expect(stored.openId).toBe('test-open-id');
+    expect(stored.accessToken).toBe('test-access-token-value');
+    expect(stored).not.toHaveProperty('clientSecret');
+    expect(JSON.stringify(stored)).not.toContain('the-secret');
+  });
+
+  it('uses the token Redis holds instead of the configured one while it is still valid', async () => {
+    const stored = makeToken({ exp: Math.round(clock.at / 1000) + 86_400, sub: 'open-id-from-token' });
+    await getRedis().hset(KEY, { clientId: 'client-id-from-redis', openId: 'open-id-from-token', accessToken: stored });
+    const store = useStore();
+
+    await store.resolve();
+
+    expect(store.accessToken).toBe(stored);
+    await expect(store.headers()).resolves.toMatchObject({ 'Access-Token': stored, 'Client-Id': 'client-id-from-redis' });
+  });
+
+  it('ignores a stored token that has expired, and replaces it with the configured one', async () => {
+    const expired = makeToken({ exp: Math.round(clock.at / 1000) - 60, sub: 'open-id-from-token' });
+    await getRedis().hset(KEY, { clientId: 'client-id-from-redis', accessToken: expired });
+    const store = useStore();
+
+    await store.resolve();
+
+    expect(store.accessToken).toBe('test-access-token-value');
+    await expect(getRedis().hget(KEY, 'accessToken')).resolves.toBe('test-access-token-value');
+  });
+
+  it('keeps a configured Open-Id authoritative over the stored one', async () => {
+    const stored = makeToken({ exp: Math.round(clock.at / 1000) + 86_400, sub: 'open-id-from-token' });
+    await getRedis().hset(KEY, { accessToken: stored, openId: 'some-other-open-id' });
+    const store = useStore({ OPS_DOCS_ACCESS_TOKEN: 'test-access-token-value' });
+
+    await store.resolve();
+
+    expect(store.accessToken).toBe(stored);
+    await expect(store.headers()).resolves.toMatchObject({ 'Open-Id': 'test-open-id' });
   });
 });
 
@@ -283,7 +336,7 @@ describe('upstreamStore readiness', () => {
 
   it('warns inside the expiry window and calls an expired credential unusable', async () => {
     const expiresAtMs = 1_789_200_000_000;
-    const store = useStore({ DOCS_ACCESS_TOKEN: makeToken({ exp: expiresAtMs / 1000 }) });
+    const store = useStore({ OPS_DOCS_ACCESS_TOKEN: makeToken({ exp: expiresAtMs / 1000 }) });
     await store.resolve();
 
     clock.set(expiresAtMs - 1_000);
@@ -294,7 +347,7 @@ describe('upstreamStore readiness', () => {
     clock.set(expiresAtMs + 1);
     const expired = store.readiness();
     expect(expired).toMatchObject({ ready: false, tokenWarning: false, tokenExpired: true });
-    expect(expired.reasons).toEqual(['access token has expired; refresh DOCS_ACCESS_TOKEN']);
+    expect(expired.reasons).toEqual(['access token has expired; refresh OPS_DOCS_ACCESS_TOKEN']);
   });
 });
 
@@ -315,7 +368,7 @@ describe('upstreamStore startup log', () => {
 
   it('warns when the credential is about to lapse', async () => {
     const records = captureLogs();
-    const store = useStore({ DOCS_ACCESS_TOKEN: makeTokenExpiringIn(3_600) });
+    const store = useStore({ OPS_DOCS_ACCESS_TOKEN: makeTokenExpiringIn(3_600) });
 
     await store.resolve();
 
@@ -326,12 +379,12 @@ describe('upstreamStore startup log', () => {
 
   it('warns when the credential has already expired', async () => {
     const records = captureLogs();
-    const store = useStore({ DOCS_ACCESS_TOKEN: makeTokenExpiringIn(-10) });
+    const store = useStore({ OPS_DOCS_ACCESS_TOKEN: makeTokenExpiringIn(-10) });
 
     await store.resolve();
 
     expect(records.find((entry) => entry.level === 'warning')).toMatchObject({
-      message: 'Access token has expired; Tencent Docs calls will fail until DOCS_ACCESS_TOKEN is refreshed',
+      message: 'Access token has expired; Tencent Docs calls will fail until OPS_DOCS_ACCESS_TOKEN is refreshed',
     });
   });
 });

@@ -1,7 +1,10 @@
 import { clock } from '@test/clock.ts';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadTestConfig, rawRecord, resetRedis, setupTencentDocsMock } from '@test/helpers.ts';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { getRedis } from '@/services/redis.ts';
+import { setClient } from '@/services/upstream/client.ts';
 import { applyModify, mergeModify, usePotStore } from '@/stores/pot.ts';
-import type { PotStore, PotWriteFailure } from '@/stores/pot.ts';
+import type { PotStore } from '@/stores/pot.ts';
 import type { Pot, PotModify, PotState } from '@/validation/index.ts';
 
 // The store reads the time through `@/services/time.ts`; this replaces it with `@test/clock.ts`, so
@@ -10,6 +13,8 @@ vi.mock('@/services/time.ts', () => import('@test/clock.ts'));
 
 const START = 1_000_000;
 const TTL = 30_000;
+/** Long enough that nothing flushes unless a case asks it to. */
+const NO_TIMER = '60000';
 
 beforeEach(() => {
   clock.set(START);
@@ -163,276 +168,202 @@ describe('mergeModify', () => {
   });
 });
 
-interface StoreHarness {
-  readonly cache: PotStore;
-  readonly reads: ReturnType<typeof vi.fn>;
-  readonly commits: ReturnType<typeof vi.fn>;
-  /** Every change the cache reported as dropped. */
-  readonly failures: PotWriteFailure[];
+// ---------------------------------------------------------------------------
+// The Redis-backed store: the sheet comes from the mocked upstream, everything else from the
+// in-process Redis the test configuration selects.
+// ---------------------------------------------------------------------------
+
+const docs = setupTencentDocsMock();
+
+const getRecordsCalls = (): number => docs.state.calls.filter((call) => call.body !== undefined && 'getRecords' in (call.body as object)).length;
+/** `addRecords` requests, as opposed to the rows they carried — `state.added` collects rows. */
+const writeCalls = (): number => docs.state.calls.filter((call) => call.body !== undefined && 'addRecords' in (call.body as object)).length;
+const rowsWritten = (): number => docs.state.added.length;
+
+/** A store over the mocked upstream and the mock Redis, with the flush timer out of the way. */
+function useStore(overrides: Record<string, string | undefined> = {}): PotStore {
+  setClient(docs.agent);
+  loadTestConfig({ OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: NO_TIMER, ...overrides });
+  return usePotStore();
 }
 
-function makeStore(
-  options: {
-    ttlMs?: number;
-    flushIntervalMs?: number;
-    read?: () => Promise<readonly Pot[]>;
-    commit?: (modify: PotModify) => Promise<void>;
-  } = {},
-): StoreHarness {
-  const reads = vi.fn(options.read ?? (async () => [pot('54-1-4000E8F3')]));
-  const commits = vi.fn(options.commit ?? (async () => undefined));
-  const failures: PotWriteFailure[] = [];
-  const cache = usePotStore({
-    ttlMs: options.ttlMs ?? TTL,
-    flushIntervalMs: options.flushIntervalMs ?? 0,
-    read: reads,
-    commit: commits,
-    // The cache only reports; recording is the owner's business (see app.ts).
-    onFailure: (failure) => failures.push(failure),
-  });
-  return { cache, reads, commits, failures };
+/** The state as Redis holds it, read straight from the key the store writes. */
+async function storedState(): Promise<PotState> {
+  return JSON.parse((await getRedis().get('occult-pot:pots')) ?? '{"data":[],"updateTime":0}') as PotState;
 }
 
-/** A `modify` that hangs on its first call, so a commit can be inspected while it is in flight. */
-function hangingCommit(): { commit: (modify: PotModify) => Promise<void>; release: () => void; calls: () => number } {
-  const slot: { release?: () => void; calls: number } = { calls: 0 };
-  return {
-    commit: async () => {
-      slot.calls += 1;
-      if (slot.release !== undefined) return;
-      await new Promise<void>((resolve) => {
-        slot.release = resolve;
-      });
-    },
-    release: () => slot.release?.(),
-    calls: () => slot.calls,
-  };
-}
-
-describe('potStore reads', () => {
-  it('reads upstream when nothing has been read and then serves the TTL window', async () => {
-    const { cache, reads } = makeStore();
-
-    const first = await cache.get();
-    expect(reads).toHaveBeenCalledTimes(1);
-    expect(ids(first)).toEqual(['54-1-4000E8F3']);
-    expect(first.updateTime).toBe(START);
-
-    expect((await cache.get()).data).toBe(first.data);
-    expect(reads).toHaveBeenCalledTimes(1);
-
-    clock.advance(TTL);
-    await cache.get();
-    expect(reads).toHaveBeenCalledTimes(2);
-  });
-
-  it('shares one read between concurrent callers', async () => {
-    let resolveRead: (() => void) | undefined;
-    const { cache, reads } = makeStore({
-      read: async () => {
-        await new Promise<void>((resolve) => {
-          resolveRead = resolve;
-        });
-        return [pot('54-1-4000E8F3')];
-      },
-    });
-
-    const pending = [cache.get(), cache.get(), cache.get()];
-    resolveRead?.();
-    const results = await Promise.all(pending);
-
-    expect(reads).toHaveBeenCalledTimes(1);
-    expect(results[0]).toBe(results[1]);
-    expect(results[1]).toBe(results[2]);
-  });
-
-  it('replaces the list on every read', async () => {
-    const pages: Array<readonly Pot[]> = [[pot('A'), pot('B')], [pot('C')]];
-    const { cache } = makeStore({ read: async () => pages.shift() ?? [] });
-
-    expect(ids(await cache.get())).toEqual(['A', 'B']);
-    clock.advance(TTL);
-
-    expect(ids(await cache.get())).toEqual(['C']);
-  });
-
-  it('stamps a read with its own clock, which is what the TTL is measured from', async () => {
-    const { cache } = makeStore();
-
-    expect((await cache.get()).updateTime).toBe(START);
-
-    clock.advance(TTL);
-    const second = await cache.get();
-
-    expect(second.updateTime).toBe(START + TTL);
-    expect(cache.currentState.updateTime).toBe(START + TTL);
-  });
-
-  it('serves a read verbatim, duplicated ids included', async () => {
-    const { cache } = makeStore({ read: async () => [pot('A', { lastVisitAtMs: 1 }), pot('A', { lastVisitAtMs: 2 })] });
-
-    const read = await cache.get();
-
-    expect(read.data).toHaveLength(2);
-    expect(cache.pendingState.data).toHaveLength(2);
-  });
+afterAll(async () => {
+  await docs.close();
 });
 
-describe('potStore views', () => {
-  it('adds the committed change on top of the state and the queued one on top of that', async () => {
-    const hanging = hangingCommit();
-    const { cache } = makeStore({ commit: hanging.commit });
-    await cache.get();
+beforeEach(async () => {
+  docs.reset();
+  docs.state.records = [rawRecord({ recordId: 'r1' }), rawRecord({ recordId: 'r2', potId: '44-1-4000AE40' })];
+  await resetRedis();
+});
 
-    cache.enqueue(modify({ update: [pot('A')], updateTime: START + 1 }));
-    const flushing = cache.flush();
+afterEach(() => {
+  docs.reset();
+});
 
-    // The first change is in flight: the second one queues behind it.
-    cache.enqueue(modify({ update: [pot('B')], updateTime: START + 2 }));
+describe('potStore reads', () => {
+  it('reads the sheet and stores what it read in Redis', async () => {
+    const store = useStore();
 
-    expect(ids(cache.currentState)).toEqual(['54-1-4000E8F3']);
-    expect(cache.committingModify?.update.map((entry) => entry.potId)).toEqual(['A']);
-    expect(cache.pendingModify?.update.map((entry) => entry.potId)).toEqual(['B']);
-    expect(ids(cache.committingState)).toEqual(['54-1-4000E8F3', 'A']);
-    expect(ids(cache.pendingState)).toEqual(['54-1-4000E8F3', 'A', 'B']);
-    expect(cache.pendingState).toEqual(applyModify(cache.committingState, cache.pendingModify!));
+    const read = await store.get();
 
-    hanging.release();
-    await flushing;
-
-    expect(ids(cache.currentState)).toEqual(['54-1-4000E8F3', 'A', 'B']);
-    expect(cache.committingModify).toBeUndefined();
-    expect(cache.pendingModify).toBeUndefined();
+    expect(ids(read)).toEqual(['54-1-4000E8F3', '44-1-4000AE40']);
+    expect(getRecordsCalls()).toBe(1);
+    await expect(storedState()).resolves.toEqual({ data: read.data, updateTime: START });
   });
 
-  it('shows an accepted change before it is written, and drops it again when it is lost', async () => {
-    const { cache } = makeStore({ commit: async () => Promise.reject(new Error('nope')) });
-    await cache.get();
+  it('serves the stored state inside the TTL, without reading the sheet again', async () => {
+    const store = useStore();
+    const first = await store.get();
 
-    cache.enqueue(modify({ update: [pot('A')], updateTime: START + 1 }));
-    expect(ids(cache.pendingState)).toEqual(['54-1-4000E8F3', 'A']);
-    expect(ids(cache.currentState)).toEqual(['54-1-4000E8F3']);
+    clock.advance(TTL - 1);
+    const second = await store.get();
 
-    await cache.flush();
+    expect(second.data).toEqual(first.data);
+    expect(getRecordsCalls()).toBe(1);
+  });
 
-    expect(ids(cache.pendingState)).toEqual(['54-1-4000E8F3']);
+  it('reads the sheet again once the TTL has passed, and stamps the new state', async () => {
+    const store = useStore();
+    await store.get();
+
+    clock.advance(TTL);
+    docs.state.records = [rawRecord({ recordId: 'r3', potId: '55-0-40001D05' })];
+    const second = await store.get();
+
+    expect(ids(second)).toEqual(['55-0-40001D05']);
+    expect(getRecordsCalls()).toBe(2);
+    expect((await storedState()).updateTime).toBe(START + TTL);
+  });
+
+  it('shares one sheet read between concurrent callers', async () => {
+    const store = useStore();
+
+    const results = await Promise.all([store.get(), store.get(), store.get()]);
+
+    expect(getRecordsCalls()).toBe(1);
+    expect(results[0]).toBe(results[1]);
+  });
+
+  it('keeps a pot that was accepted but not yet written when the sheet is read again', async () => {
+    const store = useStore();
+    await store.get();
+    await store.enqueue(modify({ update: [pot('60-0-4000ABCD')], updateTime: START + 1 }));
+
+    clock.advance(TTL);
+    const read = await store.get();
+
+    expect(ids(read)).toContain('60-0-4000ABCD');
+    expect(getRecordsCalls()).toBe(2);
+  });
+
+  it('reports the state Redis holds without reading the sheet, and nothing at all before the first read', async () => {
+    const store = useStore();
+
+    expect(await store.state()).toEqual({ data: [], updateTime: 0 });
+
+    await store.get();
+    const after = await store.state();
+
+    expect(ids(after)).toEqual(['54-1-4000E8F3', '44-1-4000AE40']);
+    expect(getRecordsCalls()).toBe(1);
+    expect(after.updateTime).toBe(START);
   });
 });
 
 describe('potStore writes', () => {
+  it('makes an accepted pot visible at once and queues it for the sheet', async () => {
+    const store = useStore();
+    await store.get();
+
+    await store.enqueue(modify({ update: [pot('60-0-4000ABCD')], updateTime: START + 1 }));
+
+    expect(ids(await store.state())).toContain('60-0-4000ABCD');
+    expect((await store.pending())?.update.map((entry) => entry.potId)).toEqual(['60-0-4000ABCD']);
+    // Accepting is not writing: the sheet has not been touched.
+    expect(rowsWritten()).toBe(0);
+    expect(getRecordsCalls()).toBe(1);
+  });
+
+  it('does not let an accepted pot refresh the read TTL', async () => {
+    const store = useStore();
+    await store.get();
+
+    await store.enqueue(modify({ update: [pot('60-0-4000ABCD')], updateTime: START + TTL * 2 }));
+
+    expect((await store.state()).updateTime).toBe(START);
+  });
+
   it('merges everything accepted into one change per flush', async () => {
-    const { cache, commits } = makeStore();
-    await cache.get();
+    const store = useStore();
+    await store.get();
 
-    cache.enqueue(modify({ update: [pot('A')], updateTime: START + 1 }));
-    cache.enqueue(modify({ update: [pot('B')], updateTime: START + 2 }));
-    cache.enqueue(modify({ update: [pot('C')], updateTime: START + 3 }));
-    expect(commits).not.toHaveBeenCalled();
+    await store.enqueue(modify({ update: [pot('60-0-4000ABCD')], updateTime: START + 1 }));
+    await store.enqueue(modify({ update: [pot('61-0-4000FFFF')], updateTime: START + 2 }));
+    expect((await store.pending())?.update.map((entry) => entry.potId)).toEqual(['60-0-4000ABCD', '61-0-4000FFFF']);
 
-    await cache.flush();
+    await store.flush();
 
-    expect(commits).toHaveBeenCalledTimes(1);
-    const written = commits.mock.calls[0]?.[0] as PotModify | undefined;
-    expect(written?.update.map((entry) => entry.potId)).toEqual(['A', 'B', 'C']);
-    expect(ids(cache.currentState)).toEqual(['54-1-4000E8F3', 'A', 'B', 'C']);
-    expect(cache.currentState.updateTime).toBe(START + 3);
+    // One request for both accepted pots, in arrival order.
+    expect(writeCalls()).toBe(1);
+    expect(docs.state.added.map((row) => row.ID)).toEqual(['60-0-4000ABCD', '61-0-4000FFFF']);
+    expect(await store.pending()).toBeUndefined();
+    expect(ids(await store.state())).toEqual(['54-1-4000E8F3', '44-1-4000AE40', '60-0-4000ABCD', '61-0-4000FFFF']);
   });
 
-  it('keeps writing while changes arrive during a commit', async () => {
-    const hanging = hangingCommit();
-    const { cache, commits } = makeStore({ commit: hanging.commit });
-    await cache.get();
+  it('is a no-op when nothing is queued, and joins an in-flight flush', async () => {
+    const store = useStore();
+    await store.get();
+    await store.flush();
+    expect(rowsWritten()).toBe(0);
 
-    cache.enqueue(modify({ update: [pot('A')], updateTime: START + 1 }));
-    const flushing = cache.flush();
-    cache.enqueue(modify({ update: [pot('B')], updateTime: START + 2 }));
+    await store.enqueue(modify({ update: [pot('60-0-4000ABCD')], updateTime: START + 1 }));
+    await Promise.all([store.flush(), store.flush()]);
 
-    hanging.release();
-    await flushing;
-
-    expect(commits).toHaveBeenCalledTimes(2);
-    expect(ids(cache.currentState)).toEqual(['54-1-4000E8F3', 'A', 'B']);
+    expect(rowsWritten()).toBe(1);
   });
 
-  it('writes once and reports the change it had to drop', async () => {
-    const { cache, commits, failures } = makeStore({ commit: async () => Promise.reject(new Error('still broken')) });
-    await cache.get();
-    cache.enqueue(modify({ update: [pot('A')], updateTime: START + 1 }));
+  it('keeps a change whose write failed, and writes it on the next cycle', async () => {
+    const store = useStore();
+    await store.get();
+    await store.enqueue(modify({ update: [pot('60-0-4000ABCD')], updateTime: START + 1 }));
 
-    await cache.flush();
+    docs.state.writeFailure = { status: 200, ret: 400010, msg: '服务内部错误' };
+    await store.flush();
 
-    // Retrying is the writer's business: the cache calls `modify` once and drops what came back.
-    expect(commits).toHaveBeenCalledTimes(1);
-    expect(ids(cache.currentState)).toEqual(['54-1-4000E8F3']);
-    expect(cache.pendingModify).toBeUndefined();
-    expect(cache.committingModify).toBeUndefined();
-    expect(failures).toHaveLength(1);
-    const reported = failures[0]!;
-    expect(reported.modify.update.map((entry) => entry.potId)).toEqual(['A']);
-    expect((reported.error as Error).message).toBe('still broken');
+    expect(rowsWritten()).toBe(0);
+    expect((await store.pending())?.update.map((entry) => entry.potId)).toEqual(['60-0-4000ABCD']);
+    expect(ids(await store.state())).toContain('60-0-4000ABCD');
+
+    docs.state.writeFailure = undefined;
+    await store.flush();
+
+    expect(rowsWritten()).toBe(1);
+    expect(await store.pending()).toBeUndefined();
   });
 
-  it('ignores a change with nothing in it', async () => {
-    const { cache, commits } = makeStore();
+  it('picks up a change stranded mid-write by a crash', async () => {
+    const store = useStore();
+    await store.get();
+    // What a process killed between the take and the write leaves behind.
+    await getRedis().set('occult-pot:pots:committing', JSON.stringify(modify({ update: [pot('60-0-4000ABCD')], updateTime: START + 1 })));
 
-    cache.enqueue(modify());
-    await cache.flush();
+    await store.flush();
 
-    expect(cache.pendingModify).toBeUndefined();
-    expect(commits).not.toHaveBeenCalled();
+    expect(rowsWritten()).toBe(1);
+    await expect(getRedis().get('occult-pot:pots:committing')).resolves.toBeNull();
   });
 
-  it('is a no-op when nothing is queued', async () => {
-    const { cache, commits } = makeStore();
+  it('writes what is queued on its own schedule', async () => {
+    const store = useStore({ OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: '50' });
+    await store.get();
+    await store.enqueue(modify({ update: [pot('60-0-4000ABCD')], updateTime: START + 1 }));
 
-    await cache.flush();
-
-    expect(commits).not.toHaveBeenCalled();
-  });
-
-  it('joins an in-flight flush instead of starting a second one', async () => {
-    const hanging = hangingCommit();
-    const { cache, commits } = makeStore({ commit: hanging.commit });
-    cache.enqueue(modify({ update: [pot('A')], updateTime: START + 1 }));
-
-    const first = cache.flush();
-    const second = cache.flush();
-
-    expect(second).toBe(first);
-
-    hanging.release();
-    await Promise.all([first, second]);
-
-    expect(commits).toHaveBeenCalledTimes(1);
-  });
-
-  it('writes out what is queued and can be flushed again', async () => {
-    const { cache, commits } = makeStore();
-    cache.enqueue(modify({ update: [pot('A')], updateTime: START + 1 }));
-
-    await cache.flush();
-    await cache.flush();
-
-    expect(commits).toHaveBeenCalledTimes(1);
-    expect(ids(cache.currentState)).toEqual(['A']);
-  });
-
-  it('flushes on its own schedule', async () => {
-    const { cache, commits } = makeStore({ flushIntervalMs: 5 });
-    cache.enqueue(modify({ update: [pot('A')], updateTime: START + 1 }));
-
-    await new Promise((resolve) => setTimeout(resolve, 40));
-
-    expect(commits).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not move updateTime when a change is only accepted', async () => {
-    const { cache } = makeStore();
-    await cache.get();
-
-    cache.enqueue(modify({ update: [pot('A')], updateTime: START + 5_000 }));
-
-    expect(cache.currentState.updateTime).toBe(START);
-    expect(cache.pendingState.updateTime).toBe(START + 5_000);
+    await vi.waitFor(() => expect(rowsWritten()).toBe(1), { timeout: 2_000 });
   });
 });

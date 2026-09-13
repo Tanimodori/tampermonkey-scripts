@@ -1,4 +1,5 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { parseEnv } from 'node:util';
 import { defu } from 'defu';
 import { ConfigError } from './errors.ts';
 import { appConfigSchema, appEnvConfigSchema } from './validation/config.ts';
@@ -14,26 +15,64 @@ import type { AppConfig, AppEnvConfig } from './validation/config.ts';
  */
 const MODE = import.meta.env?.MODE ?? process.env.NODE_ENV ?? 'development';
 
+/** The variable naming one more env file to read. It is only ever read from the real environment. */
+export const ENV_PATH_VAR = 'OPS_ENV_PATH';
+
 /**
- * The environment files a run reads, most specific first — vite's naming, selected by the mode.
- *
- * `process.loadEnvFile` never replaces a variable that is already set, so the order is what gives
- * `.env.development.local` precedence over `.env.development`: the first file to define a variable
- * wins, and the shell — or a container that was handed its variables — beats all of them.
+ * The environment files a run reads, **least specific first**: each source overrides the one before
+ * it, so a local file beats the plain one, a mode file beats the base, and every file beats the
+ * ambient environment (`loadEnv` puts that underneath all of them).
  */
 export function envFilesFor(mode: string): readonly string[] {
-  return [`.env.${mode}.local`, `.env.${mode}`, '.env'];
+  return ['.env', `.env.${mode}`, '.env.local', `.env.${mode}.local`];
+}
+
+/** One file as `parseEnv` reads it; a file that is not there simply is not a source. */
+function readEnvFile(file: string): Partial<Record<string, string>> {
+  if (!existsSync(file)) return {};
+
+  try {
+    return parseEnv(readFileSync(file, 'utf8'));
+  } catch (error) {
+    throw new Error(`Could not read the env file ${file}: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 /**
- * Reads the environment files into `process.env`, skipping the ones that are not there (a container
- * is handed its variables and carries no files at all).
+ * The environment a run reads: the real environment, then each file in ascending priority, then the
+ * file `OPS_ENV_PATH` names — later sources override earlier ones.
  *
- * Called by the entry point before `loadConfig()`; tests call it with paths of their own.
+ * Files beating the ambient environment is the point of the `OPS_` prefix: a variable that some
+ * other application exported under the same name can always be overridden from a file. `OPS_ENV_PATH`
+ * itself is read from the real environment only, because it decides what gets read at all.
+ *
+ * @throws `Error` when `OPS_ENV_PATH` names a file that is not there.
  */
-export function loadEnvFiles(files: readonly string[] = envFilesFor(MODE)): void {
-  for (const file of files) {
-    if (existsSync(file)) process.loadEnvFile(file);
+export function loadEnv(mode: string = MODE, native: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  const explicit = native[ENV_PATH_VAR];
+  const extra = explicit === undefined || explicit === '' ? undefined : explicit;
+  if (extra !== undefined && !existsSync(extra)) {
+    throw new Error(`${ENV_PATH_VAR} points at a file that does not exist: ${extra}`);
+  }
+
+  // Ascending priority: each source overrides the one before it, and `defu` keeps the first value.
+  const sources: NodeJS.ProcessEnv[] = [native, ...envFilesFor(mode).map(readEnvFile), ...(extra === undefined ? [] : [readEnvFile(extra)])];
+
+  let merged: NodeJS.ProcessEnv = {};
+  for (const source of sources) merged = defu(source, merged);
+  return merged;
+}
+
+/**
+ * Hands `process.env` the names it does not carry yet, so modules that read it directly (and any
+ * child process) see what the files supplied.
+ *
+ * Publishing never overwrites: a name the environment already had keeps its ambient value, even
+ * where the files overrode the configuration that was built from this environment.
+ */
+export function publishEnv(env: NodeJS.ProcessEnv): void {
+  for (const [name, value] of Object.entries(env)) {
+    if (value !== undefined && process.env[name] === undefined) process.env[name] = value;
   }
 }
 
@@ -41,10 +80,11 @@ export function loadEnvFiles(files: readonly string[] = envFilesFor(MODE)): void
  * Configuration, in one place: the defaults, the environment, everything derived from both, and
  * the cache that lets every module read the result instead of threading it through constructors.
  *
+ *     loadEnv()            the environment and the files it names
  *     getDefaultConfig()   what the environment may leave out
  *     loadConfigFromEnv()  what the environment supplied
  *     resolveConfig()      the two merged, derived and validated
- *     loadConfig()         runs all three and caches the result; getConfig() reads it back
+ *     loadConfig()         runs the last three and caches the result; getConfig() reads it back
  *
  * The shapes themselves live in `validation/config.ts`; this module owns the policy — which values
  * are defaults, which paths the environment may set (and under which name), and what can only be
@@ -83,21 +123,26 @@ const ENV_PATHS = [
   'upstream.maxRetries',
   'upstream.retryBackoffMs',
   'upstream.timeoutMs',
+  'redis.url',
 ] as const;
 
 /**
- * The variable a field is read from: the schema path in SCREAMING_SNAKE_CASE, so `server.port` is
- * `SERVER_PORT` and `docs.tokenExpiryWarnMs` is `DOCS_TOKEN_EXPIRY_WARN_MS`.
+ * The variable a field is read from: the schema path in SCREAMING_SNAKE_CASE under the service's own
+ * prefix, so `server.port` is `OPS_SERVER_PORT` and `docs.tokenExpiryWarnMs` is
+ * `OPS_DOCS_TOKEN_EXPIRY_WARN_MS`.
  *
  * One rule, so a name can never drift from the field it fills and the same mapping words both the
- * reads below and the failures `describeIssue` reports.
+ * reads below and the failures `describeIssue` reports. The prefix is what keeps these names out of
+ * the way of everything else on the machine with an opinion about a generic name like `PORT` or
+ * `REDIS_URL`.
  */
 function envName(path: string): string {
-  return path
+  const parts = path
     .split('.')
     .join('_')
     .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
     .toUpperCase();
+  return `OPS_${parts}`;
 }
 
 /**
@@ -119,6 +164,7 @@ function getDefaultConfig(): AppEnvConfig {
     writeQueue: { flushIntervalMs: 2000 },
     rateLimit: { ipWindowMs: 60_000, ipMax: 120, writeMax: 20 },
     upstream: { maxPerInterval: 120, intervalMs: 60_000, maxRetries: 2, retryBackoffMs: 500, timeoutMs: 10_000 },
+    redis: {},
   };
 }
 

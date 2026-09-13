@@ -1,18 +1,22 @@
 import { getLogger } from '@logtape/logtape';
 import { createApp } from './app.ts';
-import { getConfig, loadConfig, loadEnvFiles } from './config.ts';
+import { getConfig, loadConfig, loadEnv, publishEnv } from './config.ts';
 import { ConfigError } from './errors.ts';
 import { configureLogging, LOG_CATEGORY } from './logger.ts';
 import { startServer } from './server.ts';
+import { getRedis } from './services/redis.ts';
 import { upstreamStore } from './stores/upstream.ts';
 
 async function main(): Promise<void> {
-  // Local runs read `.env.development(.local)`; a container was handed its variables already, and
-  // carries none of these files.
-  loadEnvFiles();
-
+  // The environment first: the ambient one, the files vite's mode names, and whatever
+  // `OPS_ENV_PATH` adds on top. A container carries no files at all and is handed its variables.
+  let env: NodeJS.ProcessEnv;
   try {
-    loadConfig();
+    env = loadEnv();
+    // Names the environment did not have yet reach `process.env` as well, for anything that reads it
+    // directly.
+    publishEnv(env);
+    loadConfig(env);
   } catch (error) {
     const message = error instanceof ConfigError ? error.message : `Failed to load configuration: ${String(error)}`;
     process.stderr.write(`${message}\n`);
@@ -32,6 +36,17 @@ async function main(): Promise<void> {
   });
 
   const created = createApp();
+
+  // Redis holds the state the service serves, so it is as much a startup dependency as the document
+  // the state comes from — and a mock never fails this.
+  try {
+    await getRedis().ping();
+  } catch (error) {
+    logger.error('Could not reach Redis; refusing to start', { error: error instanceof Error ? error.message : String(error) });
+    await created.close().catch(() => undefined);
+    process.exitCode = 1;
+    return;
+  }
 
   try {
     await upstreamStore.resolve();

@@ -1,5 +1,5 @@
 import { clock } from '@test/clock.ts';
-import { loadTestConfig, rawRecord, setupTencentDocsMock } from '@test/helpers.ts';
+import { loadTestConfig, rawRecord, resetRedis, setupTencentDocsMock } from '@test/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
 import { createPot, getPot, listPots } from '@/services/pot.ts';
@@ -23,10 +23,13 @@ function pot(potId: string, overrides: Partial<Pot> = {}): Pot {
   return { world: '鸟', map: '北岛', potId, northRefreshAtMs: 1_789_200_960_000, lastVisitAtMs: 1_789_199_460_000, ...overrides };
 }
 
-/** Points everything at the mocked upstream; each call also gives the stores a configuration of their own. */
+/**
+ * Points everything at the mocked upstream and the mock Redis; each call also gives the stores a
+ * configuration of their own. The flush timer is long, so only an explicit `flush()` writes.
+ */
 function useApi(overrides: Record<string, string | undefined> = {}): void {
   setClient(docs.agent);
-  loadTestConfig(overrides);
+  loadTestConfig({ OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000', ...overrides });
 }
 
 const getRecordsCalls = (): number => docs.state.calls.filter((call) => call.body !== undefined && 'getRecords' in (call.body as object)).length;
@@ -35,9 +38,10 @@ afterAll(async () => {
   await docs.close();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   docs.reset();
   docs.state.records = [rawRecord({ recordId: 'r1' }), rawRecord({ recordId: 'r2', potId: '44-1-4000AE40' })];
+  await resetRedis();
 });
 
 afterEach(() => {
@@ -98,10 +102,11 @@ describe('createPot', () => {
     const message = await createPot(pot('60-0-4000ABCD'));
 
     expect(message).toBe('occult pot 60-0-4000ABCD queued for writing to the sheet');
-    expect(potStore.pendingModify?.update).toEqual([pot('60-0-4000ABCD')]);
-    expect(potStore.pendingModify?.updateTime).toBe(1_789_200_123_456);
-    expect(potStore.pendingModify?.overwrite).toEqual([]);
-    expect(potStore.pendingModify?.remove).toEqual([]);
+    const queued = await potStore.pending();
+    expect(queued?.update).toEqual([pot('60-0-4000ABCD')]);
+    expect(queued?.updateTime).toBe(1_789_200_123_456);
+    expect(queued?.overwrite).toEqual([]);
+    expect(queued?.remove).toEqual([]);
     // Fire-and-forget: nothing has been written yet.
     expect(docs.state.added).toHaveLength(0);
   });
@@ -114,8 +119,9 @@ describe('createPot', () => {
     clock.set(1_789_200_999_000);
     await createPot(pot('61-0-4000FFFF'));
 
-    expect(potStore.pendingModify?.updateTime).toBe(1_789_200_999_000);
-    expect(potStore.pendingModify?.update.map((entry) => entry.potId)).toEqual(['60-0-4000ABCD', '61-0-4000FFFF']);
+    const queued = await potStore.pending();
+    expect(queued?.updateTime).toBe(1_789_200_999_000);
+    expect(queued?.update.map((entry) => entry.potId)).toEqual(['60-0-4000ABCD', '61-0-4000FFFF']);
   });
 
   it('writes the queued pots when the store flushes', async () => {

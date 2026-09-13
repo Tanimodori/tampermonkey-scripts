@@ -4,11 +4,12 @@ import { createApp } from '@/app.ts';
 import type { CreatedApp } from '@/app.ts';
 import { startServer } from '@/server.ts';
 import type { RunningServer } from '@/server.ts';
+import { getRedis } from '@/services/redis.ts';
 import type { RawRecordDto } from '@/services/upstream/api.ts';
 import { setClient } from '@/services/upstream/client.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 import type { Pot } from '@/validation/index.ts';
-import { captureLogs, loadTestConfig, rawRecord, sheetInstant, setupTencentDocsMock, testClient } from './helpers.ts';
+import { captureLogs, loadTestConfig, rawRecord, resetRedis, sheetInstant, setupTencentDocsMock, testClient } from './helpers.ts';
 
 // Every module under test reads the time through `@/services/time.ts`, which this replaces with
 // `@test/clock.ts`: the store, the controllers and the fixtures below then agree on one instant
@@ -142,9 +143,11 @@ afterAll(async () => {
   await docs.close();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   docs.reset();
   docs.state.records = fixtureRows();
+  // The mock Redis is shared between clients, so every case starts from an empty one.
+  await resetRedis();
 });
 
 afterEach(async () => {
@@ -181,6 +184,25 @@ describe('GET /healthz, /readyz', () => {
     // The test credential is not a decodable JWT, so its health is reported as "unknown".
     expect(credential).toMatchObject({ tokenLength: 'test-access-token-value'.length, expiresAt: null, expired: null });
     expect(JSON.stringify(response.body)).not.toContain('test-access-token-value');
+  });
+
+  it('records the caller and its rate-limit counters in Redis', async () => {
+    const { client } = await startApp();
+
+    await client.get('/v1/pots').expect(200);
+
+    // The limiter's window is a key of its own, under the caller's namespace.
+    const keys = await getRedis().keys('occult-pot:user:*');
+    expect(keys.some((key) => key.startsWith('occult-pot:user:rate-limit:general:'))).toBe(true);
+
+    // The record itself is written without blocking the request, so give it a moment.
+    await vi.waitFor(
+      async () => {
+        const records = await getRedis().keys('occult-pot:user:*');
+        expect(records.some((key) => !key.startsWith('occult-pot:user:rate-limit:'))).toBe(true);
+      },
+      { timeout: 2_000 },
+    );
   });
 
   it('no longer exposes a configuration endpoint', async () => {
@@ -361,7 +383,7 @@ describe('POST /v1/pots', () => {
       最后一次进岛时间: String(NOW),
     });
     // The store stamps what it holds with the same pinned clock the request was stamped with.
-    expect(created.store.currentState.updateTime).toBe(NOW);
+    expect((await created.store.state()).updateTime).toBe(NOW);
 
     // The committed record is folded into the cached state, so it is listed immediately.
     const list = await client.get('/v1/pots').expect(200);
@@ -371,7 +393,7 @@ describe('POST /v1/pots', () => {
 
   it('serves an accepted pot before the write reaches the sheet', async () => {
     // A long flush interval makes "nothing written yet" deterministic.
-    const { client } = await startApp({ WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000' });
+    const { client } = await startApp({ OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000' });
     await client.post('/v1/pots').send(newPot).expect(202);
 
     const list = (await client.get('/v1/pots').expect(200)).body as { data: Pot[] };
@@ -558,7 +580,7 @@ describe('POST /v1/pots', () => {
   });
 
   it('merges identical accepts within one flush window into one write', async () => {
-    const { client, created } = await startApp({ WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000' });
+    const { client, created } = await startApp({ OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000' });
 
     await client
       .post('/v1/pots')
@@ -570,14 +592,14 @@ describe('POST /v1/pots', () => {
       .expect(202);
 
     // `update` is keyed by 区服|地图|ID, so the two accepts are one entry in the queued change.
-    expect(created.store.pendingModify?.update).toHaveLength(1);
+    expect((await created.store.pending())?.update).toHaveLength(1);
     await created.store.flush();
 
     expect(docs.state.added).toHaveLength(1);
   });
 
   it('writes one row per flush window for the same pot', async () => {
-    const { client, created } = await startApp({ WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000' });
+    const { client, created } = await startApp({ OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000' });
 
     await client
       .post('/v1/pots')
@@ -604,12 +626,11 @@ describe('POST /v1/pots', () => {
       .post('/v1/pots')
       .send({ ...newPot, potId: '65-0-40004444' })
       .expect(202);
-    expect(created.store.pendingModify?.update).toHaveLength(1);
-    expect(created.store.committingModify).toBeUndefined();
+    expect((await created.store.pending())?.update).toHaveLength(1);
 
     await waitForFlush();
-    expect(created.store.pendingModify).toBeUndefined();
-    expect(created.store.currentState.data.map((pot) => pot.potId)).toContain('65-0-40004444');
+    expect(await created.store.pending()).toBeUndefined();
+    expect((await created.store.state()).data.map((pot) => pot.potId)).toContain('65-0-40004444');
     expect(docs.state.added).toHaveLength(1);
   });
 
@@ -667,7 +688,7 @@ describe('POST /v1/pots', () => {
   });
 
   it('rejects a body over the configured limit with 413', async () => {
-    const { client } = await startApp({ SERVER_JSON_BODY_LIMIT: '1kb' });
+    const { client } = await startApp({ OPS_SERVER_JSON_BODY_LIMIT: '1kb' });
 
     const response = await client
       .post('/v1/pots')
@@ -679,7 +700,7 @@ describe('POST /v1/pots', () => {
   it('rate limits anonymous writes per IP', async () => {
     // `loopback` makes Express/express-rate-limit resolve the client IP from X-Forwarded-For,
     // which lets this test drive two distinct client IPs over the same socket.
-    const { client } = await startApp({ SERVER_TRUST_PROXY: 'loopback', RATE_LIMIT_WRITE_MAX: '1' });
+    const { client } = await startApp({ OPS_SERVER_TRUST_PROXY: 'loopback', OPS_RATE_LIMIT_WRITE_MAX: '1' });
 
     await client
       .post('/v1/pots')
@@ -702,25 +723,28 @@ describe('POST /v1/pots', () => {
       .expect(202);
   });
 
-  it('reports an upstream write failure through /readyz rather than failing the accept', async () => {
-    const { client, created, logs } = await startApp({ WRITE_QUEUE_FLUSH_INTERVAL_MS: '50' });
+  it('keeps a change whose write failed, and reports the state through /readyz', async () => {
+    const { client, created, logs } = await startApp({ OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: '50' });
     docs.state.writeFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
 
     // The accept cannot know the outcome, so it still answers 202.
     await client.post('/v1/pots').send(newPot).expect(202);
     await waitForFlush();
 
-    // The change was dropped: it is gone from the queued view and never reached the state.
-    expect(created.store.pendingModify).toBeUndefined();
-    expect(created.store.committingModify).toBeUndefined();
-    expect(created.store.currentState.data.map((pot) => pot.potId)).not.toContain('60-0-4000ABCD');
-    expect(logs.some((entry) => entry.message === 'Dropped a pending modify after a failed write')).toBe(true);
+    // The write is retried, not lost: the change is still queued and the pot is still served.
+    expect((await created.store.pending())?.update.map((entry) => entry.potId)).toEqual(['60-0-4000ABCD']);
+    expect((await created.store.state()).data.map((pot) => pot.potId)).toContain('60-0-4000ABCD');
+    expect(logs.some((entry) => entry.message === 'Kept a pending modify after a failed write; it will be retried')).toBe(true);
     expect(docs.state.added).toHaveLength(0);
+
+    docs.state.writeFailure = undefined;
+    await created.store.flush();
+    expect(docs.state.added).toHaveLength(1);
+    expect(await created.store.pending()).toBeUndefined();
 
     const ready = await client.get('/readyz').expect(200);
     const cache = (ready.body as { data: { cache: { updateTime: string | null; ageMs: number | null; pots: number } } }).data.cache;
-    expect(cache.pots).toBe(0);
-    expect(cache.updateTime).toBeNull();
+    expect(cache.pots).toBe(1);
   });
 
   it('republicises an upstream auth failure as UPSTREAM_AUTH_FAILED', async () => {

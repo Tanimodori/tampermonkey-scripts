@@ -5,6 +5,7 @@ import { formatInstant } from '@/logger.ts';
 import { now } from '@/services/time.ts';
 import { potStore } from '@/stores/pot.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
+import type { PotState } from '@/validation/index.ts';
 
 export interface HealthControllerDeps {
   /** When the process started, which is what `/healthz` reports its uptime from. */
@@ -25,28 +26,40 @@ export function createHealthController(deps: HealthControllerDeps): Router {
     });
   };
 
-  const ready: RequestHandler = (_req, res) => {
+  const ready: RequestHandler = async (_req, res) => {
     const nowMs = now();
     const report = upstreamStore.readiness();
-    const state = potStore.currentState;
-    res.status(report.ready ? 200 : 503).json({
+
+    // A probe that cannot reach the store it reports on is not ready — and says why instead of
+    // failing with a 500.
+    let state: PotState | undefined;
+    let storeError: string | undefined;
+    try {
+      state = await potStore.state();
+    } catch (error) {
+      storeError = error instanceof Error ? error.message : String(error);
+    }
+
+    const readyNow = report.ready && state !== undefined;
+    const reasons = [...report.reasons, ...(storeError === undefined ? [] : [`state store is unavailable: ${storeError}`])];
+    res.status(readyNow ? 200 : 503).json({
       data: {
-        ready: report.ready,
+        ready: readyNow,
         fileIdResolved: report.fileIdResolved,
         tokenValidated: report.tokenValidated,
         tokenExpiresAt: report.tokenExpiresAt ?? null,
         tokenExpiresInMs: report.tokenExpiresInMs ?? null,
         tokenWarning: report.tokenWarning,
         tokenExpired: report.tokenExpired,
-        reasons: report.reasons,
+        reasons,
         // Credential health from the store that actually sends the token. Length, expiry and the
         // last validation only — never the token itself.
         credential: upstreamStore.describe(),
-        // The pot list as last read or written. `null` means nothing has been read yet.
+        // The pot list as Redis holds it. `null` means nothing has been read yet.
         cache: {
-          updateTime: state.updateTime === 0 ? null : formatInstant(state.updateTime),
-          ageMs: state.updateTime === 0 ? null : nowMs - state.updateTime,
-          pots: state.data.length,
+          updateTime: state === undefined || state.updateTime === 0 ? null : formatInstant(state.updateTime),
+          ageMs: state === undefined || state.updateTime === 0 ? null : nowMs - state.updateTime,
+          pots: state?.data.length ?? null,
         },
         upstream: { maxPerInterval: getConfig().upstream.maxPerInterval, intervalMs: getConfig().upstream.intervalMs },
       },

@@ -21,6 +21,8 @@
 - [应用级账号 Token](https://docs.qq.com/open/document/app/oauth2/app_account_token.html)
 - [常见错误码](https://docs.qq.com/open/document/app/openapi/v3/common/code.html)
 
+Redis 本身的文档见 [redis.io/docs](https://redis.io/docs/latest/)，命令语义见 [commands](https://redis.io/docs/latest/commands/)。
+
 ## 2. 运行时依赖
 
 | 依赖 | 用途 |
@@ -37,6 +39,9 @@
 | [helmet](https://helmetjs.github.io) | 安全响应头 |
 | [cors](https://github.com/expressjs/cors) | 跨域响应头 |
 | [defu](https://github.com/unjs/defu) | 配置默认值合并 |
+| [ioredis](https://github.com/redis/ioredis) | Redis 客户端（状态、队列、凭据、限流计数） |
+| [ioredis-mock](https://github.com/stipsan/ioredis-mock) | 没有 `OPS_REDIS_URL` 时的进程内 Redis（同样的命令面，进程退出即消失） |
+| [rate-limit-redis](https://github.com/express-rate-limit/rate-limit-redis) | `express-rate-limit` 的 Redis store，让限流窗口跨实例 |
 
 ## 3. 工具链
 
@@ -46,6 +51,7 @@
 | [vite](https://vite.dev) | 构建（`ssr.noExternal` 把运行时依赖打进自包含的 `dist/`） |
 | [vitest](https://vitest.dev) | 测试 |
 | [oxfmt](https://oxc.rs/docs/guide/usage/formatter) / [oxlint](https://oxc.rs/docs/guide/usage/linter) | 格式化与静态检查 |
+| [cross-env](https://github.com/kentcdodds/cross-env) | `test:redis` 任务跨平台地提供 `OPS_REDIS_URL` |
 | [TypeScript](https://www.typescriptlang.org) | 类型检查 |
 
 ## 4. 本仓库内的文档

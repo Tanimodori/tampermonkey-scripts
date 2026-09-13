@@ -127,17 +127,16 @@ describe('parseWith', () => {
     expect(parseWith(schema, { potId: '54-1-4000E8F3' }, 'body')).toEqual({ potId: '54-1-4000E8F3' });
   });
 
-  it('raises BAD_REQUEST with the source and the field issues', () => {
+  it('raises BAD_REQUEST naming the source and every offending field', () => {
     try {
       parseWith(schema, { potId: 5 }, 'params');
       throw new Error('expected parseWith to throw');
     } catch (error) {
       expect(error).toBeInstanceOf(AppError);
       const appError = error as AppError;
-      expect(appError.code).toBe('BAD_REQUEST');
+      expect(appError.code).toBe('ERR_BAD_REQUEST');
       expect(appError.status).toBe(400);
       expect(appError.message).toContain('Invalid params: potId:');
-      expect(appError.details).toMatchObject({ source: 'params', issues: [{ path: 'potId' }] });
     }
   });
 });

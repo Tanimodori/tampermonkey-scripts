@@ -17,7 +17,7 @@ const validPot: Pot = {
   lastVisitAtMs: 1_789_199_460_000,
 };
 
-/** The issues a rejected value reports, in the shape `error.details` carries them. */
+/** The issues a rejected value reports, in the shape a failure message is built from. */
 function issuesOf(schema: z.ZodType, value: unknown): FieldIssue[] {
   const result = schema.safeParse(value);
   if (result.success) throw new Error('expected the value to be rejected');

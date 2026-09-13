@@ -4,7 +4,9 @@ import { AppError } from '@/errors.ts';
 import { formatInstant, LOG_CATEGORY } from '@/logger.ts';
 import { getRedis } from '@/services/redis.ts';
 import { now } from '@/services/time.ts';
-import { apiUrl, asArray, asRecord, call, describeBody, getEnvelope, sheetUrl } from '@/services/upstream/client.ts';
+import { getSheetList } from '@/services/upstream/api/sheet.ts';
+import { getUserInfo, refreshAccessToken } from '@/services/upstream/api/token.ts';
+import { asRecord, describeBody } from '@/services/upstream/interceptors/classify.ts';
 import type { AppConfig } from '@/validation/index.ts';
 
 /**
@@ -210,7 +212,7 @@ export function useUpstreamStore(): UpstreamStore {
   function requireOpenId(): string {
     const openId = openIdValue;
     if (openId === undefined) {
-      throw new AppError('CONFIG_INVALID', 'OPS_DOCS_OPEN_ID is required unless the access token carries a `sub` claim');
+      throw new AppError('ERR_CONFIG_INVALID', 'OPS_DOCS_OPEN_ID is required unless the access token carries a `sub` claim');
     }
     return openId;
   }
@@ -233,14 +235,12 @@ export function useUpstreamStore(): UpstreamStore {
    * there is nothing to look up.
    */
   async function checkSheet(fileId: string, sheetId: string): Promise<void> {
-    const data = await getEnvelope(sheetUrl(fileId), 'getSheet', await headers());
-    const available = asArray(data)
-      .map((entry) => asRecord(entry).sheetID)
-      .filter((id): id is string => typeof id === 'string' && id.length > 0);
+    const sheets = await getSheetList(fileId);
+    const available = sheets.map((entry) => entry.sheetID).filter((id): id is string => typeof id === 'string' && id.length > 0);
 
     if (!available.includes(sheetId)) {
       const known = available.length > 0 ? ` (available: ${available.join(', ')})` : '';
-      throw new AppError('CONFIG_INVALID', `Document ${fileId} has no sub-sheet ${sheetId}${known}`, { details: { body: describeBody(data) } });
+      throw new AppError('ERR_CONFIG_INVALID', `Document ${fileId} has no sub-sheet ${sheetId}${known} (body: ${describeBody(sheets)})`);
     }
   }
 
@@ -278,16 +278,16 @@ export function useUpstreamStore(): UpstreamStore {
    */
   async function validate(): Promise<{ openId: string }> {
     load();
-    const data = asRecord(await getEnvelope(apiUrl('/oauth/v2/userinfo', { access_token: accessTokenValue }), 'userinfo', {}));
+    const data = asRecord(await getUserInfo(accessTokenValue));
     const openId = data.openID;
     if (typeof openId !== 'string' || openId.length === 0) {
-      throw new AppError('UPSTREAM_FAILED', 'Tencent Docs user info carried no openID', { details: { body: describeBody(data) } });
+      throw new AppError('ERR_UPSTREAM_FAILED', `Tencent Docs user info carried no openID (body: ${describeBody(data)})`);
     }
 
     // A configured Open-Id is authoritative: every Open API call would fail with 10303 if it
     // disagreed with the token, so disagreeing at startup is worth a hard failure.
     if (openIdFromEnv && openIdValue !== openId) {
-      throw new AppError('CONFIG_INVALID', `OPS_DOCS_OPEN_ID (${openIdValue}) does not belong to the configured access token (${openId})`);
+      throw new AppError('ERR_CONFIG_INVALID', `OPS_DOCS_OPEN_ID (${openIdValue}) does not belong to the configured access token (${openId})`);
     }
 
     openIdValue = openId;
@@ -378,23 +378,14 @@ export function useUpstreamStore(): UpstreamStore {
       const { clientSecret } = getConfig().docs;
       const refreshToken = refreshTokenValue;
       if (clientSecret === undefined || refreshToken === undefined) {
-        throw new AppError('CONFIG_INVALID', 'Refreshing the access token needs OPS_DOCS_CLIENT_SECRET and OPS_DOCS_REFRESH_TOKEN');
+        throw new AppError('ERR_CONFIG_INVALID', 'Refreshing the access token needs OPS_DOCS_CLIENT_SECRET and OPS_DOCS_REFRESH_TOKEN');
       }
 
-      const url = apiUrl('/oauth/v2/token', {
-        client_id: clientIdValue,
-        client_secret: clientSecret,
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-      });
-      const response = await call(url, { method: 'GET', headers: {}, operation: 'refreshToken', expectsEnvelope: false });
-      const body = asRecord(response.body);
+      const body = await refreshAccessToken({ clientId: clientIdValue, clientSecret, refreshToken });
       const accessToken = body.access_token;
 
       if (typeof accessToken !== 'string' || accessToken.length === 0) {
-        throw new AppError('UPSTREAM_AUTH_FAILED', 'Tencent Docs refused to refresh the access token', {
-          details: { status: response.status, body: describeBody(response.body) },
-        });
+        throw new AppError('ERR_UPSTREAM_AUTH_FAILED', `Tencent Docs refused to refresh the access token (body: ${describeBody(body)})`);
       }
 
       accessTokenValue = accessToken;

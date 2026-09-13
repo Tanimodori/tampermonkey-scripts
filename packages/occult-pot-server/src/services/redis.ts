@@ -7,8 +7,8 @@ import { LOG_CATEGORY } from '@/logger.ts';
 import type { AppConfig } from '@/validation/index.ts';
 
 /**
- * The one Redis connection: the shared state (pot list and its pending writes, the credential) and
- * the per-user counters all go through here.
+ * The one Redis connection: the shared state (the cached pot list, the credential) and the
+ * per-user counters all go through here.
  *
  * Built from the loaded configuration on first use and kept until the configuration is replaced,
  * exactly like the undici pool in `services/upstream/client.ts`. With no `OPS_REDIS_URL` this is an

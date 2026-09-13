@@ -3,7 +3,7 @@ import { captureLogs, FILE_ID, loadTestConfig, resetRedis, SHEET_ID, setupTencen
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
 import { getRedis } from '@/services/redis.ts';
-import { setClient } from '@/services/upstream/client.ts';
+import type { ClientOptions } from '@/services/upstream/client.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 
 // The credential's expiry is judged against `@/services/time.ts`; the tokens below are minted from
@@ -14,6 +14,13 @@ vi.mock('@/services/time.ts', () => import('@test/clock.ts'));
 const NOW = 1_789_140_693_000;
 
 const docs = setupTencentDocsMock();
+
+vi.mock('@/services/upstream/client.ts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/services/upstream/client.ts')>();
+  // The api modules build their own transport with no options; that is the one the mock replaces.
+  // `docs.client` itself is built from the real factory, so the interceptors stay the real ones.
+  return { ...actual, useClient: (options?: ClientOptions) => (options === undefined ? docs.client : actual.useClient(options)) };
+});
 
 /** A JWT-shaped token whose payload anyone can read — this service never verifies the signature. */
 function encodeSegment(payload: Record<string, unknown>): string {
@@ -35,7 +42,6 @@ function makeTokenExpiringIn(seconds: number): string {
  * on the instant the cases' tokens are minted from.
  */
 function useStore(overrides: Record<string, string | undefined> = {}): typeof upstreamStore {
-  setClient(docs.agent);
   clock.set(NOW);
   loadTestConfig({ OPS_DOCS_FILE_ID: FILE_ID, OPS_DOCS_SHEET_ID: SHEET_ID, ...overrides });
   return upstreamStore;
@@ -88,7 +94,7 @@ describe('upstreamStore ids', () => {
     const error = await store.resolve().catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(AppError);
-    expect(error).toMatchObject({ code: 'CONFIG_INVALID' });
+    expect(error).toMatchObject({ code: 'ERR_CONFIG_INVALID' });
     expect((error as Error).message).toContain(SHEET_ID);
     expect((error as Error).message).toContain('first1, second');
     expect(store.resolved()).toBe(false);
@@ -149,7 +155,7 @@ describe('upstreamStore credential', () => {
     docs.state.userInfoFailure = { status: 200, ret: 37019, msg: 'Token 校验失败，错误或过期' };
     const store = useStore();
 
-    await expect(store.resolve()).rejects.toMatchObject({ code: 'UPSTREAM_AUTH_FAILED', status: 503 });
+    await expect(store.resolve()).rejects.toMatchObject({ code: 'ERR_UPSTREAM_AUTH_FAILED', status: 503 });
     expect(store.resolved()).toBe(false);
   });
 
@@ -157,7 +163,7 @@ describe('upstreamStore credential', () => {
     docs.state.userInfoOpenId = 'somebody-else';
     const store = useStore();
 
-    await expect(store.resolve()).rejects.toMatchObject({ code: 'CONFIG_INVALID' });
+    await expect(store.resolve()).rejects.toMatchObject({ code: 'ERR_CONFIG_INVALID' });
   });
 
   it('falls back to the token sub claim for the Open-Id', async () => {
@@ -172,7 +178,7 @@ describe('upstreamStore credential', () => {
   it('requires an explicit Open-Id when the token carries no sub claim', async () => {
     const store = useStore({ OPS_DOCS_ACCESS_TOKEN: 'opaque-token', OPS_DOCS_OPEN_ID: undefined });
 
-    await expect(store.headers()).rejects.toMatchObject({ code: 'CONFIG_INVALID' });
+    await expect(store.headers()).rejects.toMatchObject({ code: 'ERR_CONFIG_INVALID' });
   });
 
   it('decodes the token expiry and tolerates opaque tokens', () => {
@@ -229,7 +235,7 @@ describe('upstreamStore refresh', () => {
   it('refuses to refresh without the client secret and refresh token', async () => {
     const store = useStore();
 
-    await expect(store.refresh()).rejects.toMatchObject({ code: 'CONFIG_INVALID' });
+    await expect(store.refresh()).rejects.toMatchObject({ code: 'ERR_CONFIG_INVALID' });
     expect(called('/oauth/v2/token')).toBe(false);
   });
 
@@ -237,7 +243,7 @@ describe('upstreamStore refresh', () => {
     docs.state.refreshFailure = { status: 200, body: { error: 'invalid_grant', error_description: 'refresh token expired' } };
     const store = useStore({ OPS_DOCS_CLIENT_SECRET: 'client-secret', OPS_DOCS_REFRESH_TOKEN: 'refresh-token' });
 
-    await expect(store.refresh()).rejects.toMatchObject({ code: 'UPSTREAM_AUTH_FAILED', status: 503 });
+    await expect(store.refresh()).rejects.toMatchObject({ code: 'ERR_UPSTREAM_AUTH_FAILED', status: 503 });
     expect(store.accessToken).toBe('test-access-token-value');
   });
 
@@ -310,7 +316,8 @@ describe('upstreamStore errors', () => {
     const error = await store.resolve().catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(AppError);
-    expect((error as AppError).details).toMatchObject({ ret: 10003 });
+    // What the upstream said about it is worded into the message; there is no detail object.
+    expect((error as Error).message).toContain('ret=10003');
   });
 });
 

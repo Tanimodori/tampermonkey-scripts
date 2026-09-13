@@ -68,11 +68,6 @@ const docsSchema = z.object({
 
 const cacheSchema = z.object({ readTtlMs: integerFrom({ min: 0 }) });
 
-/** How often the cache writes what it holds; the upstream's own pacing lives in `upstream`. */
-const writeQueueSchema = z.object({
-  flushIntervalMs: integerFrom({ min: 50 }),
-});
-
 const rateLimitSchema = z.object({
   ipWindowMs: integerFrom({ min: 1000 }),
   ipMax: integerFrom({ min: 1 }),
@@ -102,7 +97,6 @@ export const appConfigSchema = z.object({
   server: serverSchema,
   docs: docsSchema,
   cache: cacheSchema,
-  writeQueue: writeQueueSchema,
   rateLimit: rateLimitSchema,
   upstream: upstreamSchema,
   redis: redisSchema,
@@ -122,7 +116,6 @@ export const appEnvConfigSchema = z
     server: serverSchema.partial(),
     docs: docsSchema.partial(),
     cache: cacheSchema.partial(),
-    writeQueue: writeQueueSchema.partial(),
     rateLimit: rateLimitSchema.partial(),
     upstream: upstreamSchema.partial(),
     redis: redisSchema.partial(),

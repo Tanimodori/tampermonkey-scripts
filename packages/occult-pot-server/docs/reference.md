@@ -31,15 +31,15 @@ Redis 本身的文档见 [redis.io/docs](https://redis.io/docs/latest/)，命令
 | [@logtape/logtape](https://logtape.org) | 日志：`configure()` + `getLogger()`（provider/consumer）、JSON Lines sink、meta 诊断 |
 | [@logtape/redaction](https://logtape.org/manual/redaction) | 按字段名脱敏日志里的凭据 |
 | [zod](https://zod.dev) | 配置与请求校验 |
-| [undici](https://undici.nodejs.org) | 出站连接池与超时；测试用它的 [`MockAgent`](https://undici.nodejs.org/#/docs/api/MockAgent) 拦截上游 |
-| [throttled-queue](https://github.com/shaunpersad/throttled-queue) | 出站调用的节流与重试 |
+| [undici](https://undici.nodejs.org) | 出站连接池与超时，以及注入其中的拦截器（[`interceptors.retry`](https://undici.nodejs.org/api/Interceptors) 负责重试、一个自写的分类拦截器负责错误解析）；测试用它的 [`MockAgent`](https://undici.nodejs.org/#/docs/api/MockAgent) 拦截上游 |
+| [throttled-queue](https://github.com/shaunpersad/throttled-queue) | 出站调用的节流（只排节奏，重试归 undici 的拦截器） |
 | [express-rate-limit](https://express-rate-limit.mintlify.app) | 按 IP 的入站限流 |
 | [morgan](https://github.com/expressjs/morgan) | 访问日志 |
 | [body-parser](https://github.com/expressjs/body-parser) | JSON 请求体解析 |
 | [helmet](https://helmetjs.github.io) | 安全响应头 |
 | [cors](https://github.com/expressjs/cors) | 跨域响应头 |
 | [defu](https://github.com/unjs/defu) | 配置默认值合并 |
-| [ioredis](https://github.com/redis/ioredis) | Redis 客户端（状态、队列、凭据、限流计数） |
+| [ioredis](https://github.com/redis/ioredis) | Redis 客户端（pot 缓存、凭据、调用者记录、限流计数） |
 | [ioredis-mock](https://github.com/stipsan/ioredis-mock) | 没有 `OPS_REDIS_URL` 时的进程内 Redis（同样的命令面，进程退出即消失） |
 | [rate-limit-redis](https://github.com/express-rate-limit/rate-limit-redis) | `express-rate-limit` 的 Redis store，让限流窗口跨实例 |
 

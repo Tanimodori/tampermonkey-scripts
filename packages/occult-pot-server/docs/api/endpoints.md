@@ -1,6 +1,11 @@
 # API 端点
 
-所有响应都是 JSON。数据端点（`GET /v1/pots`、`GET /v1/pots/{potId}`、`POST /v1/pots`）成功时返回 `{ "data": …, "meta": { "requestId": … } }`，`/healthz`、`/readyz` 与 `GET /v1` 只返回 `data`；失败统一是 `{ "error": { "code", "message", "details?" }, "requestId" }`（见 `errors.md`）。每个响应都带 `X-Request-Id` 头：入站值合法（`^[\w.:-]{1,128}$`）就沿用，否则生成一个 UUID。
+所有响应都是 JSON，且共用同一个信封：
+
+- **成功**：HTTP `200` + `{ "code": "SUCCESS", "data": …, "message": "ok", "requestId": "…" }`
+- **失败**：对应的 HTTP 状态码 + `{ "code": "ERR_…", "data": null, "message": "…", "requestId": "…" }`
+
+`message` 在成功时默认是 `"ok"`，写入端点用它报出确认信息；失败时它就是全部信息 —— 包括校验失败时逐字段的清单（见 `errors.md` §4），没有额外的结构化字段。每个响应都带 `X-Request-Id` 头：入站值合法（`^[\w.:-]{1,128}$`）就沿用，否则生成一个 UUID；信封里的 `requestId` 与它一致。错误码与状态码的完整对照见 `errors.md`。
 
 ## 1. 通用约定
 
@@ -18,19 +23,21 @@
 | GET  | `/v1`              | 版本索引（字段映射、约定、路由）           |
 | GET  | `/v1/pots`         | 表上所有罐子，一次返回                     |
 | GET  | `/v1/pots/{potId}` | 按游戏内 ID 取一个罐子                     |
-| POST | `/v1/pots`         | 追加一个罐子（入队）                       |
+| POST | `/v1/pots`         | 追加一个罐子（同步写回表）                 |
 
 `/healthz` 与 `/readyz` 不带版本前缀，也不限流。
 
 ## 3. `GET /healthz`
 
 ```json
-{ "data": { "status": "ok", "uptimeSeconds": 42, "version": "v1" } }
+{ "code": "SUCCESS", "data": { "status": "ok", "uptimeSeconds": 42, "version": "v1" }, "message": "ok", "requestId": "…" }
 ```
 
 ## 4. `GET /readyz`
 
-`200` 表示可以服务；不可用时返回 `503`（凭据已过期，或配置的文档坐标还没核对过）。凭据临近过期只标记为 degraded，仍然返回 `200`。启动时会核对一次子表（`OPS_DOCS_SHEET_ID` 在不在 `OPS_DOCS_FILE_ID` 里）并用 `GET /oauth/v2/userinfo` 校验一次凭据，校验结果反映在 `tokenValidated` 与 `credential.validated` 上。这一组值由 upstream store 给出（`readiness()` / `describe()`），探针只负责组装。
+`200` 表示可以服务；不可用时返回 `503`。凭据临近过期只标记为 degraded，仍然返回 `200`。启动时会核对一次子表（`OPS_DOCS_SHEET_ID` 在不在 `OPS_DOCS_FILE_ID` 里）并用 `GET /oauth/v2/userinfo` 校验一次凭据，校验结果反映在 `tokenValidated` 与 `credential.validated` 上。这一组值由 upstream store 给出（`readiness()` / `describe()`），探针只负责组装。
+
+**探针报的是状态，不是错误对象**：`503` 时 `code` 是 `ERR_NOT_READY`、`message` 是不可用的原因，而 `data` **仍然是这份报告本身**，这样只看状态码的负载均衡和要读细节的人都拿到自己那份。
 
 | 字段 | 含义 |
 | --- | --- |
@@ -41,7 +48,7 @@
 | `tokenWarning` / `tokenExpired` | 是否进入 `OPS_DOCS_TOKEN_EXPIRY_WARN_MS` 告警窗口 / 是否已过期 |
 | `reasons[]` | 不可用（或降级）的原因，直接可读 |
 | `credential` | 凭据健康度：`tokenLength`、`expiresAt`（ISO 8601 或 `null`）、`expired`（`null` 表示未知）、`validated`、`validatedAt`（ISO 8601 或 `null`）；**永远不含 token 本身** |
-| `cache.updateTime` / `ageMs` / `pots` | Redis 里的状态被读到的时刻（ISO 8601）、距今多久、持有多少个罐子；**从未读过时三者都是 `null`**（Redis 读不到时 `pots` 也是 `null`，并给出 `reasons`） |
+| `cache.updateTime` / `ageMs` / `pots` | Redis 里那份缓存是**什么时候回表读来的**（ISO 8601）、距今多久、持有多少个罐子；**从未读过时三者都是 `null`**（Redis 读不到时 `pots` 也是 `null`，并给出 `reasons`） |
 | `upstream.maxPerInterval` / `intervalMs` | 当前出站节流窗口 |
 
 ## 5. `GET /v1`
@@ -54,6 +61,7 @@
 
 ```json
 {
+  "code": "SUCCESS",
   "data": [
     {
       "world": "鸟",
@@ -63,7 +71,8 @@
       "lastVisitAtMs": 1789199460000
     }
   ],
-  "meta": { "requestId": "…" }
+  "message": "ok",
+  "requestId": "…"
 }
 ```
 
@@ -71,6 +80,7 @@
 
 - 不满足表规则的行走不到这里（`北罐刷新时间` 为 `0`、缺失或格式不对、`ID` 不合规等），它们在映射阶段就被丢弃。
 - 重复行与过期行**照原样返回**：去重与过期判定是客户端脚本的职责（见 `../data/pot.md`）。
+- 读的是 Redis 里的缓存：只有缓存超过 `OPS_CACHE_READ_TTL_MS` 才会回表刷新；回表失败而缓存非空时，旧缓存会照常返回（并记一条 warning），缓存为空时才把失败报给调用方。
 - 走 `general` 限流（见 §9）。
 
 ```bash
@@ -79,7 +89,7 @@ curl 'http://127.0.0.1:3000/v1/pots'
 
 ## 7. `GET /v1/pots/{potId}`
 
-唯一输入是路径里的游戏内 ID（查询参数被忽略），返回形状与列表里的单个罐子一致；找不到时是 `404` `NOT_FOUND`。
+唯一输入是路径里的游戏内 ID（查询参数被忽略），返回形状与列表里的单个罐子一致；找不到时是 `404` `ERR_NOT_FOUND`。
 
 ```bash
 curl 'http://127.0.0.1:3000/v1/pots/54-1-4000E8F3'
@@ -120,35 +130,32 @@ curl 'http://127.0.0.1:3000/v1/pots/54-1-4000E8F3'
 Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 1789201200000, received "1789201200"
 ```
 
-记录交给 store 的写队列后立刻返回 `202 Accepted`：
+**写入是同步的**：行先落到表里，然后才回答 `200`，`data` 就是写进去的那个罐子：
 
 ```json
-{ "data": { "message": "occult pot 60-0-4000ABCD queued for writing to the sheet" }, "meta": { "requestId": "…" } }
+{
+  "code": "SUCCESS",
+  "data": { "world": "鸟", "map": "北岛", "potId": "60-0-4000ABCD", "northRefreshAtMs": 1789201200000, "lastVisitAtMs": 1789199700000 },
+  "message": "occult pot 60-0-4000ABCD written to the sheet",
+  "requestId": "…"
+}
 ```
 
-这是一个 **fire-and-forget** 端点：没有单次写入的句柄，也没有结果对象 —— 没有 `recordId`、没有可轮询的状态、没有 `Location`、没有队列计数。**被接受就是全部答复。**
+- **表拒绝这次写入时，请求就失败**（`502` `ERR_UPSTREAM_FAILED`、`503` `ERR_UPSTREAM_AUTH_FAILED` / `ERR_UPSTREAM_RATE_LIMITED`、`400` `ERR_UPSTREAM_BAD_REQUEST`），而且**什么都没写进去**：缓存也不会多出这个罐子。没有队列、没有后台重试、没有可轮询的句柄。
+- 写入成功后这次结果同时折进 Redis 缓存，所以 `GET /v1/pots` 立刻看得到它，且这次读不会回表。
+- 没有批次：一次请求一次 `addRecords`，行序等于请求到达顺序。
+- 走 `writes` 限流（见 §9）。
 
-写入结果从这三处观察：
+值得知道的几件事：
 
-| 信号                         | 含义                                                                                                                       |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `GET /v1/pots`               | 罐子在被接受的瞬间就可见（读己所写），写回成功后继续存在                                                                   |
-| `GET /readyz` → `data.cache` | 状态的 `updateTime`/`ageMs` 与罐子数；首次读取前是 `null`                                                                  |
-| 日志                         | 写回失败的变更会记 `Kept a pending modify after a failed write; it will be retried` 与原因（变更留在 Redis，下个周期再试） |
-
-因此一次**被上游拒绝**的写入不会回报给发起的客户端：`202` 写出去的时候队列可能还在重试，失败的变更会留在 Redis 里继续试（见 [存储设计](../data/store.md)）。唯一的同步拒绝是校验失败（`400`），以及 Redis 本身写不进去（`500`）。
+- **没有幂等头、没有内容哈希、也不对着表做唯一性检查。** 同一个 body 发两次就是两行（缓存里也是两条，读回来就能看到），即使表里已经有那个 `区服|地图|ID`。清理重复是客户端脚本的事（见 `../data/pot.md`）。
+- 表与缓存都写成功之后才回答，所以「成功」意味着这次写入在两侧都已生效。
 
 ```bash
 curl -X POST http://127.0.0.1:3000/v1/pots \
   -H 'Content-Type: application/json' \
   -d '{"world":"鸟","map":"北岛","potId":"60-0-4000ABCD","northRefreshAt":"1789201200000","lastVisitAt":"1789199700000"}'
 ```
-
-值得知道的几件事：
-
-- **没有幂等头、没有内容哈希、也不对着表做唯一性检查。** 服务端不会为了去重而读表，所以同一个 body 落在两个不同的 flush 窗口里会写出两行 —— 即使表里已经有那个 `区服|地图|ID`。清理重复是客户端脚本的事。不过在**同一个** flush 窗口内，接受是按 `区服|地图|ID` 合并的，两次相同接受只会写一次（见 `../data/store.md`）。
-- 追加是批量的（`addRecords`）：队列每个 `OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS` 把它持有的东西一次写出去，且同一时刻只有一批在途，所以表里的行序等于到达顺序。没有批量大小可调，也没有积压上限 —— 客户端一次写一个罐子。
-- 走 `writes` 限流（见 §9）。
 
 ## 9. 限流
 
@@ -162,6 +169,6 @@ curl -X POST http://127.0.0.1:3000/v1/pots \
 | `OPS_RATE_LIMIT_IP_MAX`       | `120`   |
 | `OPS_RATE_LIMIT_WRITE_MAX`    | `20`    |
 
-被限流时返回 `429` `RATE_LIMITED`（错误结构见 `errors.md`），并带 `RateLimit-*` 与 `Retry-After` 响应头。
+被限流时返回 `429` `ERR_RATE_LIMITED`（错误结构见 `errors.md`），并带 `RateLimit-*` 与 `Retry-After` 响应头。
 
 `OPS_SERVER_TRUST_PROXY` 必须与部署拓扑一致：躲在没配置好的反向代理后面时，所有请求共用代理的 IP，限流既过严又无用。

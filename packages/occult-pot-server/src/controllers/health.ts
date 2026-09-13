@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import type { RequestHandler } from 'express';
 import { getConfig } from '@/config.ts';
+import { ok } from '@/errors.ts';
 import { formatInstant } from '@/logger.ts';
+import { getRequestId } from '@/middlewares/requestId.ts';
 import { now } from '@/services/time.ts';
 import { potStore } from '@/stores/pot.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
@@ -16,17 +18,15 @@ export interface HealthControllerDeps {
 export function createHealthController(deps: HealthControllerDeps): Router {
   const router = Router();
 
-  const health: RequestHandler = (_req, res) => {
-    res.json({
-      data: {
-        status: 'ok',
-        uptimeSeconds: Math.round((now() - deps.startedAt) / 1000),
-        version: 'v1',
-      },
+  const health: RequestHandler = (req, res) => {
+    ok(res, req, {
+      status: 'ok',
+      uptimeSeconds: Math.round((now() - deps.startedAt) / 1000),
+      version: 'v1',
     });
   };
 
-  const ready: RequestHandler = async (_req, res) => {
+  const ready: RequestHandler = async (req, res) => {
     const nowMs = now();
     const report = upstreamStore.readiness();
 
@@ -42,28 +42,35 @@ export function createHealthController(deps: HealthControllerDeps): Router {
 
     const readyNow = report.ready && state !== undefined;
     const reasons = [...report.reasons, ...(storeError === undefined ? [] : [`state store is unavailable: ${storeError}`])];
-    res.status(readyNow ? 200 : 503).json({
-      data: {
-        ready: readyNow,
-        fileIdResolved: report.fileIdResolved,
-        tokenValidated: report.tokenValidated,
-        tokenExpiresAt: report.tokenExpiresAt ?? null,
-        tokenExpiresInMs: report.tokenExpiresInMs ?? null,
-        tokenWarning: report.tokenWarning,
-        tokenExpired: report.tokenExpired,
-        reasons,
-        // Credential health from the store that actually sends the token. Length, expiry and the
-        // last validation only — never the token itself.
-        credential: upstreamStore.describe(),
-        // The pot list as Redis holds it. `null` means nothing has been read yet.
-        cache: {
-          updateTime: state === undefined || state.updateTime === 0 ? null : formatInstant(state.updateTime),
-          ageMs: state === undefined || state.updateTime === 0 ? null : nowMs - state.updateTime,
-          pots: state?.data.length ?? null,
-        },
-        upstream: { maxPerInterval: getConfig().upstream.maxPerInterval, intervalMs: getConfig().upstream.intervalMs },
+
+    // The report is the payload on both answers: a probe is read by machines that need the detail,
+    // so only `code` and the status distinguish ready from not.
+    const body = {
+      ready: readyNow,
+      fileIdResolved: report.fileIdResolved,
+      tokenValidated: report.tokenValidated,
+      tokenExpiresAt: report.tokenExpiresAt ?? null,
+      tokenExpiresInMs: report.tokenExpiresInMs ?? null,
+      tokenWarning: report.tokenWarning,
+      tokenExpired: report.tokenExpired,
+      reasons,
+      // Credential health from the store that actually sends the token. Length, expiry and the
+      // last validation only — never the token itself.
+      credential: upstreamStore.describe(),
+      // The pot list as Redis holds it. `null` means nothing has been read yet.
+      cache: {
+        updateTime: state === undefined || state.updateTime === 0 ? null : formatInstant(state.updateTime),
+        ageMs: state === undefined || state.updateTime === 0 ? null : nowMs - state.updateTime,
+        pots: state?.data.length ?? null,
       },
-    });
+      upstream: { maxPerInterval: getConfig().upstream.maxPerInterval, intervalMs: getConfig().upstream.intervalMs },
+    };
+
+    if (readyNow) {
+      ok(res, req, body);
+      return;
+    }
+    res.status(503).json({ code: 'ERR_NOT_READY', data: body, message: reasons.join('; ') || 'not ready', requestId: getRequestId(req) });
   };
 
   router.get('/healthz', health);

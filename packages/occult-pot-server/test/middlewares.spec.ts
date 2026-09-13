@@ -38,10 +38,10 @@ describe('errorHandler', () => {
     const records = captureLogs();
     const response = makeResponse();
 
-    errorHandler({})(new AppError('NOT_FOUND', 'No handler for GET /nope'), request, response.res, (() => undefined) as NextFunction);
+    errorHandler({})(new AppError('ERR_NOT_FOUND', 'No handler for GET /nope'), request, response.res, (() => undefined) as NextFunction);
 
     expect(response.status()).toBe(404);
-    expect(response.body()).toEqual({ error: { code: 'NOT_FOUND', message: 'No handler for GET /nope' }, requestId: 'unknown' });
+    expect(response.body()).toEqual({ code: 'ERR_NOT_FOUND', data: null, message: 'No handler for GET /nope', requestId: 'unknown' });
     expect(records).toEqual([
       {
         level: 'warning',
@@ -51,7 +51,7 @@ describe('errorHandler', () => {
         // The mounted prefix survives: `path` would have been just `/pots`.
         path: '/v1/pots?view=raw',
         status: 404,
-        code: 'NOT_FOUND',
+        code: 'ERR_NOT_FOUND',
         error: 'No handler for GET /nope',
       },
     ]);
@@ -61,10 +61,10 @@ describe('errorHandler', () => {
     const records = captureLogs();
     const response = makeResponse();
 
-    errorHandler({})(new AppError('UPSTREAM_FAILED', 'Tencent Docs returned HTTP 500'), request, response.res, (() => undefined) as NextFunction);
+    errorHandler({})(new AppError('ERR_UPSTREAM_FAILED', 'Tencent Docs returned HTTP 500'), request, response.res, (() => undefined) as NextFunction);
 
     expect(response.status()).toBe(502);
-    expect(records[0]).toMatchObject({ level: 'error', message: 'Request failed', status: 502, code: 'UPSTREAM_FAILED' });
+    expect(records[0]).toMatchObject({ level: 'error', message: 'Request failed', status: 502, code: 'ERR_UPSTREAM_FAILED' });
   });
 
   it('classifies the failures body-parser throws', () => {
@@ -75,7 +75,7 @@ describe('errorHandler', () => {
     errorHandler({})(tooLarge, request, response.res, (() => undefined) as NextFunction);
 
     expect(response.status()).toBe(413);
-    expect(response.body()).toMatchObject({ error: { code: 'PAYLOAD_TOO_LARGE' } });
+    expect(response.body()).toMatchObject({ code: 'ERR_PAYLOAD_TOO_LARGE', data: null });
     expect(records[0]).toMatchObject({ level: 'warning', status: 413 });
   });
 
@@ -86,8 +86,19 @@ describe('errorHandler', () => {
     errorHandler({ isProduction: true })(new Error('kaboom'), request, response.res, (() => undefined) as NextFunction);
 
     expect(response.status()).toBe(500);
-    expect(response.body()).toEqual({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' }, requestId: 'unknown' });
+    expect(response.body()).toEqual({ code: 'ERR_INTERNAL_ERROR', data: null, message: 'Internal server error', requestId: 'unknown' });
     expect(records[0]).toMatchObject({ level: 'error', message: 'Request failed', status: 500, error: 'kaboom' });
+  });
+
+  it('keeps the stack of an unexpected failure out of the body and on the log line', () => {
+    const records = captureLogs();
+    const response = makeResponse();
+
+    // Outside production the same failure is diagnosable — from the log, not from the response.
+    errorHandler({})(new Error('kaboom'), request, response.res, (() => undefined) as NextFunction);
+
+    expect(response.body()).toEqual({ code: 'ERR_INTERNAL_ERROR', data: null, message: 'Internal server error', requestId: 'unknown' });
+    expect(records[0]?.stack).toEqual(expect.arrayContaining([expect.stringContaining('kaboom')]));
   });
 
   it('carries the error headers onto the response', () => {
@@ -95,7 +106,7 @@ describe('errorHandler', () => {
     const response = makeResponse();
 
     errorHandler({})(
-      new AppError('UPSTREAM_RATE_LIMITED', 'rate limited', { retryAfterSeconds: 60, headers: { Allow: 'GET, POST' } }),
+      new AppError('ERR_UPSTREAM_RATE_LIMITED', 'rate limited', { retryAfterSeconds: 60, headers: { Allow: 'GET, POST' } }),
       request,
       response.res,
       (() => undefined) as NextFunction,
@@ -108,7 +119,7 @@ describe('errorHandler', () => {
   it('hands the error on when the response has already started', () => {
     const records = captureLogs();
     const response = makeResponse();
-    const error = new AppError('UPSTREAM_FAILED', 'too late');
+    const error = new AppError('ERR_UPSTREAM_FAILED', 'too late');
     let forwarded: unknown;
     Object.defineProperty(response.res, 'headersSent', { value: true });
 
@@ -165,7 +176,7 @@ describe('fallbacks', () => {
     notFoundHandler()(request, makeResponse().res, ((value: unknown) => (forwarded = value)) as NextFunction);
 
     expect(forwarded).toBeInstanceOf(AppError);
-    expect(forwarded).toMatchObject({ code: 'NOT_FOUND', status: 404 });
+    expect(forwarded).toMatchObject({ code: 'ERR_NOT_FOUND', status: 404 });
     expect((forwarded as Error).message).toContain('GET /v1/pots?view=raw');
   });
 
@@ -173,7 +184,7 @@ describe('fallbacks', () => {
     let forwarded: unknown;
     methodNotAllowed(['GET', 'POST'])(request, makeResponse().res, ((value: unknown) => (forwarded = value)) as NextFunction);
 
-    expect(forwarded).toMatchObject({ code: 'METHOD_NOT_ALLOWED', status: 405 });
+    expect(forwarded).toMatchObject({ code: 'ERR_METHOD_NOT_ALLOWED', status: 405 });
     expect((forwarded as AppError).headers.Allow).toBe('GET, POST');
   });
 });

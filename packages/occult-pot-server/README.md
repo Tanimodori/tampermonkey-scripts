@@ -3,7 +3,7 @@
 腾讯文档在线智能表（魔法罐刷新时间表）的**只读 + 只追加**代理 API 服务：客户端不持有凭据，只通过本服务读取整张表、提交新观察到的罐子。
 
 - 匿名访问、无鉴权：防护是按客户端 IP 的限流（计数在 Redis，跨实例共享），加上一条独立的出站腾讯文档调用预算。
-- 状态放在 Redis：读按 TTL 回表刷新，写入合并成一个变更、每 `OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS` 以一次 `addRecords` 写回；写回失败留在 Redis 里重试，重启不丢已接受的写入。
+- 状态放在 Redis：读只在缓存超过 `OPS_CACHE_READ_TTL_MS` 时回表刷新（回表失败又有缓存时返回旧缓存并告警）；写入是同步的 —— 先 `addRecords` 落表，成功后再折进缓存，表拒绝这次写入就是请求失败。
 - REST 风格，路径版本化（`/v1`）。
 
 ## 快速开始
@@ -36,9 +36,9 @@ docker compose up -d --build      # 变量由 compose 注入：.env、.env.produ
 
 compose 里还有一个 `redis` 服务（`redis:7-alpine`，AOF 持久化 + 命名卷），server 通过 `OPS_REDIS_URL=redis://:<密码>@redis:6379` 连它；密码从 shell 的 `REDIS_PASSWORD` 读（`REDIS_PASSWORD=… docker compose up -d`），compose 文件里不写明文（密码含 `@`/`:`/`#` 时需要百分号编码）。
 
-镜像是多阶段的 `node:24-slim` 构建：运行时依赖（express、helmet、cors、express-rate-limit、body-parser、morgan、defu、zod、undici、ioredis、rate-limit-redis）都被 vite 打进自包含的 `dist/`，所以运行阶段只带 `dist/`，以非 root 的 `node` 用户运行，健康检查打 `/healthz`。收到 `SIGTERM` 会优雅停机：停止接受连接、把排队的变更写出去，然后退出。
+镜像是多阶段的 `node:24-slim` 构建：运行时依赖（express、helmet、cors、express-rate-limit、body-parser、morgan、defu、zod、undici、ioredis、rate-limit-redis）都被 vite 打进自包含的 `dist/`，所以运行阶段只带 `dist/`，以非 root 的 `node` 用户运行，健康检查打 `/healthz`。收到 `SIGTERM` 会优雅停机：停止接受连接、等在途请求结束，然后退出；写入都在请求路径上，没有需要另外排空的队列。
 
-**建议单实例部署**：状态、队列、凭据与限流计数都在 Redis 里，所以重启不丢数据、多副本共享同一份视角；但出站节流队列是每进程一份，多副本会把腾讯文档的调用量成倍放大（见 [存储设计](docs/data/store.md) §7）。
+**建议单实例部署**：状态、凭据与限流计数都在 Redis 里，所以重启不丢数据、多副本共享同一份视角；但出站节流队列是每进程一份，多副本会把腾讯文档的调用量成倍放大（见 [存储设计](docs/data/store.md) §7）。
 
 ## 配置
 
@@ -63,7 +63,7 @@ rushx typecheck    # tsc --noEmit
 rushx test --run   # vitest
 ```
 
-测试跑在真实的 HTTP 服务上，上游用 undici 的 `MockAgent` 换掉、Redis 默认用 `ioredis-mock`（不设 `OPS_REDIS_URL` 就是它），并禁用了真实连接：没有测试会碰网络或真实 Redis，未被 mock 的调用会直接报错。
+测试跑在真实的 HTTP 服务上，上游用 undici 的 `MockAgent` 换掉（spec 里 `vi.mock` 掉 `services/upstream/client.ts` 的 `useClient`：`api/*` 那种无参调用换成 mock，带 dispatcher 的调用仍走真实工厂，所以拿到的仍是真正带拦截器的传输）、Redis 默认用 `ioredis-mock`（不设 `OPS_REDIS_URL` 就是它），并禁用了真实连接：没有测试会碰网络或真实 Redis，未被 mock 的调用会直接报错。
 
 想把同一套用例跑在真实 Redis 上（验证 Lua/脚本这类 mock 只是近似的东西）：
 
@@ -80,11 +80,11 @@ rushx test:redis   # = cross-env OPS_REDIS_URL=redis://127.0.0.1:6399 vitest --r
 
 ## 文档
 
-| 文档                                   | 内容                                                                    |
-| -------------------------------------- | ----------------------------------------------------------------------- |
-| [Pot 数据](docs/data/pot.md)           | 五个数据列与表内额外的三列、单元格取值形态、30 分钟刷新逻辑、清洗规则   |
-| [存储设计](docs/data/store.md)         | Redis 键布局、TTL 回表、持久队列与重试、凭据与调用者数据、单/多实例边界 |
-| [API 端点](docs/api/endpoints.md)      | 端点和请求/响应约定、写入的 fire-and-forget 语义、入站限流              |
-| [错误处理](docs/api/errors.md)         | 错误信封、错误码与状态码、校验失败结构、日志策略                        |
-| [与腾讯文档通讯](docs/api/upstream.md) | 文档坐标与协议、既有做法与现做法、节流与重试、token 解析与更新          |
-| [外部文档](docs/reference.md)          | 腾讯文档开放平台、依赖库与工具链的链接                                  |
+| 文档                                   | 内容                                                                          |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| [Pot 数据](docs/data/pot.md)           | 五个数据列与表内额外的三列、单元格取值形态、30 分钟刷新逻辑、清洗规则         |
+| [存储设计](docs/data/store.md)         | Redis 键布局、TTL 回表与旧缓存回退、写透语义、凭据与调用者数据、单/多实例边界 |
+| [API 端点](docs/api/endpoints.md)      | 端点和请求/响应约定、写入的 fire-and-forget 语义、入站限流                    |
+| [错误处理](docs/api/errors.md)         | 错误信封、错误码与状态码、校验失败结构、日志策略                              |
+| [与腾讯文档通讯](docs/api/upstream.md) | 文档坐标与协议、既有做法与现做法、节流与重试、token 解析与更新                |
+| [外部文档](docs/reference.md)          | 腾讯文档开放平台、依赖库与工具链的链接                                        |

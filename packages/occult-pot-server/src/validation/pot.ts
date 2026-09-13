@@ -9,8 +9,8 @@ import { z } from 'zod';
  * - **The request body** (`createPotBodySchema`) is the wire contract: `world`/`map`/`potId` are
  *   strings, and the two instants are epoch milliseconds accepted either as 13 digit strings or as
  *   numbers. Everything is still checked for width, so no date or time literal can reach the sheet.
- * - **The state** (`PotState`) and **one change to it** (`PotModify`) are pure types: the client
- *   reads the former and writes the latter, so they live beside the pot they are made of.
+ * - **The state** (`PotState`) is a pure type: the pot list a store holds, and when the sheet was
+ *   last read into it.
  */
 
 /** `区服` — the only four servers the client script accepted. */
@@ -106,23 +106,8 @@ export const potParamsSchema = z.object({ potId: potIdSchema });
 
 /** The pot list a store holds. */
 export interface PotState {
-  /** The pots, in sheet order on a fresh read. */
+  /** The pots, in the order the sheet sent them, plus whatever has been appended since it was read. */
   readonly data: readonly Pot[];
-  /** Epoch ms this state reflects; `0` means nothing has been read or written yet. */
-  readonly updateTime: number;
-}
-
-/**
- * One change to the pot list, resolved **per pot id** in the order the fields are listed
- * (`overwrite` > `remove` > `update`); ids are the sheet's row key, `区服|地图|ID`.
- */
-export interface PotModify {
-  /** Wins over `remove` and `update` for the same id: the escape hatch for a value that must survive a concurrent removal. */
-  readonly overwrite: readonly Pot[];
-  /** The id is dropped; a value for it in `update` loses. */
-  readonly remove: readonly Pot[];
-  /** An upsert, not an append: the id takes this value, gaining a row when the state has none. */
-  readonly update: readonly Pot[];
-  /** When the change was accepted (for a state read: when it was read); stamped by whoever builds the change. */
+  /** Epoch ms of the sheet read this list came from; `0` means the sheet has never been read. */
   readonly updateTime: number;
 }

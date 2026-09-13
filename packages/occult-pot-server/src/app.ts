@@ -13,14 +13,13 @@ import { requestLogger } from './middlewares/requestLogger.ts';
 import { userContext } from './middlewares/userContext.ts';
 import { closeRedis } from './services/redis.ts';
 import { now } from './services/time.ts';
-import { closeClient } from './services/upstream/client.ts';
 import { potStore } from './stores/pot.ts';
 import type { PotStore } from './stores/pot.ts';
 
 export interface CreatedApp {
   readonly app: Express;
   readonly store: PotStore;
-  /** Flushes pending writes and stops timers. */
+  /** Releases what the process holds open; the upstream pool lives as long as the process does. */
   close(): Promise<void>;
 }
 
@@ -60,10 +59,7 @@ export function createApp(): CreatedApp {
     app,
     store: potStore,
     async close(): Promise<void> {
-      // Write out what is queued first: it still needs the pool and Redis.
-      await potStore.flush();
       await closeRedis();
-      await closeClient();
     },
   };
 }

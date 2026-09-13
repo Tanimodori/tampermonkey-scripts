@@ -38,7 +38,7 @@ export function createRateLimiters(): RateLimiters {
     // The limiter has already written its `RateLimit-*`/`Retry-After` headers by the time this runs,
     // so the refusal can be an ordinary AppError: one response shape, one log line.
     handler: (_req: Request, _res: Response, next: NextFunction) => {
-      next(new AppError('RATE_LIMITED', 'Too many requests from this IP, please retry later'));
+      next(new AppError('ERR_RATE_LIMITED', 'Too many requests from this IP, please retry later'));
     },
   };
 

@@ -3,90 +3,34 @@ import { getConfig } from '@/config.ts';
 import { LOG_CATEGORY } from '@/logger.ts';
 import { getRedis } from '@/services/redis.ts';
 import { now } from '@/services/time.ts';
-import { getPot, modify } from '@/services/upstream/api.ts';
-import type { AppConfig, Pot, PotModify, PotState } from '@/validation/index.ts';
+import { addRecords, getRecords } from '@/services/upstream/api/sheet.ts';
+import type { RawRecordDto } from '@/services/upstream/api/sheet.ts';
+import { asArray } from '@/services/upstream/interceptors/classify.ts';
+import { fromSheetValues, isValidPot, toSheetValues } from '@/validation/index.ts';
+import type { Pot, PotState } from '@/validation/index.ts';
 
 /**
  * The pot list this service serves. Redis holds it; the Tencent Docs sheet is still the authority.
  *
- *     occult-pot:pots             the state readers see: `{ data, updateTime }`
- *     occult-pot:pots:pending     changes accepted, waiting for the sheet
- *     occult-pot:pots:committing  the change being written to the sheet right now
+ *     occult-pot:pots    `{ data, updateTime }` — the list, and when the sheet was last read into it
  *
- * Reads are answered from Redis, and the sheet is read again once the state is older than
- * `OPS_CACHE_READ_TTL_MS`. Accepting a change writes it into the state at once — so a pot is visible
- * before it reaches the sheet — and merges it into the pending change, which one `addRecords` call
- * per `OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS` writes out. A write that fails **stays** in `committing` and
- * is retried on the next cycle: the queue is durable, so a restart does not lose accepted pots
- * (at the price of a repeated row when a write arrived but its answer was lost).
+ * A read is answered from Redis, and goes back to the sheet only once the cached read is older than
+ * `OPS_CACHE_READ_TTL_MS`; a successful read overwrites the cache. A write appends one row to the
+ * sheet **first** — when that fails the caller's request fails too and the cache is untouched — and
+ * then folds the pot into the cached list. So a machine with Redis and an unreachable sheet still
+ * serves reads, as long as what it cached is recent enough.
  *
- * `usePotStore()` builds one of these and the module's default instance is `potStore`. The store
- * follows the loaded configuration: a configuration that gets replaced restarts the flush timer.
+ * This is also where the sheet's vocabulary ends: paging, mapping a row onto a `Pot`, and dropping
+ * the rows this service's own validation rejects all happen here, over the one call per endpoint
+ * that `api.ts` offers.
  *
- * The queue assumes one writer per Redis: `enqueue` and `flush` read and replace keys, and nothing
- * coordinates that across processes (see `docs/data/store.md`).
+ * `usePotStore()` builds one of these; the module's default instance is `potStore`.
  */
 
-/** The sheet's unique row key, exactly as the client script defined it. */
-function potKey(pot: Pot): string {
-  return `${pot.world}|${pot.map}|${pot.potId}`;
-}
-
-function isEmptyModify(modify: PotModify): boolean {
-  return modify.overwrite.length === 0 && modify.remove.length === 0 && modify.update.length === 0;
-}
-
-/**
- * Applies one change to a state, per the priority documented on `PotModify`.
- *
- * The result holds one row per id, in the order the state already had: an id an update touches
- * keeps its position, a new id lands at the end, and a duplicated id (the sheet can hold one) is
- * represented by its first row. `updateTime` moves forward only, so a change that reaches us late
- * cannot make the state look older than it is.
- */
-export function applyModify(state: PotState, modify: PotModify): PotState {
-  if (isEmptyModify(modify)) return state;
-
-  const byId = new Map<string, Pot>();
-  for (const pot of state.data) {
-    const key = potKey(pot);
-    if (!byId.has(key)) byId.set(key, pot);
-  }
-  for (const pot of modify.update) byId.set(potKey(pot), pot);
-  for (const pot of modify.remove) byId.delete(potKey(pot));
-  for (const pot of modify.overwrite) byId.set(potKey(pot), pot);
-
-  return { data: [...byId.values()], updateTime: Math.max(state.updateTime, modify.updateTime) };
-}
-
-/**
- * Merges two changes into one with the same per-id priority.
- *
- * For an id both sides carry in the same list the later value wins (`second`), but the id keeps the
- * position of its first appearance, so the merged `update` list stays in arrival order — which is
- * the order the sheet receives its rows in. The result keeps the three lists id-disjoint.
- */
-export function mergeModify(first: PotModify, second: PotModify): PotModify {
-  const overwrite = mergeById(first.overwrite, second.overwrite);
-  const overwritten = new Set(overwrite.map(potKey));
-  const remove = mergeById(first.remove, second.remove).filter((pot) => !overwritten.has(potKey(pot)));
-  const suppressed = new Set([...overwritten, ...remove.map(potKey)]);
-  const update = mergeById(first.update, second.update).filter((pot) => !suppressed.has(potKey(pot)));
-
-  return { overwrite, remove, update, updateTime: Math.max(first.updateTime, second.updateTime) };
-}
-
-/** One row per id: the last row for an id wins, the id keeps the position of its first. */
-function mergeById(first: readonly Pot[], second: readonly Pot[]): Pot[] {
-  const byId = new Map<string, Pot>();
-  for (const pot of first) byId.set(potKey(pot), pot);
-  for (const pot of second) byId.set(potKey(pot), pot);
-  return [...byId.values()];
-}
+/** The Tencent Docs maximum page size for `getRecords`. */
+const PAGE_LIMIT = 100;
 
 const STATE_KEY = 'occult-pot:pots';
-const PENDING_KEY = 'occult-pot:pots:pending';
-const COMMITTING_KEY = 'occult-pot:pots:committing';
 
 /** The empty state: what a service with nothing in Redis and nothing read yet reports. */
 function emptyState(): PotState {
@@ -105,70 +49,67 @@ function parseState(raw: string | null): PotState {
   }
 }
 
-/** A stored change, or `undefined` when there is none this code can make sense of. */
-function parseModify(raw: string | null): PotModify | undefined {
-  if (raw === null) return undefined;
-  try {
-    const parsed = JSON.parse(raw) as Partial<PotModify> | null;
-    if (typeof parsed !== 'object' || parsed === null) return undefined;
-    return {
-      overwrite: Array.isArray(parsed.overwrite) ? parsed.overwrite : [],
-      remove: Array.isArray(parsed.remove) ? parsed.remove : [],
-      update: Array.isArray(parsed.update) ? parsed.update : [],
-      updateTime: typeof parsed.updateTime === 'number' ? parsed.updateTime : 0,
-    };
-  } catch {
-    return undefined;
-  }
-}
-
-export interface PotStore {
-  /** The pot list, read from the sheet again when the state Redis holds is older than the TTL. */
-  get(): Promise<PotState>;
-  /** The state Redis holds, without a TTL check or a sheet read; `/readyz` reports on it. */
-  state(): Promise<PotState>;
-  /** The change waiting for the sheet, when there is one. */
-  pending(): Promise<PotModify | undefined>;
-  /** Accepts a change: visible at once, written to the sheet on the next flush. */
-  enqueue(change: PotModify): Promise<void>;
-  /** Writes the queued change to the sheet; a failure leaves it queued for the next cycle. */
-  flush(): Promise<void>;
+/** The cell values of a raw record, or an empty object when the upstream sent none. */
+function valuesOf(record: RawRecordDto): Record<string, unknown> {
+  return typeof record.values === 'object' && record.values !== null ? (record.values as Record<string, unknown>) : {};
 }
 
 /**
- * Builds a store. The flush timer follows the loaded configuration, and every read or write goes
- * straight to Redis.
+ * The whole table, every page in sheet order.
+ *
+ * The API caps a page at 100 records, so this loops until the sheet says it has no more — trusting
+ * its `next` offset when it sends a usable one, and otherwise counting the rows it just read.
  */
-export function usePotStore(): PotStore {
-  /** The configuration this store follows; a different one restarts the timer. */
-  let bound: AppConfig | undefined;
-  /** The interval only paces the writes: it is unref'd, so there is nothing to stop. */
-  let timer: NodeJS.Timeout | undefined;
-  /** Serialises the read-modify-write pairs: the state and the queue are both read and replaced. */
-  let queue: Promise<unknown> = Promise.resolve();
-  let flushing: Promise<void> | undefined;
-  let fetchInFlight: Promise<PotState> | undefined;
+async function readAllRecords(): Promise<readonly RawRecordDto[]> {
+  const records: RawRecordDto[] = [];
+  let offset = 0;
 
-  /** Picks up a replaced configuration, which is where the flush interval comes from. */
-  function sync(): void {
-    const config = getConfig();
-    if (bound === config) return;
+  for (;;) {
+    const data = await getRecords({ offset, limit: PAGE_LIMIT });
+    const page = asArray(data.records) as unknown as readonly RawRecordDto[];
+    records.push(...page);
 
-    bound = config;
-    if (timer !== undefined) clearInterval(timer);
-    timer = setInterval(() => {
-      void flush().catch((error: unknown) => {
-        getLogger(LOG_CATEGORY).warning('Scheduled flush failed before it could reach the sheet', {
-          reason: error instanceof Error ? error.message : String(error),
-        });
-      });
-    }, config.writeQueue.flushIntervalMs);
-    timer.unref?.();
+    if (data.hasMore !== true) break;
+    const next = typeof data.next === 'number' && data.next > offset ? data.next : offset + page.length;
+    if (next <= offset) break;
+    offset = next;
   }
 
+  return records;
+}
+
+/**
+ * The sheet as the pots this service serves. Rows the pot rules reject are dropped here, so nothing
+ * downstream sees them; no timestamp is taken, because the cache is what stamps when it read this.
+ */
+async function readPots(): Promise<readonly Pot[]> {
+  const records = await readAllRecords();
+  return records.map((record) => fromSheetValues(valuesOf(record))).filter(isValidPot);
+}
+
+/** Appends pots to the sheet, in the order given; a failure is the caller's to handle. */
+async function appendPots(pots: readonly Pot[]): Promise<void> {
+  await addRecords(pots.map((pot) => ({ values: toSheetValues(pot) })));
+}
+
+export interface PotStore {
+  /** The pot list, read from the sheet again when the cached one is older than the TTL. */
+  get(): Promise<PotState>;
+  /** The cached list, without a TTL check or a sheet read; `/readyz` reports on it. */
+  state(): Promise<PotState>;
+  /** Appends one pot to the sheet, then folds it into the cache; a failed sheet write throws. */
+  put(pot: Pot): Promise<void>;
+}
+
+export function usePotStore(): PotStore {
+  /** Serialises the read-modify-write pairs: the cache is read and replaced as a whole. */
+  let queue: Promise<unknown> = Promise.resolve();
+  let fetchInFlight: Promise<PotState> | undefined;
+
   /**
-   * Runs `work` after everything already queued, so nothing reads a state that another caller is in
-   * the middle of replacing.
+   * Runs `work` after everything already queued, so one refresh's sheet read cannot land on top of
+   * a write that happened while it was in flight. A write therefore waits for a refresh that is
+   * already running — one sheet read, not a whole request.
    */
   function serialized<T>(work: () => Promise<T>): Promise<T> {
     const run = queue.then(work, work);
@@ -180,137 +121,89 @@ export function usePotStore(): PotStore {
     return parseState(await getRedis().get(STATE_KEY));
   }
 
-  async function readModify(key: string): Promise<PotModify | undefined> {
-    return parseModify(await getRedis().get(key));
-  }
-
   async function writeState(state: PotState): Promise<void> {
     await getRedis().set(STATE_KEY, JSON.stringify(state));
   }
 
+  /** Whether the cached list is old enough to be worth reading the sheet again. */
   function expired(state: PotState): boolean {
     return now() - state.updateTime >= getConfig().cache.readTtlMs;
   }
 
-  /** Reads the whole sheet, then stores it with whatever has been accepted since still on top. */
-  async function refreshFromSheet(): Promise<PotState> {
-    const data = await getPot();
-
+  /**
+   * Reads the sheet and replaces the cache with it, or hands back what is already cached.
+   *
+   * A failed read is not fatal while the cache holds a read of its own: those pots are served with
+   * a warning. With `updateTime === 0` nothing has ever been read, so there is nothing to serve and
+   * the failure reaches the caller.
+   */
+  function refresh(): Promise<PotState> {
     return serialized(async () => {
-      const read: PotState = { data, updateTime: now() };
-      const pending = await readModify(PENDING_KEY);
-      const committing = await readModify(COMMITTING_KEY);
-      const accepted = pending === undefined ? read : applyModify(read, pending);
-      const complete = committing === undefined ? accepted : applyModify(accepted, committing);
-      await writeState(complete);
-      return complete;
+      // Re-checked here rather than by the caller: a write or another refresh may have run first.
+      const cached = await readState();
+      if (!expired(cached)) return cached;
+
+      let data: readonly Pot[];
+      try {
+        data = await readPots();
+      } catch (error) {
+        if (cached.updateTime === 0) throw error;
+        getLogger(LOG_CATEGORY).warning('Served a stale pot list; the sheet read failed', {
+          reason: error instanceof Error ? error.message : String(error),
+          ageMs: now() - cached.updateTime,
+          pots: cached.data.length,
+        });
+        return cached;
+      }
+
+      const state: PotState = { data, updateTime: now() };
+      await writeState(state);
+      return state;
     });
   }
 
   async function get(): Promise<PotState> {
-    sync();
-    const state = await readState();
-    if (!expired(state)) return state;
+    const cached = await readState();
+    if (!expired(cached)) return cached;
 
-    // Single-flight: the first caller reads, the rest await the same promise.
-    fetchInFlight ??= refreshFromSheet().finally(() => {
+    // Single-flight: the first caller reads the sheet, and the rest await the same promise.
+    fetchInFlight ??= refresh().finally(() => {
       fetchInFlight = undefined;
     });
     return fetchInFlight;
   }
 
-  /**
-   * Returns the change stored in `committing`, or takes the queue's head into it.
-   *
-   * Taking is a `RENAME`, which is atomic: whoever renames owns the change. A leftover from a
-   * crash or a failed write is merged back into the queue first, so it is written out in this cycle
-   * rather than lost.
-   */
-  async function takePending(): Promise<PotModify | undefined> {
-    const stranded = await readModify(COMMITTING_KEY);
-    if (stranded !== undefined) {
-      const pending = await readModify(PENDING_KEY);
-      await getRedis().set(PENDING_KEY, JSON.stringify(pending === undefined ? stranded : mergeModify(stranded, pending)));
-      await getRedis().del(COMMITTING_KEY);
-    }
-
-    try {
-      await getRedis().rename(PENDING_KEY, COMMITTING_KEY);
-    } catch {
-      // Nothing queued — `RENAME` is how the absence is reported.
-      return undefined;
-    }
-    return readModify(COMMITTING_KEY);
-  }
-
-  /**
-   * Writes the queued change. One call, no retry inside this cycle: how hard to try is the writer's
-   * business (`modify` goes through the throttled queue, which retries), and a change that comes
-   * back failed is kept in `committing` for the next cycle.
-   */
-  async function drain(): Promise<void> {
-    const change = await takePending();
-    if (change === undefined) return;
-
-    try {
-      await modify(change);
-    } catch (error) {
-      getLogger(LOG_CATEGORY).warning('Kept a pending modify after a failed write; it will be retried', {
-        overwrite: change.overwrite.length,
-        remove: change.remove.length,
-        update: change.update.length,
-        reason: error instanceof Error ? error.message : String(error),
-      });
-      return;
-    }
-
-    await getRedis().del(COMMITTING_KEY);
-    // The sheet now holds the change, so the state's `updateTime` may move forward with it.
-    await writeState(applyModify(await readState(), change));
-  }
-
-  /**
-   * The only method callers need, and it is safe and idempotent: the timer and the shutdown path use
-   * the same call, a second caller while a drain is running joins that drain instead of starting
-   * another, and a call with nothing queued resolves immediately.
-   */
-  function flush(): Promise<void> {
-    sync();
-    if (flushing !== undefined) return flushing;
-
-    flushing = serialized(drain).finally(() => {
-      flushing = undefined;
-    });
-    return flushing;
-  }
-
   return {
     get,
     state(): Promise<PotState> {
-      sync();
       return readState();
     },
-    pending(): Promise<PotModify | undefined> {
-      sync();
-      // Whatever has not reached the sheet yet: the queue's head, or the change a failed write left
-      // in `committing` for the next cycle.
-      return serialized(async () => (await readModify(PENDING_KEY)) ?? readModify(COMMITTING_KEY));
-    },
-    async enqueue(change: PotModify): Promise<void> {
-      sync();
-      if (isEmptyModify(change)) return;
+    async put(pot: Pot): Promise<void> {
+      // The sheet is the authority, so the row lands there first: a failure is the caller's answer,
+      // and the cache is left saying exactly what it said before.
+      await appendPots([pot]);
 
-      await serialized(async () => {
-        const pending = await readModify(PENDING_KEY);
-        const merged = pending === undefined ? change : mergeModify(pending, change);
-        const state = await readState();
-        // The change's own `updateTime` is kept for the sheet write; accepting it does not make the
-        // state look fresher, so the TTL still measures from the last read or committed write.
-        const next = applyModify(state, change);
-        await Promise.all([getRedis().set(PENDING_KEY, JSON.stringify(merged)), writeState({ data: next.data, updateTime: state.updateTime })]);
-      });
+      // Then the cache, so the pot is visible to the next read without waiting for the TTL. It is
+      // appended rather than merged: the sheet now holds one more row, and the cache mirrors it.
+      // `updateTime` stays where it was — a write is not a read, so the TTL still measures from the
+      // last read.
+      try {
+        await serialized(async () => {
+          const state = await readState();
+          await writeState({ data: [...state.data, pot], updateTime: state.updateTime });
+        });
+      } catch (error) {
+        // The row is in the sheet, so this is not a failed write. Dropping the cached list is what
+        // makes the next read rebuild it from the authority.
+        getLogger(LOG_CATEGORY).warning('Appended a pot but could not update the cached list; dropped the cache', {
+          potId: pot.potId,
+          reason: error instanceof Error ? error.message : String(error),
+        });
+        await getRedis()
+          .del(STATE_KEY)
+          .catch(() => undefined);
+      }
     },
-    flush,
   };
 }
 

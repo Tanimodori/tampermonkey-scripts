@@ -28,6 +28,6 @@ export function requireJsonForBody(): RequestHandler {
     if (primaryType === 'application/json') return next();
 
     const received = primaryType === undefined || primaryType === '' ? '' : `, received ${JSON.stringify(primaryType)}`;
-    next(new AppError('UNSUPPORTED_MEDIA_TYPE', `Content-Type must be application/json for ${method} requests${received}`));
+    next(new AppError('ERR_UNSUPPORTED_MEDIA_TYPE', `Content-Type must be application/json for ${method} requests${received}`));
   };
 }

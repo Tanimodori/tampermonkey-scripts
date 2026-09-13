@@ -2,10 +2,12 @@ import { defu } from 'defu';
 import Redis from 'ioredis';
 import RedisMock from 'ioredis-mock';
 import { MockAgent } from 'undici';
+import type { Dispatcher } from 'undici';
 import { loadConfig } from '@/config.ts';
 import { configureLogging } from '@/logger.ts';
 import type { LogLevel } from '@/logger.ts';
-import type { RawRecordDto } from '@/services/upstream/api.ts';
+import type { RawRecordDto } from '@/services/upstream/api/sheet.ts';
+import { useClient } from '@/services/upstream/client.ts';
 import type { AppConfig } from '@/validation/index.ts';
 
 /** The document coordinates every test app is configured with; the mock reports the same ids. */
@@ -24,7 +26,6 @@ const TEST_DEFAULTS: NodeJS.ProcessEnv = {
   OPS_DOCS_ACCESS_TOKEN: 'test-access-token-value',
   OPS_DOCS_CLIENT_ID: 'test-client-id',
   OPS_DOCS_OPEN_ID: 'test-open-id',
-  OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: '50',
   // The throttled queue is effectively unthrottled and never waits between attempts: these tests
   // assert behaviour, not pacing, and a 500 ms wait per retry would only make them slow.
   OPS_UPSTREAM_MAX_PER_INTERVAL: '10000',
@@ -198,8 +199,10 @@ export interface TencentDocsMockState {
 
 export interface TencentDocsMock {
   readonly state: TencentDocsMockState;
-  /** The dispatcher the app under test must be given. */
+  /** The bare mock pool, for a spec that wants to compose a client of its own over it. */
   readonly agent: MockAgent;
+  /** The transport the app under test runs on: the real interceptors over the mocked upstream. */
+  readonly client: Dispatcher;
   reset(): void;
   close(): Promise<void>;
 }
@@ -246,6 +249,11 @@ function lowerHeaders(headers: unknown): Record<string, string> {
 /**
  * Intercepts every Tencent Docs Open API call. Real connections are disabled, so a request the
  * mock does not know about fails loudly instead of reaching the network.
+ *
+ * A spec swaps this transport in with `vi.mock` on `@/services/upstream/client.ts`: a no-argument
+ * `useClient()` — how the `api/` modules build their own — returns this client, while the call that
+ * carries a dispatcher still goes to the real factory. That is what keeps the production modules
+ * free of a test seam.
  */
 export function setupTencentDocsMock(
   options: {
@@ -275,6 +283,8 @@ export function setupTencentDocsMock(
   const initialSheets = state.sheets;
 
   let nextRecordId = 1;
+  /** The transport `client` hands out, built once and reused for every request of this mock. */
+  let custom: Dispatcher | undefined;
 
   const agent = new MockAgent();
   agent.disableNetConnect();
@@ -370,6 +380,11 @@ export function setupTencentDocsMock(
   return {
     state,
     agent,
+    // Built on first use: it reads the loaded configuration, which exists only inside a test.
+    get client(): Dispatcher {
+      custom ??= useClient({ dispatcher: agent });
+      return custom;
+    },
     reset: () => {
       state.added.length = 0;
       state.calls.length = 0;

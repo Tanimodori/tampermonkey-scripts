@@ -1,14 +1,18 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { loadTestConfig } from '@test/helpers.ts';
-import { afterEach, describe, expect, it } from 'vitest';
-import { closeClient, getClient } from '@/services/upstream/client.ts';
+import { loadTestConfig, setupTencentDocsMock } from '@test/helpers.ts';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
+import { useClient } from '@/services/upstream/client.ts';
+import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
 
 /**
- * The pool is the whole of `client.ts`, so this is the whole of its behaviour: one pool per loaded
- * configuration, able to talk to a server and to give up on one that never answers (the timeouts
- * come from the configuration, and the api layer relies on them to bound an attempt).
+ * `client.ts` is the composition and nothing else: a pool sized by the configuration — or a
+ * dispatcher it is handed — with the classification and retry interceptors injected. These cases
+ * pin exactly that; what each interceptor then does is `interceptors/classify.spec.ts` and
+ * `interceptors/retry.spec.ts`.
  */
+
+const docs = setupTencentDocsMock();
 
 const servers: Array<{ close(): Promise<void> }> = [];
 
@@ -26,51 +30,70 @@ async function listen(handler: Parameters<typeof createServer>[1]): Promise<stri
   return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 }
 
+/** One request as `api/sheet.ts` builds it. */
+function options(overrides: Partial<CallOptions> = {}): CallOptions {
+  return {
+    origin: 'https://docs.qq.com',
+    path: '/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets/tXXXXXX',
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ getRecords: { offset: 0, limit: 100 } }),
+    operation: 'getRecords',
+    envelope: true,
+    ...overrides,
+  };
+}
+
+/** Every intercepted record read, in order: one per attempt. */
+const readCalls = (): number => docs.state.calls.filter((call) => (call.body as Record<string, unknown> | undefined)?.getRecords !== undefined).length;
+
+afterAll(async () => {
+  await docs.close();
+});
+
 afterEach(async () => {
+  docs.reset();
   await Promise.all(servers.splice(0).map((server) => server.close()));
 });
 
-describe('getClient', () => {
-  it('shares one pool per configuration and rebuilds it when the configuration changes', async () => {
-    loadTestConfig();
-    const first = getClient();
-
-    expect(getClient()).toBe(first);
-
-    loadTestConfig({ OPS_UPSTREAM_TIMEOUT_MS: '5000' });
-    expect(getClient()).not.toBe(first);
-
-    await closeClient();
-  });
-
-  it('sends a request and hands back the response', async () => {
+describe('useClient', () => {
+  it('sends a request through the pool it built and hands back the response', async () => {
     const origin = await listen((_request, response) => {
       response.writeHead(200, { 'content-type': 'application/json' });
       response.end(JSON.stringify({ ret: 0 }));
     });
     loadTestConfig();
 
-    const client = getClient();
-    const response = await client.request({ origin, path: '/anything', method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+    const response = await useClient().request(options({ origin, path: '/anything' }));
 
     expect(response.statusCode).toBe(200);
     await expect(response.body.text()).resolves.toBe('{"ret":0}');
-    await closeClient();
   });
 
   it('gives up on a request that never answers, at the configured timeout', async () => {
     const origin = await listen(() => {
       // Deliberately never responds.
     });
-    loadTestConfig({ OPS_UPSTREAM_TIMEOUT_MS: '50' });
-
-    const client = getClient();
+    // No retries: this is about the timeout, which the pool's own timers impose.
+    loadTestConfig({ OPS_UPSTREAM_TIMEOUT_MS: '50', OPS_UPSTREAM_MAX_RETRIES: '0' });
     const startedAt = Date.now();
 
-    await expect(client.request({ origin, path: '/slow', method: 'GET' })).rejects.toMatchObject({ code: 'UND_ERR_HEADERS_TIMEOUT' });
+    await expect(useClient().request(options({ origin, path: '/slow', method: 'GET' }))).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
     // undici's own timer resolution is a whole second, so this is "the configured timeout, not the
     // ten-second default" rather than an exact figure.
     expect(Date.now() - startedAt).toBeLessThan(2_000);
-    await closeClient();
+  });
+
+  it('injects both interceptors over a dispatcher it is handed', async () => {
+    loadTestConfig({ OPS_UPSTREAM_MAX_RETRIES: '1' });
+    const client = useClient({ dispatcher: docs.agent });
+    // One dropped connection: only the retry interceptor can turn this into a 200, and only the
+    // classifier can turn the transport error into the failure that policy retries.
+    docs.state.networkFailures = 1;
+
+    const response = await client.request(options());
+
+    expect(response.statusCode).toBe(200);
+    expect(readCalls()).toBe(2);
   });
 });

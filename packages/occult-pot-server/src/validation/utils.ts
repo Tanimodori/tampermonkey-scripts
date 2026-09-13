@@ -11,7 +11,7 @@ export interface FieldIssue {
   readonly message: string;
 }
 
-/** Flattens zod issues into `{path, message}` pairs for `error.details`. */
+/** Flattens zod issues into `{path, message}` pairs, which is what a failure message is built from. */
 export function formatIssues(error: z.ZodError, rootLabel = '(body)'): FieldIssue[] {
   return error.issues.map((issue) => ({
     path: issue.path.length === 0 ? rootLabel : issue.path.join('.'),
@@ -20,16 +20,17 @@ export function formatIssues(error: z.ZodError, rootLabel = '(body)'): FieldIssu
 }
 
 /**
- * Parses `value` with a schema, raising `BAD_REQUEST` with the field-level issues.
- * `value` is `unknown` because Express 5 exposes `req.body` and `req.params` loosely.
+ * Parses `value` with a schema, raising `ERR_BAD_REQUEST` with every offending field named in the
+ * message. `value` is `unknown` because Express 5 exposes `req.body` and `req.params` loosely.
  */
 export function parseWith<S extends z.ZodType>(schema: S, value: unknown, source: 'body' | 'query' | 'params'): z.infer<S> {
   const result = schema.safeParse(value);
   if (result.success) return result.data;
 
-  const issues = formatIssues(result.error);
-  const summary = issues.map((issue) => `${issue.path}: ${issue.message}`).join('; ');
-  throw new AppError('BAD_REQUEST', `Invalid ${source}: ${summary}`, { details: { source, issues } });
+  const summary = formatIssues(result.error)
+    .map((issue) => `${issue.path}: ${issue.message}`)
+    .join('; ');
+  throw new AppError('ERR_BAD_REQUEST', `Invalid ${source}: ${summary}`);
 }
 
 /**

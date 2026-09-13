@@ -5,16 +5,15 @@ import type { CreatedApp } from '@/app.ts';
 import { startServer } from '@/server.ts';
 import type { RunningServer } from '@/server.ts';
 import { getRedis } from '@/services/redis.ts';
-import type { RawRecordDto } from '@/services/upstream/api.ts';
-import { setClient } from '@/services/upstream/client.ts';
+import type { RawRecordDto } from '@/services/upstream/api/sheet.ts';
+import type { ClientOptions } from '@/services/upstream/client.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 import type { Pot } from '@/validation/index.ts';
 import { captureLogs, loadTestConfig, rawRecord, resetRedis, sheetInstant, setupTencentDocsMock, testClient } from './helpers.ts';
 
 // Every module under test reads the time through `@/services/time.ts`, which this replaces with
 // `@test/clock.ts`: the store, the controllers and the fixtures below then agree on one instant
-// (`NOW`), pinned before each app is built. Real timers still drive the write queue, so a flush is
-// waited for rather than simulated.
+// (`NOW`), pinned before each app is built.
 vi.mock('@/services/time.ts', () => import('@test/clock.ts'));
 
 /** The clock the app runs on: pinned to the wall clock once, and never moved afterwards. */
@@ -97,6 +96,13 @@ function fixtureRows(): RawRecordDto[] {
 
 const docs = setupTencentDocsMock();
 
+vi.mock('@/services/upstream/client.ts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/services/upstream/client.ts')>();
+  // The api modules build their own transport with no options; that is the one the mock replaces.
+  // `docs.client` itself is built from the real factory, so the interceptors stay the real ones.
+  return { ...actual, useClient: (options?: ClientOptions) => (options === undefined ? docs.client : actual.useClient(options)) };
+});
+
 interface Harness {
   readonly created: CreatedApp;
   readonly running: RunningServer;
@@ -107,14 +113,6 @@ interface Harness {
 
 const started: Array<{ close(): Promise<void> }> = [];
 
-/**
- * Flushes happen on the queue's own schedule, so tests that assert on the sheet wait for the
- * configured interval to elapse plus a margin for the upstream call.
- */
-async function waitForFlush(ms = 120): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 /** The intercepted calls carrying one payload keyword, e.g. the record reads. */
 function callsMatching(keyword: string): Array<{ url: string }> {
   return docs.state.calls.filter((call) => call.body !== undefined && keyword in (call.body as object));
@@ -124,8 +122,6 @@ function callsMatching(keyword: string): Array<{ url: string }> {
 async function startApp(overrides: Record<string, string | undefined> = {}): Promise<Harness> {
   // The environment carries the configuration; `testEnv` already sets a fast flush interval.
   loadTestConfig(overrides);
-  // Every Tencent Docs call goes out on this pool; the real one is never reached.
-  setClient(docs.agent);
   // The instant the fixtures above are written against.
   clock.set(NOW);
   // LogTape is configured per app; the records it collects are what the log assertions read.
@@ -209,7 +205,7 @@ describe('GET /healthz, /readyz', () => {
     const { client } = await startApp();
 
     const response = await client.get('/config').expect(404);
-    expect((response.body as { error: { code: string } }).error.code).toBe('NOT_FOUND');
+    expect((response.body as { code: string }).code).toBe('ERR_NOT_FOUND');
   });
 });
 
@@ -296,13 +292,13 @@ describe('GET /v1/pots', () => {
     docs.state.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
 
     const response = await client.get('/v1/pots').expect(502);
-    expect((response.body as { error: { code: string } }).error.code).toBe('UPSTREAM_FAILED');
+    expect((response.body as { code: string }).code).toBe('ERR_UPSTREAM_FAILED');
 
     // The error handler is the one place a request-scoped failure is recorded.
     expect(logs.find((entry) => entry.message === 'Request failed')).toMatchObject({
       level: 'error',
       status: 502,
-      code: 'UPSTREAM_FAILED',
+      code: 'ERR_UPSTREAM_FAILED',
       path: '/v1/pots',
     });
   });
@@ -327,7 +323,7 @@ describe('GET /v1/pots/:potId', () => {
     const { client } = await startApp();
 
     const response = await client.get('/v1/pots/99-9-4000FFFF').expect(404);
-    expect((response.body as { error: { code: string } }).error.code).toBe('NOT_FOUND');
+    expect((response.body as { code: string }).code).toBe('ERR_NOT_FOUND');
   });
 
   it('rejects a malformed pot ID with 400 before touching the upstream', async () => {
@@ -335,7 +331,8 @@ describe('GET /v1/pots/:potId', () => {
     const before = docs.state.calls.length;
 
     const response = await client.get('/v1/pots/not-a-pot-id').expect(400);
-    expect((response.body as { error: { details: { issues: Array<{ path: string }> } } }).error.details.issues[0]?.path).toBe('potId');
+    // Every offending field is named in the message, which is the only place field detail lives.
+    expect((response.body as { message: string }).message).toContain('params: potId:');
     expect(docs.state.calls).toHaveLength(before);
   });
 
@@ -358,22 +355,22 @@ describe('POST /v1/pots', () => {
   // Text fields are strings; the two instants take either a 13 digit string or a number.
   const newPot = { world: '鸟', map: '北岛', potId: '60-0-4000ABCD', northRefreshAt: String(sheetInstant('2026-09-12 16:20')), lastVisitAt: String(NOW) };
 
-  it('accepts the record and answers 202 with a confirmation message', async () => {
+  it('writes the record and answers 200 with the pot it wrote', async () => {
     const { client } = await startApp();
 
-    const response = await client.post('/v1/pots').send(newPot).expect(202);
-    const data = (response.body as { data: Record<string, unknown> }).data;
+    const response = await client.post('/v1/pots').send(newPot).expect(200);
+    const body = response.body as { code: string; data: Pot; message: string };
 
-    // Fire-and-forget: acceptance is the entire result — no status, recordId, counts or handle.
-    expect(data).toEqual({ message: 'occult pot 60-0-4000ABCD queued for writing to the sheet' });
-    expect(response.headers.location).toBeUndefined();
-  });
-
-  it('eventually writes the accepted record to the sheet once the flush runs', async () => {
-    const { client, created } = await startApp();
-    await client.post('/v1/pots').send(newPot).expect(202);
-
-    await waitForFlush();
+    expect(body.code).toBe('SUCCESS');
+    expect(body.message).toBe('occult pot 60-0-4000ABCD written to the sheet');
+    expect(body.data).toEqual({
+      world: '鸟',
+      map: '北岛',
+      potId: '60-0-4000ABCD',
+      northRefreshAtMs: sheetInstant('2026-09-12 16:20'),
+      lastVisitAtMs: NOW,
+    });
+    // The row reached the sheet before the response did; there is no queue behind this.
     expect(docs.state.added).toHaveLength(1);
     expect(docs.state.added[0]).toEqual({
       区服: '鸟',
@@ -382,28 +379,35 @@ describe('POST /v1/pots', () => {
       北罐刷新时间: String(sheetInstant('2026-09-12 16:20')),
       最后一次进岛时间: String(NOW),
     });
-    // The store stamps what it holds with the same pinned clock the request was stamped with.
-    expect((await created.store.state()).updateTime).toBe(NOW);
-
-    // The committed record is folded into the cached state, so it is listed immediately.
-    const list = await client.get('/v1/pots').expect(200);
-    const pots = (list.body as { data: Pot[] }).data;
-    expect(pots.filter((pot) => pot.potId === '60-0-4000ABCD')).toHaveLength(1);
   });
 
-  it('serves an accepted pot before the write reaches the sheet', async () => {
-    // A long flush interval makes "nothing written yet" deterministic.
-    const { client } = await startApp({ OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000' });
-    await client.post('/v1/pots').send(newPot).expect(202);
+  it('serves what it accepted without reading the sheet again', async () => {
+    const { client } = await startApp();
+    await client.get('/v1/pots').expect(200);
+
+    await client.post('/v1/pots').send(newPot).expect(200);
 
     const list = (await client.get('/v1/pots').expect(200)).body as { data: Pot[] };
     expect(list.data.filter((pot) => pot.potId === '60-0-4000ABCD')).toHaveLength(1);
-
     const one = (await client.get('/v1/pots/60-0-4000ABCD').expect(200)).body as { data: Pot };
     expect(one.data.potId).toBe('60-0-4000ABCD');
+    // Folded into the cached list, so the sheet is still read exactly once.
+    expect(callsMatching('getRecords')).toHaveLength(1);
+  });
 
-    // Read-your-writes: the sheet has not been touched yet.
+  it('fails the request when the sheet refuses the write, and leaves the list alone', async () => {
+    const { client, logs } = await startApp();
+    await client.get('/v1/pots').expect(200);
+    docs.state.writeFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
+
+    const response = await client.post('/v1/pots').send(newPot).expect(503);
+    expect((response.body as { code: string }).code).toBe('ERR_UPSTREAM_RATE_LIMITED');
+
+    // Nothing was written and nothing is served: the caller's failure is the whole story.
     expect(docs.state.added).toHaveLength(0);
+    const list = (await client.get('/v1/pots').expect(200)).body as { data: Pot[] };
+    expect(list.data.some((pot) => pot.potId === '60-0-4000ABCD')).toBe(false);
+    expect(logs.find((entry) => entry.message === 'Request failed')?.code).toBe('ERR_UPSTREAM_RATE_LIMITED');
   });
 
   it('still refuses a number where the field is text', async () => {
@@ -432,9 +436,8 @@ describe('POST /v1/pots', () => {
     await client
       .post('/v1/pots')
       .send({ world: '猫', map: '南岛', potId: '61-1-4000FFFF', northRefreshAt: String(sheetInstant('2026-09-12 16:30')), lastVisitAt: String(NOW) })
-      .expect(202);
+      .expect(200);
 
-    await waitForFlush();
     expect(docs.state.added[0]?.['北罐刷新时间']).toBe(String(sheetInstant('2026-09-12 16:30')));
     expect(docs.state.added[0]?.['最后一次进岛时间']).toBe(String(NOW));
   });
@@ -447,9 +450,8 @@ describe('POST /v1/pots', () => {
     await client
       .post('/v1/pots')
       .send({ ...newPot, northRefreshAt: north, lastVisitAt: NOW })
-      .expect(202);
+      .expect(200);
 
-    await waitForFlush();
     expect(docs.state.added[0]?.['北罐刷新时间']).toBe(String(north));
     expect(docs.state.added[0]?.['最后一次进岛时间']).toBe(String(NOW));
   });
@@ -460,9 +462,8 @@ describe('POST /v1/pots', () => {
     await client
       .post('/v1/pots')
       .send({ ...newPot, lastVisitAt: String(NOW) })
-      .expect(202);
+      .expect(200);
 
-    await waitForFlush();
     expect(docs.state.added[0]?.['北罐刷新时间']).toBe(String(sheetInstant('2026-09-12 16:20')));
   });
 
@@ -472,9 +473,8 @@ describe('POST /v1/pots', () => {
     await client
       .post('/v1/pots')
       .send({ ...newPot, northRefreshAt: ` ${sheetInstant('2026-09-12 16:20')} ` })
-      .expect(202);
+      .expect(200);
 
-    await waitForFlush();
     expect(docs.state.added[0]?.['北罐刷新时间']).toBe(String(sheetInstant('2026-09-12 16:20')));
   });
 
@@ -525,7 +525,7 @@ describe('POST /v1/pots', () => {
         .post('/v1/pots')
         .send({ ...newPot, northRefreshAt: wrong })
         .expect(400);
-      expect((response.body as { error: { message: string } }).error.message).toContain('northRefreshAt');
+      expect((response.body as { message: string }).message).toContain('northRefreshAt');
     }
 
     expect(docs.state.added).toHaveLength(0);
@@ -533,19 +533,19 @@ describe('POST /v1/pots', () => {
 
   it('requires both instants — the server never substitutes its own clock', async () => {
     const { client } = await startApp();
-    const issuesOf = (body: unknown): Array<{ path: string }> => (body as { error: { details: { issues: Array<{ path: string }> } } }).error.details.issues;
+    const messageOf = (body: unknown): string => (body as { message: string }).message;
 
     const missingLastVisit = await client
       .post('/v1/pots')
       .send({ ...newPot, lastVisitAt: undefined })
       .expect(400);
-    expect(issuesOf(missingLastVisit.body)).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'lastVisitAt' })]));
+    expect(messageOf(missingLastVisit.body)).toContain('lastVisitAt:');
 
     const missingNorth = await client
       .post('/v1/pots')
       .send({ ...newPot, northRefreshAt: undefined })
       .expect(400);
-    expect(issuesOf(missingNorth.body)).toEqual(expect.arrayContaining([expect.objectContaining({ path: 'northRefreshAt' })]));
+    expect(messageOf(missingNorth.body)).toContain('northRefreshAt:');
 
     // Empty/null are not stand-ins for "now" either.
     await client
@@ -564,82 +564,49 @@ describe('POST /v1/pots', () => {
     expect(docs.state.added).toHaveLength(0);
   });
 
-  it('queues a pot the sheet already carries — there is no uniqueness rule', async () => {
+  it('writes a pot the sheet already carries — there is no uniqueness rule', async () => {
     const { client } = await startApp();
 
     const response = await client
       .post('/v1/pots')
       .send({ ...newPot, potId: '54-1-4000E8F3' })
-      .expect(202);
-    expect((response.body as { data: { message: string } }).data.message).toContain('54-1-4000E8F3');
+      .expect(200);
+    expect((response.body as { message: string }).message).toContain('54-1-4000E8F3');
 
-    await waitForFlush();
     // `54-1-4000E8F3` now exists twice in the sheet, which is allowed.
     expect(docs.state.added).toHaveLength(1);
     expect(docs.state.records.filter((record) => JSON.stringify(record.values).includes('54-1-4000E8F3'))).toHaveLength(2);
   });
 
-  it('merges identical accepts within one flush window into one write', async () => {
-    const { client, created } = await startApp({ OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000' });
-
-    await client
-      .post('/v1/pots')
-      .send({ ...newPot, potId: '64-0-40003333' })
-      .expect(202);
-    await client
-      .post('/v1/pots')
-      .send({ ...newPot, potId: '64-0-40003333' })
-      .expect(202);
-
-    // `update` is keyed by 区服|地图|ID, so the two accepts are one entry in the queued change.
-    expect((await created.store.pending())?.update).toHaveLength(1);
-    await created.store.flush();
-
-    expect(docs.state.added).toHaveLength(1);
-  });
-
-  it('writes one row per flush window for the same pot', async () => {
-    const { client, created } = await startApp({ OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: '60000' });
+  it('writes one row per accept, and the cached list mirrors the sheet', async () => {
+    const { client } = await startApp();
+    await client.get('/v1/pots').expect(200);
 
     await client
       .post('/v1/pots')
       .send({ ...newPot, potId: '64-0-40004444' })
-      .expect(202);
-    await created.store.flush();
+      .expect(200);
     await client
       .post('/v1/pots')
       .send({ ...newPot, potId: '64-0-40004444' })
-      .expect(202);
-    await created.store.flush();
+      .expect(200);
 
-    // Two windows, two rows: nothing is de-duplicated across flushes.
+    // No merging and no de-duplication: two accepts, two rows, and the list shows both of them.
     expect(docs.state.added).toHaveLength(2);
-    // The view is keyed by id, so it shows the pot once.
     const list = (await client.get('/v1/pots').expect(200)).body as { data: Pot[] };
-    expect(list.data.filter((pot) => pot.potId === '64-0-40004444')).toHaveLength(1);
-  });
-
-  it('flushes the queue on its own schedule', async () => {
-    const { client, created } = await startApp();
-
-    await client
-      .post('/v1/pots')
-      .send({ ...newPot, potId: '65-0-40004444' })
-      .expect(202);
-    expect((await created.store.pending())?.update).toHaveLength(1);
-
-    await waitForFlush();
-    expect(await created.store.pending()).toBeUndefined();
-    expect((await created.store.state()).data.map((pot) => pot.potId)).toContain('65-0-40004444');
-    expect(docs.state.added).toHaveLength(1);
+    expect(list.data.filter((pot) => pot.potId === '64-0-40004444')).toHaveLength(2);
+    // Nothing was written behind the requests' backs, so the sheet was read exactly once.
+    expect(callsMatching('getRecords')).toHaveLength(1);
   });
 
   it('validates the body with zod and every domain rule', async () => {
     const { client } = await startApp();
 
     const empty = await client.post('/v1/pots').send({}).expect(400);
-    const issues = (empty.body as { error: { details: { issues: Array<{ path: string }> } } }).error.details.issues.map((issue) => issue.path);
-    expect(issues).toEqual(expect.arrayContaining(['world', 'map', 'potId', 'northRefreshAt', 'lastVisitAt']));
+    const message = (empty.body as { message: string }).message;
+    for (const field of ['world', 'map', 'potId', 'northRefreshAt', 'lastVisitAt']) {
+      expect(message).toContain(`${field}:`);
+    }
 
     await client
       .post('/v1/pots')
@@ -659,7 +626,7 @@ describe('POST /v1/pots', () => {
       .expect(400);
 
     const arrayBody = await client.post('/v1/pots').send([newPot]).expect(400);
-    expect((arrayBody.body as { error: { message: string } }).error.message).toMatch(/Invalid body/);
+    expect((arrayBody.body as { message: string }).message).toMatch(/Invalid body/);
     expect(docs.state.added).toHaveLength(0);
   });
 
@@ -667,7 +634,7 @@ describe('POST /v1/pots', () => {
     const { client } = await startApp();
 
     const response = await client.post('/v1/pots').set('Content-Type', 'text/plain').send(JSON.stringify(newPot)).expect(415);
-    expect((response.body as { error: { code: string } }).error.code).toBe('UNSUPPORTED_MEDIA_TYPE');
+    expect((response.body as { code: string }).code).toBe('ERR_UNSUPPORTED_MEDIA_TYPE');
   });
 
   it('does not accept a +json vendor type in place of application/json', async () => {
@@ -675,15 +642,15 @@ describe('POST /v1/pots', () => {
 
     // `body-parser` would skip the body entirely for this type, so the answer cannot come from it.
     const response = await client.post('/v1/pots').set('Content-Type', 'application/vnd.api+json').send(JSON.stringify(newPot)).expect(415);
-    expect((response.body as { error: { code: string } }).error.code).toBe('UNSUPPORTED_MEDIA_TYPE');
-    expect((response.body as { error: { message: string } }).error.message).toContain('application/vnd.api+json');
+    expect((response.body as { code: string }).code).toBe('ERR_UNSUPPORTED_MEDIA_TYPE');
+    expect((response.body as { message: string }).message).toContain('application/vnd.api+json');
   });
 
   it('requires a JSON content type even when none is announced', async () => {
     const { client } = await startApp();
 
     const response = await client.post('/v1/pots').send(newPot, { contentType: false }).expect(415);
-    expect((response.body as { error: { code: string } }).error.code).toBe('UNSUPPORTED_MEDIA_TYPE');
+    expect((response.body as { code: string }).code).toBe('ERR_UNSUPPORTED_MEDIA_TYPE');
     expect(docs.state.added).toHaveLength(0);
   });
 
@@ -694,7 +661,7 @@ describe('POST /v1/pots', () => {
       .post('/v1/pots')
       .send({ ...newPot, values: { padding: 'x'.repeat(4096) } })
       .expect(413);
-    expect((response.body as { error: { code: string } }).error.code).toBe('PAYLOAD_TOO_LARGE');
+    expect((response.body as { code: string }).code).toBe('ERR_PAYLOAD_TOO_LARGE');
   });
 
   it('rate limits anonymous writes per IP', async () => {
@@ -706,53 +673,29 @@ describe('POST /v1/pots', () => {
       .post('/v1/pots')
       .set('X-Forwarded-For', '10.0.0.1')
       .send({ ...newPot, potId: '72-0-40004444' })
-      .expect(202);
+      .expect(200);
 
     const limited = await client
       .post('/v1/pots')
       .set('X-Forwarded-For', '10.0.0.1')
       .send({ ...newPot, potId: '73-0-40005555' })
       .expect(429);
-    expect((limited.body as { error: { code: string } }).error.code).toBe('RATE_LIMITED');
+    expect((limited.body as { code: string }).code).toBe('ERR_RATE_LIMITED');
 
     // A different client IP is unaffected.
     await client
       .post('/v1/pots')
       .set('X-Forwarded-For', '10.0.0.2')
       .send({ ...newPot, potId: '74-0-40006666' })
-      .expect(202);
+      .expect(200);
   });
 
-  it('keeps a change whose write failed, and reports the state through /readyz', async () => {
-    const { client, created, logs } = await startApp({ OPS_WRITE_QUEUE_FLUSH_INTERVAL_MS: '50' });
-    docs.state.writeFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
-
-    // The accept cannot know the outcome, so it still answers 202.
-    await client.post('/v1/pots').send(newPot).expect(202);
-    await waitForFlush();
-
-    // The write is retried, not lost: the change is still queued and the pot is still served.
-    expect((await created.store.pending())?.update.map((entry) => entry.potId)).toEqual(['60-0-4000ABCD']);
-    expect((await created.store.state()).data.map((pot) => pot.potId)).toContain('60-0-4000ABCD');
-    expect(logs.some((entry) => entry.message === 'Kept a pending modify after a failed write; it will be retried')).toBe(true);
-    expect(docs.state.added).toHaveLength(0);
-
-    docs.state.writeFailure = undefined;
-    await created.store.flush();
-    expect(docs.state.added).toHaveLength(1);
-    expect(await created.store.pending()).toBeUndefined();
-
-    const ready = await client.get('/readyz').expect(200);
-    const cache = (ready.body as { data: { cache: { updateTime: string | null; ageMs: number | null; pots: number } } }).data.cache;
-    expect(cache.pots).toBe(1);
-  });
-
-  it('republicises an upstream auth failure as UPSTREAM_AUTH_FAILED', async () => {
+  it('republicises an upstream auth failure as ERR_UPSTREAM_AUTH_FAILED', async () => {
     const { client } = await startApp();
     docs.state.readFailure = { status: 200, ret: 37019, msg: 'Token 校验失败，错误或过期' };
 
     const response = await client.get('/v1/pots?refresh=true').expect(503);
-    expect((response.body as { error: { code: string } }).error.code).toBe('UPSTREAM_AUTH_FAILED');
+    expect((response.body as { code: string }).code).toBe('ERR_UPSTREAM_AUTH_FAILED');
   });
 });
 
@@ -761,13 +704,13 @@ describe('error envelope and headers', () => {
     const { client, logs } = await startApp();
 
     const response = await client.get('/v2/pots').expect(404);
-    expect((response.body as { error: { code: string } }).error.code).toBe('NOT_FOUND');
+    expect((response.body as { code: string }).code).toBe('ERR_NOT_FOUND');
     expect((response.body as { requestId: string }).requestId).toBe(response.headers['x-request-id']);
 
     expect(logs.find((entry) => entry.message === 'Request rejected')).toMatchObject({
       level: 'warning',
       status: 404,
-      code: 'NOT_FOUND',
+      code: 'ERR_NOT_FOUND',
       path: '/v2/pots',
     });
   });
@@ -776,14 +719,14 @@ describe('error envelope and headers', () => {
     const { client } = await startApp();
 
     const response = await client.get('/v1/write-queue/wq_whatever').expect(404);
-    expect((response.body as { error: { code: string } }).error.code).toBe('NOT_FOUND');
+    expect((response.body as { code: string }).code).toBe('ERR_NOT_FOUND');
   });
 
   it('answers known paths with the wrong method with JSON 405 and Allow', async () => {
     const { client } = await startApp();
 
     const response = await client.delete('/v1/pots').expect(405);
-    expect((response.body as { error: { code: string } }).error.code).toBe('METHOD_NOT_ALLOWED');
+    expect((response.body as { code: string }).code).toBe('ERR_METHOD_NOT_ALLOWED');
     expect(response.headers.allow).toContain('GET');
   });
 

@@ -55,7 +55,8 @@ Redis 本身的文档见 [redis.io/docs](https://redis.io/docs/latest/)，命令
 - [官方 nginx 镜像](https://hub.docker.com/_/nginx)（只读挂载配置、`/etc/nginx/templates` 的 envsubst、read-only 模式要挂的目录）
 - [Docker Compose 网络](https://docs.docker.com/compose/how-tos/networking/)（用户自建网络按服务名解析、容器重建换 IP）
 - [Docker 容器网络概览](https://docs.docker.com/manuals/engine/network/)（bridge 上哪些端口宿主可见、内嵌 DNS 是 `127.0.0.11`）
-- [构建上下文与 `.dockerignore`](https://docs.docker.com/manuals/build/concepts/context/)（忽略文件按 Dockerfile 命名的约定、`**/` 匹配）
+- [`rush deploy`](https://rushjs.io/pages/commands/rush_deploy/) / [`deploy.json`](https://rushjs.io/pages/configs/deploy_json/) / [`rush init-deploy`](https://rushjs.io/pages/commands/rush_init-deploy/)（部署场景、`dependenciesToExclude`、`--create-archive`、目标目录布局）
+- [package.json 的 `files` 字段](https://docs.npmjs.com/cli/v11/configuring-npm/package-json#files)（白名单优先于 `.gitignore`，`rush deploy` 的 npm-pack 过滤据此挑选产物）
 - [Express behind proxies](https://expressjs.com/en/guide/behind-proxies.html)（`trust proxy` 的跳数语义）
 - [LogTape 文件 sink](https://logtape.org/sinks/file)（缓冲、轮转、`flushInterval`）
 

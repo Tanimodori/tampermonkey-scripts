@@ -232,8 +232,8 @@ describe('loadConfig and getConfig', () => {
   it('rejects coordinates that are not the two ids a call path carries', () => {
     // The sheet URL from the browser is the mistake this catches: the API wants its own `fileID`.
     expect(() => loadConfig(baseEnv({ OPS_DOCS_FILE_ID: 'https://docs.qq.com/sheet/DXXXXXXXXXXXXXXX' }))).toThrow(/OPS_DOCS_FILE_ID must be the API fileID/);
-    expect(() => loadConfig(baseEnv({ OPS_DOCS_FILE_ID: '300000000 IchOGcTSLJNm' }))).toThrow(/OPS_DOCS_FILE_ID must be the API fileID/);
-    expect(() => loadConfig(baseEnv({ OPS_DOCS_SHEET_ID: 't00i2h/records' }))).toThrow(/OPS_DOCS_SHEET_ID must be a smartsheet sub-sheet ID/);
+    expect(() => loadConfig(baseEnv({ OPS_DOCS_FILE_ID: '300000000 sample fileID' }))).toThrow(/OPS_DOCS_FILE_ID must be the API fileID/);
+    expect(() => loadConfig(baseEnv({ OPS_DOCS_SHEET_ID: 'tXXXXXX/records' }))).toThrow(/OPS_DOCS_SHEET_ID must be a smartsheet sub-sheet ID/);
   });
 
   it('leaves Redis without an address when the environment names no server', () => {

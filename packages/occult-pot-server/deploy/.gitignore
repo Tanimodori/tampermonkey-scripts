@@ -1,0 +1,4 @@
+# The outputs of "rush deploy" (see the README): the deployment folder the image is built from, and
+# the archive that gets copied to the server. Both are build artifacts, never committed.
+server/
+occult-pot-server.zip

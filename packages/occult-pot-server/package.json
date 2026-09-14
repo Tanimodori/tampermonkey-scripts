@@ -15,6 +15,9 @@
   "author": "Tanimodori",
   "type": "module",
   "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "dev": "tsx watch src/index.ts",

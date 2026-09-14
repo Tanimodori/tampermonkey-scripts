@@ -28,38 +28,51 @@ process.env  <  .env  <  .env.<mode>  <  .env.local  <  .env.<mode>.local  <  OP
 
 文档坐标由 `OPS_DOCS_FILE_ID` / `OPS_DOCS_SHEET_ID` 直接给出（就是调用路径里的 `fileID` 与子表 id，不是浏览器里的表格链接）；服务在启动时核对子表确实在这份文档里，并用一次 `userinfo` 校验凭据，任何一步失败都会直接拒绝启动并退出，而不是等到第一个请求才失败。
 
-## 部署
+## 打包与部署
+
+镜像是**单阶段**的：它不编译、不装依赖、不联网，只把 `rush deploy` 打出来的产物解到 `/app`。所以顺序是"先在开发机上打包，再把产物交给服务器"，服务器不需要仓库源码、不需要 node/rush/pnpm，也不需要 GitHub。
+
+**打包**（在仓库根执行；`rush deploy` 只拷文件，不会替你构建）：
 
 ```bash
-# 构建上下文是整个 monorepo（Dockerfile 要用仓库的 Rush/pnpm 装依赖），所以先到包目录：
-cd packages/occult-pot-server
-docker compose up -d --build
+rush build --to occult-pot-server
+rush deploy --scenario occult-pot-server \
+  --target-folder packages/occult-pot-server/deploy/server \
+  --overwrite --create-archive ../occult-pot-server.zip
 ```
 
-**更新已部署的实例**：`--build` 不能省 —— 不带它时 compose 看到 `occult-pot-server:latest` 已经存在就直接复用那个镜像，容器不会重建，现象就是"代码改了却没生效"。构建上下文是仓库根，所以远程要先拿到新代码：
+- 场景文件是 `common/config/rush/deploy-occult-pot-server.json`，场景名与包同名。`dependenciesToExclude: ["*"]` 让部署树里只有 `dist/` 与 `package.json` —— vite 已把运行时依赖全部内联，部署目录里没有 `node_modules`，也不会有 `src/`、`test/`、`docs/` 与任何 `.env*`（文件白名单见 `package.json` 的 `files`）。
+- 产物：`packages/occult-pot-server/deploy/server/packages/occult-pot-server/`（部署树，镜像从这里 `COPY`）与 `packages/occult-pot-server/deploy/occult-pot-server.zip`（传输用）。
+- **`--overwrite` 会递归删除 target folder 的内容**，所以 target 固定写 `deploy/server`；**绝不能**写成 `deploy`，那会删掉 Dockerfile 与 nginx 配置。
+
+**部署/更新**（服务器上的部署根目录是 `~/occult-pot-server/`，与包目录一一对应，详见 [`deploy/README.md`](deploy/README.md)）：
 
 ```bash
-git pull                          # 在仓库根
-cd packages/occult-pot-server
-docker compose up -d --build      # 重新构建镜像并重建容器
+# 开发机：目标写成你自己的部署主机（非默认 SSH 端口就用 -P <port>，账号与地址按实际填）
+scp packages/occult-pot-server/deploy/occult-pot-server.zip \
+    <user>@<host>:~/occult-pot-server/deploy/
+
+# 服务器
+cd ~/occult-pot-server
+rm -rf deploy/server && unzip -oq deploy/occult-pot-server.zip -d deploy/server
+sudo docker compose up -d --build
 ```
 
-镜像重建后 `up -d` 会自行重建容器（想强制就再加 `--force-recreate`）；只重建不启动是 `docker compose build occult-pot-server`。"镜像里带着旧代码"这一种可能排除了：`Dockerfile.dockerignore` 排除了 `**/dist`，运行阶段的 `dist/` 只可能是在容器里从容器内的源码编出来的，而 `COPY . .` 之后每一层都随源码失效，所以一般也用不着 `--no-cache`。确认线上跑的是哪一份：
+- `--build` 不能省：不带它时 compose 看到 `occult-pot-server:latest` 已经存在就直接复用，线上还是旧产物。镜像重建后 `up -d` 会自行重建容器（想强制就再加 `--force-recreate`）；只重建不启动是 `sudo docker compose build occult-pot-server`。
+- Docker 的 `ADD` **不会**解 zip，所以必须先在服务器上解压到 `deploy/server/` 再构建。
+- 配置文件/机读字段没变，只是**来源**变了：`env_file` 那三份、`environment` 里的三项、`./logs` 挂载、`./deploy` 构建上下文都相对 compose 文件，所以把包目录里除源码之外的东西原样放到 `~/occult-pot-server/` 即可。
+- 回滚：留一份上一版 zip，覆盖回去重新解压 + `up -d --build`。
+
+确认线上跑的是哪一份：
 
 ```bash
 curl -sS -o /dev/null -w '%{http_code}\n' localhost:29070/api/v1/pots   # 200
 curl -sS -o /dev/null -w '%{http_code}\n' localhost:29070/api/v1        # 404（索引已删）
-docker compose exec occult-pot-server grep -c '"/v1' dist/index.js      # 必须输出 0
-docker images occult-pot-server --format '{{.CreatedAt}} {{.ID}}'       # 镜像时间应刚刚构建
+sudo docker compose exec occult-pot-server grep -c '"/v1' dist/index.js # 必须输出 0
+sudo docker images occult-pot-server --format '{{.CreatedAt}} {{.ID}}'  # 镜像时间应刚刚构建
 ```
 
 这个 compose 用的是本地构建的 `occult-pot-server:latest`（没有任何 registry），所以 `docker compose pull` 在它身上什么也不做；若是改成在别处构建、推送到 registry 再拉取，那一侧的命令才是 `docker compose pull && docker compose up -d`。前面还有 CDN 或云 LB 时记得刷缓存 —— 404 同样会被缓存。
-
-构建阶段默认走国内镜像，两者都是 Dockerfile 顶部的 build arg（值是**主机名**，协议由各自工具决定）：apt 用 [TUNA](https://mirrors.tuna.tsinghua.edu.cn/help/debian/)（把基础镜像自带的 `deb.debian.org` 换掉，走 http —— `ca-certificates` 正是这一步才装上的包），npm 用 [npmmirror](https://npmmirror.com)（构建阶段的 `/root/.npmrc` 覆盖 Rush/pnpm 自举时读不到项目配置的那一段，`common/config/rush/.npmrc` 供其后的 pnpm 用，二者都取自同一个 arg）。境外网络构建：
-
-```bash
-docker compose build --build-arg APT_MIRROR=deb.debian.org --build-arg NPM_MIRROR=registry.npmjs.org
-```
 
 三个容器，一张 `occult-pot` 网络：
 
@@ -90,7 +103,7 @@ docker compose exec occult-pot-server tail -f /var/log/occult-pot-server/occult-
 
 nginx 用 `$request_id` 覆盖 `X-Request-Id`，所以 `docker compose logs nginx` 里的 `requestId` 与 app 日志（以及上面的文件）是同一个，两边可以对着追一次请求。
 
-镜像是多阶段的 `node:24-slim` 构建：运行时依赖（express、helmet、cors、express-rate-limit、body-parser、morgan、defu、zod、undici、ioredis、rate-limit-redis）都被 vite 打进自包含的 `dist/`，所以运行阶段只带 `dist/`，以非 root 的 `node` 用户运行，健康检查打 `/healthz`。收到 `SIGTERM` 会优雅停机：停止接受连接、等在途请求结束，然后退出；写入都在请求路径上，没有需要另外排空的队列。
+镜像是**单阶段**的 `node:24-slim`：唯一的构建动作是把 `rush deploy` 的产物 `COPY` 到 `/app` 并建好日志目录，运行阶段只有自包含的 `dist/`（express、helmet、cors、express-rate-limit、body-parser、morgan、defu、zod、undici、ioredis、rate-limit-redis 都被 vite 打进 bundle，所以镜像里没有 `node_modules`），以非 root 的 `node` 用户运行，健康检查打 `/healthz`。收到 `SIGTERM` 会优雅停机：停止接受连接、等在途请求结束，然后退出；写入都在请求路径上，没有需要另外排空的队列。
 
 **建议单实例部署**：状态、凭据与限流计数都在 Redis 里，所以重启不丢数据、多副本共享同一份视角；但出站节流队列是每进程一份，多副本会把腾讯文档的调用量成倍放大（见 [存储设计](docs/data/store.md) §7）。
 
@@ -112,7 +125,7 @@ compose 的 `env_file` 按顺序层叠——`.env.production` → `.env.local` �
 
 **`$` 不会被吃掉**：`env_file` 三项都写了 `format: raw`（实测：不加就会被 compose 插值，文档 id 的 `$` 连同后半段一起消失）。raw 表示"值按原样传给容器"，与宿主机上应用自己读这个文件的结果一致，所以文档 id 就按平台的写法（`300000000$…`）填。代价是这三份文件不能用 dotenv 的糖：值后面跟 ` # 注释` 会把注释算进值里，值两边的引号也会被保留。这条要求依赖 Compose ≥ 2.30。
 
-镜像构建的忽略文件是 `Dockerfile.dockerignore`（BuildKit 按 Dockerfile 命名的约定）：构建上下文是仓库根，那里没有 `.dockerignore`，所以旧名字从来没生效过；改名前上下文里带着 `common/temp`（本机约 967MB）与 `.env*`。
+镜像的构建上下文是 `deploy/`（compose 里的 `build.context`），里面只有 `Dockerfile`、nginx/fail2ban/logrotate 配置与 `rush deploy` 的产物，所以既不需要 `.dockerignore` 去挡 monorepo，也不会把源码或 `.env*` 送进构建；哪些文件算"产物"由 `package.json` 的 `files` 白名单和 `deploy-occult-pot-server.json` 决定。
 
 ## 开发
 
@@ -133,8 +146,9 @@ rushx typecheck    # tsc --noEmit
 | `test` | `npm run test:unit && npm run test:redis && npm run test:api` | 三个串联 | 每个用例至少跑一次，涉及真实依赖的额外各跑一次 |
 
 ```bash
-# 测试用的 Redis 跑在 WSL 的 docker 里：/root/containers/test-redis（端口 6399，restart: unless-stopped）
-wsl -d Ubuntu-26.04 -u root -- bash -lc 'cd /root/containers/test-redis && docker compose up -d'
+# 测试用的 Redis 就是一个本地容器（端口 6399，restart: unless-stopped）：
+#   docker run -d --name test-redis -p 6399:6379 --restart unless-stopped redis:7-alpine
+# 地址写在 `.env.test-redis` 里（本机自己的地址放 `.env.test-redis.local`）。
 
 rushx test:redis
 rushx test:api

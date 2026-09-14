@@ -17,7 +17,9 @@ enabled = true
 port = 29070
 
 filter = occult-pot-nginx
-logpath = /home/ubuntu/tampermonkey-scripts/packages/occult-pot-server/logs/nginx-access.log
+# The placeholder below is the deployment's own log path: change it to where this deployment keeps
+# its logs (next to the compose file, i.e. <deployment folder>/logs/nginx-access.log).
+logpath = /path/to/occult-pot-server/logs/nginx-access.log
 
 # Tuned to the traffic this host actually sees: the busiest scanner sent 106 requests in one stretch
 # and was already being refused by nginx's own `limit_req`. Twenty misses inside ten minutes is a

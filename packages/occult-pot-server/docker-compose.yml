@@ -40,8 +40,11 @@ services:
 
   occult-pot-server:
     build:
-      context: ../..
-      dockerfile: packages/occult-pot-server/Dockerfile
+      # The image only installs the artifact "rush deploy" wrote here (see deploy/README.md): the
+      # context is that folder instead of the monorepo, so no sources, no package manager and no
+      # apt/npm mirrors are involved.
+      context: ./deploy
+      dockerfile: Dockerfile
     image: occult-pot-server:latest
     depends_on:
       redis:

@@ -2,7 +2,14 @@
 
 ## 响应结构
 
-失败响应固定为四个字段：
+成功与失败共用同一个信封，四个字段：
+
+- `code`：成功为 `SUCCESS`，失败以 `ERR_` 开头。
+- `data`：成功时的负载；失败时永远为 `null`。
+- `message`：成功时默认为 `ok`；失败时是唯一的信息载体，校验失败逐字段说明，上游失败包含腾讯文档返回的 `ret`、`msg` 与 `status`。
+- `requestId`：与 `X-Request-Id` 响应头一致，可在日志中定位这次请求。
+
+`X-Request-Id` 沿用来访请求中合法的值（`^[\w.:-]{1,128}$`），否则生成一个 UUID；失败的 HTTP 状态码由错误码决定。排查用的额外信息（非生产环境 5xx 的调用栈前几行）只出现在日志里。
 
 ```json
 {
@@ -12,11 +19,6 @@
   "requestId": "0d5f…"
 }
 ```
-
-- `code` 是稳定的机器可读标识，成功为 `SUCCESS`，失败一律以 `ERR_` 开头；失败时 `data` 永远是 `null`。
-- `message` 是唯一的信息载体：校验失败时逐字段说明，上游失败时包含腾讯文档返回的 `ret` / `msg` / `status`。
-- `requestId` 与 `X-Request-Id` 响应头一致，可用来在日志中定位这次请求。
-- 排查用的额外信息（非生产环境 5xx 的调用栈前几行）只出现在日志里。
 
 `/readyz` 是探针：`503` 时 `code` 为 `ERR_NOT_READY`，`data` 为 `{"status":"offline"}`，`message` 只写 `offline`。
 
@@ -29,7 +31,7 @@
 | `ERR_METHOD_NOT_ALLOWED`     | 405  | 路径存在但不支持该方法，响应带 `Allow`                     |
 | `ERR_UNSUPPORTED_MEDIA_TYPE` | 415  | 请求体没有声明 `application/json`，或编码不支持            |
 | `ERR_PAYLOAD_TOO_LARGE`      | 413  | 请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`                    |
-| `ERR_RATE_LIMITED`           | 429  | 按 IP 的入站限流；也可能是前置 nginx 直接拒绝              |
+| `ERR_RATE_LIMITED`           | 429  | 按 IP 的入站限流                                           |
 | `ERR_NOT_READY`              | 503  | `/readyz` 判为不可用：凭据过期、坐标未核对或 Redis 读不到  |
 | `ERR_UPSTREAM_AUTH_FAILED`   | 503  | 腾讯文档拒绝凭据，或凭据已过期                             |
 | `ERR_UPSTREAM_RATE_LIMITED`  | 503  | 腾讯文档返回 429 或业务码 `400007`，带 `retryAfterSeconds` |
@@ -38,7 +40,17 @@
 | `ERR_CONFIG_INVALID`         | 500  | 配置非法、配置的子表不在该文档里，或凭据校验失败           |
 | `ERR_INTERNAL_ERROR`         | 500  | 其他未预期的服务端错误                                     |
 
-公网上看不到这些信封：nginx 只转发 `/api/v1/pots`、`/api/v1/pots/<id>` 与 `/readyz`，其余路径在 nginx 层就以纯文本 `404 Not Found` 结束。上表只适用于直连应用端口的调用，见 [`deploy/README.md`](../../deploy/README.md)。
+以上只适用于直连应用端口与公网白名单内的路径；白名单之外由 nginx 直接返回纯文本 `404 Not Found`，见 [API 端点](endpoints.md) 的公网入口一节。
+
+## 请求体解析失败
+
+| 类型                                           | HTTP | 文案                                                             |
+| ---------------------------------------------- | ---- | ---------------------------------------------------------------- |
+| `entity.too.large`                             | 413  | `Request body exceeds the configured OPS_SERVER_JSON_BODY_LIMIT` |
+| `entity.parse.failed`                          | 400  | `Request body is not valid JSON`                                 |
+| `encoding.unsupported` / `charset.unsupported` | 415  | `Unsupported request body encoding; send UTF-8 JSON`             |
+
+请求体未声明 `Content-Type: application/json` 或声明了其他类型时同样返回 `415`，避免请求体被跳过解析。
 
 ## 校验失败的文案
 
@@ -53,31 +65,18 @@
 }
 ```
 
-请求体与表格中的行共用同一套规则，字段与规则的对应关系见 [API 端点](endpoints.md) 与 [Pot 数据](../data/pot.md)。
-
-## 请求体解析失败
-
-| 类型                                           | HTTP | 文案                                                             |
-| ---------------------------------------------- | ---- | ---------------------------------------------------------------- |
-| `entity.too.large`                             | 413  | `Request body exceeds the configured OPS_SERVER_JSON_BODY_LIMIT` |
-| `entity.parse.failed`                          | 400  | `Request body is not valid JSON`                                 |
-| `encoding.unsupported` / `charset.unsupported` | 415  | `Unsupported request body encoding; send UTF-8 JSON`             |
-
-请求体未声明 `Content-Type: application/json` 或声明了其他类型时同样返回 `415`，避免请求体被跳过解析。
+请求体与表格中的行共用同一套规则，字段与取值见 [API 端点](endpoints.md) 与 [Pot 数据](../data/pot.md)。
 
 ## 上游失败如何呈现
 
-| 上游情况                      | 返回的 code                                                    | 是否重试 |
-| ----------------------------- | -------------------------------------------------------------- | -------- |
-| 传输错误 / HTTP 5xx           | `ERR_UPSTREAM_FAILED` (502)                                    | 是       |
-| HTTP 429 或业务码 `400007`    | `ERR_UPSTREAM_RATE_LIMITED` (503)                              | 是       |
-| HTTP 401/403 或鉴权类业务码   | `ERR_UPSTREAM_AUTH_FAILED` (503)                               | 否       |
-| 参数类业务码 / 无法解析的响应 | `ERR_UPSTREAM_BAD_REQUEST` (400) / `ERR_UPSTREAM_FAILED` (502) | 否       |
-| 文档或子表 ID 解析失败        | `ERR_CONFIG_INVALID` (500)                                     | 否       |
-| 凭据校验或刷新被拒绝          | `ERR_UPSTREAM_AUTH_FAILED` (503) / `ERR_CONFIG_INVALID` (500)  | 否       |
+- 传输错误或 HTTP 5xx：`ERR_UPSTREAM_FAILED`（502），会重试。
+- HTTP 429 或业务码 `400007`：`ERR_UPSTREAM_RATE_LIMITED`（503），会重试。
+- HTTP 401/403 或鉴权类业务码：`ERR_UPSTREAM_AUTH_FAILED`（503），不重试。
+- 参数类业务码：`ERR_UPSTREAM_BAD_REQUEST`（400），不重试。
+- 无法解析的响应：`ERR_UPSTREAM_FAILED`（502），不重试。
+- 文档或子表 ID 解析失败：`ERR_CONFIG_INVALID`（500），不重试。
+- 凭据校验或刷新被拒绝：`ERR_UPSTREAM_AUTH_FAILED`（503）或 `ERR_CONFIG_INVALID`（500），不重试。
 
-重试次数、退避与节流参数见 [与腾讯文档通讯](upstream.md)。
+重试次数与退避参数见 [与腾讯文档通讯](upstream.md)。
 
-## 日志
-
-错误在响应之外还会记录一条日志：5xx 记为 `Request failed`（`error`），4xx 记为 `Request rejected`（`warning`），字段包含 `requestId`、`method`、`path`、`status`、`code`。访问日志另有一行，包含状态码与耗时，被短路的响应（413、415、429、404）同样会被记录。格式与脱敏规则见 [日志](../logging.md)。
+失败的请求会留下日志：5xx 记 `Request failed`（`error`），4xx 记 `Request rejected`（`warning`）。格式与脱敏规则见 [日志](../logging.md)。

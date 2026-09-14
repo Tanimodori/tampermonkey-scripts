@@ -1,10 +1,8 @@
 # 本地开发
 
-开发与测试环境的准备方式。
-
 ## 运行前置
 
-Node.js 与 pnpm 由 Rush 管理：在仓库根执行 `rush update` 安装依赖，包内脚本用 `rushx <script>` 运行。
+Node.js 与 pnpm 由 Rush 管理：在仓库根执行 `rush update` 安装依赖，包内脚本用 `rushx` 运行。
 
 未配置 `OPS_SERVER_REDIS_URL` 时使用进程内 Redis mock，开发模式的上游地址指向本地，因此没有外部服务也能启动。连接真实腾讯文档需要一份测试文档的坐标与凭据；运行 Redis 测试需要一个本机 Redis：
 
@@ -14,22 +12,26 @@ docker run -d --name test-redis -p 6399:6379 --restart unless-stopped redis:7-al
 
 ## 配置来源
 
-配置来源按下表顺序合并，右侧覆盖左侧：
+配置按下列顺序合并，优先级由高到低，靠前者覆盖靠后者：
 
-```
-process.env  <  .env  <  .env.<mode>  <  .env.local  <  .env.<mode>.local  <  OPS_ENV_PATH  <  <OPS_ENV_PATH>.local
-```
+1. `${OPS_ENV_PATH}.local`
+2. `${OPS_ENV_PATH}`
+3. `.env.${mode}.local`
+4. `.env.local`
+5. `.env.${mode}`
+6. `.env`
+7. 原生环境变量
 
-`<mode>` 是 vite 的运行模式：`rushx dev` 与直接运行源码是 `development`，构建产物是 `production`，测试是 `test`。`OPS_ENV_PATH` 只从原生环境读取，指向的文件优先级最高，并会连带读取同名的 `.local` 文件。文件中的值覆盖原生环境变量。
+文件中的值覆盖原生环境变量。`OPS_ENV_PATH` 只从原生环境读取。`${mode}` 是 vite 的运行模式：`rushx dev` 与直接运行源码是 `development`，构建产物是 `production`，测试是 `test`。
 
-| 文件                      | 用途                             | 入库                  |
-| ------------------------- | -------------------------------- | --------------------- |
-| `.env`                    | 全部配置项的参考，已注释、不生效 | 是                    |
-| `.env.development`        | 开发模式的值，全部指向 mock      | 是                    |
-| `.env.local`              | 本机共享值                       | 否                    |
-| `.env.test-redis(.local)` | Redis 测试的地址                 | 示例入库，`.local` 否 |
-| `.env.test-api(.local)`   | 腾讯文档测试的坐标与凭据         | 示例入库，`.local` 否 |
-| `.env.production(.local)` | 生产模板与生产真实值             | 模板入库，`.local` 否 |
+各配置文件的用途：
+
+- `.env`：全部配置项的参考，已注释、不生效（入库）。
+- `.env.development`：开发模式的值，全部指向 mock（入库）。
+- `.env.local`：本机共享值（不入库）。
+- `.env.test-redis`、`.env.test-redis.local`：Redis 测试的地址，前者入库作为示例。
+- `.env.test-api`、`.env.test-api.local`：腾讯文档测试的坐标与凭据，前者入库作为示例。
+- `.env.production`、`.env.production.local`：生产模板与生产真实值，前者入库。
 
 ## 测试
 

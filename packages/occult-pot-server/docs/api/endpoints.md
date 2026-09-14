@@ -1,52 +1,44 @@
 # API 端点
 
-所有响应都是 JSON，且共用同一个信封：
+所有响应都是 JSON，共用同一个信封：成功是 HTTP `200` 加 `{"code":"SUCCESS","data":…,"message":"ok","requestId":"…"}`；失败是对应的状态码加 `{"code":"ERR_…","data":null,"message":"…","requestId":"…"}`。失败时 `message` 是唯一的信息载体，校验失败会逐字段说明。每个响应带 `X-Request-Id` 头：入站值合法（`^[\w.:-]{1,128}$`）时沿用，否则生成 UUID。错误码对照见 [错误处理](errors.md)。
 
-- **成功**：HTTP `200` + `{ "code": "SUCCESS", "data": …, "message": "ok", "requestId": "…" }`
-- **失败**：对应的 HTTP 状态码 + `{ "code": "ERR_…", "data": null, "message": "…", "requestId": "…" }`
+## 端点一览
 
-`message` 在成功时默认是 `"ok"`，写入端点用它报出确认信息；失败时它就是全部信息 —— 包括校验失败时逐字段的清单（见 `errors.md` §4），没有额外的结构化字段。每个响应都带 `X-Request-Id` 头：入站值合法（`^[\w.:-]{1,128}$`）就沿用，否则生成一个 UUID；信封里的 `requestId` 与它一致。错误码与状态码的完整对照见 `errors.md`。
+| 方法 | 路径                   | 说明                              |
+| ---- | ---------------------- | --------------------------------- |
+| GET  | `/healthz`             | 存活探针，不访问腾讯文档          |
+| GET  | `/readyz`              | 就绪探针，只回答 online / offline |
+| GET  | `/api/v1/pots`         | 表上所有罐子，一次返回            |
+| GET  | `/api/v1/pots/{potId}` | 按游戏内 ID 取一个罐子            |
+| POST | `/api/v1/pots`         | 追加一个罐子                      |
 
-## 1. 通用约定
+两个探针不带版本前缀，也不限流。公网经 nginx 转发的只有 `/readyz`，白名单之外的路径由 nginx 返回纯文本 `404 Not Found`，不转发给应用，见 [`deploy/README.md`](../../deploy/README.md)。
 
-- **文本参数是 JSON 字符串**（`world`、`map`、`potId`）；这些字段传数字会被拒绝。ID 永远不是数字，不存在精度问题。
-- **时间参数是 epoch 毫秒**：接受 13 位字符串（`"1789201200000"`）或 JSON 数字（`1789201200000`）。13 位的上限比 `Number.MAX_SAFE_INTEGER` 小两千倍，double 可以精确表示；无法表示的宽度会被拒绝，而不是被四舍五入。服务不解析任何日期时间文本：`"2026-09-12 16:20"`、`"16:20"`、`1789201200`（秒）都会 400 并点名出错字段。
-- **响应照常类型化**：两个时刻以 JSON 数字返回（`northRefreshAtMs` / `lastVisitAtMs`）。
-- 读取端点**不接受任何参数**，多余的查询参数被忽略而不是拒绝 —— 老客户端不会因为多带参数而坏掉。
+## 通用约定
 
-## 2. 端点一览
+- 文本参数（`world`、`map`、`potId`）是 JSON 字符串，传数字会被拒绝。
+- 时间参数是 epoch 毫秒：13 位字符串或 JSON 数字都可以，响应中同样是数字。服务不解析日期时间文本，`"2026-09-12 16:20"`、`"16:20"`、`1789201200`（秒）都会返回 `400` 并点名出错字段。
+- 读取端点不接受参数，多余的查询参数被忽略。
 
-| 方法 | 路径                   | 说明                                     |
-| ---- | ---------------------- | ---------------------------------------- |
-| GET  | `/healthz`             | 存活探针，不触碰上游（只给容器健康检查） |
-| GET  | `/readyz`              | 就绪探针：只回答 online / offline        |
-| GET  | `/api/v1/pots`         | 表上所有罐子，一次返回                   |
-| GET  | `/api/v1/pots/{potId}` | 按游戏内 ID 取一个罐子                   |
-| POST | `/api/v1/pots`         | 追加一个罐子（同步写回表）               |
-
-`/healthz` 与 `/readyz` 不带版本前缀，也不限流。经 nginx 暴露的探针只有 `/readyz`：容器的健康检查直连 app 的 3000 端口，所以 `/healthz` 不必对公网开放。白名单之外的任何路径（包括 `/api/v1` 本身、`/api/v1` 下的未知路径、扫描器的 `/cgi-bin/...`）由 nginx 直接返回**纯文本** `404 Not Found`，不带本文档描述的信封 —— 它们根本到不了 app，也不进 app 日志（nginx 的访问日志照常记录，fail2ban 读的就是那份）。
-
-## 3. `GET /healthz`
+## GET /healthz
 
 ```json
 { "code": "SUCCESS", "data": { "status": "ok", "uptimeSeconds": 42, "version": "v1" }, "message": "ok", "requestId": "…" }
 ```
 
-## 4. `GET /readyz`
+## GET /readyz
 
-`200` + `{"status":"online"}` 表示可以服务；不可用时 `503` + `{"status":"offline"}`。就绪的含义是：启动时核对过文档坐标（`OPS_DOCS_SHEET_ID` 在 `OPS_DOCS_FILE_ID` 里）、凭据没有过期，并且此刻读得到状态存储（Redis）。凭据临近过期只算 degraded（进入 `OPS_DOCS_TOKEN_EXPIRY_WARN_MS` 窗口），仍然返回 online。
+`200` 加 `{"status":"online"}` 表示可以服务，不可用时是 `503` 加 `{"status":"offline"}`。
 
 ```json
 { "code": "SUCCESS", "data": { "status": "online" }, "message": "ok", "requestId": "…" }
 ```
 
-**探针只回答状态，不回答为什么**：`data` 里只有 `status` 一个字段（离线时 `message` 也只是 `offline`）。凭据的到期时刻、token 长度、校验时间、缓存新鲜度、出站节流窗口都不再出现在响应里 —— 探针是对公网的，那些是服务内部的事，报出来只会替扫描者做侦察。状态**翻转**时各记一条日志（离线那条带 `reasons`，见 `logging.md` §3）：要细节看日志，而不是看探针。
+就绪的条件是：启动时核对过文档坐标、凭据没有过期、当前读得到 Redis。凭据临近过期只算 degraded（进入 `OPS_DOCS_TOKEN_EXPIRY_WARN_MS` 窗口），仍返回 online。响应中只有 `status` 一个字段，不给出原因；状态翻转时会记录日志，见 [日志](../logging.md)。
 
-启动时会用 `GET /oauth/v2/userinfo` 校验一次凭据、并核对一次子表；这两件事的结果由 upstream store 给出（`readiness()`），探针只负责把它折成一个词。详见 [与腾讯文档通讯](upstream.md) §7。
+## GET /api/v1/pots
 
-## 5. `GET /api/v1/pots`
-
-一次返回表上所有罐子，**不接受任何参数**：这张表最多几十个罐子，所以没有分页、没有过滤、也没有视图切换。
+一次返回表上所有罐子，不接受参数：这张表最多几十行，没有分页与过滤。
 
 ```json
 {
@@ -65,29 +57,29 @@
 }
 ```
 
-返回的就是这五个字段，没有别的东西：没有 `recordId`、没有原始 `values`、没有 `timing`/`refreshCycle`/`lastVisitMinutesAgo`、没有 `stale`/`valid`/`duplicate` 标记，也没有表总数。表里那三列派生列是给人在表格里看的，不属于 API（见 `../data/pot.md`）。
+返回的字段只有上面五个，没有记录 ID、原始单元格、新鲜度标记与总行数；表内那三列派生列不属于 API，见 [Pot 数据](../data/pot.md)。
 
-- 不满足表规则的行走不到这里（`北罐刷新时间` 为 `0`、缺失或格式不对、`ID` 不合规等）：回表时它们会被**从表里删掉**，也不会写进缓存。
-- `最后一次进岛时间` 距今超过 `OPS_UPSTREAM_STALE_AFTER_MS`（默认 3 小时）的行同样会被删掉，永远不会返回。
-- 重复行**照原样返回**：去重是客户端脚本的职责（见 `../data/pot.md`）。
-- 读的是 Redis 里的缓存：只有缓存超过 `OPS_UPSTREAM_CACHE_TTL` 才会回表刷新；回表失败而缓存非空时，旧缓存会照常返回（并记一条 warning），缓存为空时才把失败报给调用方。
-- 走 `general` 限流（见 §8）。
+- 不满足表格规则的罐子会在读取时从表里删除，也不会进入缓存。
+- `最后一次进岛时间` 超过 `OPS_UPSTREAM_STALE_AFTER_MS` 的行同样会被删除，不会返回。
+- 重复行照原样返回，去重由客户端负责。
+- 缓存未过期时直接返回缓存；回源失败且缓存非空时返回旧缓存并记录一条 warning，缓存为空时返回错误。见 [存储设计](../data/store.md)。
+- 受 `general` 限流。
 
 ```bash
 curl 'http://127.0.0.1:3000/api/v1/pots'
 ```
 
-## 6. `GET /api/v1/pots/{potId}`
+## GET /api/v1/pots/{potId}
 
-唯一输入是路径里的游戏内 ID（查询参数被忽略），返回形状与列表里的单个罐子一致；找不到时是 `404` `ERR_NOT_FOUND`。
+唯一输入是路径里的游戏内 ID，返回的形状与列表中的单个罐子一致；找不到时是 `404` `ERR_NOT_FOUND`。
 
 ```bash
 curl 'http://127.0.0.1:3000/api/v1/pots/54-1-4000E8F3'
 ```
 
-## 7. `POST /api/v1/pots`
+## POST /api/v1/pots
 
-**文本字段是 JSON 字符串，时刻是 13 位字符串或数字。**
+五个字段全部必填，文本字段是 JSON 字符串，时刻是 13 位字符串或数字。罐子由客户端观察得到，服务不生成时间，也不会用自己的时钟填充 `最后一次进岛时间`。
 
 ```json
 {
@@ -99,28 +91,26 @@ curl 'http://127.0.0.1:3000/api/v1/pots/54-1-4000E8F3'
 }
 ```
 
-| 字段                             | 接受形式                        |
-| -------------------------------- | ------------------------------- |
-| `world`                          | `"鸟"`、`"猫"`、`"猪"`、`"狗"`  |
-| `map`                            | `"北岛"`、`"南岛"`              |
-| `potId`                          | `"54-1-4000E8F3"`               |
-| `northRefreshAt` / `lastVisitAt` | epoch 毫秒，13 位，数字或字符串 |
+| 字段                             | 接受的形式                                               |
+| -------------------------------- | -------------------------------------------------------- |
+| `world`                          | `"鸟"`、`"猫"`、`"猪"`、`"狗"`                           |
+| `map`                            | `"北岛"`、`"南岛"`                                       |
+| `potId`                          | 形如 `"54-1-4000E8F3"`，即 `^\d+-\d+-400[0-9A-Fa-f]{5}$` |
+| `northRefreshAt` / `lastVisitAt` | epoch 毫秒，13 位，数字或字符串                          |
 
-五个字段全部必填：罐子是客户端观察到的，服务端从不替客户端捏造时间，尤其不会用自己的时钟填 `最后一次进岛时间`。
+不接受的形式：
 
-明确**不接受**的形态：
+- `world` / `map` / `potId` 传 JSON 数字；
+- 日期时间字符串，例如 `"2026-09-12 16:20"`、`"2026-09-12T16:20:30"`、`"16:20"`；
+- 宽度或精度不对的 epoch：秒（`1789201200`）、微秒（`17892012000000000`）、小数（`1789201200000.7`）与 `0`。
 
-- `world`/`map`/`potId` 传 JSON 数字 —— 它们是文本，ID 也不是数字；
-- 日期时间字符串（`"2026-09-12 16:20"`、`"2026-09-12T16:20:30"`、`"16:20"`）—— 服务不解析墙上时钟文本，任何奇特的日期字面量都到不了表里；
-- 宽度或精度不对的 epoch：秒（`1789201200`）、微秒（`17892012000000000`）、小数（`1789201200000.7`）与 `0` 都是 `400`。
-
-每次拒绝都会点名出错的字段，例如：
+被拒绝时 `message` 会点名出错的字段：
 
 ```
 Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 1789201200000, received "1789201200"
 ```
 
-**写入是同步的**：行先落到表里，然后才回答 `200`，`data` 就是写进去的那个罐子：
+写入是同步的：行先落到表里再回答 `200`，`data` 是写进去的那个罐子。
 
 ```json
 {
@@ -131,15 +121,11 @@ Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 178
 }
 ```
 
-- **表拒绝这次写入时，请求就失败**（`502` `ERR_UPSTREAM_FAILED`、`503` `ERR_UPSTREAM_AUTH_FAILED` / `ERR_UPSTREAM_RATE_LIMITED`、`400` `ERR_UPSTREAM_BAD_REQUEST`），而且**什么都没写进去**：缓存也不会多出这个罐子。没有队列、没有后台重试、没有可轮询的句柄。
-- 写入成功后这次结果同时折进 Redis 缓存，所以 `GET /api/v1/pots` 立刻看得到它，且这次读不会回表。
-- 没有批次：一次请求一次 `addRecords`，行序等于请求到达顺序。
-- 走 `writes` 限流（见 §8）。
-
-值得知道的几件事：
-
-- **没有幂等头、没有内容哈希、也不对着表做唯一性检查。** 同一个 body 发两次就是两行（缓存里也是两条，读回来就能看到），即使表里已经有那个 `区服|地图|ID`。清理重复是客户端脚本的事（见 `../data/pot.md`）。
-- 表与缓存都写成功之后才回答，所以「成功」意味着这次写入在两侧都已生效。
+- 表拒绝写入时请求失败（`502` `ERR_UPSTREAM_FAILED`、`503` `ERR_UPSTREAM_AUTH_FAILED` 或 `ERR_UPSTREAM_RATE_LIMITED`、`400` `ERR_UPSTREAM_BAD_REQUEST`），此时不会写入任何内容，缓存也不会增加这个罐子。没有队列、后台重试或可轮询的句柄。
+- 写入成功后这条记录同时进入缓存，因此紧接着的列表读取能看到它，且不会回源。表与缓存都写入成功后才回答。
+- 没有批次：一次请求写入一行，行序等于请求到达顺序。
+- 没有幂等机制，也不检查表中是否已有同一个 `区服|地图|ID`：同一个请求体发送两次就是两行，去重由客户端负责。
+- 受 `writes` 限流。
 
 ```bash
 curl -X POST http://127.0.0.1:3000/api/v1/pots \
@@ -147,11 +133,9 @@ curl -X POST http://127.0.0.1:3000/api/v1/pots \
   -d '{"world":"鸟","map":"北岛","potId":"60-0-4000ABCD","northRefreshAt":"1789201200000","lastVisitAt":"1789199700000"}'
 ```
 
-## 8. 限流
+## 限流
 
-两个按客户端 IP 计的滑动窗口限流器：`general` 覆盖整个匿名 API，`writes` 更紧，因为每次写入都要消耗出站腾讯文档配额。
-
-计数存在 Redis 里（`occult-pot:user:rate-limit:general:<ip>` / `…:writes:<ip>`，用官方的 `rate-limit-redis` store），所以多实例共享同一份窗口；同一个调用者的身份信息记在 `occult-pot:user:<ip>`（见 [存储设计](../data/store.md)）。Redis 不可用时限流器会把错误交给错误处理器（`500`），而不是放行。
+两个按客户端 IP 计算的滑动窗口限流器：`general` 覆盖全部接口，`writes` 更紧，因为每次写入都消耗腾讯文档的调用配额。计数存在 Redis 中，多实例共享同一份窗口；Redis 不可用时请求以 `500` 失败，而不是放行。
 
 | 变量                          | 默认值  |
 | ----------------------------- | ------- |
@@ -159,8 +143,6 @@ curl -X POST http://127.0.0.1:3000/api/v1/pots \
 | `OPS_RATE_LIMIT_IP_MAX`       | `120`   |
 | `OPS_RATE_LIMIT_WRITE_MAX`    | `20`    |
 
-被限流时返回 `429` `ERR_RATE_LIMITED`（错误结构见 `errors.md`），并带 `RateLimit-*` 与 `Retry-After` 响应头。
+被限流时返回 `429` `ERR_RATE_LIMITED`，并带 `RateLimit-*` 与 `Retry-After` 响应头。
 
-`OPS_SERVER_TRUST_PROXY` 必须与部署拓扑一致：躲在没配置好的反向代理后面时，所有请求共用代理的 IP，限流既过严又无用。
-
-交付的 compose 里 nginx 在前面还有一道**更松**的 `limit_req` 闸（每 IP 20r/s，POST 2r/s，burst 之上才拒），它只挡洪水，应用这两个限流器才是实际生效的那一层；被 nginx 拒掉同样是 429 与 `ERR_RATE_LIMITED` 信封，但没有 `RateLimit-*`（那一层不维护窗口），所以客户端应按 `code` 判断而不是按响应头。compose 同时把 `OPS_SERVER_TRUST_PROXY` 固定为 `1`（恰好一个 nginx 跳，且 app 自己的端口不发布），应用的 `req.ip` 因此仍是真实客户端地址。
+`OPS_SERVER_TRUST_PROXY` 决定服务如何理解直连地址，取值需要与部署拓扑一致：配置不当的反向代理会让所有请求共用代理的 IP，限流因此失效。交付的 compose 把它固定为 `1`。nginx 前面还有一道更松的限制（每 IP 20r/s，POST 2r/s），被它拒绝同样是 `429` 与 `ERR_RATE_LIMITED`，但没有 `RateLimit-*` 响应头，因此客户端应按 `code` 判断。

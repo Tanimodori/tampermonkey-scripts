@@ -1,5 +1,6 @@
 import { apiOrigin, captureLogs, loadTestConfig, rawRecord, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { metricsRegistry, renderMetrics } from '@/services/metrics.ts';
 import { classify, describeBody } from '@/services/upstream/interceptors/classify.ts';
 import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
 
@@ -255,5 +256,21 @@ describe('what it records about an attempt', () => {
     expect(describeBody({ ret: 10003, msg: 'bad', access_token: 'a-value', refresh_token: 'b-value', expires_in: 60 })).toBe(
       '{"ret":10003,"msg":"bad","access_token":"[redacted]","refresh_token":"[redacted]","expires_in":60}',
     );
+  });
+});
+
+describe('the upstream metrics', () => {
+  it('records each attempt by operation and result', async () => {
+    loadTestConfig();
+    metricsRegistry.resetMetrics();
+
+    await client().request(options());
+    docs.state.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
+    await expect(client().request(options())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
+
+    const body = await renderMetrics();
+    expect(body).toMatch(/occult_pot_upstream_requests_total\{operation="getRecords",result="ok"\} 1/);
+    expect(body).toMatch(/occult_pot_upstream_requests_total\{operation="getRecords",result="ERR_UPSTREAM_FAILED"\} 1/);
+    expect(body).toContain('occult_pot_upstream_request_duration_seconds_count{operation="getRecords",result="ok"} 1');
   });
 });

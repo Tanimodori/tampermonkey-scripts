@@ -112,6 +112,30 @@ sudo logrotate -d /etc/logrotate.d/occult-pot-nginx           # 干跑一遍，�
 
 规则里的日志路径是占位值 `/path/to/occult-pot-server/logs/nginx-access.log`，安装前替换为实际部署目录；fail2ban 的 `logpath` 同样是占位值。
 
+## 可选：监控
+
+监控组是 compose 里的 `stats` profile：Prometheus、Grafana 与三个 exporter。它需要 `deploy/stats/` 下的配置与面板文件，而部署 zip 里只有应用产物，所以这些文件随 compose 与 nginx 配置一起上传。
+
+```bash
+sudo docker compose --profile stats up -d
+sudo docker compose --profile stats ps        # 关注的端口只有 29070、127.0.0.1:9999、127.0.0.1:9090
+```
+
+Grafana 的管理员密码来自 `.env.production.local` 里的 `GF_SECURITY_ADMIN_PASSWORD`；没配时容器直接退出，不会退回默认密码。这个变量只在账号第一次创建时生效，之后轮换用界面，或者：
+
+```bash
+sudo docker compose exec grafana grafana cli --homepath /usr/share/grafana admin reset-admin-password '<新密码>'
+```
+
+两个界面都只绑在服务器回环上，从本机开隧道访问：
+
+```bash
+ssh -N -L 9999:127.0.0.1:9999 -L 9090:127.0.0.1:9090 ${user}@${host}
+# 之后打开 http://127.0.0.1:9999（Grafana）与 http://127.0.0.1:9090（Prometheus）
+```
+
+`deploy/stats/ssh/config.occult-pot.sample` 是同一件事的 `~/.ssh/config` 版本。端口表、指标清单与排错见 [监控说明](../docs/monitoring.md)。
+
 ## 对外暴露面（核对清单）
 
 在服务器本机执行，各行的预期结果见注释：
@@ -121,7 +145,10 @@ curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:29070/readyz         
 curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:29070/api/v1/pots      # 200
 curl -sS http://127.0.0.1:29070/api/v1                                           # 404，纯文本 Not Found
 curl -sS http://127.0.0.1:29070/healthz                                          # 404，探针不经 nginx
+curl -sS http://127.0.0.1:29070/metrics                                          # 404，指标不经 nginx
+curl -sS http://127.0.0.1:29070/stub_status                                      # 404，状态页只在容器网络内
 curl -sS 'http://127.0.0.1:29070/cgi-bin/luci/rpc/auth'                          # 404，纯文本
+ss -ltnp | grep -E '9999|9090'                                                   # 只应看到 127.0.0.1
 ```
 
 公网可达的路径与其语义见 [API 端点](../docs/api/endpoints.md)。

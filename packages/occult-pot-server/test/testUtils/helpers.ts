@@ -561,10 +561,13 @@ class TestRequest {
       ...(this.body === undefined ? {} : { body: this.body }),
     });
     const text = await response.text();
+    // Only the JSON surface is parsed; the scrape endpoint answers in the Prometheus text format,
+    // and a case that reads it wants `text` rather than a parse error.
+    const json = (response.headers.get('content-type') ?? '').includes('application/json');
     return {
       status: response.status,
       headers: Object.fromEntries(response.headers),
-      body: text === '' ? undefined : (JSON.parse(text) as unknown),
+      body: !json || text === '' ? undefined : (JSON.parse(text) as unknown),
       text,
     };
   }

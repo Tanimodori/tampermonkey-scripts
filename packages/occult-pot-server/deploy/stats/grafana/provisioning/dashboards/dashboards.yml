@@ -1,0 +1,17 @@
+# Where the instance finds its dashboards: the JSON files that ship with the deployment, mounted
+# read-only at /var/lib/grafana/dashboards.
+apiVersion: 1
+
+providers:
+  - name: occult-pot
+    orgId: 1
+    folder: occult-pot
+    type: file
+    # The files are the source of truth: an edit made in the UI is not what the next container sees,
+    # so deleting a dashboard in the UI is allowed but pointless, and `allowUiUpdates` is off.
+    disableDeletion: false
+    allowUiUpdates: false
+    updateIntervalSeconds: 300
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

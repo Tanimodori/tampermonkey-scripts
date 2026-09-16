@@ -1,5 +1,6 @@
 import { apiOrigin, captureLogs, loadTestConfig, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { metricsRegistry, renderMetrics } from '@/services/metrics.ts';
 import { classify } from '@/services/upstream/interceptors/classify.ts';
 import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
 import { retry } from '@/services/upstream/interceptors/retry.ts';
@@ -138,5 +139,18 @@ describe('what it records about a retry', () => {
         delayMs: expect.any(Number),
       }),
     );
+  });
+});
+
+describe('the retry metric', () => {
+  it('counts the attempts it decides to send again', async () => {
+    loadTestConfig({ OPS_UPSTREAM_MAX_RETRIES: '1' });
+    metricsRegistry.resetMetrics();
+    docs.state.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
+
+    await expect(client().request(options())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
+
+    // One logical call, two attempts: the counter counts the second one's decision, not the call.
+    expect(await renderMetrics()).toMatch(/occult_pot_upstream_retries_total\{operation="getRecords"\} 1/);
   });
 });

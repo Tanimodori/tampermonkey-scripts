@@ -36,6 +36,7 @@
     "@logtape/file": "^2.3.4",
     "@logtape/logtape": "^2.3.4",
     "@logtape/redaction": "^2.3.4",
+    "@prometheus-io/client": "^0.16.1",
     "body-parser": "^2.3.0",
     "cors": "^2.8.6",
     "defu": "^6.1.7",

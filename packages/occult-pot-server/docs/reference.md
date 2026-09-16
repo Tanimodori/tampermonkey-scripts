@@ -27,6 +27,7 @@
 - [defu](https://github.com/unjs/defu)：配置默认值合并
 - [ioredis](https://github.com/redis/ioredis)：Redis 客户端
 - [ioredis-mock](https://github.com/stipsan/ioredis-mock)：未配置 Redis 地址时使用的进程内实现
+- [@prometheus-io/client](https://github.com/prometheus/client_js)：Prometheus 指标与 `/metrics` 输出
 
 ## 部署
 
@@ -38,6 +39,15 @@
 - [package.json 的 `files` 字段](https://docs.npmjs.com/cli/v11/configuring-npm/package-json#files)：部署产物的白名单
 - [fail2ban 的 filter 与 jail](https://fail2ban.readthedocs.io/en/latest/filters.html)
 - [logrotate 手册](https://man7.org/linux/man-pages/man8/logrotate.8.html)
+
+## 监控
+
+- [Prometheus](https://prometheus.io/docs/)：抓取、存储与 PromQL，[存储与保留](https://prometheus.io/docs/prometheus/latest/storage/)
+- [Grafana](https://grafana.com/docs/grafana/latest/)：面板与数据源；容器化配置见[用 Docker 运行](https://grafana.com/docs/grafana/latest/setup-grafana/configure-docker/)，鉴权方式见[配置鉴权](https://grafana.com/docs/grafana/latest/setup-grafana/configure-access/configure-authentication/)
+- [redis_exporter](https://github.com/oliver006/redis_exporter)：Redis 指标
+- [nginx-prometheus-exporter](https://github.com/nginx/nginx-prometheus-exporter)：nginx 指标
+- [node_exporter](https://github.com/prometheus/node_exporter)：主机指标
+- [`ngx_http_stub_status_module`](https://nginx.org/en/docs/http/ngx_http_stub_status_module.html)：exporter 读取的 nginx 状态页
 
 ## 工具链
 
@@ -54,4 +64,5 @@
 - [Pot 数据](data/pot.md)与[存储设计](data/store.md)
 - [API 端点](api/endpoints.md)、[错误处理](api/errors.md)与[与腾讯文档通讯](api/upstream.md)
 - [日志](logging.md)与[本地开发](development.md)
+- [监控](monitoring.md)：`stats` profile、端口、指标清单与访问方式
 - [部署与运维交付物](../deploy/README.md)

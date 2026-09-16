@@ -140,6 +140,141 @@ services:
       retries: 5
     logging: *logging
 
+  # ---------------------------------------------------------------------------
+  # The monitoring group. It is a profile, not part of the service:
+  #
+  #     docker compose --profile stats up -d
+  #
+  # Only Prometheus and Grafana publish a port, and both bind 127.0.0.1 — they are reached through an
+  # SSH tunnel (see deploy/stats/ssh/config.occult-pot.sample), never from the internet. The three
+  # exporters publish nothing at all: Prometheus scrapes them by service name on this network.
+  # ---------------------------------------------------------------------------
+
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    profiles: [stats]
+    ports:
+      # Prometheus has no authentication of its own, so the loopback address is what keeps it private.
+      - '127.0.0.1:${OPS_STATS_PROMETHEUS_PORT:-9090}:9090'
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    volumes:
+      # The whole configuration lives in the repository: scrape interval, the five targets and the
+      # 60-day / 5 GB retention are all in this one file.
+      - ./deploy/stats/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks: [occult-pot]
+    restart: unless-stopped
+    logging: *logging
+
+  grafana:
+    image: grafana/grafana:13.2.2
+    profiles: [stats]
+    ports:
+      - '127.0.0.1:${OPS_STATS_GRAFANA_PORT:-9999}:9999'
+    env_file:
+      # The same files the app and Redis read. The one value Grafana wants from them is
+      # `GF_SECURITY_ADMIN_PASSWORD`; the deployment keeps it in `.env.production.local`.
+      - path: .env.production
+        required: false
+        format: raw
+      - path: .env.local
+        required: false
+        format: raw
+      - path: .env.production.local
+        required: false
+        format: raw
+    environment:
+      # 9999 rather than Grafana's own default 3000: 3000 is the app's, and one number shared by the
+      # container, the published port and the tunnel is one number to remember.
+      GF_SERVER_HTTP_PORT: '9999'
+      # The address a browser uses, which is the tunnel's. Grafana builds its links and redirects
+      # from this, so publishing Grafana anywhere else means changing it too.
+      GF_SERVER_ROOT_URL: http://127.0.0.1:${OPS_STATS_GRAFANA_PORT:-9999}/
+      # Reached through a tunnel with an admin account: anonymous access and self-service sign-up
+      # have no place here.
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    entrypoint:
+      # Without a password Grafana would not fail — it would quietly keep `admin`/`admin`, and the
+      # placeholder `.env.production` ships is worse still: a public string that looks configured.
+      # Refusing to start is the only safe reading of "the deployment did not set it".
+      - /bin/sh
+      - -c
+      - |
+        if [ -z "$$GF_SECURITY_ADMIN_PASSWORD" ] || [ "$$GF_SECURITY_ADMIN_PASSWORD" = "<Grafana admin password>" ]; then
+          echo "GF_SECURITY_ADMIN_PASSWORD is required: set it in .env.production.local (the placeholder from .env.production is not a password)" >&2
+          exit 1
+        fi
+        exec /run.sh
+    volumes:
+      # Data sources and the dashboard are files in this repository, not clicks in an admin UI.
+      - ./deploy/stats/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/stats/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    networks: [occult-pot]
+    restart: unless-stopped
+    logging: *logging
+
+  redis-exporter:
+    # The `-alpine` variant on purpose: the exporter image proper carries no shell at all, and the
+    # command below needs one to read the password out of the environment.
+    image: oliver006/redis_exporter:v1.91.1-alpine
+    profiles: [stats]
+    env_file:
+      # Read for `OPS_SERVER_REDIS_PASSWORD`, the same name Redis itself was configured with.
+      - path: .env.production
+        required: false
+        format: raw
+      - path: .env.local
+        required: false
+        format: raw
+      - path: .env.production.local
+        required: false
+        format: raw
+    environment:
+      REDIS_ADDR: redis://redis:6379
+    # The image's own entrypoint is the exporter binary, so a `command:` would be appended to it as
+    # arguments and never run as a shell — the password flag would silently disappear. Overriding the
+    # entrypoint is what makes the `sh -c` below real.
+    entrypoint: ['/bin/sh', '-c']
+    # One variable, both sides, and the `${VAR:+…}` form leaves the flag out when there is no
+    # password — exactly how the `redis` service above reads it. The exporter takes the password on
+    # the command line or as `REDIS_PASSWORD`; only the former can be fed from the shared env files.
+    command:
+      - exec /redis_exporter --redis.addr="$$REDIS_ADDR" $${OPS_SERVER_REDIS_PASSWORD:+--redis.password="$$OPS_SERVER_REDIS_PASSWORD"}
+    networks: [occult-pot]
+    restart: unless-stopped
+    logging: *logging
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.5.3
+    profiles: [stats]
+    # The internal listener deploy/nginx/default.conf adds; 8080 is not published anywhere.
+    command: ['--nginx.scrape-uri=http://nginx:8080/stub_status']
+    networks: [occult-pot]
+    restart: unless-stopped
+    logging: *logging
+
+  node-exporter:
+    image: prom/node-exporter:v1.12.1
+    profiles: [stats]
+    # Host metrics. The container reads the host's /proc, /sys and filesystems through the mount
+    # below; it needs neither host networking nor a published port, because Prometheus scrapes it
+    # from inside this network — so nothing new listens on the host's interfaces.
+    #
+    # Read-only, and deliberately without `rslave`: a shared/slave mount propagation is what the
+    # usual recipes ask for, but it is not available in every environment (`path / is mounted on /
+    # but it is not a shared or slave mount` under WSL, for one), and its only benefit is that a
+    # filesystem mounted *after* this container starts shows up. `--path.rootfs` does the rest.
+    command: ['--path.rootfs=/host']
+    volumes:
+      - '/:/host:ro'
+    networks: [occult-pot]
+    restart: unless-stopped
+    logging: *logging
+
 networks:
   # One user-defined bridge for all three: on a custom network containers reach each other by service
   # name, and an explicit `name:` is used as-is instead of being scoped with the project name. It must
@@ -149,3 +284,7 @@ networks:
 
 volumes:
   redis-data:
+  # The monitoring group's data. Both are named volumes rather than bind mounts: nothing on the host
+  # reads them, and Prometheus owns its own retention.
+  prometheus-data:
+  grafana-data:

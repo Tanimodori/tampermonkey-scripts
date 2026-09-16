@@ -29,7 +29,7 @@ importers:
         version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
       vitest:
         specifier: ^5.0.1
-        version: 5.0.1(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
+        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
     optionalDependencies:
       '@oxfmt/binding-win32-x64-msvc':
         specifier: ^0.67.0
@@ -72,7 +72,7 @@ importers:
         version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
       vitest:
         specifier: ^5.0.1
-        version: 5.0.1(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
+        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
     optionalDependencies:
       '@oxfmt/binding-win32-x64-msvc':
         specifier: ^0.67.0
@@ -98,6 +98,9 @@ importers:
       '@logtape/redaction':
         specifier: ^2.3.4
         version: 2.3.4(@logtape/logtape@2.3.4)
+      '@prometheus-io/client':
+        specifier: ^0.16.1
+        version: 0.16.1
       body-parser:
         specifier: ^2.3.0
         version: 2.3.0
@@ -176,7 +179,7 @@ importers:
         version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
       vitest:
         specifier: ^5.0.1
-        version: 5.0.1(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
+        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
     optionalDependencies:
       '@oxfmt/binding-win32-x64-msvc':
         specifier: ^0.67.0
@@ -220,7 +223,7 @@ importers:
         version: 8.3.0(@types/node@25.0.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
       vitest:
         specifier: ^5.0.1
-        version: 5.0.1(@types/node@25.0.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@25.0.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
+        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@25.0.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@25.0.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
     optionalDependencies:
       '@oxfmt/binding-win32-x64-msvc':
         specifier: ^0.67.0
@@ -254,7 +257,7 @@ importers:
         version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
       vitest:
         specifier: ^5.0.1
-        version: 5.0.1(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
+        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
     optionalDependencies:
       '@oxfmt/binding-win32-x64-msvc':
         specifier: ^0.67.0
@@ -288,7 +291,7 @@ importers:
         version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
       vitest:
         specifier: ^5.0.1
-        version: 5.0.1(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
+        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
     optionalDependencies:
       '@oxfmt/binding-win32-x64-msvc':
         specifier: ^0.67.0
@@ -510,6 +513,10 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@opentelemetry/api@1.9.1':
+    resolution: {integrity: sha512-gLyJlPHPZYdAk1JENA9LeHejZe1Ti77/pTeFm/nMXmQH/HFZlcS/O2XJB+L8fkbrNSqhdtlvjBVjxwUYanNH5Q==}
+    engines: {node: '>=8.0.0'}
 
   '@oxc-project/types@0.149.0':
     resolution: {integrity: sha512-Efcc+iF0j3Bf67YjEqIqWXbX5XddXoK/Mw4K1/JuXwRCZ8N16VR7iT23nlCc9XrveFVh/E5Rqs2StT0V8v9LdA==}
@@ -758,6 +765,10 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@prometheus-io/client@0.16.1':
+    resolution: {integrity: sha512-XkFPsGFGoSs/UMg/vh0QLDpanl/tsrOV5PLHdpGe8Ho+ir/Llhytr15j6y8ZwLrpIGzK9gTVVpIalA6C4UjUZw==}
+    engines: {node: ^22 || ^24 || >=26}
+
   '@rolldown/binding-android-arm-eabi@1.2.8':
     resolution: {integrity: sha512-tN5aztYkKCte4i5SIrrz5yK/HMjEuCqCSCJa418jOV8tZ1cBY3YF2otxB1ktPxzsLA1BeTqwapK0bfjxNvHJVw==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -961,6 +972,9 @@ packages:
   basic-auth@2.0.1:
     resolution: {integrity: sha512-NF+epuEdnUYVlGuhaxbbq+dvJttwLnGY+YixlXlME5KpQ5W3CnXA5cVTneY3SPbPDRkcjMbifrwmFYcClgOZeg==}
     engines: {node: '>= 0.8'}
+
+  bintrees@1.0.2:
+    resolution: {integrity: sha512-VOMgTMwjAaUG580SXn3LacVgjurrbMme7ZZNYGSSV7mmtY6QQRh0Eg3pwIcntQ77DErK1L0NxkbetjcoXzVwKw==}
 
   body-parser@2.3.0:
     resolution: {integrity: sha512-2cGmJupaNgg+QUwVLAucDuWuoMZ6EX9iHDRswZ5lsNYEmwPaRknMPCLZz07yTzVq/83p4o/wzbDZbBrTvGGTIw==}
@@ -1724,6 +1738,9 @@ packages:
   sync-rpc@1.3.6:
     resolution: {integrity: sha512-J8jTXuZzRlvU7HemDgHi3pGnh/rkoqR/OZSjhTyyZrEkkYQbk7Z33AXp37mkPfPpfdOuj7Ex3H/TJM1z48uPQw==}
 
+  tdigest@0.1.3:
+    resolution: {integrity: sha512-zbRt+lT+/H4fRItHshczHErVCQnitJk8MfMT24MqFJf3YL7SJJPqGIGeuOdvxXxM/AHFzKBl7WoyaYwqO9s3Kw==}
+
   then-request@6.0.2:
     resolution: {integrity: sha512-3ZBiG7JvP3wbDzA9iNY5zJQcHL4jn/0BWtXIkagfz7QgOL/LqjCEOBQuJNZfu0XYnv5JhKh+cDxCPM4ILrqruA==}
     engines: {node: '>=6.0.0'}
@@ -2043,6 +2060,8 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
+  '@opentelemetry/api@1.9.1': {}
+
   '@oxc-project/types@0.149.0': {}
 
   '@oxfmt/binding-android-arm-eabi@0.67.0':
@@ -2158,6 +2177,11 @@ snapshots:
 
   '@oxlint/binding-win32-x64-msvc@1.82.0':
     optional: true
+
+  '@prometheus-io/client@0.16.1':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      tdigest: 0.1.3
 
   '@rolldown/binding-android-arm-eabi@1.2.8':
     optional: true
@@ -2322,6 +2346,8 @@ snapshots:
   basic-auth@2.0.1:
     dependencies:
       safe-buffer: 5.1.2
+
+  bintrees@1.0.2: {}
 
   body-parser@2.3.0:
     dependencies:
@@ -3152,6 +3178,10 @@ snapshots:
     dependencies:
       get-port: 3.2.0
 
+  tdigest@0.1.3:
+    dependencies:
+      bintrees: 1.0.2
+
   then-request@6.0.2:
     dependencies:
       '@types/concat-stream': 1.6.1
@@ -3247,7 +3277,7 @@ snapshots:
       less: 4.5.1
       tsx: 4.23.13
 
-  vitest@5.0.1(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)):
+  vitest@5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.0.1(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
@@ -3264,12 +3294,13 @@ snapshots:
       vite: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
       why-is-node-running: 2.3.0
     optionalDependencies:
+      '@opentelemetry/api': 1.9.1
       '@types/node': 22.19.3
       happy-dom: 6.0.4
     transitivePeerDependencies:
       - msw
 
-  vitest@5.0.1(@types/node@25.0.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@25.0.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)):
+  vitest@5.0.1(@opentelemetry/api@1.9.1)(@types/node@25.0.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@25.0.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.0.1(vite@8.3.0(@types/node@25.0.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
@@ -3286,6 +3317,7 @@ snapshots:
       vite: 8.3.0(@types/node@25.0.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
       why-is-node-running: 2.3.0
     optionalDependencies:
+      '@opentelemetry/api': 1.9.1
       '@types/node': 25.0.3
       happy-dom: 6.0.4
     transitivePeerDependencies:

@@ -1,0 +1,19 @@
+# The one data source, provisioned rather than clicked: the instance is delivered with its dashboard
+# working, and a recreated container comes back with the same setup.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    # By service name on the compose network. Prometheus publishes a loopback port for a tunnel, but
+    # nothing here needs to leave the network.
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      # Matches `scrape_interval` in deploy/stats/prometheus/prometheus.yml: it is what Grafana uses
+      # to pick a sensible `$__rate_interval`, so it has to be the real scrape interval.
+      timeInterval: 120s
+      httpMethod: POST

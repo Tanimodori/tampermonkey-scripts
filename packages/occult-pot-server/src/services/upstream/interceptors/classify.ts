@@ -4,6 +4,7 @@ import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
 import type { AppErrorOptions, ErrorCode } from '@/errors.ts';
 import { LOG_CATEGORIES } from '@/logger.ts';
+import { upstreamRequestDuration, upstreamRequests } from '@/services/metrics.ts';
 import { now } from '@/services/time.ts';
 
 /**
@@ -54,9 +55,13 @@ type CallContext = Dispatcher.DispatchOptions & Partial<UpstreamCall>;
 export class UpstreamError extends AppError {
   readonly plan: { readonly retryable: boolean; readonly delayMs: number };
 
-  constructor(code: ErrorCode, message: string, plan: { retryable: boolean; delayMs: number }, options: AppErrorOptions = {}) {
+  /** The call this attempt belonged to; retry accounting is grouped by it. */
+  readonly operation: string;
+
+  constructor(code: ErrorCode, message: string, plan: { retryable: boolean; delayMs: number }, operation: string, options: AppErrorOptions = {}) {
     super(code, message, options);
     this.plan = plan;
+    this.operation = operation;
   }
 }
 
@@ -167,6 +172,7 @@ function classifier(handler: Dispatcher.DispatchHandler, call: CallContext): Dis
       const durationMs = now() - startedAt;
       const failure = classifyResponse({ status, body, headers }, call);
       if (failure !== undefined) {
+        countAttempt(operationOf(call), failure.code, durationMs);
         logger.warning('Tencent Docs call failed', {
           ...describeCall(call),
           status,
@@ -179,6 +185,7 @@ function classifier(handler: Dispatcher.DispatchHandler, call: CallContext): Dis
         return;
       }
 
+      countAttempt(operationOf(call), 'ok', durationMs);
       logger.info('Tencent Docs call answered', { ...describeCall(call), status, ret: retOf(body), durationMs });
       handler.onResponseStart?.(controller, status, headers, statusMessage);
       for (const chunk of chunks) handler.onResponseData?.(controller, chunk);
@@ -188,10 +195,29 @@ function classifier(handler: Dispatcher.DispatchHandler, call: CallContext): Dis
       const failure = error instanceof UpstreamError ? error : transportFailure(error, call);
       // The upstream never answered (or answered with something unreadable): the classifier's failure
       // already carries the reason, and no body was read at all.
-      logger.warning('Tencent Docs call could not be sent', { ...describeCall(call), durationMs: now() - startedAt, reason: failure.message });
+      const durationMs = now() - startedAt;
+      countAttempt(failure.operation, failure.code, durationMs);
+      logger.warning('Tencent Docs call could not be sent', { ...describeCall(call), durationMs, reason: failure.message });
       handler.onResponseError?.(controller, failure);
     },
   };
+}
+
+/** The name of a call for wording and labels; a dispatch that named none is `request`. */
+function operationOf(call: CallContext): string {
+  return call.operation ?? 'request';
+}
+
+/**
+ * Records one attempt: what it was for, how it ended, how long it took.
+ *
+ * Attempts, not logical calls: a retried dispatch passes through the classifier again, so one call
+ * that needed three tries leaves three records — which is what makes the success ratio carry the
+ * cost of retrying, with `upstreamRetries` as the earlier warning.
+ */
+function countAttempt(operation: string, result: string, durationMs: number): void {
+  upstreamRequests.inc({ operation, result });
+  upstreamRequestDuration.observe({ operation, result }, durationMs / 1000);
 }
 
 /** The words every record about a call carries: what was asked for, and where. */
@@ -259,7 +285,7 @@ function classifyResponse(response: JsonResponse, call: CallContext): UpstreamEr
   const body = asRecord(response.body);
   const ret = typeof body.ret === 'number' ? body.ret : undefined;
   const msg = typeof body.msg === 'string' ? body.msg : undefined;
-  const operation = call.operation ?? 'request';
+  const operation = operationOf(call);
   const said = joined([ret === undefined ? undefined : `ret=${ret}`, msg === undefined ? undefined : `msg=${msg}`]);
   const because = said === '' ? '' : ` (${said})`;
 
@@ -269,29 +295,35 @@ function classifyResponse(response: JsonResponse, call: CallContext): UpstreamEr
       `Tencent Docs rate limit reached (${joined([`status=${response.status}`, said === '' ? undefined : said])})`,
       // A stated `Retry-After` is what the upstream wants us to wait; otherwise the configured backoff.
       { retryable: true, delayMs: retryAfterMs(response.headers) ?? backoffMs() },
+      operation,
       { retryAfterSeconds: rateLimitHintSeconds() },
     );
   }
   // Transport-level failures come before the business-code ranges: `400010` (service internal
   // error) arrives with HTTP 500 and must not be reported as a bad request.
   if (response.status >= 500) {
-    return new UpstreamError('ERR_UPSTREAM_FAILED', `Tencent Docs returned HTTP ${response.status} for ${operation}${because}`, {
-      retryable: true,
-      delayMs: backoffMs(),
-    });
+    return new UpstreamError(
+      'ERR_UPSTREAM_FAILED',
+      `Tencent Docs returned HTTP ${response.status} for ${operation}${because}`,
+      {
+        retryable: true,
+        delayMs: backoffMs(),
+      },
+      operation,
+    );
   }
   if (response.status === 401 || response.status === 403) {
-    return new UpstreamError('ERR_UPSTREAM_AUTH_FAILED', `Tencent Docs returned HTTP ${response.status} for ${operation}${because}`, NO_RETRY);
+    return new UpstreamError('ERR_UPSTREAM_AUTH_FAILED', `Tencent Docs returned HTTP ${response.status} for ${operation}${because}`, NO_RETRY, operation);
   }
 
   if (call.envelope !== true) return undefined;
 
   if (ret === 0) return undefined;
   if (ret !== undefined && AUTH_RET_CODES.has(ret)) {
-    return new UpstreamError('ERR_UPSTREAM_AUTH_FAILED', `Tencent Docs rejected the credential${because}`, NO_RETRY);
+    return new UpstreamError('ERR_UPSTREAM_AUTH_FAILED', `Tencent Docs rejected the credential${because}`, NO_RETRY, operation);
   }
   if (ret !== undefined && ret >= 400000 && ret < 500000) {
-    return new UpstreamError('ERR_UPSTREAM_BAD_REQUEST', `Tencent Docs rejected the request${because}`, NO_RETRY);
+    return new UpstreamError('ERR_UPSTREAM_BAD_REQUEST', `Tencent Docs rejected the request${because}`, NO_RETRY, operation);
   }
   if (ret === undefined) {
     // A shape we cannot read will not read better on a second attempt.
@@ -299,9 +331,10 @@ function classifyResponse(response: JsonResponse, call: CallContext): UpstreamEr
       'ERR_UPSTREAM_FAILED',
       `Unexpected response from Tencent Docs for ${operation} (status=${response.status}, body=${describeBody(response.body)})`,
       NO_RETRY,
+      operation,
     );
   }
-  return new UpstreamError('ERR_UPSTREAM_BAD_REQUEST', `Tencent Docs request failed${because}`, NO_RETRY);
+  return new UpstreamError('ERR_UPSTREAM_BAD_REQUEST', `Tencent Docs request failed${because}`, NO_RETRY, operation);
 }
 
 /** A failure with no response at all: a timeout, a refused connection, a dropped socket. */
@@ -312,6 +345,7 @@ function transportFailure(cause: unknown, call: CallContext): UpstreamError {
     `Request to ${target} failed`,
     // Worth another attempt: the upstream never answered.
     { retryable: true, delayMs: backoffMs() },
+    operationOf(call),
     { cause },
   );
 }

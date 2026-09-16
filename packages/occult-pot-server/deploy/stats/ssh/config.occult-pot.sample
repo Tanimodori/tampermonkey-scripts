@@ -1,0 +1,44 @@
+# The monitoring group's two user interfaces, reached through an SSH tunnel.
+#
+# docker-compose.yml publishes them on the server's loopback only:
+#
+#     127.0.0.1:9999  Grafana        (its own login; the password is GF_SECURITY_ADMIN_PASSWORD)
+#     127.0.0.1:9090  Prometheus     (no authentication of its own — the loopback is what protects it)
+#
+# Appending the block below to ~/.ssh/config makes `ssh -N occult-pot` the one command that opens
+# both, and `-N` means it opens no shell on the server: it only forwards.
+#
+#     ssh -N occult-pot          # then browse http://127.0.0.1:9999 and http://127.0.0.1:9090
+#
+# Replace the three placeholders with the deployment's own values.
+
+Host occult-pot
+    HostName ${host}
+    User ${user}
+    # Optional: the port sshd listens on, when it is not 22.
+    # Port ${port}
+    # Both forwards at once. The right-hand side is resolved *on the server*, which is why 127.0.0.1
+    # there means the server's own loopback — the address the containers are published on.
+    LocalForward 9999 127.0.0.1:9999
+    LocalForward 9090 127.0.0.1:9090
+    # Fail loudly when a local port is already taken, instead of connecting without the forwards.
+    ExitOnForwardFailure yes
+    # Keep an idle tunnel alive, and give up on one that has really gone.
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
+    # Reuse one connection for several tunnels (and for the shell) when opening more than one.
+    # ControlMaster auto
+    # ControlPath ~/.ssh/cm-%r@%h:%p
+    # ControlPersist 10m
+
+# Notes
+#
+# * A local port that is already in use (9999 or 9090 on your own machine) can be moved by changing
+#   the left-hand number — `LocalForward 19999 127.0.0.1:9999` — but Grafana builds its links and
+#   login redirects from GF_SERVER_ROOT_URL, so a moved Grafana port has to be changed there too
+#   (`.env.production.local`, then `docker compose --profile stats up -d grafana`).
+# * Through a jump host: `ssh -J ${jump}@${bastion} -N occult-pot`, or add `ProxyJump` to the block.
+# * The server must allow local forwarding: `sshd -T | grep allowtcpforwarding` has to say `yes` (or
+#   `local`). Nothing else on that side needs to change.
+# * Close a foreground tunnel with Ctrl-C; after `ssh -f -N occult-pot`, close it with
+#   `ssh -O exit occult-pot`.

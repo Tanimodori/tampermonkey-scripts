@@ -1,0 +1,48 @@
+# Prometheus for occult-pot-server, mounted read-only at /etc/prometheus/prometheus.yml.
+#
+# Low precision on purpose: one scrape every two minutes, sixty days of retention and a 5 GB ceiling
+# on the blocks. The numbers are small because nothing here needs second-by-second resolution — and
+# every dashboard panel has to use a window of at least 10m to see more than a handful of samples.
+#
+# The targets are service names on the compose network. Only Prometheus and Grafana publish a host
+# port (both on 127.0.0.1); the exporters are reachable from here and from nowhere else.
+
+global:
+  # The one interval every job inherits. `scrape_timeout` stays well inside it, so a slow target is
+  # marked down instead of delaying the next round.
+  scrape_interval: 120s
+  scrape_timeout: 30s
+  # Nothing here evaluates rules — there are no alerting or recording rules yet — but the interval
+  # that governs them is stated rather than left to its 1m default.
+  evaluation_interval: 120s
+
+storage:
+  tsdb:
+    # Whichever comes first: after sixty days, or once the blocks reach 5 GB, the oldest data goes.
+    retention:
+      time: 60d
+      size: 5GB
+
+scrape_configs:
+  # The service itself: HTTP requests, Tencent Docs calls, readiness and the process defaults. The
+  # endpoint is not published and nginx does not forward it, so this is the only reader.
+  - job_name: occult-pot-server
+    static_configs:
+      - targets: ['occult-pot-server:3000']
+
+  # Prometheus on itself: scrape duration, sample counts and the `up` series of every job.
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: redis
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  - job_name: nginx
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+
+  - job_name: node
+    static_configs:
+      - targets: ['node-exporter:9100']

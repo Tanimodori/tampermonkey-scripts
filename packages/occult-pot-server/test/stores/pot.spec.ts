@@ -5,7 +5,7 @@ import { loadTestConfig, resetRedis } from '@test/testUtils/helpers.ts';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { clearPotState, readPotState, writePotState } from '@/stores/pot.ts';
 import { getRedis } from '@/stores/redis.ts';
-import type { Pot, PotState } from '@/validation/index.ts';
+import type { Pot, PotRecord, PotState } from '@/validation/index.ts';
 
 /**
  * The pot store is the Redis half of the pot list and nothing else: the key it uses, the shape it
@@ -16,6 +16,7 @@ import type { Pot, PotState } from '@/validation/index.ts';
 const KEY = 'occult-pot:pots';
 
 const pot: Pot = { world: '鸟', map: '北岛', potId: '54-1-4000E8F3', northRefreshAtMs: 1_789_200_960_000, lastVisitAtMs: 1_789_199_460_000 };
+const record: PotRecord = { ...pot, docs: { recordId: 'rMW8vK', createTime: 1_789_100_000_000, updateTime: 1_789_199_000_000 } };
 
 beforeEach(async () => {
   loadTestConfig();
@@ -32,11 +33,18 @@ describe('readPotState', () => {
   });
 
   it('reads back what was written', async () => {
-    const state: PotState = { data: [pot], updateTime: 42 };
+    const state: PotState = { data: [record], updateTime: 42 };
 
     await writePotState(state);
 
     await expect(readPotState()).resolves.toEqual(state);
+  });
+
+  it('reads back a state written before records carried a document side', async () => {
+    // What an older version of this service left in Redis: the same key, bare pots.
+    await getRedis().set(KEY, JSON.stringify({ data: [pot], updateTime: 42 }));
+
+    await expect(readPotState()).resolves.toEqual({ data: [pot], updateTime: 42 });
   });
 
   it('reads the empty state when the key holds something it cannot read', async () => {
@@ -56,7 +64,7 @@ describe('readPotState', () => {
 
 describe('clearPotState', () => {
   it('drops the key, so the next read rebuilds it', async () => {
-    await writePotState({ data: [pot], updateTime: 42 });
+    await writePotState({ data: [record], updateTime: 42 });
 
     await clearPotState();
 

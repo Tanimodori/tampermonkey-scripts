@@ -4,7 +4,7 @@ import { FILE_ID, loadTestConfig, testEnv } from '@test/testUtils/helpers.ts';
  */
 import { TestRunner, afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getConfig } from '@/config.ts';
-import { listPots } from '@/services/pot.ts';
+import { createPot, listPots } from '@/services/pot.ts';
 import { getSheetList } from '@/services/upstream/api/file.ts';
 import { addRecords, getRecords } from '@/services/upstream/api/record.ts';
 import { getUserInfo } from '@/services/upstream/api/token.ts';
@@ -193,8 +193,8 @@ describe.skipIf(!live)('the real Tencent Docs document', () => {
     expect((await allRecords()).length).toBe(before);
   });
 
-  it('appends one row, reads it back as stored, and deletes it again', async () => {
-    // Through the production helper, so this checks the shape the service actually writes.
+  it('appends one row through the record API, reads it back as stored, and deletes it again', async () => {
+    // The raw append path, so this checks the shape the service actually writes.
     await addRecords([{ values: toSheetValues(MARKER) }]);
 
     const appended = await markerRecordIds();
@@ -205,6 +205,26 @@ describe.skipIf(!live)('the real Tencent Docs document', () => {
     expect(String(asRecord(stored?.values)['北罐刷新时间'])).toBe(String(MARKER.northRefreshAtMs));
 
     await deleteRecords(appended);
+    expect(await markerRecordIds()).toHaveLength(0);
+  });
+
+  it('updates the row a pot already has instead of appending a second one', async () => {
+    // The client script uploads what it observes, and observes the same pot again and again. The
+    // second upload must overwrite the first one's row: the document is checked for the pot first.
+    const first = await createPot(MARKER);
+    expect(await markerRecordIds()).toHaveLength(1);
+    expect(first.potId).toBe(MARKER.potId);
+
+    const second = await createPot({ ...MARKER, northRefreshAtMs: MARKER.northRefreshAtMs + 60_000 });
+
+    // One row, holding the last upload — through the real `updateRecords`, not an append.
+    const ids = await markerRecordIds();
+    expect(ids).toHaveLength(1);
+    const stored = (await allRecords()).find((record) => record.recordID === ids[0]);
+    expect(String(asRecord(stored?.values)['北罐刷新时间'])).toBe(String(MARKER.northRefreshAtMs + 60_000));
+    expect(second).toEqual({ ...MARKER, northRefreshAtMs: MARKER.northRefreshAtMs + 60_000 });
+
+    await deleteRecords(ids);
     expect(await markerRecordIds()).toHaveLength(0);
   });
 });

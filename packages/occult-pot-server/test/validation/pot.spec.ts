@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import type { z } from 'zod';
-import { createPotBodySchema, formatIssues, isValidPot, MAP_VALUES, POT_ID_PATTERN, potParamsSchema, WORLD_VALUES } from '@/validation/index.ts';
+import {
+  createPotBodySchema,
+  docsOf,
+  formatIssues,
+  isValidPot,
+  MAP_VALUES,
+  potKey,
+  POT_ID_PATTERN,
+  potOf,
+  potRecordSchema,
+  WORLD_VALUES,
+} from '@/validation/index.ts';
 import type { FieldIssue, Pot } from '@/validation/index.ts';
 
 /**
@@ -152,12 +163,66 @@ describe('createPotBodySchema', () => {
   });
 });
 
-describe('potParamsSchema', () => {
-  it('accepts a pot ID, trimmed', () => {
-    expect(potParamsSchema.parse({ potId: ' 54-1-4000E8F3 ' })).toEqual({ potId: '54-1-4000E8F3' });
+/**
+ * The record: a pot plus the document side. Nothing else reads that side — the API still answers a
+ * bare `Pot` — so these cases pin that the two stay separable and that a row without a usable
+ * identity is not given one.
+ */
+describe('PotRecord', () => {
+  const docs = { recordId: 'rMW8vK', createTime: 1_789_100_000_000, updateTime: 1_789_199_000_000 };
+
+  it('carries the five fields and the document side', () => {
+    const parsed = potRecordSchema.safeParse({ ...validPot, docs });
+
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data.docs).toEqual(docs);
   });
 
-  it.each(['nope', '', '54-1-5000E8F3'])('rejects %o as a path parameter', (potId) => {
-    expect(potParamsSchema.safeParse({ potId }).success).toBe(false);
+  it('accepts a record with no document side at all', () => {
+    const parsed = potRecordSchema.safeParse(validPot);
+
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data.docs).toBeUndefined();
+  });
+
+  it('still enforces the pot rules on a record', () => {
+    expect(potRecordSchema.safeParse({ ...validPot, potId: 'nope', docs }).success).toBe(false);
+    expect(potRecordSchema.safeParse({ ...validPot, docs: { ...docs, recordId: '' } }).success).toBe(false);
+  });
+
+  it('drops the document side from the pot a caller is served', () => {
+    const record = { ...validPot, docs };
+
+    // Key order is the pot's own: this is the object the API serialises.
+    expect(potOf(record)).toEqual(validPot);
+    expect(Object.keys(potOf(record))).toEqual(['world', 'map', 'potId', 'northRefreshAtMs', 'lastVisitAtMs']);
+    // The same five fields in the same order, so the shape cannot drift by accident.
+    expect(Object.keys(potOf(record))).toEqual(Object.keys(validPot));
+  });
+
+  it('keys a pot by the combination the document is expected to carry once', () => {
+    expect(potKey(validPot)).toBe('鸟|北岛|54-1-4000E8F3');
+    // The same pot in another world or on another island is another row.
+    expect(potKey({ ...validPot, world: '猫' })).not.toBe(potKey(validPot));
+    expect(potKey({ ...validPot, map: '南岛' })).not.toBe(potKey(validPot));
+  });
+
+  it('reads the document side off a sheet row, accepting both encodings of an instant', () => {
+    expect(docsOf({ recordID: 'rMW8vK', createTime: '1789100000000', updateTime: 1789199000000 })).toEqual({
+      recordId: 'rMW8vK',
+      createTime: 1_789_100_000_000,
+      updateTime: 1_789_199_000_000,
+    });
+  });
+
+  it.each([
+    ['no record id', { createTime: '1789100000000', updateTime: '1789199000000' }],
+    ['an empty record id', { recordID: '', createTime: '1789100000000', updateTime: '1789199000000' }],
+    ['no create time', { recordID: 'rMW8vK', updateTime: '1789199000000' }],
+    ['a create time that is not a millisecond epoch', { recordID: 'rMW8vK', createTime: '2026-09-12', updateTime: '1789199000000' }],
+    ['a seconds epoch', { recordID: 'rMW8vK', createTime: '1789100000', updateTime: '1789199000000' }],
+    ['no update time', { recordID: 'rMW8vK', createTime: '1789100000000' }],
+  ])('has no document side for a row with %s', (_name, row) => {
+    expect(docsOf(row)).toBeUndefined();
   });
 });

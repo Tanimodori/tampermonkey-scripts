@@ -50,17 +50,15 @@ describe('GET /api/v1/pots', () => {
 
     // Ordered by sheet position. The rows that are absent are the ones the service will not serve:
     // the malformed ID, the north=0 row, and the row nobody has visited for over three hours. All
-    // three are deleted from the sheet on the read that found them (see the case below); duplicates
-    // are still returned as stored, because de-duplication is the client script's business.
+    // three are deleted from the sheet on the read that found them (see the case below). The
+    // duplicate pair is served once — the service keeps the fresher row of a key and drops the other.
     expect(pots).toEqual([
       { world: '鸟', map: '北岛', potId: '54-1-4000E8F3', northRefreshAtMs: sheetInstant('2026-09-12 16:16'), lastVisitAtMs: sheetInstant('2026-09-12 15:51') },
       { world: '猫', map: '北岛', potId: '44-1-4000AE40', northRefreshAtMs: sheetInstant('2026-09-12 15:36'), lastVisitAtMs: sheetInstant('2026-09-12 15:20') },
       { world: '猫', map: '北岛', potId: '55-0-40001D05', northRefreshAtMs: sheetInstant('2026-09-12 13:49'), lastVisitAtMs: sheetInstant('2026-09-12 14:48') },
       { world: '鸟', map: '南岛', potId: '57-1-4000D7E8', northRefreshAtMs: sheetInstant('2026-09-12 16:17'), lastVisitAtMs: sheetInstant('2026-09-12 15:53') },
+      // The duplicate pair `rDupOld`/`rE`: one pot, from the row with the later 最后一次进岛时间.
       { world: '猫', map: '南岛', potId: '57-0-400076E4', northRefreshAtMs: sheetInstant('2026-09-12 13:45'), lastVisitAtMs: sheetInstant('2026-09-12 15:37') },
-      // A second row with the same world|map|potId, carrying an older 最后一次进岛时间: it is
-      // returned as stored rather than folded away.
-      { world: '猫', map: '南岛', potId: '57-0-400076E4', northRefreshAtMs: sheetInstant('2026-09-12 13:45'), lastVisitAtMs: sheetInstant('2026-09-12 13:00') },
     ]);
     expect(response.body).not.toHaveProperty('meta.total');
     expect(response.body).not.toHaveProperty('meta.sheetTotal');
@@ -127,50 +125,16 @@ describe('GET /api/v1/pots', () => {
   });
 });
 
-describe('GET /api/v1/pots/:potId', () => {
-  it('returns one pot as the same flat shape', async () => {
+describe('the removed per-pot read', () => {
+  it('no longer serves one pot by its in-game ID', async () => {
     const { client } = await startApp();
 
-    const response = await client.get('/api/v1/pots/54-1-4000E8F3').expect(200);
+    // The client script reads the whole table and does its own lookup, so the endpoint is gone — and
+    // with it the path-parameter validation that used to answer 400 here.
+    const response = await client.get('/api/v1/pots/54-1-4000E8F3').expect(404);
 
-    expect((response.body as { data: Pot }).data).toEqual({
-      world: '鸟',
-      map: '北岛',
-      potId: '54-1-4000E8F3',
-      northRefreshAtMs: sheetInstant('2026-09-12 16:16'),
-      lastVisitAtMs: sheetInstant('2026-09-12 15:51'),
-    });
-  });
-
-  it('404s for an unknown pot', async () => {
-    const { client } = await startApp();
-
-    const response = await client.get('/api/v1/pots/99-9-4000FFFF').expect(404);
     expect((response.body as { code: string }).code).toBe('ERR_NOT_FOUND');
-  });
-
-  it('rejects a malformed pot ID with 400 before touching the upstream', async () => {
-    const { client } = await startApp();
-    const before = docs.state.calls.length;
-
-    const response = await client.get('/api/v1/pots/not-a-pot-id').expect(400);
-    // Every offending field is named in the message, which is the only place field detail lives.
-    expect((response.body as { message: string }).message).toContain('params: potId:');
-    expect(docs.state.calls).toHaveLength(before);
-  });
-
-  it('404s for a row the sheet rules reject', async () => {
-    const { client } = await startApp();
-
-    // The north=0 row is not a pot, so it is not addressable either.
-    await client.get('/api/v1/pots/11-1-4000AAAA').expect(404);
-  });
-
-  it('accepts and ignores query parameters', async () => {
-    const { client } = await startApp();
-
-    const response = await client.get('/api/v1/pots/54-1-4000E8F3?view=raw&includeStale=true&refresh=true').expect(200);
-    expect((response.body as { data: Pot }).data.potId).toBe('54-1-4000E8F3');
+    expect((response.body as { message: string }).message).toContain('No /api/v1 endpoint matches GET /api/v1/pots/54-1-4000E8F3');
   });
 });
 
@@ -212,10 +176,9 @@ describe('POST /api/v1/pots', () => {
 
     const list = (await client.get('/api/v1/pots').expect(200)).body as { data: Pot[] };
     expect(list.data.filter((pot) => pot.potId === '60-0-4000ABCD')).toHaveLength(1);
-    const one = (await client.get('/api/v1/pots/60-0-4000ABCD').expect(200)).body as { data: Pot };
-    expect(one.data.potId).toBe('60-0-4000ABCD');
-    // Folded into the cached list, so the sheet is still read exactly once.
-    expect(callsMatching('getRecords')).toHaveLength(1);
+    // Folded into the cached list, so the second read is answered from Redis; the one extra read is
+    // the write's own look at the sheet, which is how it knows this pot has no row yet.
+    expect(callsMatching('getRecords')).toHaveLength(2);
   });
 
   it('fails the request when the sheet refuses the write, and leaves the list alone', async () => {
@@ -387,7 +350,7 @@ describe('POST /api/v1/pots', () => {
     expect(docs.state.added).toHaveLength(0);
   });
 
-  it('writes a pot the sheet already carries — there is no uniqueness rule', async () => {
+  it('updates the row the sheet already carries instead of adding a second one', async () => {
     const { client } = await startApp();
 
     const response = await client
@@ -396,12 +359,15 @@ describe('POST /api/v1/pots', () => {
       .expect(200);
     expect((response.body as { message: string }).message).toContain('54-1-4000E8F3');
 
-    // `54-1-4000E8F3` now exists twice in the sheet, which is allowed.
-    expect(docs.state.added).toHaveLength(1);
-    expect(docs.state.records.filter((record) => JSON.stringify(record.values).includes('54-1-4000E8F3'))).toHaveLength(2);
+    // `54-1-4000E8F3` is a pot the sheet already carries, so the row it lives in is rewritten and no
+    // second row appears: the key is the combination the document is expected to hold once.
+    expect(docs.state.added).toHaveLength(0);
+    expect(docs.state.updated).toHaveLength(1);
+    expect(docs.state.updated[0]?.recordID).toBe('rA');
+    expect(docs.state.records.filter((record) => JSON.stringify(record.values).includes('54-1-4000E8F3'))).toHaveLength(1);
   });
 
-  it('writes one row per accept, and the cached list mirrors the sheet', async () => {
+  it('turns a repeated upload into one row and one served pot', async () => {
     const { client } = await startApp();
     await client.get('/api/v1/pots').expect(200);
 
@@ -411,15 +377,20 @@ describe('POST /api/v1/pots', () => {
       .expect(200);
     await client
       .post('/api/v1/pots')
-      .send({ ...newPot, potId: '64-0-40004444' })
+      .send({ ...newPot, potId: '64-0-40004444', northRefreshAt: String(sheetInstant('2026-09-12 16:30')) })
       .expect(200);
 
-    // No merging and no de-duplication: two accepts, two rows, and the list shows both of them.
-    expect(docs.state.added).toHaveLength(2);
+    // One append, then one update of that same row: the repeat is the same pot, not a second one.
+    expect(docs.state.added).toHaveLength(1);
+    expect(docs.state.updated).toHaveLength(1);
+    expect(docs.state.records.filter((record) => JSON.stringify(record.values).includes('64-0-40004444'))).toHaveLength(1);
+
     const list = (await client.get('/api/v1/pots').expect(200)).body as { data: Pot[] };
-    expect(list.data.filter((pot) => pot.potId === '64-0-40004444')).toHaveLength(2);
-    // Nothing was written behind the requests' backs, so the sheet was read exactly once.
-    expect(callsMatching('getRecords')).toHaveLength(1);
+    const written = list.data.filter((pot) => pot.potId === '64-0-40004444');
+    expect(written).toHaveLength(1);
+    // The served pot is the last upload's, and it carries none of the row's own bookkeeping.
+    expect(written[0]).toEqual({ world: '鸟', map: '北岛', potId: '64-0-40004444', northRefreshAtMs: sheetInstant('2026-09-12 16:30'), lastVisitAtMs: NOW });
+    expect(Object.keys(written[0] ?? {}).sort()).toEqual(['lastVisitAtMs', 'map', 'northRefreshAtMs', 'potId', 'world']);
   });
 
   it('validates the body with zod and every domain rule', async () => {

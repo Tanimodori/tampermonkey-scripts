@@ -174,6 +174,10 @@ export interface TencentDocsMockState {
   pageSize: number | undefined;
   /** Every `addRecords` payload the service sent, in order. */
   added: Array<Record<string, unknown>>;
+  /** The same appends as the sheet stored them: what a later read hands back, id and times included. */
+  addedRecords: RawRecordDto[];
+  /** Every `updateRecords` request the service sent, in order: which row, and the values it was given. */
+  updated: Array<{ recordID: string; values: Record<string, unknown> }>;
   /** Every `deleteRecords` request's record ids, in order. */
   deleted: string[];
   /** Set to make `deleteRecords` answer with this business error instead. */
@@ -184,6 +188,17 @@ export interface TencentDocsMockState {
   readFailure: MockFailure | undefined;
   /** Set to make `addRecords` answer with this business error instead. */
   writeFailure: MockFailure | undefined;
+  /** Set to make `updateRecords` answer with this business error instead. */
+  updateFailure: MockFailure | undefined;
+  /** Answers `addRecords` with no `recordID`, the way a shape we cannot read would. */
+  omitAddedRecordId: boolean;
+  /**
+   * The instant the sheet stamps on an appended row, as a 13 digit string. The real document keeps
+   * its own `createTime`/`updateTime` per row and never reports them on a write, so a case that cares
+   * about the document's times sets this to its own clock; the service reads them back on the next
+   * read, which is what makes a round trip consistent.
+   */
+  sheetTime: string;
   /** The document's sub-sheets, as `查询子表` reports them; the store checks its `sheetId` against them. */
   sheets: Array<{ sheetID: string; title: string; isVibile?: boolean }>;
   /** Set to make the sub-sheet list fail. */
@@ -278,10 +293,15 @@ export function setupTencentDocsMock(
     records: options.records ?? [],
     pageSize: undefined,
     added: [],
+    addedRecords: [],
+    updated: [],
     deleted: [],
     calls: [],
     readFailure: undefined,
     writeFailure: undefined,
+    updateFailure: undefined,
+    omitAddedRecordId: false,
+    sheetTime: '1789534000000',
     deleteFailure: undefined,
     sheets: options.sheets ?? [{ sheetID: SHEET_ID, title: '智能表1' }],
     sheetListFailure: undefined,
@@ -389,12 +409,33 @@ export function setupTencentDocsMock(
         if (state.writeFailure !== undefined) return failureReply(state.writeFailure);
 
         const records = (body.addRecords as { records: Array<{ values: Record<string, unknown> }> }).records;
+        const stamps = { createTime: state.sheetTime, updateTime: state.sheetTime };
         const stored: RawRecordDto[] = records.map((entry) => {
           state.added.push(entry.values);
-          return { recordID: `rNew${nextRecordId++}`, values: entry.values };
+          // A real answer carries the record id (and nothing about the row's times): see the live
+          // probe in `docs/data/pot.md`. `omitAddedRecordId` is the shape a document that answers
+          // without one would have.
+          return { recordID: `rNew${nextRecordId++}`, ...stamps, values: entry.values };
         });
+        const answered = state.omitAddedRecordId ? stored.map((entry) => ({ values: entry.values })) : stored;
+        state.addedRecords.push(...stored);
         state.records.push(...stored);
-        return mockReply(200, { ret: 0, msg: 'Succeed', data: { addRecords: { records: stored } } });
+        return mockReply(200, { ret: 0, msg: 'Succeed', data: { addRecords: { records: answered } } });
+      }
+
+      if (body !== undefined && 'updateRecords' in body) {
+        if (state.updateFailure !== undefined) return failureReply(state.updateFailure);
+
+        const records = (body.updateRecords as { records: Array<{ recordID: string; values: Record<string, unknown> }> }).records;
+        const stored: RawRecordDto[] = records.map((entry) => {
+          state.updated.push(entry);
+          // The row keeps its own identity and times; only the cells are replaced, which is what the
+          // API does — and why `docs` cannot take its timestamps from this answer.
+          const before = state.records.find((row) => row.recordID === entry.recordID);
+          return { ...before, recordID: entry.recordID, values: entry.values };
+        });
+        for (const entry of stored) state.records = state.records.map((row) => (row.recordID === entry.recordID ? entry : row));
+        return mockReply(200, { ret: 0, msg: 'Succeed', data: { updateRecords: { records: stored } } });
       }
 
       return mockReply(200, { ret: 0, msg: 'Succeed' });
@@ -411,10 +452,15 @@ export function setupTencentDocsMock(
     },
     reset: () => {
       state.added.length = 0;
+      state.addedRecords.length = 0;
+      state.updated.length = 0;
       state.deleted.length = 0;
       state.calls.length = 0;
       state.readFailure = undefined;
       state.writeFailure = undefined;
+      state.updateFailure = undefined;
+      state.omitAddedRecordId = false;
+      state.sheetTime = '1789534000000';
       state.deleteFailure = undefined;
       state.pageSize = undefined;
       state.sheets = initialSheets;
@@ -425,6 +471,8 @@ export function setupTencentDocsMock(
       state.refreshFailure = undefined;
       state.rawReadReply = undefined;
       state.networkFailures = 0;
+      // The numbering restarts with the state, so a case can name the row its own append produced.
+      nextRecordId = 1;
     },
     close: () => agent.close(),
   };

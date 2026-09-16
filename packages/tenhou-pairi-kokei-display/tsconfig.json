@@ -4,7 +4,7 @@
     "target": "esnext",
     "lib": ["esnext", "DOM"],
     "sourceMap": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "skipLibCheck": true,
     "strict": true,
     "isolatedModules": true,

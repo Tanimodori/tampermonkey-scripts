@@ -15,8 +15,8 @@
   "author": "Tanimodori",
   "type": "module",
   "scripts": {
-    "build:vite": "tsc && vite build",
-    "build": "tsc && vite build && esbuild dist/**/*.js --outdir=dist --allow-overwrite --charset=utf8 --minify-whitespace --format=esm",
+    "build:vite": "tsc && node build/build.ts",
+    "build": "tsc && node build/build.ts && esbuild dist/**/*.js --outdir=dist --allow-overwrite --charset=utf8 --minify-whitespace --format=esm --log-level=warning",
     "dev": "vite",
     "preview": "vite preview",
     "format": "oxfmt",
@@ -28,17 +28,18 @@
   "devDependencies": {
     "@types/node": "^22.10.5",
     "acorn": "^8.14.1",
-    "esbuild": "^0.25.1",
+    "esbuild": "^0.28.0",
     "fast-glob": "^3.3.3",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",
-    "typescript": "~5.6.2",
-    "vite": "^6.0.5",
-    "vite-plugin-strip-comments": "^0.0.5",
-    "vitest": "^2.1.8"
+    "typescript": "~5.9.3",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
   },
   "optionalDependencies": {
     "@oxfmt/binding-win32-x64-msvc": "^0.67.0",
-    "@oxlint/binding-win32-x64-msvc": "^1.82.0"
+    "@oxlint/binding-win32-x64-msvc": "^1.82.0",
+    "@rolldown/binding-win32-x64-msvc": "~1.2.6",
+    "lightningcss-win32-x64-msvc": "^1.33.0"
   }
 }

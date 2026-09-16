@@ -10,13 +10,13 @@ const nodeBuiltins = new Set([...builtinModules, ...builtinModules.map((name) =>
 
 export default defineConfig({
   build: {
-    ssr: resolve(__dirname, 'src/index.ts'),
-    outDir: resolve(__dirname, 'dist'),
+    ssr: resolve(import.meta.dirname, 'src/index.ts'),
+    outDir: resolve(import.meta.dirname, 'dist'),
     emptyOutDir: true,
     target: 'node24',
     minify: false,
     sourcemap: true,
-    rollupOptions: {
+    rolldownOptions: {
       external: (id) => nodeBuiltins.has(id),
       output: {
         format: 'es',
@@ -59,8 +59,8 @@ export default defineConfig({
     alias: {
       // `@test` first: `@` matches `@` or `@/…` only, so a scoped package like `@logtape/logtape`
       // stays untouched — the order just makes the two aliases unambiguous.
-      '@test': resolve(__dirname, 'test'),
-      '@': resolve(__dirname, 'src'),
+      '@test': resolve(import.meta.dirname, 'test'),
+      '@': resolve(import.meta.dirname, 'src'),
     },
   },
 });

@@ -1,14 +1,14 @@
 /// <reference types="node" />
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import gfMetadata from './build/gfMetadata';
+import gfMetadata from './build/gfMetadata.ts';
 
 export default defineConfig({
   build: {
-    outDir: resolve(__dirname, 'dist'),
+    outDir: resolve(import.meta.dirname, 'dist'),
     emptyOutDir: true,
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: resolve(import.meta.dirname, 'src/index.ts'),
       name: 'universalisZhData',
       formats: ['iife'],
       fileName: () => 'index.js',
@@ -16,7 +16,7 @@ export default defineConfig({
     minify: false,
   },
   resolve: {
-    alias: { '@': resolve(__dirname, 'src') },
+    alias: { '@': resolve(import.meta.dirname, 'src') },
   },
   plugins: [gfMetadata],
 });

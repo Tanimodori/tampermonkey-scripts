@@ -3,7 +3,7 @@
 import fs from 'fs';
 import { resolve } from 'path';
 import { PluginOption } from 'vite';
-import pkg from '../package.json';
+import pkg from '../package.json' with { type: 'json' };
 
 const metadata = `// ==UserScript==
 // @name         天鳳牌理好形表示

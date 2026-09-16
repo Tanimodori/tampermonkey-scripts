@@ -1,16 +1,18 @@
 name: CI
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 2
+          # `rush change --verify` needs the merge base with the default branch, so the clone has to
+          # carry the full history: a shallow clone cannot resolve it and the step fails instead.
+          fetch-depth: 0
       - name: Git config user
         uses: snow-actions/git-config-user@v1.0.0
         with:
@@ -18,10 +20,10 @@ jobs:
           email: # Service Account's Email Address
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 24
       - name: Verify Change Logs
         run: node common/scripts/install-run-rush.js change --verify
       - name: Rush Install
         run: node common/scripts/install-run-rush.js install
       - name: Rush rebuild
-        run: node common/scripts/install-run-rush.js rebuild --verbose --production
+        run: node common/scripts/install-run-rush.js rebuild --verbose

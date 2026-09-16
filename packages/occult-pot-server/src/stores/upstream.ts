@@ -3,7 +3,7 @@ import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
 import { formatInstant, LOG_CATEGORIES } from '@/logger.ts';
 import { now } from '@/services/time.ts';
-import { getSheetList } from '@/services/upstream/api/sheet.ts';
+import { getSheetList } from '@/services/upstream/api/file.ts';
 import { getUserInfo, refreshAccessToken } from '@/services/upstream/api/token.ts';
 import { asRecord, describeBody } from '@/services/upstream/interceptors/classify.ts';
 import { getRedis, traced } from '@/stores/redis.ts';

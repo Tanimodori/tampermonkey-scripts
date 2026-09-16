@@ -5,9 +5,10 @@ import { FILE_ID, loadTestConfig, testEnv } from '@test/testUtils/helpers.ts';
 import { TestRunner, afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getConfig } from '@/config.ts';
 import { listPots } from '@/services/pot.ts';
-import { addRecords, getRecords, getSheetList } from '@/services/upstream/api/sheet.ts';
+import { getSheetList } from '@/services/upstream/api/file.ts';
+import { addRecords, getRecords } from '@/services/upstream/api/record.ts';
 import { getUserInfo } from '@/services/upstream/api/token.ts';
-import { useClient } from '@/services/upstream/client.ts';
+import { getClient } from '@/services/upstream/client.ts';
 import { asArray, asRecord, parseBody } from '@/services/upstream/interceptors/classify.ts';
 import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
@@ -106,7 +107,7 @@ async function deleteRecords(recordIDs: readonly string[]): Promise<void> {
     operation: 'deleteRecords',
     envelope: true,
   };
-  const response = await useClient().request(options);
+  const response = await getClient().request(options);
   const body = asRecord(parseBody(await response.body.text()));
   if (body.ret !== 0) throw new Error(`deleteRecords answered ret=${String(body.ret)} msg=${String(body.msg)}`);
 }

@@ -15,7 +15,7 @@ const docs = setupTencentDocsMock();
 /** The two interceptors in the order `useClient()` composes them. */
 const client = () => docs.agent.compose(classify, retry);
 
-/** One request as `api/sheet.ts` builds it. */
+/** One request as `api/record.ts` builds it. */
 function options(overrides: Partial<CallOptions> = {}): CallOptions {
   return {
     origin: apiOrigin(),

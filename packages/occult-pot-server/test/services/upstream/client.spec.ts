@@ -2,13 +2,15 @@ import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
-import { useClient } from '@/services/upstream/client.ts';
+import { getClient, invalidateClient, useClient } from '@/services/upstream/client.ts';
 import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
 
 /**
  * `client.ts` is the composition and nothing else: a pool sized by the configuration — or a
- * dispatcher it is handed — with the classification and retry interceptors injected. These cases
- * pin exactly that; what each interceptor then does is `interceptors/classify.spec.ts` and
+ * dispatcher it is handed — with the classification and retry interceptors injected. These cases pin
+ * exactly that, plus the two things the process-wide transport adds: it is built once per
+ * configuration, and `loadConfig()`/`invalidateClient()` drop it so the next caller rebuilds it.
+ * What each interceptor then does is `interceptors/classify.spec.ts` and
  * `interceptors/retry.spec.ts`.
  */
 
@@ -30,7 +32,7 @@ async function listen(handler: Parameters<typeof createServer>[1]): Promise<stri
   return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 }
 
-/** One request as `api/sheet.ts` builds it. */
+/** One request as `api/record.ts` builds it. */
 function options(overrides: Partial<CallOptions> = {}): CallOptions {
   return {
     origin: apiOrigin(),
@@ -95,5 +97,47 @@ describe('useClient', () => {
 
     expect(response.statusCode).toBe(200);
     expect(readCalls()).toBe(2);
+  });
+});
+
+describe('getClient', () => {
+  it('builds the default transport once and hands the same one back', () => {
+    loadTestConfig();
+    // A previous case may have replaced the configuration; building here is what makes the identity
+    // below about the cache rather than about a transport nothing had asked for yet.
+    const first = getClient();
+
+    expect(getClient()).toBe(first);
+    // A transport built from a dispatcher the caller owns is never the default one.
+    expect(useClient({ dispatcher: docs.agent })).not.toBe(first);
+    expect(getClient({ dispatcher: docs.agent })).not.toBe(first);
+  });
+
+  it('builds a transport from the options it is given, without caching it', () => {
+    loadTestConfig();
+    const defaultClient = getClient();
+
+    expect(getClient({ dispatcher: docs.agent })).not.toBe(getClient({ dispatcher: docs.agent }));
+    expect(getClient()).toBe(defaultClient);
+  });
+
+  it('rebuilds the default transport once the configuration is reloaded', () => {
+    loadTestConfig();
+    const before = getClient();
+
+    // `loadConfig()` replaces the cached configuration and invalidates what was built from it: a
+    // pool's timeouts cannot follow a replacement that already happened.
+    loadTestConfig();
+
+    expect(getClient()).not.toBe(before);
+  });
+
+  it('rebuilds the default transport when the invalidation is explicit', () => {
+    loadTestConfig();
+    const before = getClient();
+
+    invalidateClient();
+
+    expect(getClient()).not.toBe(before);
   });
 });

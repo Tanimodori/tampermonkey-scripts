@@ -2,12 +2,12 @@
  * @module-tag redis
  */
 import { clock } from '@test/testUtils/clock.ts';
-import { captureLogs, loadTestConfig, rawRecord, resetRedis, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
+import { captureLogs, loadTestConfig, rawRecord, resetRedis, setupTencentDocsMock, lazyTransport } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
 import { createPot, getPot, listPots, potState, usePotService } from '@/services/pot.ts';
 import type { PotService } from '@/services/pot.ts';
-import type { RawRecordDto } from '@/services/upstream/api/sheet.ts';
+import type { RawRecordDto } from '@/services/upstream/api/record.ts';
 import type { ClientOptions } from '@/services/upstream/client.ts';
 import { getRedis } from '@/stores/redis.ts';
 import type { Pot, PotState } from '@/validation/index.ts';
@@ -26,9 +26,16 @@ vi.mock('@/services/time.ts', () => import('@test/testUtils/clock.ts'));
 
 const docs = setupTencentDocsMock();
 
+/**
+ * What the production modules reach the upstream with: the no-argument `getClient()`. The transport
+ * is built on first call — through the real `useClient()`, so the interceptors stay the real ones —
+ * and by then the case has loaded the configuration it reads.
+ */
+const transport = lazyTransport(docs);
+
 vi.mock('@/services/upstream/client.ts', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/services/upstream/client.ts')>();
-  return { ...actual, useClient: (options?: ClientOptions) => (options === undefined ? docs.client : actual.useClient(options)) };
+  return { ...actual, getClient: (options?: ClientOptions) => (options === undefined ? (transport() as never) : actual.getClient(options)) };
 });
 
 /** The fixture world's "now": every row below is stamped relative to it. */

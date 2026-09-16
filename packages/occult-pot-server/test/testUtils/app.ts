@@ -4,7 +4,7 @@ import { createApp } from '@/app.ts';
 import type { CreatedApp } from '@/app.ts';
 import { startServer } from '@/server.ts';
 import type { RunningServer } from '@/server.ts';
-import type { RawRecordDto } from '@/services/upstream/api/sheet.ts';
+import type { RawRecordDto } from '@/services/upstream/api/record.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 import { captureLogs, loadTestConfig, rawRecord, resetRedis, sheetInstant, setupTencentDocsMock, testClient } from './helpers.ts';
 

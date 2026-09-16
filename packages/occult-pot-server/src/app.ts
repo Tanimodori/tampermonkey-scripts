@@ -24,7 +24,7 @@ export function createApp(): CreatedApp {
   const config = getConfig();
   const startedAt = now();
 
-  // The stores and the services take what they need themselves — records through `api/sheet.ts`,
+  // The stores and the services take what they need themselves — records through `api/record.ts`,
   // ids and credential through the upstream store, pots through the pot service, the clock through
   // `services/time.ts` — so the composition root only hands the routes their limiters.
   const rateLimiters = createRateLimiters();

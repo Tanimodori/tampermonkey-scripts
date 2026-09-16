@@ -3,8 +3,8 @@ import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
 import { LOG_CATEGORIES } from '@/logger.ts';
 import { now } from '@/services/time.ts';
-import { addRecords, deleteRecords, getRecords } from '@/services/upstream/api/sheet.ts';
-import type { RawRecordDto } from '@/services/upstream/api/sheet.ts';
+import { addRecords, deleteRecords, getRecords } from '@/services/upstream/api/record.ts';
+import type { RawRecordDto } from '@/services/upstream/api/record.ts';
 import { asArray } from '@/services/upstream/interceptors/classify.ts';
 import { clearPotState, readPotState, writePotState } from '@/stores/pot.ts';
 import { fromSheetValues, isValidPot, toSheetValues } from '@/validation/index.ts';
@@ -14,7 +14,7 @@ import type { Pot, PotState } from '@/validation/index.ts';
  * The pot service: where the online sheet, the Redis cache and the rules about them meet.
  *
  * Every caller — the routes, the probes, anything added later — goes through this module. The three
- * layers around it know one thing each: `api/sheet.ts` performs one call per endpoint,
+ * layers around it know one thing each: `api/record.ts` performs one call per endpoint,
  * `stores/pot.ts` reads and writes the cached list, and this one decides *when* either happens:
  *
  * - a read is answered from Redis and goes back to the sheet only once the cached read is older

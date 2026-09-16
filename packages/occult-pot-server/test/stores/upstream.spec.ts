@@ -2,7 +2,7 @@
  * @module-tag redis
  */
 import { clock } from '@test/testUtils/clock.ts';
-import { captureLogs, FILE_ID, loadTestConfig, resetRedis, SHEET_ID, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
+import { captureLogs, FILE_ID, loadTestConfig, resetRedis, SHEET_ID, setupTencentDocsMock, lazyTransport } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
 import type { ClientOptions } from '@/services/upstream/client.ts';
@@ -18,11 +18,16 @@ const NOW = 1_789_140_693_000;
 
 const docs = setupTencentDocsMock();
 
+/**
+ * What the production modules reach the upstream with: the no-argument `getClient()`. The transport
+ * is built on first call — through the real `useClient()`, so the interceptors stay the real ones —
+ * and by then the case has loaded the configuration it reads.
+ */
+const transport = lazyTransport(docs);
+
 vi.mock('@/services/upstream/client.ts', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/services/upstream/client.ts')>();
-  // The api modules build their own transport with no options; that is the one the mock replaces.
-  // `docs.client` itself is built from the real factory, so the interceptors stay the real ones.
-  return { ...actual, useClient: (options?: ClientOptions) => (options === undefined ? docs.client : actual.useClient(options)) };
+  return { ...actual, getClient: (options?: ClientOptions) => (options === undefined ? (transport() as never) : actual.getClient(options)) };
 });
 
 /** A JWT-shaped token whose payload anyone can read — this service never verifies the signature. */

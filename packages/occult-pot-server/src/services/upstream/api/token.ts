@@ -1,6 +1,5 @@
-import type { Dispatcher } from 'undici';
 import { getConfig } from '@/config.ts';
-import { useClient } from '../client.ts';
+import { getClient } from '../client.ts';
 import { asRecord, parseBody } from '../interceptors/classify.ts';
 import type { CallOptions } from '../interceptors/classify.ts';
 import { throttle } from '../throttle.ts';
@@ -12,10 +11,8 @@ import { throttle } from '../throttle.ts';
  * They speak their own vocabulary — `userinfo` answers with the smartsheet envelope, the token
  * endpoint answers with the token itself and no envelope at all — which is why each function says
  * so on its request rather than leaving the classifier to guess. The credential lives in
- * `stores/upstream.ts`; this module only performs the two calls.
- *
- * This module holds its own client: `sheet.ts` has one of its own, and neither is a process-wide
- * singleton.
+ * `stores/upstream.ts`; this module only performs the two calls, over the transport `client.ts`
+ * builds and under the pacing `throttle.ts` keeps.
  *
  * See https://docs.qq.com/open/document/app/oauth2/refresh_token.html
  */
@@ -50,19 +47,9 @@ export async function refreshAccessToken(input: RefreshTokenInput): Promise<Reco
   return asRecord(await send({ ...target(url), method: 'GET', headers: {}, operation: 'refreshToken', envelope: false }));
 }
 
-/**
- * This module's transport, built on first use: it reads the loaded configuration for its timeouts,
- * which does not exist yet while modules are being imported.
- */
-let built: Dispatcher | undefined;
-
-function client(): Dispatcher {
-  return (built ??= useClient());
-}
-
 /** Runs one call under the shared pacing and hands back its parsed body. */
 async function send(options: CallOptions): Promise<unknown> {
-  const response = await throttle(() => client().request(options));
+  const response = await throttle(() => getClient().request(options));
   return parseBody(await response.body.text());
 }
 

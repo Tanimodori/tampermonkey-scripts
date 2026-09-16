@@ -17,7 +17,7 @@ const docs = setupTencentDocsMock();
 /** Classify, and nothing else: one attempt, one answer. */
 const client = () => docs.agent.compose(classify);
 
-/** One request as `api/sheet.ts` builds it. */
+/** One request as `api/record.ts` builds it. */
 function options(overrides: Partial<CallOptions> = {}): CallOptions {
   return {
     origin: apiOrigin(),

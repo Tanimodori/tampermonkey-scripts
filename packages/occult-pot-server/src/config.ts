@@ -292,15 +292,45 @@ function resolveConfig(defaults: AppEnvConfig, fromEnv: AppEnvConfig): AppConfig
 let cached: AppConfig | undefined;
 
 /**
+ * The things that cache something derived from the configuration, and have to be told when it is
+ * replaced: the outbound transport (`services/upstream/client.ts`) and its pacing queue
+ * (`services/upstream/throttle.ts`).
+ *
+ * They register themselves at import time rather than being imported from here, because both read
+ * the configuration through `getConfig()`: importing them would make this module depend on them and
+ * close a cycle. A listener is called after the new configuration is in the cache, and only when one
+ * was stored — a failed load leaves both the configuration and every cache built from it alone.
+ */
+const reloadListeners = new Map<string, () => void>();
+
+/**
+ * Registers one listener to run after a successful `loadConfig()` replaces the configuration.
+ *
+ * The name identifies it in the map, so registering the same name twice replaces the previous
+ * listener rather than accumulating them. A listener must not read the configuration while it is
+ * being registered: it is called when one is loaded, which is the only moment it has something to do.
+ */
+export function onConfigReload(name: string, listener: () => void): void {
+  reloadListeners.set(name, listener);
+}
+
+/** Tells every registered listener that the configuration was replaced. */
+function notifyConfigReload(): void {
+  for (const listener of reloadListeners.values()) listener();
+}
+
+/**
  * Reads the configuration: defaults, then the environment, then everything derived from both.
  *
  * The result is cached, so `getConfig()` can hand the same object to every module. Calling this
- * again replaces the cache; a call that throws leaves the previous configuration in place.
+ * again replaces the cache — and invalidates what the previous configuration had built, through
+ * `onConfigReload()`; a call that throws leaves the previous configuration in place.
  *
  * @throws `ConfigError` listing every problem at once.
  */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   cached = resolveConfig(getDefaultConfig(), loadConfigFromEnv(env));
+  notifyConfigReload();
   return cached;
 }
 

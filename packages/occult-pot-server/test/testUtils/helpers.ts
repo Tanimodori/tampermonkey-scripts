@@ -6,8 +6,8 @@ import type { Dispatcher } from 'undici';
 import { loadConfig, loadEnv } from '@/config.ts';
 import { configureLogging } from '@/logger.ts';
 import type { LogLevel } from '@/logger.ts';
-import type { RawRecordDto } from '@/services/upstream/api/sheet.ts';
-import { useClient } from '@/services/upstream/client.ts';
+import type { RawRecordDto } from '@/services/upstream/api/record.ts';
+import { getClient } from '@/services/upstream/client.ts';
 import type { AppConfig } from '@/validation/index.ts';
 
 /** The document coordinates every test app is configured with; the mock reports the same ids. */
@@ -263,9 +263,9 @@ function lowerHeaders(headers: unknown): Record<string, string> {
  * mock does not know about fails loudly instead of reaching the network.
  *
  * A spec swaps this transport in with `vi.mock` on `@/services/upstream/client.ts`: a no-argument
- * `useClient()` — how the `api/` modules build their own — returns this client, while the call that
- * carries a dispatcher still goes to the real factory. That is what keeps the production modules
- * free of a test seam.
+ * `getClient()` — how the `api/` modules reach their transport — returns this client, while the call
+ * that carries a dispatcher still goes to the real factory. That is what keeps the production
+ * modules free of a test seam.
  */
 export function setupTencentDocsMock(
   options: {
@@ -406,7 +406,7 @@ export function setupTencentDocsMock(
     agent,
     // Built on first use: it reads the loaded configuration, which exists only inside a test.
     get client(): Dispatcher {
-      custom ??= useClient({ dispatcher: agent });
+      custom ??= getClient({ dispatcher: agent });
       return custom;
     },
     reset: () => {
@@ -428,6 +428,18 @@ export function setupTencentDocsMock(
     },
     close: () => agent.close(),
   };
+}
+
+/**
+ * A stand-in for the no-argument `getClient()`, for the specs that swap the transport with `vi.mock`.
+ *
+ * The first call is what asks the mock for its client (`mock.client`): that one builds a transport
+ * by reading the loaded configuration, which does not exist while a spec's module body is being
+ * evaluated — by the time a request happens, the case has loaded its own.
+ */
+export function lazyTransport(mock: TencentDocsMock): () => Dispatcher {
+  let built: Dispatcher | undefined;
+  return () => (built ??= mock.client);
 }
 
 // ---------------------------------------------------------------------------

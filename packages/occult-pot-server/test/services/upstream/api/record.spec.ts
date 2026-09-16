@@ -1,13 +1,14 @@
-import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
+import { apiOrigin, loadTestConfig, setupTencentDocsMock, lazyTransport } from '@test/testUtils/helpers.ts';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { addRecords, deleteRecords, getRecords, getSheetList } from '@/services/upstream/api/sheet.ts';
+import { addRecords, deleteRecords, getRecords } from '@/services/upstream/api/record.ts';
 import type { ClientOptions } from '@/services/upstream/client.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 
 /**
- * The sub-sheet endpoints: one function per Tencent Docs call, and what each puts on the wire.
+ * The record endpoints: one function per Tencent Docs call, and what each puts on the wire.
  * Nothing here is about policy — retries and error classification belong to the interceptors, and
- * paging, row mapping and the sweep belong to the pot service (`services/pot.spec.ts`).
+ * paging, row mapping and the sweep belong to the pot service (`services/pot.spec.ts`). Which
+ * sub-sheets a document holds is `file.spec.ts`.
  */
 
 const FILE_ID = '300000000$ExAmPlEfIlEiD';
@@ -15,11 +16,16 @@ const SHEET_ID = 'tXXXXXX';
 
 const docs = setupTencentDocsMock();
 
+/**
+ * What the production modules reach the upstream with: the no-argument `getClient()`. The transport
+ * is built on first call — through the real `useClient()`, so the interceptors stay the real ones —
+ * and by then the case has loaded the configuration it reads.
+ */
+const transport = lazyTransport(docs);
+
 vi.mock('@/services/upstream/client.ts', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/services/upstream/client.ts')>();
-  // The api modules build their own transport with no options; that is the one the mock replaces.
-  // `docs.client` itself is built from the real factory, so the interceptors stay the real ones.
-  return { ...actual, useClient: (options?: ClientOptions) => (options === undefined ? docs.client : actual.useClient(options)) };
+  return { ...actual, getClient: (options?: ClientOptions) => (options === undefined ? (transport() as never) : actual.getClient(options)) };
 });
 
 /** Points the layer at the mocked upstream and gives it a configuration of its own. */
@@ -95,21 +101,5 @@ describe('deleteRecords', () => {
     expect(docs.state.calls[0]?.method).toBe('POST');
     expect(docs.state.calls[0]?.body).toEqual({ deleteRecords: { recordIDs: ['rMW8vK', 'rABC12'] } });
     expect(docs.state.calls[0]?.headers).toMatchObject({ 'access-token': 'test-access-token-value' });
-  });
-});
-
-describe('getSheetList', () => {
-  it('reads the document’s sub-sheets', async () => {
-    docs.state.sheets = [
-      { sheetID: SHEET_ID, title: '智能表1' },
-      { sheetID: 'tYYYYYY', title: '智能表2' },
-    ];
-    await useApi();
-
-    const sheets = await getSheetList(FILE_ID);
-
-    expect(sheets.map((entry) => entry.sheetID)).toEqual([SHEET_ID, 'tYYYYYY']);
-    expect(docs.state.calls[0]?.url).toBe(`${apiOrigin()}/openapi/smartbook/v2/files/${FILE_ID}/sheets`);
-    expect(docs.state.calls[0]?.method).toBe('GET');
   });
 });

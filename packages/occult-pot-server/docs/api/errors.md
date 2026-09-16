@@ -2,81 +2,124 @@
 
 ## 响应结构
 
-成功与失败共用同一个信封，四个字段：
+服务API返回值均为 JSON 对象，包含以下字段：
 
-- `code`：成功为 `SUCCESS`，失败以 `ERR_` 开头。
-- `data`：成功时的负载；失败时永远为 `null`。
-- `message`：成功时默认为 `ok`；失败时是唯一的信息载体，校验失败逐字段说明，上游失败包含腾讯文档返回的 `ret`、`msg` 与 `status`。
-- `requestId`：与 `X-Request-Id` 响应头一致，可在日志中定位这次请求。
+- `code`：成功是 `SUCCESS`，失败以 `ERR_` 开头。
+- `data`：成功时是负载；失败时永远是 `null`。
+- `message`：成功时默认是 `ok`；失败时包含错误信息。
+- `requestId`：与 `X-Request-Id` 响应头一致。
 
-`X-Request-Id` 沿用来访请求中合法的值（`^[\w.:-]{1,128}$`），否则生成一个 UUID；失败的 HTTP 状态码由错误码决定。排查用的额外信息（非生产环境 5xx 的调用栈前几行）只出现在日志里。
+失败时 HTTP 状态由 `code` 决定，每个错误的对应关系与出错原因见下。
 
-```json
-{
-  "code": "ERR_NOT_FOUND",
-  "data": null,
-  "message": "No occult pot with ID 60-0-4000ABCD",
-  "requestId": "0d5f…"
-}
-```
+## 具体错误
 
-`/readyz` 是探针：`503` 时 `code` 为 `ERR_NOT_READY`，`data` 为 `{"status":"offline"}`，`message` 只写 `offline`。
+### 请求体不合规
 
-## 错误码
+- `code`：`ERR_BAD_REQUEST`
+- HTTP：400
+- `message`：
+  - `Invalid body: ${field}: ${reason}` 字段或取值不合规
+  - `Request body is not valid JSON` 请求体不是合法 JSON
+- 出错原因：发生在 `POST /api/v1/pots` 的请求体上。字段不合规时一次列出所有出错的字段，多个字段用 `; ` 连起来；两种情况都不会动表和缓存。
 
-| code                         | HTTP | 何时出现                                                   |
-| ---------------------------- | ---- | ---------------------------------------------------------- |
-| `ERR_BAD_REQUEST`            | 400  | 请求体或路径参数不合规，或请求体不是合法 JSON              |
-| `ERR_NOT_FOUND`              | 404  | 未知的罐子 ID，或没有匹配的路径                            |
-| `ERR_METHOD_NOT_ALLOWED`     | 405  | 路径存在但不支持该方法，响应带 `Allow`                     |
-| `ERR_UNSUPPORTED_MEDIA_TYPE` | 415  | 请求体没有声明 `application/json`，或编码不支持            |
-| `ERR_PAYLOAD_TOO_LARGE`      | 413  | 请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`                    |
-| `ERR_RATE_LIMITED`           | 429  | 按 IP 的入站限流                                           |
-| `ERR_NOT_READY`              | 503  | `/readyz` 判为不可用：凭据过期、坐标未核对或 Redis 读不到  |
-| `ERR_UPSTREAM_AUTH_FAILED`   | 503  | 腾讯文档拒绝凭据，或凭据已过期                             |
-| `ERR_UPSTREAM_RATE_LIMITED`  | 503  | 腾讯文档返回 429 或业务码 `400007`，带 `retryAfterSeconds` |
-| `ERR_UPSTREAM_BAD_REQUEST`   | 400  | 腾讯文档以参数类业务码拒绝请求                             |
-| `ERR_UPSTREAM_FAILED`        | 502  | 传输失败、HTTP 5xx，或响应无法解析                         |
-| `ERR_CONFIG_INVALID`         | 500  | 配置非法、配置的子表不在该文档里，或凭据校验失败           |
-| `ERR_INTERNAL_ERROR`         | 500  | 其他未预期的服务端错误                                     |
+### 路径不存在
 
-以上只适用于直连应用端口与公网白名单内的路径；白名单之外由 nginx 直接返回纯文本 `404 Not Found`，见 [API 端点](endpoints.md) 的公网入口一节。
+- `code`：`ERR_NOT_FOUND`
+- HTTP：404
+- `message`：
+  - `No /api/v1 endpoint matches ${method} ${url}` `/api/v1` 下没有对应路径
+  - `No handler for ${method} ${url}` 其余路径
+- 出错原因：请求没有被任何处理程序接手。探针路径上换了方法也走这一条。
 
-## 请求体解析失败
+### 方法不被支持
 
-| 类型                                           | HTTP | 文案                                                             |
-| ---------------------------------------------- | ---- | ---------------------------------------------------------------- |
-| `entity.too.large`                             | 413  | `Request body exceeds the configured OPS_SERVER_JSON_BODY_LIMIT` |
-| `entity.parse.failed`                          | 400  | `Request body is not valid JSON`                                 |
-| `encoding.unsupported` / `charset.unsupported` | 415  | `Unsupported request body encoding; send UTF-8 JSON`             |
+- `code`：`ERR_METHOD_NOT_ALLOWED`
+- HTTP：405
+- `message`：`${method} is not allowed for ${url} (allowed: GET, POST)`
+- 出错原因：只出现在 `/api/v1/pots` 上用了 `GET`、`POST` 以外的方法时；响应带 `Allow` 头。
 
-请求体未声明 `Content-Type: application/json` 或声明了其他类型时同样返回 `415`，避免请求体被跳过解析。
+### 请求体的类型不被接受
 
-## 校验失败的文案
+- `code`：`ERR_UNSUPPORTED_MEDIA_TYPE`
+- HTTP：415
+- `message`：
+  - `Content-Type must be application/json for ${method} requests, received "${type}"` 主类型不是 `application/json`
+  - `Unsupported request body encoding; send UTF-8 JSON` 编码或字符集不支持
+- 出错原因：带请求体的方法（`POST`、`PUT`、`PATCH`）没有把 `application/json` 作为主类型声明时走第一条，vendor 类型也一样；完全没声明 `Content-Type` 时这条不带收到的类型。请求体不会被跳过解析。
 
-校验失败时 `message` 逐字段列出出错的字段与原因，用 `; ` 分隔，来源写在最前面（`body` 或 `params`）：
+### 请求体过大
 
-```json
-{
-  "code": "ERR_BAD_REQUEST",
-  "data": null,
-  "message": "Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 1789201200000, received \"1789201200\"; lastVisitAt: must be a 13 digit epoch in milliseconds, e.g. 1789201200000, received \"16:20\"",
-  "requestId": "0d5f…"
-}
-```
+- `code`：`ERR_PAYLOAD_TOO_LARGE`
+- HTTP：413
+- `message`：`Request body exceeds the configured OPS_SERVER_JSON_BODY_LIMIT`
+- 出错原因：请求体超过配置的上限（默认 `64kb`）。
 
-请求体与表格中的行共用同一套规则，字段与取值见 [API 端点](endpoints.md) 与 [Pot 数据](../data/pot.md)。
+### 请求过于频繁
 
-## 上游失败如何呈现
+- `code`：`ERR_RATE_LIMITED`
+- HTTP：429
+- `message`：`Too many requests from this IP, please retry later`
+- 出错原因：同一个客户端 IP 超出自己的窗口——读走 `general`，写走 `writes`。计数在 Redis 里，多实例共享同一份；响应带 `RateLimit-*` 与 `Retry-After` 头。
 
-- 传输错误或 HTTP 5xx：`ERR_UPSTREAM_FAILED`（502），会重试。
-- HTTP 429 或业务码 `400007`：`ERR_UPSTREAM_RATE_LIMITED`（503），会重试。
-- HTTP 401/403 或鉴权类业务码：`ERR_UPSTREAM_AUTH_FAILED`（503），不重试。
-- 参数类业务码：`ERR_UPSTREAM_BAD_REQUEST`（400），不重试。
-- 无法解析的响应：`ERR_UPSTREAM_FAILED`（502），不重试。
-- 文档或子表 ID 解析失败：`ERR_CONFIG_INVALID`（500），不重试。
-- 凭据校验或刷新被拒绝：`ERR_UPSTREAM_AUTH_FAILED`（503）或 `ERR_CONFIG_INVALID`（500），不重试。
+### 实例尚未就绪
 
-重试次数与退避参数见 [与腾讯文档通讯](upstream.md)。
+- `code`：`ERR_NOT_READY`
+- HTTP：503
+- `message`：`offline`
+- 出错原因：只在 `/readyz`，文档坐标还没核对过、凭据已经过期，或读不到 Redis 里的状态。这时 `data` 是 `{"status":"offline"}`，原因不写进响应，只在状态翻转时进日志。
 
-失败的请求会留下日志：5xx 记 `Request failed`（`error`），4xx 记 `Request rejected`（`warning`）。格式与脱敏规则见 [日志](../logging.md)。
+### 上游拒绝了请求内容
+
+- `code`：`ERR_UPSTREAM_BAD_REQUEST`
+- HTTP：400
+- `message`：
+  - `Tencent Docs rejected the request (ret=${ret}, msg=${msg})` 参数类业务码
+  - `Tencent Docs request failed (ret=${ret})` 其它非零 `ret`
+- 出错原因：读表或写表时，腾讯文档以参数类业务码（`ret` 在 400000–499999）或其它非零 `ret` 拒绝这次调用；不重试。
+
+### 上游凭据不可用
+
+- `code`：`ERR_UPSTREAM_AUTH_FAILED`
+- HTTP：503
+- `message`：
+  - `Tencent Docs returned HTTP ${status} for ${operation}` 上游回 401 或 403
+  - `Tencent Docs rejected the credential (ret=${ret}, msg=${msg})` 凭据类业务码
+  - `Tencent Docs refused to refresh the access token (body: ${body})` 刷新凭据被拒
+- 出错原因：腾讯文档回 401 或 403，或返回凭据类业务码 `10007`、`10302`、`10303`、`10313`、`37019`，或刷新凭据时被拒；不重试。
+
+### 上游限流
+
+- `code`：`ERR_UPSTREAM_RATE_LIMITED`
+- HTTP：503
+- `message`：`Tencent Docs rate limit reached (status=${status}, ret=${ret}, msg=${msg})`
+- 出错原因：腾讯文档回 429 或业务码 `400007`。先等它给出的等待时长，没有就等配置的退避，再重试；对外用 `Retry-After` 头给出建议等待的秒数。
+
+### 上游调用失败
+
+- `code`：`ERR_UPSTREAM_FAILED`
+- HTTP：502
+- `message`：
+  - `Tencent Docs returned HTTP ${status} for ${operation}` 上游 5xx
+  - `Request to ${url} failed` 连不上或超时
+  - `Unexpected response from Tencent Docs for ${operation} (status=${status}, body=${body})` 响应读不懂
+  - `Tencent Docs user info carried no openID (body: ${body})` 用户信息里没有 `openID`
+- 出错原因：上游 5xx、连不上或超时会重试；读不懂的响应与用户信息里没有 `openID` 不重试。重试次数与退避参数见 [与腾讯文档通讯](upstream.md)。
+
+### 配置不可用
+
+- `code`：`ERR_CONFIG_INVALID`
+- HTTP：500
+- `message`：
+  - `Invalid configuration:` 启动时逐行列出全部配置问题
+  - `Document ${fileId} has no sub-sheet ${sheetId}` 子表不在文档里
+  - ``OPS_DOCS_OPEN_ID is required unless the access token carries a `sub` claim`` 没配 Open-Id，凭据里也没有
+  - `OPS_DOCS_OPEN_ID (${openId}) does not belong to the configured access token (${tokenOpenId})` Open-Id 与凭据不匹配
+  - `Refreshing the access token needs OPS_DOCS_CLIENT_SECRET and OPS_DOCS_REFRESH_TOKEN` 刷新凭据缺配置
+- 出错原因：配置、文档坐标与凭据在启动时一次核对完，失败就拒绝启动，服务不会带着坏配置开始服务。运行中再问到坐标或刷新凭据而条件不满足时，才会作为 500 返回。
+
+### 未预期的服务端错误
+
+- `code`：`ERR_INTERNAL_ERROR`
+- HTTP：500
+- `message`：`Internal server error`
+- 出错原因：兜底，没被上面分类的异常都走这里，例如 Redis 读写失败。限流计数与罐子缓存都在 Redis 里，读不到就让请求失败，而不是放行；细节只在日志里。

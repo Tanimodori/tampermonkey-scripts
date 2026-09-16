@@ -42,7 +42,7 @@ rushx test    # 依次运行单元测试、Redis 测试、真实腾讯文档测�
 | `occult-pot-server` | 本仓构建            | 不发布                        |
 | `redis`             | `redis:7-alpine`    | 不发布                        |
 
-对外只有 nginx 发布端口，其转发范围与 nginx 层的限制见 [API 端点](docs/api/endpoints.md) 的公网入口一节；TLS 在更前面的一层终止。多实例部署的边界见 [存储设计](docs/data/store.md)。
+对外只有 nginx 发布端口，其转发范围与 nginx 层的限制见 [API 端点](docs/api/endpoints.md) 的限流一节；TLS 在更前面的一层终止。多实例部署的边界见 [存储设计](docs/data/store.md)。
 
 ## 日志
 

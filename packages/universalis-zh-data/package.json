@@ -30,6 +30,7 @@
     "oxlint": "^1.82.0",
     "typescript": "~5.9.3",
     "vite": "^8.3.0",
+    "vite-plugin-userscript-metadata": "workspace:*",
     "vitest": "^5.0.1"
   },
   "optionalDependencies": {

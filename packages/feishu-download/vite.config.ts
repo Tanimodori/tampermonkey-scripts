@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import gfMetadata from './build/gfMetadata.ts';
+import userscriptMetadata from 'vite-plugin-userscript-metadata';
 
 export default defineConfig({
   build: {
@@ -18,5 +18,21 @@ export default defineConfig({
   resolve: {
     alias: { '@': resolve(import.meta.dirname, 'src') },
   },
-  plugins: [gfMetadata],
+  plugins: [
+    userscriptMetadata({
+      meta: {
+        name: { default: 'feishu-download', zh: '飞书资源下载' },
+        description: {
+          default: 'Download audio and image resources from Feishu pages',
+          zh: '在飞书页面中下载音频和图片资源',
+        },
+        namespace: 'http://tanimodori.com/',
+        match: ['https://*.feishu.cn/*', 'https://*.larksuite.com/*'],
+        include: ['https://*.feishu.cn/*', 'https://*.larksuite.com/*'],
+        grant: 'none',
+        'run-at': 'document-idle',
+      },
+      injectPackageJson: true,
+    }),
+  ],
 });

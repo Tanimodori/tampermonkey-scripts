@@ -424,6 +424,10 @@
     // },
     //
     {
+      "packageName": "vite-plugin-userscript-metadata",
+      "projectFolder": "packages/vite-plugin-userscript-metadata"
+    },
+    {
       "packageName": "xivanalysis-zh",
       "projectFolder": "packages/xivanalysis-zh"
     },

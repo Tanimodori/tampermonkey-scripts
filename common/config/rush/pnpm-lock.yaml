@@ -27,6 +27,9 @@ importers:
       vite:
         specifier: ^8.3.0
         version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
+      vite-plugin-userscript-metadata:
+        specifier: workspace:*
+        version: link:../vite-plugin-userscript-metadata
       vitest:
         specifier: ^5.0.1
         version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
@@ -221,6 +224,9 @@ importers:
       vite:
         specifier: ^8.3.0
         version: 8.3.0(@types/node@25.0.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
+      vite-plugin-userscript-metadata:
+        specifier: workspace:*
+        version: link:../vite-plugin-userscript-metadata
       vitest:
         specifier: ^5.0.1
         version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@25.0.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@25.0.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
@@ -239,6 +245,47 @@ importers:
         version: 1.33.0
 
   ../../packages/universalis-zh-data:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.19.3
+      oxfmt:
+        specifier: ^0.67.0
+        version: 0.67.0
+      oxlint:
+        specifier: ^1.82.0
+        version: 1.82.0
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
+      vite-plugin-userscript-metadata:
+        specifier: workspace:*
+        version: link:../vite-plugin-userscript-metadata
+      vitest:
+        specifier: ^5.0.1
+        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
+    optionalDependencies:
+      '@oxfmt/binding-win32-x64-msvc':
+        specifier: ^0.67.0
+        version: 0.67.0
+      '@oxlint/binding-win32-x64-msvc':
+        specifier: ^1.82.0
+        version: 1.82.0
+      '@rolldown/binding-win32-x64-msvc':
+        specifier: ~1.2.6
+        version: 1.2.8
+      lightningcss-win32-x64-msvc:
+        specifier: ^1.33.0
+        version: 1.33.0
+
+  ../../packages/vite-plugin-userscript-metadata:
+    dependencies:
+      pkg-types:
+        specifier: ^2.3.3
+        version: 2.3.3
     devDependencies:
       '@types/node':
         specifier: ^22.10.5
@@ -289,6 +336,9 @@ importers:
       vite:
         specifier: ^8.3.0
         version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
+      vite-plugin-userscript-metadata:
+        specifier: workspace:*
+        version: link:../vite-plugin-userscript-metadata
       vitest:
         specifier: ^5.0.1
         version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
@@ -1018,6 +1068,9 @@ packages:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
     engines: {'0': node >= 0.8}
 
+  confbox@0.3.1:
+    resolution: {integrity: sha512-cKUSoKa8YxFZZSmraVi7onONx3amu77ngK3kGpsYHDH7drPwCRkQE1RYMPlLRrMtnciRj274XNRxcHxnKmDSnA==}
+
   content-disposition@1.1.0:
     resolution: {integrity: sha512-5jRCH9Z/+DRP7rkvY83B+yGIGX96OYdJmzngqnw2SBSxqCFPd0w2km3s5iawpGX8krnwSGmF0FW5Nhr0Hfai3g==}
     engines: {node: '>=18'}
@@ -1153,6 +1206,9 @@ packages:
   express@5.2.1:
     resolution: {integrity: sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==}
     engines: {node: '>= 18'}
+
+  exsolve@1.1.1:
+    resolution: {integrity: sha512-9U/jZUgjnSGyntRr6y5Muu1MJcwFl6kPu7k8qLF0IMNfLqvw0NZ4nnVDq0RVoZ0RvCyumib4Ez3KYrVfilrw+g==}
 
   fast-glob@3.3.3:
     resolution: {integrity: sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg==}
@@ -1549,6 +1605,9 @@ packages:
   path-to-regexp@8.4.2:
     resolution: {integrity: sha512-qRcuIdP69NPm4qbACK+aDogI5CBDMi1jKe0ry5rSQJz8JVLsC7jV8XpiJjGRLLol3N+R5ihGYcrPLTno6pAdBA==}
 
+  pathe@2.0.3:
+    resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -1563,6 +1622,9 @@ packages:
   pify@4.0.1:
     resolution: {integrity: sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==}
     engines: {node: '>=6'}
+
+  pkg-types@2.3.3:
+    resolution: {integrity: sha512-j/lCFdcppV0JxWpCEITdbDltBxPP6cHT+yNJ6Go2OgoSA9518X847X9z0p6LtA4Nc16+eQzCZjRrWanTGvHJ5w==}
 
   postcss@8.5.28:
     resolution: {integrity: sha512-RRuzqDtt5Y9h3quz5hWhK+TPnsmVs6WwSU6LkJMeY4HstUEDuYTG8UJSdawMRzmzAtV+KEoG8N3Qg2qLy5vM/A==}
@@ -2398,6 +2460,8 @@ snapshots:
       readable-stream: 2.3.8
       typedarray: 0.0.6
 
+  confbox@0.3.1: {}
+
   content-disposition@1.1.0: {}
 
   content-type@1.0.5: {}
@@ -2561,6 +2625,8 @@ snapshots:
       vary: 1.1.2
     transitivePeerDependencies:
       - supports-color
+
+  exsolve@1.1.1: {}
 
   fast-glob@3.3.3:
     dependencies:
@@ -2951,6 +3017,8 @@ snapshots:
 
   path-to-regexp@8.4.2: {}
 
+  pathe@2.0.3: {}
+
   picocolors@1.1.1: {}
 
   picomatch@2.3.1: {}
@@ -2959,6 +3027,12 @@ snapshots:
 
   pify@4.0.1:
     optional: true
+
+  pkg-types@2.3.3:
+    dependencies:
+      confbox: 0.3.1
+      exsolve: 1.1.1
+      pathe: 2.0.3
 
   postcss@8.5.28:
     dependencies:

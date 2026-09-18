@@ -1,16 +1,11 @@
 node_modules/
 dist/
-# `.env.development` and `.env.production` are tracked — they are the complete lists of variable
-# names, and only `.env.production` carries the few values a deployment must not leave at their
-# defaults. Everything that holds one machine's or one deployment's own values is ignored: the
-# `.local` files the app and compose read on top of a list, and `.env` itself, which compose loads
-# automatically and the app reads as its lowest-priority source.
+# The delivery folder tracks the value *lists* (`deploy/.env.production`, `deploy/.env.deploy`) and
+# ignores everything that holds one machine's or one deployment's own values: the `.local` files read
+# on top of a list, and a `.env` beside the compose file, which compose loads for interpolation on its
+# own. The development and test lists at the package root are tracked for the same reason.
 .env
 .env.local
 .env.*.local
 rush-logs/
 *.tsbuildinfo
-# The container's log directory is a compose bind mount: the directory itself is tracked (so the
-# mount target exists with sane ownership), what lands in it is not.
-logs/*
-!logs/.gitkeep

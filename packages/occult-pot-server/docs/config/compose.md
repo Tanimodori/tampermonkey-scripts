@@ -1,6 +1,8 @@
 # 编排
 
-[`docker-compose.yml`](../../docker-compose.yml) 的可配置项，以及几个变量在容器之间的去向。`OPS_COMPOSE_*` 只有 compose 用得到，名字不会进入任何容器。
+# 编排
+
+[`docker-compose.yml`](../../deploy/docker-compose.yml) 的可配置项，以及几个变量在容器之间的去向。`OPS_COMPOSE_*` 只有 compose 用得到，名字不会进入任何容器。
 
 ## OPS_ENV_PATH
 
@@ -52,15 +54,18 @@
 原生环境变量  <  .env  <  .env.<mode>  <  .env.local  <  .env.<mode>.local  <  OPS_ENV_PATH  <  OPS_ENV_PATH.local
 ```
 
-文件里的值覆盖原生环境变量，空值与未设置等价。`<mode>` 是运行模式：`rushx dev` 与直接跑源码是 `development`，构建产物是 `production`，测试是 `test`。仓库不发布 `.env`，只要它存在就会被读；`.env.development` 与 `.env.production` 是两份完整清单。
+文件里的值覆盖原生环境变量，空值与未设置等价。`<mode>` 是运行模式：`rushx dev` 与直接跑源码是 `development`，构建产物是 `production`，测试是 `test`。仓库不发布 `.env`，只要它存在就会被读；`.env.development`（包目录）与 `.env.production`（交付目录 `deploy/`）是两份完整清单。
 
-compose 与应用的读法是两件事：compose 只把 `OPS_COMPOSE_*`、以及 `OPS_SERVER_LOG_TIMEZONE` 这类被显式映射的变量拿去做插值，容器里的其它变量来自服务定义里的 `env_file`。
+compose 与应用的读法是两件事：compose 只把 `OPS_COMPOSE_*`、以及 `OPS_SERVER_LOG_TIMEZONE` 这类被显式映射的变量拿去做插值，容器里的其它变量来自服务定义里的 `env_file`。容器里没有值文件，应用读到的是 compose 注入的环境变量。
 
 ## 值文件怎么给
 
-- 生产默认用 `.env.production.local` 放真实值与覆盖，命令是 `docker compose --env-file .env.production.local up -d --build`：`--env-file` 会取代自动加载的 `.env`，可以重复给、后面的文件覆盖前面的，所以端口与时区也可以写在这份文件里。
-- 也可以把值放进部署目录的 `.env`：compose 会自动加载它做插值，容器也读它（它是 `env_file` 里的第二项，比交付的清单高、比两份 `.local` 低），此时端口与时区不需要 `--env-file`。两种写法选一种即可；不带任何 `--env-file` 时，端口与时区取 compose 里的默认值。
-- 服务定义里的 `env_file` 顺序是 `.env.production` → `.env` → `.env.local` → `.env.production.local`：交付的清单在最下，部署自己的 `.env` 次之，本机与部署的 `.local` 覆盖在最上，后面的覆盖前面的；服务自己的 `environment:` 再盖住所有文件。这一组写在 compose 的 `x-env-files` 里，需要取值的四个服务共用同一份。
+两类文件，都在交付目录 `deploy/` 下：
+
+- 容器的值：`env_file` 读 `.env.production`（清单，入库）与 `.env.production.local`（真实值，不入库），后面的覆盖前面的；服务自己的 `environment:` 再盖住两者。这一组写在 compose 的 `x-env-files` 里，需要取值的四个服务共用同一份。
+- compose 的插值：只读 `.env.deploy`（清单，入库）与可选的 `.env.deploy.local`，命令是 `docker compose --env-file .env.deploy --env-file .env.deploy.local up -d --build`（`--env-file` 可以重复给、后面的覆盖前面的，缺文件会报错，所以没有 `.env.deploy.local` 时就只带前一个）。不带任何 `--env-file` 时端口与时区取 compose 里的默认值，容器变量不受影响。
+
+两侧都只入库清单，真实值与机器相关的覆盖放各自的 `.local`。
 
 ## 被固定与跨容器的变量
 

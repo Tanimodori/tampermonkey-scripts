@@ -1,5 +1,5 @@
 # nginx has no rotation of its own, and the access log it writes next to this deployment
-# (deploy/nginx/default.conf) is the one fail2ban tails. `copytruncate` is why this file needs no
+# (nginx/default.conf) is the one fail2ban tails. `copytruncate` is why this file needs no
 # postrotate hook: the alternative would be `docker compose exec nginx nginx -s reopen` after each
 # rotation, which means logrotate driving docker.
 #
@@ -7,7 +7,7 @@
 # _MAX_FILES) and rotating it from here would fight the file sink.
 #
 # Install and check (the path belongs to the deployment folder on the server, not to a checkout):
-#   sudo cp deploy/logrotate/occult-pot-nginx /etc/logrotate.d/
+#   sudo cp logrotate/occult-pot-nginx /etc/logrotate.d/
 #   sudo logrotate -d /etc/logrotate.d/occult-pot-nginx   # dry run, prints what it would do
 
 # The placeholder below is the deployment's own log path: change it to where this deployment keeps

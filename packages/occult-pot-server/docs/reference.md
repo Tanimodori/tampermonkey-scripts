@@ -67,6 +67,5 @@
 - [occult-pot-server README](../README.md)：服务概况、配置、部署要点、运行时
 - [Pot 数据](data/pot.md)与[存储设计](data/store.md)
 - [API 端点](api/endpoints.md)、[错误处理](api/errors.md)与[与腾讯文档通讯](api/upstream.md)
-- [日志](logging.md)与[本地开发](development.md)
-- [监控](monitoring.md)：`stats` profile、端口、指标清单与访问方式
-- [部署与运维交付物](deploy.md)
+- [本地开发](development.md)：运行前置、环境文件、测试与检查命令
+- [部署与运维](deploy/setup.md)、[日志](deploy/logging.md)、[限速](deploy/rate-limit.md)与[监控](deploy/monitoring.md)

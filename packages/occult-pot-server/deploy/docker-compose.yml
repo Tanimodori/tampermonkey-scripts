@@ -6,22 +6,15 @@ x-logging: &logging
     max-size: 10m
     max-file: '5'
 
-# The value files every service that needs values reads, least specific first: a later file overrides
-# an earlier one, and a service's own `environment:` overrides all of them.
+# What the containers read, least specific first: `.env.production` is the tracked list of every name
+# (only the few values a deployment must not leave at its default), `.env.production.local` is the
+# deployment's own values. `format: raw` because a document id carries a `$`.
 #
-#   .env.production   .env   .env.local   .env.production.local
-#
-# `format: raw` because a document id carries a `$`. `.env` is the deployment's own base file: the
-# delivered list is beneath it, and the `.local` files above it, so a machine or deployment override
-# still wins.
+# Compose's own variables are not here. `OPS_COMPOSE_*` only feeds the `${…}` interpolation, which
+# reads the shell or whatever `--env-file` names — a deployment passes `.env.deploy`, plus
+# `.env.deploy.local` when the machine overrides a port or the zone.
 x-env-files: &env-files
   - path: .env.production
-    required: false
-    format: raw
-  - path: .env
-    required: false
-    format: raw
-  - path: .env.local
     required: false
     format: raw
   - path: .env.production.local
@@ -37,8 +30,8 @@ services:
       occult-pot-server:
         condition: service_healthy
     ports:
-      # The only port reachable from the internet; the value comes from compose interpolation
-      # (`--env-file`, the shell or a `.env` beside this file).
+      # The only port reachable from the internet; the value comes from compose interpolation, i.e.
+      # from `--env-file .env.deploy` (or `.env.deploy.local`) or the shell.
       - '${OPS_COMPOSE_NGINX_PORT:-29070}:80'
     environment:
       # The zone nginx logs in. Empty falls back to the app's `OPS_SERVER_LOG_TIMEZONE` — which only
@@ -46,7 +39,7 @@ services:
       TZ: ${OPS_COMPOSE_NGINX_TZ:-${OPS_SERVER_LOG_TIMEZONE:-UTC}}
     volumes:
       # The repository is the single source of the proxy's configuration.
-      - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       # Shared with the app: nginx writes the access log fail2ban reads there.
       - ./logs:/var/log/occult-pot-server
     networks: [occult-pot]
@@ -56,7 +49,7 @@ services:
   occult-pot-server:
     build:
       # The rush deploy output, so the build needs no sources, package manager or network.
-      context: ./deploy
+      context: .
       dockerfile: Dockerfile
     image: occult-pot-server:latest
     depends_on:
@@ -121,7 +114,7 @@ services:
       - '--storage.tsdb.path=/prometheus'
     volumes:
       # Scrape interval, targets and the 60-day / 5 GB retention all live in this one file.
-      - ./deploy/stats/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./stats/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     networks: [occult-pot]
     restart: unless-stopped
@@ -160,8 +153,8 @@ services:
         exec /run.sh
     volumes:
       # Data source and dashboard are files in the repository, not clicks in an admin UI.
-      - ./deploy/stats/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./deploy/stats/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./stats/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./stats/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
     networks: [occult-pot]
     restart: unless-stopped
@@ -189,7 +182,7 @@ services:
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:1.5.3
     profiles: [stats]
-    # The internal `stub_status` listener deploy/nginx/default.conf adds; it is not published.
+    # The internal `stub_status` listener nginx/default.conf adds; it is not published.
     command: ['--nginx.scrape-uri=http://nginx:8080/stub_status']
     networks: [occult-pot]
     restart: unless-stopped

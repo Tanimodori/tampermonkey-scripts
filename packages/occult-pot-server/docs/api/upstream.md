@@ -6,7 +6,7 @@
 
 `fileID` 是腾讯文档 API 的编号，不是浏览器地址栏里的表格链接。两者都能从一条已授权的调用或官方工具里读到；由分享链接的 encodedID 反推 `fileID` 的方法见[文件 ID 转换](https://docs.qq.com/open/document/app/openapi/v2/file/util/converter.html)。
 
-这些值是部署数据，只放在环境变量里：本机为 `.env.production.local`（生产）与 `.env.test-api.local`（测试文档），容器中由 compose 注入。启动时会核对子表属于该文档，失败则拒绝启动。变量本身见 [配置：腾讯文档](../config/docs.md)。
+这些值是部署数据，只放在环境变量里：本机为交付目录的 `deploy/.env.production.local`（生产）与 `.env.test-api.local`（测试文档），容器中由 compose 注入。启动时会核对子表属于该文档，失败则拒绝启动。变量本身见 [配置：腾讯文档](../config/docs.md)。
 
 ## 凭据
 
@@ -14,7 +14,7 @@
 
 access token 的有效期是 30 天，refresh token 是 1 年，换取与刷新都必须由后台服务发起。启动时会校验凭据，失败则拒绝启动；凭据进入有效期最后 3 天时记录一条 warning，过期后就绪状态变为 `offline`，上游调用返回鉴权失败。当前轮换凭据的方式是修改环境变量并重启：刷新的能力已经具备，但没有自动调度的定时器。
 
-日志只记录 token 的长度、到期时刻与校验结果，不输出 token 本身，也不记录调用地址中的查询串，见 [日志](../logging.md)。
+日志只记录 token 的长度、到期时刻与校验结果，不输出 token 本身，也不记录调用地址中的查询串，见 [日志](../deploy/logging.md)。
 
 ## 上游限制
 

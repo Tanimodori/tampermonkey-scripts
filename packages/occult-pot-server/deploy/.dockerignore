@@ -1,0 +1,13 @@
+# The build context is this delivery directory, and the image only copies `server/`. Everything else
+# is either mounted into the containers at run time or holds this machine's own values, so it is left
+# out of what the daemon receives.
+.env*
+logs/
+*.zip
+backup*/
+stats/
+fail2ban/
+logrotate/
+nginx/
+docker-compose.yml
+Dockerfile

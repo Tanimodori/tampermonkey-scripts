@@ -150,7 +150,7 @@ Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 178
 { "code": "SUCCESS", "data": { "status": "online" }, "message": "ok", "requestId": "…" }
 ```
 
-成功与失败都只回答 `status` 一个字段，不给原因；原因只在状态翻转时写进日志，见 [日志](../logging.md)。凭据进入 `OPS_DOCS_TOKEN_EXPIRY_WARN_MS` 窗口只算 degraded，仍然返回 online。
+成功与失败都只回答 `status` 一个字段，不给原因；原因只在状态翻转时写进日志，见 [日志](../deploy/logging.md)。凭据进入 `OPS_DOCS_TOKEN_EXPIRY_WARN_MS` 窗口只算 degraded，仍然返回 online。
 
 ### 可能的报错
 
@@ -159,7 +159,7 @@ Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 178
 
 ## 限流
 
-对外有两层按客户端 IP 计算的入站限制——服务自身的限流器与 nginx 的一层——再加上腾讯文档对出站调用的配额。相关配置项见 [配置：入站限流](../config/rate-limit.md)。
+入站限制按客户端 IP 计算，分服务自身的一层与 nginx 的一层，另外腾讯文档对出站调用另有配额。三层的分工、取值与配置位置见 [限速](../deploy/rate-limit.md)，配置项本身见 [配置：入站限流](../config/rate-limit.md)。
 
 ### 客户端请求限流
 
@@ -171,7 +171,7 @@ Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 178
 
 nginx 只转发 `GET /api/v1/pots`、`POST /api/v1/pots` 与 `GET /readyz`；其余路径返回纯文本 `404 Not Found`，连响应信封都没有，也不转发给应用。
 
-nginx 另有一道更松的限制（每 IP 20r/s，POST 2r/s）。被它拒绝同样是 `429` 与 `ERR_RATE_LIMITED`，但**没有 `RateLimit-*` 响应头**，所以客户端只能按 `code` 判断，不能指望响应头。配置与核对方式见 [`deploy/nginx/default.conf`](../../deploy/nginx/default.conf)。
+nginx 另有一道更松的限制。被它拒绝同样是 `429` 与 `ERR_RATE_LIMITED` 信封，但没有 `RateLimit-*` 响应头，客户端只能按 `code` 判断。
 
 ### 腾讯文档限流
 

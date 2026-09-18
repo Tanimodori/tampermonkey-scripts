@@ -13,7 +13,7 @@ datasources:
     isDefault: true
     editable: false
     jsonData:
-      # Matches `scrape_interval` in deploy/stats/prometheus/prometheus.yml: it is what Grafana uses
+      # Matches `scrape_interval` in stats/prometheus/prometheus.yml: it is what Grafana uses
       # to pick a sensible `$__rate_interval`, so it has to be the real scrape interval.
       timeInterval: 120s
       httpMethod: POST

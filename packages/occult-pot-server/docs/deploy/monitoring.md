@@ -1,6 +1,6 @@
 # 监控
 
-监控组是 [`docker-compose.yml`](../docker-compose.yml) 里的 `stats` profile：Prometheus、Grafana，以及三个 exporter。它默认不启动，`docker compose up -d` 的行为与没有它时完全一样。
+监控组是 [`docker-compose.yml`](../../deploy/docker-compose.yml) 里的 `stats` profile：Prometheus、Grafana，以及三个 exporter。它默认不启动，`docker compose up -d` 的行为与没有它时完全一样。
 
 ```
 occult-pot-server:3000/metrics ◀──┐
@@ -26,7 +26,7 @@ Prometheus 自身                    ◀──┘
 | `nginx-exporter`    | 9113       | `nginx-exporter:9113`    | 不发布                                                    | —      |
 | `node-exporter`     | 9100       | `node-exporter:9100`     | 不发布                                                    | —      |
 
-两个发布出来的端口都只绑在服务器回环上，所以它们是给隧道用的：公网扫不到，同一台机器之外的地址也连不上。Prometheus 没有自带鉴权，回环绑定就是它的保护；Grafana 用自带账号登录，密码来自配置。这几个端口变量的含义与取值方式见 [配置：编排](config/compose.md)。
+两个发布出来的端口都只绑在服务器回环上，所以它们是给隧道用的：公网扫不到，同一台机器之外的地址也连不上。Prometheus 没有自带鉴权，回环绑定就是它的保护；Grafana 用自带账号登录，密码来自配置。这几个端口变量的含义与取值方式见 [配置：编排](../config/compose.md)。
 
 容器内看指标（这也是核对抓取是否正常时最直接的办法）：
 
@@ -41,16 +41,18 @@ docker compose exec prometheus wget -qO- http://localhost:9090/api/v1/targets
 ## 启停
 
 ```bash
-docker compose --profile stats up -d     # 拉起监控组（业务服务本来就在跑）
-docker compose --profile stats down      # 停掉监控组
-docker compose ps                        # 关注的端口只有 29070、127.0.0.1:9999、127.0.0.1:9090
+docker compose --env-file .env.deploy --profile stats up -d     # 拉起监控组（业务服务本来就在跑）
+docker compose --env-file .env.deploy --profile stats down      # 停掉监控组
+docker compose --env-file .env.deploy ps                        # 关注的端口只有 29070、127.0.0.1:9999、127.0.0.1:9090
 ```
+
+覆盖过端口或时区时，在 `--env-file .env.deploy` 后面再加一个 `--env-file .env.deploy.local`。
 
 Prometheus 与 Grafana 的数据放在命名卷 `prometheus-data` 与 `grafana-data` 里；`down` 不会删它们，`down -v` 会。
 
 ## 访问
 
-[`deploy/stats/ssh/config.occult-pot.sample`](../deploy/stats/ssh/config.occult-pot.sample) 是一份可以追加到本机 `~/.ssh/config` 的片段：把 `${host}`、`${user}` 换成部署的实际值，之后一条命令同时开两个转发。
+[`deploy/stats/ssh/config.occult-pot.sample`](../../deploy/stats/ssh/config.occult-pot.sample) 是一份可以追加到本机 `~/.ssh/config` 的片段：把 `${host}`、`${user}` 换成部署的实际值，之后一条命令同时开两个转发。
 
 ```bash
 ssh -N occult-pot          # 只做转发，不在服务器上开 shell
@@ -59,13 +61,13 @@ ssh -N occult-pot          # 只做转发，不在服务器上开 shell
 - Grafana：`http://127.0.0.1:9999`
 - Prometheus：`http://127.0.0.1:9090`
 
-本地 9999 或 9090 被占用时，改片段里 `LocalForward` 左边的本地端口即可。Grafana 的端口被改过的话，还要把 `GF_SERVER_ROOT_URL` 改成浏览器实际用的地址，否则登录跳转与页面里的链接会指回 `9999`。服务器侧需要允许本地转发：`sshd -T | grep allowtcpforwarding` 应为 `yes` 或 `local`。
+本地 9999 或 9090 被占用时，改片段里 `LocalForward` 左边的本地端口。Grafana 的端口被改过的话，还要把 `GF_SERVER_ROOT_URL` 改成浏览器实际用的地址，否则登录跳转与页面里的链接会指回 `9999`。服务器侧需要允许本地转发：`sshd -T | grep allowtcpforwarding` 应为 `yes` 或 `local`。
 
 不想开隧道时，用 Grafana 的 Explore 查 PromQL，或按下面「需要对外暴露时」把 Grafana 发布出去。
 
 ## 登录与密码
 
-Grafana 用自带账号，管理员密码来自 `GF_SECURITY_ADMIN_PASSWORD`（值写在 `.env.production.local`，清单在 [`.env.production`](../.env.production)）。这个变量为空时容器直接退出并说明原因，不会退回 `admin`/`admin`。
+Grafana 用自带账号，管理员密码来自 `GF_SECURITY_ADMIN_PASSWORD`（值写在 `.env.production.local`，清单在 [`.env.production`](../../deploy/.env.production)）。这个变量为空时容器直接退出并说明原因，不会退回 `admin`/`admin`。
 
 这个变量只在管理员账号**第一次被创建**时生效。实例已经初始化过（`grafana-data` 里有数据）之后再改它不会改掉已有密码，轮换要用界面，或者：
 
@@ -81,7 +83,7 @@ docker compose exec grafana grafana cli --homepath /usr/share/grafana admin rese
 2. `GF_SERVER_ROOT_URL` 改成浏览器实际访问的地址（例如 `https://stats.example.com/`）；
 3. 云安全组放行该端口，前面最好再有一层 TLS 终止，并相应设 `GF_SECURITY_COOKIE_SECURE=true`。
 
-Prometheus 建议一直留在回环上：它没有鉴权，要暴露必须先配 `--web.config.file` 的 `basic_auth_users`。暴露之后可以再考虑匿名只读、反向代理鉴权或接 SSO，见文末「鉴权的升级路径」。
+Prometheus 没有鉴权，默认只在回环上；要暴露它，先配 `--web.config.file` 的 `basic_auth_users`。暴露之后可以再考虑匿名只读、反向代理鉴权或接 SSO，见文末「鉴权的升级路径」。
 
 ## 怎么读这些指标
 
@@ -205,7 +207,7 @@ min_over_time(up[10m]) == 0
 
 ## 保留与磁盘
 
-- 采集间隔 120s，抓取超时 30s：[`deploy/stats/prometheus/prometheus.yml`](../deploy/stats/prometheus/prometheus.yml) 的 `global`。
+- 采集间隔 120s，抓取超时 30s：[`deploy/stats/prometheus/prometheus.yml`](../../deploy/stats/prometheus/prometheus.yml) 的 `global`。
 - 保留 60 天，容量上限 5GB：同一个文件的 `storage.tsdb.retention`。两者谁先到谁生效，容量不够时先删最旧的块，不会写坏当前数据。
 - 面板与将来的告警窗口都用 10m 起步（慢变量用 1h），这是低精度的代价。
 

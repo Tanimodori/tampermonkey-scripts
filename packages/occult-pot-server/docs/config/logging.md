@@ -1,6 +1,6 @@
 # 日志
 
-日志一行一个 JSON，字段与轮转规则见 [日志](../logging.md)。记录默认只写 stdout 与 stderr，只有给了路径才会写到文件。
+日志一行一个 JSON，字段与轮转规则见 [日志](../deploy/logging.md)。记录默认只写 stdout 与 stderr，只有给了路径才会写到文件。
 
 两个文件 sink 是互斥的：`OPS_LOG_FILE_PATH` 与 `OPS_LOG_ROTATING_FILE_PATH` 不能同时设；只给某个 sink 的其它选项而不给它的 `PATH`，同样是配置错误。
 

@@ -1,4 +1,9 @@
-# The outputs of "rush deploy" (see the README): the deployment folder the image is built from, and
-# the archive that gets copied to the server. Both are build artifacts, never committed.
+# The outputs of "rush deploy" (see docs/deploy/setup.md): the deployment folder the image is built
+# from, and the archive that gets copied to the server. Both are build artifacts, never committed.
 server/
 occult-pot-server.zip
+
+# The containers' log directory is a compose bind mount: the directory itself is tracked (so the mount
+# target exists with sane ownership), what lands in it is not.
+logs/*
+!logs/.gitkeep

@@ -27,14 +27,15 @@ docker run -d --name test-redis -p 6399:6379 --restart unless-stopped redis:7-al
 各配置文件的用途：
 
 - `.env.development`：开发模式的完整清单与值，上游指向 mock（入库）。
-- `.env.production`：生产的完整清单，只有日志路径等少数几项有值（入库）。
-- `.env.production.local`：生产的真实值与覆盖（不入库）。
+- `deploy/.env.production`：容器的完整清单，只有日志路径等少数几项有值（入库）。
+- `deploy/.env.production.local`：容器的真实值与覆盖（不入库）。生产模式在主机上直接跑构建产物时，工作目录要落在 `deploy/`，否则这份文件不会被读到。
+- `deploy/.env.deploy`、`deploy/.env.deploy.local`：compose 插值用的变量，前者入库、后者不入库；应用不读这两份。
 - `.env.local`、`.env.development.local`：本机共享值与本机覆盖（不入库）。
-- `.env`：仓库不发布它；存在时会被读（也是最低优先级的文件来源），compose 也会自动加载它做插值。
+- `.env`：仓库不发布它；存在时会被读（也是最低优先级的文件来源）。
 - `.env.test-redis`、`.env.test-redis.local`：Redis 测试的地址，前者入库作为示例。
 - `.env.test-api`、`.env.test-api.local`：腾讯文档测试的坐标与凭据，前者入库作为示例。测试文档与生产文档结构相同、数据可以随意写入删除：分享链接里的 `tab=` 是子表 ID，`fileID` 由链接的 encodedID 经[文件 ID 转换](https://docs.qq.com/open/document/app/openapi/v2/file/util/converter.html)得到，凭据是该文档自己的应用（生产凭据对它没有权限）。
 
-配置项本身的类型、默认值与含义见 [配置](config/compose.md)。
+容器里没有这些文件，应用读到的是 compose 按 `env_file` 注入的环境变量。配置项本身的类型、默认值与含义，以及 compose 的取值方式，见 [配置](config/compose.md)。
 
 ## 测试
 

@@ -19,8 +19,4 @@
 
 ## 配置
 
-| 变量                        | 默认值                             |
-| --------------------------- | ---------------------------------- |
-| `OPS_SERVER_REDIS_URL`      | —（未设置时使用进程内 Redis mock） |
-| `OPS_SERVER_REDIS_PASSWORD` | —                                  |
-| `OPS_UPSTREAM_CACHE_TTL`    | `30000`                            |
+地址、密码与缓存有效期都是环境变量：地址与密码见 [配置：状态存储](../config/redis.md)，缓存有效期见 [配置：出站调用](../config/upstream.md)。

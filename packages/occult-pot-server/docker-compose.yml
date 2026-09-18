@@ -1,38 +1,53 @@
-# Docker's own log files have no size bound by default, and this port is scanned: keep the last
-# 50 MB of each container's stdout/stderr. (The app also writes its own rotating file to ./logs.)
+# The published port is scanned, so each container's stdout is bounded at 50 MB. The app keeps its
+# own rotating file under ./logs as well.
 x-logging: &logging
   driver: json-file
   options:
     max-size: 10m
     max-file: '5'
 
+# The value files every service that needs values reads, least specific first: a later file overrides
+# an earlier one, and a service's own `environment:` overrides all of them.
+#
+#   .env.production   .env   .env.local   .env.production.local
+#
+# `format: raw` because a document id carries a `$`. `.env` is the deployment's own base file: the
+# delivered list is beneath it, and the `.local` files above it, so a machine or deployment override
+# still wins.
+x-env-files: &env-files
+  - path: .env.production
+    required: false
+    format: raw
+  - path: .env
+    required: false
+    format: raw
+  - path: .env.local
+    required: false
+    format: raw
+  - path: .env.production.local
+    required: false
+    format: raw
+
 services:
   nginx:
-    # The only published surface. 1.30 is the current stable line (1.30.4) and is above 1.27.3, which
-    # is where `resolve` in an upstream became open source; bump this line as stable moves, the way
-    # `redis:7-alpine` is pinned.
+    # 1.30 is the current stable line and above 1.27.3, where `resolve` in an upstream became open
+    # source; bump it as stable moves.
     image: nginx:1.30-alpine
     depends_on:
       occult-pot-server:
-        # The proxy resolves the app's name when it starts: wait until the app is actually serving.
         condition: service_healthy
     ports:
-      # The only host port this project takes. Override it from the shell or the project-directory
-      # `.env` (`OPS_NGINX_PORT=9000 docker compose up -d`); a value in `.env.production*` does NOT
-      # feed this interpolation — env_file only reaches the containers.
-      - '${OPS_NGINX_PORT:-29070}:80'
+      # The only port reachable from the internet; the value comes from compose interpolation
+      # (`--env-file`, the shell or a `.env` beside this file).
+      - '${OPS_COMPOSE_NGINX_PORT:-29070}:80'
     environment:
-      # The zone nginx renders `$time_iso8601` in, so its access lines and the app's lines agree. The
-      # value is interpolated by compose, so it comes from the shell or `--env-file` (the same way
-      # `OPS_NGINX_PORT` does); the app reads the same variable name from its own env files.
-      TZ: ${OPS_SERVER_LOG_TIMEZONE:-UTC}
+      # The zone nginx logs in. Empty falls back to the app's `OPS_SERVER_LOG_TIMEZONE` — which only
+      # reaches this interpolation through the shell or `--env-file` — and then to UTC.
+      TZ: ${OPS_COMPOSE_NGINX_TZ:-${OPS_SERVER_LOG_TIMEZONE:-UTC}}
     volumes:
-      # One config source, read-only. The image's entrypoint copes with that: its IPv6 step skips a
-      # file it cannot write, and its envsubst step only renders /etc/nginx/templates.
+      # The repository is the single source of the proxy's configuration.
       - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      # The same host directory the app writes its rotating file into: nginx adds the access log
-      # fail2ban reads (deploy/fail2ban/), while `docker compose logs nginx` keeps reading stdout
-      # through the image's own /var/log/nginx/access.log -> /dev/stdout symlink.
+      # Shared with the app: nginx writes the access log fail2ban reads there.
       - ./logs:/var/log/occult-pot-server
     networks: [occult-pot]
     restart: unless-stopped
@@ -40,97 +55,49 @@ services:
 
   occult-pot-server:
     build:
-      # The image only installs the artifact "rush deploy" wrote here (see deploy/README.md): the
-      # context is that folder instead of the monorepo, so no sources, no package manager and no
-      # apt/npm mirrors are involved.
+      # The rush deploy output, so the build needs no sources, package manager or network.
       context: ./deploy
       dockerfile: Dockerfile
     image: occult-pot-server:latest
     depends_on:
       redis:
         condition: service_healthy
-    env_file:
-      # Least specific first: files are evaluated in order, and a later one overrides an earlier one.
-      # The order is the one the app's own loader uses on the host, so a value lands the same way
-      # either side:
-      #   .env.production         the tracked production template — part of the delivery
-      #   .env.local              this machine's own shared values, ignored
-      #   .env.production.local   the deployment's values, ignored; wins over everything above
-      #
-      # `.env` is deliberately not here: it is the variable reference (all of it commented out), and a
-      # documentation file has no business being a source of values. What it documents about these
-      # three applies: values go in the files, and only the ignored ones hold secrets.
-      #
-      # `format: raw` on every one of them: without it compose interpolates `$` in the values, which
-      # would eat the `$` of a document id (`300000000$…`). Raw passes each value through as written —
-      # the same reading the app's own loader gives the file on the host — so the id is spelled
-      # normally here. The trade is that these files must not rely on dotenv sugar: an inline ` # …`
-      # after a value would become part of it, and surrounding quotes would be kept.
-      - path: .env.production
-        required: false
-        format: raw
-      - path: .env.local
-        required: false
-        format: raw
-      - path: .env.production.local
-        required: false
-        format: raw
+    # The shared value files; the values that follow from the topology are pinned below.
+    env_file: *env-files
     environment:
-      # Topology-following values, pinned here: `environment:` outranks every env_file entry.
-      #
-      # The internal port nginx proxies to (and the image's healthcheck uses).
+      # The internal port nginx proxies to, and the one the image's healthcheck asks.
       OPS_SERVER_PORT: 3000
-      # Exactly one reverse proxy hop. Express then takes the client IP from the right-most
-      # X-Forwarded-For entry nginx appended, so per-IP throttling stays correct and a client-supplied
-      # header is ignored. This port is not published, so nothing outside the host can reach the app
-      # directly. (On Linux the host itself can still reach a container by its bridge IP — that is
-      # bridge networking, not a hole here.) If it is ever published directly again, set this back to
-      # false.
+      # Exactly one proxy hop: the client IP then comes from nginx's X-Forwarded-For entry, which is
+      # what the per-IP limits count. This port is never published.
       OPS_SERVER_TRUST_PROXY: 1
-      # The state store is the `redis` service below, by service name on this network. The address
-      # carries no credential and no compose variable: the password, when there is one, arrives as
-      # `OPS_SERVER_REDIS_PASSWORD` from the env files above — one value, read by both this service
-      # and Redis itself, never written into this file or into a URL that could reach a log line.
+      # The state store, by service name. The password arrives as `OPS_SERVER_REDIS_PASSWORD`, the
+      # variable Redis itself reads.
       OPS_SERVER_REDIS_URL: redis://redis:6379
     volumes:
-      # Where the rotating file sink writes (OPS_LOG_ROTATING_FILE_PATH); the bind mount keeps the JSON
-      # Lines files on the host. uid 1000 — the runtime `node` user — must be able to write here: on
-      # WSL/DrvFs it can, on a native Linux host `chown 1000:1000 logs` once. The image creates the
-      # directory as well, so swapping this for a named volume inherits the right ownership.
+      # Where the rotating file sink writes: uid 1000 — the runtime `node` user — has to be able to
+      # write here (`chown 1000:1000 logs` once on a native Linux host).
       - ./logs:/var/log/occult-pot-server
-    # No `ports`: internal only, reachable as occult-pot-server:3000 from this network.
+    # No published port: reachable as occult-pot-server:3000 on this network only.
     networks: [occult-pot]
     restart: unless-stopped
-    # Give the graceful shutdown path time to flush the write queue and the log sinks.
+    # Time for the graceful shutdown to flush the write queue and the log sinks.
     stop_grace_period: 30s
     init: true
     logging: *logging
 
   redis:
     image: redis:7-alpine
-    env_file:
-      # The same files the app reads, because `OPS_SERVER_REDIS_PASSWORD` is the one value this service
-      # wants from them. `${VAR:+…}` leaves the flag out when the variable is empty, so a deployment
-      # that sets no password gets an unauthenticated Redis — which is exactly what the app then
-      # connects to. Both sides read one variable, so they cannot disagree.
-      - path: .env.production
-        required: false
-        format: raw
-      - path: .env.local
-        required: false
-        format: raw
-      - path: .env.production.local
-        required: false
-        format: raw
-    # Append-only persistence: the pot list, the pending writes and the credential survive a restart.
+    # Read for `OPS_SERVER_REDIS_PASSWORD`, the one value this service wants.
+    env_file: *env-files
+    # AOF on, and the password from the same variable the app uses: neither side can disagree, and
+    # leaving it empty means no authentication at all.
     command:
       - sh
       - -c
       - exec redis-server --appendonly yes $${OPS_SERVER_REDIS_PASSWORD:+--requirepass "$$OPS_SERVER_REDIS_PASSWORD"}
     volumes:
       - redis-data:/data
-    # No `ports` either: nothing outside this network (or on another one) can reach Redis, so a host
-    # Redis on 6379 cannot collide with it.
+    # Not published, so a host Redis on 6379 cannot collide with it.
     networks: [occult-pot]
     restart: unless-stopped
     healthcheck:
@@ -140,28 +107,20 @@ services:
       retries: 5
     logging: *logging
 
-  # ---------------------------------------------------------------------------
-  # The monitoring group. It is a profile, not part of the service:
-  #
-  #     docker compose --profile stats up -d
-  #
-  # Only Prometheus and Grafana publish a port, and both bind 127.0.0.1 — they are reached through an
-  # SSH tunnel (see deploy/stats/ssh/config.occult-pot.sample), never from the internet. The three
-  # exporters publish nothing at all: Prometheus scrapes them by service name on this network.
-  # ---------------------------------------------------------------------------
+  # The monitoring group, started with `docker compose --profile stats up -d`. Only Prometheus and
+  # Grafana publish ports, both on 127.0.0.1 for an SSH tunnel; the exporters publish none.
 
   prometheus:
     image: prom/prometheus:v3.14.0
     profiles: [stats]
     ports:
-      # Prometheus has no authentication of its own, so the loopback address is what keeps it private.
-      - '127.0.0.1:${OPS_STATS_PROMETHEUS_PORT:-9090}:9090'
+      # Loopback only: Prometheus has no authentication of its own.
+      - '127.0.0.1:${OPS_COMPOSE_PROMETHEUS_PORT:-9090}:9090'
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     volumes:
-      # The whole configuration lives in the repository: scrape interval, the five targets and the
-      # 60-day / 5 GB retention are all in this one file.
+      # Scrape interval, targets and the 60-day / 5 GB retention all live in this one file.
       - ./deploy/stats/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     networks: [occult-pot]
@@ -172,44 +131,29 @@ services:
     image: grafana/grafana:13.2.2
     profiles: [stats]
     ports:
-      - '127.0.0.1:${OPS_STATS_GRAFANA_PORT:-9999}:9999'
-    env_file:
-      # The same files the app and Redis read. The one value Grafana wants from them is
-      # `GF_SECURITY_ADMIN_PASSWORD`; the deployment keeps it in `.env.production.local`.
-      - path: .env.production
-        required: false
-        format: raw
-      - path: .env.local
-        required: false
-        format: raw
-      - path: .env.production.local
-        required: false
-        format: raw
+      - '127.0.0.1:${OPS_COMPOSE_GRAFANA_PORT:-9999}:9999'
+    # Read for `GF_SECURITY_ADMIN_PASSWORD`, which the deployment keeps in one of the value files.
+    env_file: *env-files
     environment:
-      # 9999 rather than Grafana's own default 3000: 3000 is the app's, and one number shared by the
-      # container, the published port and the tunnel is one number to remember.
+      # 9999 in the container, on the host and in the tunnel alike: 3000 is the app's.
       GF_SERVER_HTTP_PORT: '9999'
-      # The address a browser uses, which is the tunnel's. Grafana builds its links and redirects
-      # from this, so publishing Grafana anywhere else means changing it too.
-      GF_SERVER_ROOT_URL: http://127.0.0.1:${OPS_STATS_GRAFANA_PORT:-9999}/
-      # Reached through a tunnel with an admin account: anonymous access and self-service sign-up
-      # have no place here.
+      # The address the browser uses, which is the tunnel's; Grafana builds its links from it.
+      GF_SERVER_ROOT_URL: http://127.0.0.1:${OPS_COMPOSE_GRAFANA_PORT:-9999}/
+      # Reached through a tunnel with an admin account, so neither of these has a place here.
       GF_AUTH_ANONYMOUS_ENABLED: 'false'
       GF_USERS_ALLOW_SIGN_UP: 'false'
     entrypoint:
-      # Without a password Grafana would not fail — it would quietly keep `admin`/`admin`, and the
-      # placeholder `.env.production` ships is worse still: a public string that looks configured.
-      # Refusing to start is the only safe reading of "the deployment did not set it".
+      # Without a password Grafana would quietly keep `admin`/`admin`; refuse to start instead.
       - /bin/sh
       - -c
       - |
-        if [ -z "$$GF_SECURITY_ADMIN_PASSWORD" ] || [ "$$GF_SECURITY_ADMIN_PASSWORD" = "<Grafana admin password>" ]; then
-          echo "GF_SECURITY_ADMIN_PASSWORD is required: set it in .env.production.local (the placeholder from .env.production is not a password)" >&2
+        test -n "$$GF_SECURITY_ADMIN_PASSWORD" || {
+          echo "GF_SECURITY_ADMIN_PASSWORD is required: set it in .env.production.local" >&2
           exit 1
-        fi
+        }
         exec /run.sh
     volumes:
-      # Data sources and the dashboard are files in this repository, not clicks in an admin UI.
+      # Data source and dashboard are files in the repository, not clicks in an admin UI.
       - ./deploy/stats/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./deploy/stats/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
@@ -218,30 +162,18 @@ services:
     logging: *logging
 
   redis-exporter:
-    # The `-alpine` variant on purpose: the exporter image proper carries no shell at all, and the
-    # command below needs one to read the password out of the environment.
+    # The `-alpine` variant: the exporter image proper has no shell, and the command below needs one.
     image: oliver006/redis_exporter:v1.91.1-alpine
     profiles: [stats]
-    env_file:
-      # Read for `OPS_SERVER_REDIS_PASSWORD`, the same name Redis itself was configured with.
-      - path: .env.production
-        required: false
-        format: raw
-      - path: .env.local
-        required: false
-        format: raw
-      - path: .env.production.local
-        required: false
-        format: raw
+    # Read for `OPS_SERVER_REDIS_PASSWORD`, the same one Redis was configured with.
+    env_file: *env-files
     environment:
       REDIS_ADDR: redis://redis:6379
-    # The image's own entrypoint is the exporter binary, so a `command:` would be appended to it as
-    # arguments and never run as a shell — the password flag would silently disappear. Overriding the
-    # entrypoint is what makes the `sh -c` below real.
+    # The image's entrypoint is the exporter binary, so a `command:` would be swallowed as its
+    # arguments; this is what makes the `sh -c` below real.
     entrypoint: ['/bin/sh', '-c']
-    # One variable, both sides, and the `${VAR:+…}` form leaves the flag out when there is no
-    # password — exactly how the `redis` service above reads it. The exporter takes the password on
-    # the command line or as `REDIS_PASSWORD`; only the former can be fed from the shared env files.
+    # The exporter takes the password as a flag or as `REDIS_PASSWORD`, and only the flag can be fed
+    # from the shared value files.
     command:
       - exec /redis_exporter --redis.addr="$$REDIS_ADDR" $${OPS_SERVER_REDIS_PASSWORD:+--redis.password="$$OPS_SERVER_REDIS_PASSWORD"}
     networks: [occult-pot]
@@ -251,7 +183,7 @@ services:
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:1.5.3
     profiles: [stats]
-    # The internal listener deploy/nginx/default.conf adds; 8080 is not published anywhere.
+    # The internal `stub_status` listener deploy/nginx/default.conf adds; it is not published.
     command: ['--nginx.scrape-uri=http://nginx:8080/stub_status']
     networks: [occult-pot]
     restart: unless-stopped
@@ -260,14 +192,11 @@ services:
   node-exporter:
     image: prom/node-exporter:v1.12.1
     profiles: [stats]
-    # Host metrics. The container reads the host's /proc, /sys and filesystems through the mount
-    # below; it needs neither host networking nor a published port, because Prometheus scrapes it
-    # from inside this network — so nothing new listens on the host's interfaces.
+    # Host metrics, read through the mount below and scraped from inside this network — so no host
+    # networking and no published port.
     #
-    # Read-only, and deliberately without `rslave`: a shared/slave mount propagation is what the
-    # usual recipes ask for, but it is not available in every environment (`path / is mounted on /
-    # but it is not a shared or slave mount` under WSL, for one), and its only benefit is that a
-    # filesystem mounted *after* this container starts shows up. `--path.rootfs` does the rest.
+    # Read-only and without `rslave` on purpose: propagating mounts is unavailable in some
+    # environments (WSL among them) and only helps for filesystems mounted later.
     command: ['--path.rootfs=/host']
     volumes:
       - '/:/host:ro'
@@ -276,15 +205,13 @@ services:
     logging: *logging
 
 networks:
-  # One user-defined bridge for all three: on a custom network containers reach each other by service
-  # name, and an explicit `name:` is used as-is instead of being scoped with the project name. It must
-  # NOT be `internal: true` — the app needs outbound internet for docs.qq.com.
+  # A user-defined bridge: containers reach each other by service name. It must not be
+  # `internal: true`, the app needs outbound internet for docs.qq.com.
   occult-pot:
     name: occult-pot
 
 volumes:
   redis-data:
-  # The monitoring group's data. Both are named volumes rather than bind mounts: nothing on the host
-  # reads them, and Prometheus owns its own retention.
+  # Monitoring data, on named volumes: nothing on the host reads them.
   prometheus-data:
   grafana-data:

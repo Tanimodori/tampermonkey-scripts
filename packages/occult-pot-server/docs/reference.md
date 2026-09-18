@@ -49,6 +49,10 @@
 - [node_exporter](https://github.com/prometheus/node_exporter)：主机指标
 - [`ngx_http_stub_status_module`](https://nginx.org/en/docs/http/ngx_http_stub_status_module.html)：exporter 读取的 nginx 状态页
 
+## 配置
+
+配置项的类型、默认值与含义，按主题分成七份文档：[配置](config/README.md)。
+
 ## 工具链
 
 - [Rush](https://rushjs.io) 与 pnpm：monorepo 与依赖管理
@@ -65,4 +69,4 @@
 - [API 端点](api/endpoints.md)、[错误处理](api/errors.md)与[与腾讯文档通讯](api/upstream.md)
 - [日志](logging.md)与[本地开发](development.md)
 - [监控](monitoring.md)：`stats` profile、端口、指标清单与访问方式
-- [部署与运维交付物](../deploy/README.md)
+- [部署与运维交付物](deploy.md)

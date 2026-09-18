@@ -159,7 +159,7 @@ Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 178
 
 ## 限流
 
-对外有两层按客户端 IP 计算的入站限制——服务自身的限流器与 nginx 的一层——再加上腾讯文档对出站调用的配额。相关配置项见 [`.env`](../../.env)。
+对外有两层按客户端 IP 计算的入站限制——服务自身的限流器与 nginx 的一层——再加上腾讯文档对出站调用的配额。相关配置项见 [配置：入站限流](../config/rate-limit.md)。
 
 ### 客户端请求限流
 

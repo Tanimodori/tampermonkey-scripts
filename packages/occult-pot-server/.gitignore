@@ -1,9 +1,11 @@
 node_modules/
 dist/
-# Templates are tracked (`.env`, `.env.development`, `.env.production`, `.env.test-*`); the values
-# that belong to one machine or one deployment are not. Both the app's loader and docker-compose read
-# a `.local` file on top of the template it names, so a secret only ever lives there — and the
-# `.env.production` template's placeholders are what a deployment overrides.
+# `.env.development` and `.env.production` are tracked — they are the complete lists of variable
+# names, and only `.env.production` carries the few values a deployment must not leave at their
+# defaults. Everything that holds one machine's or one deployment's own values is ignored: the
+# `.local` files the app and compose read on top of a list, and `.env` itself, which compose loads
+# automatically and the app reads as its lowest-priority source.
+.env
 .env.local
 .env.*.local
 rush-logs/

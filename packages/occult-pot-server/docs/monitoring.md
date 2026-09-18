@@ -14,19 +14,19 @@ Prometheus 自身                    ◀──┘
 
 ## 端口
 
-| 服务                | 容器内监听 | 网络内地址               | 主机发布                                                | 隧道   |
-| ------------------- | ---------- | ------------------------ | ------------------------------------------------------- | ------ |
-| `occult-pot-server` | 3000       | `occult-pot-server:3000` | 不发布                                                  | —      |
-| `nginx`             | 80         | `nginx:80`               | `${OPS_NGINX_PORT}`（默认 `29070`）                     | —      |
-| `nginx`（监控用）   | 8080       | `nginx:8080`             | 不发布                                                  | —      |
-| `redis`             | 6379       | `redis:6379`             | 不发布                                                  | —      |
-| `prometheus`        | 9090       | `prometheus:9090`        | `127.0.0.1:${OPS_STATS_PROMETHEUS_PORT}`（默认 `9090`） | `9090` |
-| `grafana`           | 9999       | `grafana:9999`           | `127.0.0.1:${OPS_STATS_GRAFANA_PORT}`（默认 `9999`）    | `9999` |
-| `redis-exporter`    | 9121       | `redis-exporter:9121`    | 不发布                                                  | —      |
-| `nginx-exporter`    | 9113       | `nginx-exporter:9113`    | 不发布                                                  | —      |
-| `node-exporter`     | 9100       | `node-exporter:9100`     | 不发布                                                  | —      |
+| 服务                | 容器内监听 | 网络内地址               | 主机发布                                                  | 隧道   |
+| ------------------- | ---------- | ------------------------ | --------------------------------------------------------- | ------ |
+| `occult-pot-server` | 3000       | `occult-pot-server:3000` | 不发布                                                    | —      |
+| `nginx`             | 80         | `nginx:80`               | `${OPS_COMPOSE_NGINX_PORT}`（默认 `29070`）               | —      |
+| `nginx`（监控用）   | 8080       | `nginx:8080`             | 不发布                                                    | —      |
+| `redis`             | 6379       | `redis:6379`             | 不发布                                                    | —      |
+| `prometheus`        | 9090       | `prometheus:9090`        | `127.0.0.1:${OPS_COMPOSE_PROMETHEUS_PORT}`（默认 `9090`） | `9090` |
+| `grafana`           | 9999       | `grafana:9999`           | `127.0.0.1:${OPS_COMPOSE_GRAFANA_PORT}`（默认 `9999`）    | `9999` |
+| `redis-exporter`    | 9121       | `redis-exporter:9121`    | 不发布                                                    | —      |
+| `nginx-exporter`    | 9113       | `nginx-exporter:9113`    | 不发布                                                    | —      |
+| `node-exporter`     | 9100       | `node-exporter:9100`     | 不发布                                                    | —      |
 
-两个发布出来的端口都只绑在服务器回环上，所以它们是给隧道用的：公网扫不到，同一台机器之外的地址也连不上。Prometheus 没有自带鉴权，回环绑定就是它的保护；Grafana 用自带账号登录，密码来自配置。两个端口变量的含义见 [`.env`](../.env)。
+两个发布出来的端口都只绑在服务器回环上，所以它们是给隧道用的：公网扫不到，同一台机器之外的地址也连不上。Prometheus 没有自带鉴权，回环绑定就是它的保护；Grafana 用自带账号登录，密码来自配置。这几个端口变量的含义与取值方式见 [配置：编排](config/compose.md)。
 
 容器内看指标（这也是核对抓取是否正常时最直接的办法）：
 
@@ -65,7 +65,7 @@ ssh -N occult-pot          # 只做转发，不在服务器上开 shell
 
 ## 登录与密码
 
-Grafana 用自带账号，管理员密码来自 `GF_SECURITY_ADMIN_PASSWORD`（值写在 `.env.production.local`，模板在 [`.env.production`](../.env.production)）。没配这个变量、或者值还是模板里的占位串时，容器直接退出并说明原因，不会退回 `admin`/`admin`。
+Grafana 用自带账号，管理员密码来自 `GF_SECURITY_ADMIN_PASSWORD`（值写在 `.env.production.local`，清单在 [`.env.production`](../.env.production)）。这个变量为空时容器直接退出并说明原因，不会退回 `admin`/`admin`。
 
 这个变量只在管理员账号**第一次被创建**时生效。实例已经初始化过（`grafana-data` 里有数据）之后再改它不会改掉已有密码，轮换要用界面，或者：
 

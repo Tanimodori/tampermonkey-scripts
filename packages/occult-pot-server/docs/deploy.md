@@ -1,6 +1,6 @@
 # 部署与运维交付物
 
-本目录存放服务器侧的文件：镜像的 `Dockerfile`、nginx 反向代理配置，以及两个可选的配置项——fail2ban 的过滤与 jail、nginx 访问日志的 logrotate 规则。`docker compose` 与 `.env*` 仍留在包目录，本机开发也会用到。
+本目录存放服务器侧的文件：镜像的 `Dockerfile`、nginx 反向代理配置，以及两个可选的配置项——fail2ban 的过滤与 jail、nginx 访问日志的 logrotate 规则。`docker compose` 与 `.env.production*` 仍留在包目录，本机开发也会用到。
 
 服务器上的部署根目录是 `~/occult-pot-server/`，它是包目录中除源码之外的对应物：
 
@@ -12,6 +12,7 @@
 ├── deploy/
 │   ├── Dockerfile
 │   ├── nginx/default.conf
+│   ├── stats/                       监控组的配置、面板与 ssh 片段
 │   ├── fail2ban/                    可选：filter.d 与 jail.d
 │   ├── logrotate/                   可选：nginx 访问日志的轮转规则
 │   ├── server/                      rush deploy 的产物
@@ -46,12 +47,13 @@ scp packages/occult-pot-server/deploy/occult-pot-server.zip ${user}@${host}:~/oc
 cd ~/occult-pot-server
 rm -rf deploy/server                                     # 清掉上一版产物
 unzip -oq deploy/occult-pot-server.zip -d deploy/server   # 解压新产物
-sudo docker compose up -d --build                         # 重建镜像并启动
+sudo docker compose --env-file .env.production.local up -d --build   # 重建镜像并启动
 ```
 
 - 必须先解压再构建；更新时需要 `--build`，否则会继续使用已有的镜像。
 - 回滚：保留上一版 zip，覆盖回去重新执行上面三条命令。
-- 默认对外端口是 `29070`，用 `OPS_NGINX_PORT` 覆盖；改端口前先在云安全组放行。
+- `--env-file` 指向那份持有真实值的文件（compose 的插值只读它、shell 以及同目录的 `.env`；它不会取代服务定义里的 `env_file`，容器变量照旧来自那三个文件）。不带 `--env-file` 时端口与时区取 compose 里的默认值，凭据仍然生效。
+- 默认对外端口是 `29070`，把 `OPS_COMPOSE_NGINX_PORT=…` 写进这份文件即可覆盖；改端口前先在云安全组放行。变量清单见 [配置：编排](config/compose.md)。
 - 只改了 nginx 配置时，让运行中的容器重新加载：
 
 ```bash
@@ -65,14 +67,16 @@ sudo docker compose exec nginx nginx -s reload  # 重新加载配置
 - `logs/nginx-access.log`：nginx 访问日志，供 fail2ban 使用。
 - `docker compose logs`：两个容器的 stdout。
 
-时间戳默认是 UTC。改成 GMT+8：
+时间戳默认是 UTC。改成 GMT+8：应用日志看 `OPS_SERVER_LOG_TIMEZONE`，nginx 的访问日志看 `OPS_COMPOSE_NGINX_TZ`（它留空时会回落到前者，所以只设前者通常就够）。
 
 ```bash
 echo 'OPS_SERVER_LOG_TIMEZONE=Asia/Shanghai' >> ~/occult-pot-server/.env.production.local
-cd ~/occult-pot-server && sudo docker compose --env-file .env.production.local up -d   # 让 nginx 容器也读到这个变量
+# nginx 要跟着改时再加一行；设了它就以它为准
+echo 'OPS_COMPOSE_NGINX_TZ=Asia/Shanghai'    >> ~/occult-pot-server/.env.production.local
+cd ~/occult-pot-server && sudo docker compose --env-file .env.production.local up -d
 ```
 
-字段与脱敏规则见 [日志说明](../docs/logging.md)。
+字段与脱敏规则见 [日志说明](logging.md)。
 
 ## 可选：fail2ban
 
@@ -81,9 +85,11 @@ cd ~/occult-pot-server && sudo docker compose --env-file .env.production.local u
 ```bash
 sudo apt-get install -y fail2ban                                                 # 安装
 sudo cp deploy/fail2ban/filter.d/occult-pot-nginx.conf /etc/fail2ban/filter.d/    # 安装匹配规则
-sudo cp deploy/fail2ban/jail.d/occult-pot-nginx.local     /etc/fail2ban/jail.d/   # 安装 jail 配置
+sudo cp deploy/fail2ban/jail.d/occult-pot-nginx.conf   /etc/fail2ban/jail.d/      # 安装 jail 配置
 sudo systemctl restart fail2ban                                                  # 生效
 ```
+
+jail 文件叫 `.conf`：fail2ban 把 `jail.d/*.conf` 当作分发的默认，把 `jail.d/*.local` 当作本机覆盖，并且在 `.conf` 之后解析。要改端口或日志路径时，建议新建一份 `/etc/fail2ban/jail.d/occult-pot-nginx.local` 只写要改的字段。早先装在旧名字 `occult-pot-nginx.local` 下的那份要删掉，否则它会盖住新的 `.conf`。
 
 核对是否生效：
 
@@ -117,7 +123,7 @@ sudo logrotate -d /etc/logrotate.d/occult-pot-nginx           # 干跑一遍，�
 监控组是 compose 里的 `stats` profile：Prometheus、Grafana 与三个 exporter。它需要 `deploy/stats/` 下的配置与面板文件，而部署 zip 里只有应用产物，所以这些文件随 compose 与 nginx 配置一起上传。
 
 ```bash
-sudo docker compose --profile stats up -d
+sudo docker compose --env-file .env.production.local --profile stats up -d
 sudo docker compose --profile stats ps        # 关注的端口只有 29070、127.0.0.1:9999、127.0.0.1:9090
 ```
 
@@ -134,7 +140,7 @@ ssh -N -L 9999:127.0.0.1:9999 -L 9090:127.0.0.1:9090 ${user}@${host}
 # 之后打开 http://127.0.0.1:9999（Grafana）与 http://127.0.0.1:9090（Prometheus）
 ```
 
-`deploy/stats/ssh/config.occult-pot.sample` 是同一件事的 `~/.ssh/config` 版本。端口表、指标清单与排错见 [监控说明](../docs/monitoring.md)。
+`deploy/stats/ssh/config.occult-pot.sample` 是同一件事的 `~/.ssh/config` 版本。端口表、指标清单与排错见 [监控说明](monitoring.md)。
 
 ## 对外暴露面（核对清单）
 
@@ -151,4 +157,4 @@ curl -sS 'http://127.0.0.1:29070/cgi-bin/luci/rpc/auth'                         
 ss -ltnp | grep -E '9999|9090'                                                   # 只应看到 127.0.0.1
 ```
 
-公网可达的路径与其语义见 [API 端点](../docs/api/endpoints.md)。
+公网可达的路径与其语义见 [API 端点](api/endpoints.md)。

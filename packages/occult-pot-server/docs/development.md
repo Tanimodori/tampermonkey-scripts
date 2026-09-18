@@ -22,16 +22,19 @@ docker run -d --name test-redis -p 6399:6379 --restart unless-stopped redis:7-al
 6. `.env`
 7. 原生环境变量
 
-文件中的值覆盖原生环境变量。`OPS_ENV_PATH` 只从原生环境读取。`${mode}` 是 vite 的运行模式：`rushx dev` 与直接运行源码是 `development`，构建产物是 `production`，测试是 `test`。
+文件中的值覆盖原生环境变量。`OPS_ENV_PATH` 只从原生环境读取。`.env` 不在仓库里，但只要放一份就会被读。`${mode}` 是 vite 的运行模式：`rushx dev` 与直接运行源码是 `development`，构建产物是 `production`，测试是 `test`。
 
 各配置文件的用途：
 
-- `.env`：全部配置项的参考，已注释、不生效（入库）。
-- `.env.development`：开发模式的值，全部指向 mock（入库）。
-- `.env.local`：本机共享值（不入库）。
+- `.env.development`：开发模式的完整清单与值，上游指向 mock（入库）。
+- `.env.production`：生产的完整清单，只有日志路径等少数几项有值（入库）。
+- `.env.production.local`：生产的真实值与覆盖（不入库）。
+- `.env.local`、`.env.development.local`：本机共享值与本机覆盖（不入库）。
+- `.env`：仓库不发布它；存在时会被读（也是最低优先级的文件来源），compose 也会自动加载它做插值。
 - `.env.test-redis`、`.env.test-redis.local`：Redis 测试的地址，前者入库作为示例。
-- `.env.test-api`、`.env.test-api.local`：腾讯文档测试的坐标与凭据，前者入库作为示例。
-- `.env.production`、`.env.production.local`：生产模板与生产真实值，前者入库。
+- `.env.test-api`、`.env.test-api.local`：腾讯文档测试的坐标与凭据，前者入库作为示例。测试文档与生产文档结构相同、数据可以随意写入删除：分享链接里的 `tab=` 是子表 ID，`fileID` 由链接的 encodedID 经[文件 ID 转换](https://docs.qq.com/open/document/app/openapi/v2/file/util/converter.html)得到，凭据是该文档自己的应用（生产凭据对它没有权限）。
+
+配置项本身的类型、默认值与含义见 [配置](config/compose.md)。
 
 ## 测试
 

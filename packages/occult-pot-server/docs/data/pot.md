@@ -43,6 +43,4 @@
 
 `docs` 只在写入成功时更新：上游拒绝写入时，表、缓存与 `docs` 都不变。`docs` 不进入任何 API 响应——调用方只看到 `Pot` 的五个字段。
 
-| 变量                          | 默认值     |
-| ----------------------------- | ---------- |
-| `OPS_UPSTREAM_STALE_AFTER_MS` | `10800000` |
+过期判定的阈值（默认 3 小时）是 `OPS_UPSTREAM_STALE_AFTER_MS`，取值见 [配置：出站调用](../config/upstream.md)。

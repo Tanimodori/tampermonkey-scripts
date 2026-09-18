@@ -142,6 +142,12 @@ services:
       # Reached through a tunnel with an admin account, so neither of these has a place here.
       GF_AUTH_ANONYMOUS_ENABLED: 'false'
       GF_USERS_ALLOW_SIGN_UP: 'false'
+      # Without this, Grafana 13 updates the bundled Prometheus data source at start-up and can leave
+      # it unregistered (observed on 13.2.2: the running plugin is killed, `plugin.notRegistered`
+      # afterwards). The instance needs no plugin it does not ship with, so nothing is preinstalled
+      # or updated from grafana.com either.
+      GF_PLUGINS_PREINSTALL_AUTO_UPDATE: 'false'
+      GF_PLUGINS_PREINSTALL_DISABLED: 'true'
     entrypoint:
       # Without a password Grafana would quietly keep `admin`/`admin`; refuse to start instead.
       - /bin/sh

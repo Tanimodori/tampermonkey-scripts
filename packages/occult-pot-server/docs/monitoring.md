@@ -223,6 +223,8 @@ curl -s -u admin:"${password}" http://127.0.0.1:9999/api/health
 curl -s -u admin:"${password}" http://127.0.0.1:9999/api/datasources
 ```
 
+面板报「Unable to find datasource plugin」或 `plugin.notRegistered` 时，是 Grafana 13 的插件自动更新把自带的 Prometheus 数据源换掉、又没能重新注册：`curl -s -u admin:"${password}" 'http://127.0.0.1:9999/api/plugins?embedded=0' | grep -c '"id":"prometheus"'` 会是 0。compose 里已经用 `GF_PLUGINS_PREINSTALL_AUTO_UPDATE=false` 与 `GF_PLUGINS_PREINSTALL_DISABLED=true` 关掉了这套动作，万一还是遇到，`docker compose --profile stats up -d --force-recreate grafana` 会带着自带的插件重新起来。
+
 - `up 0` 先分两步：`docker compose ps` 看那个容器在不在，再按上面的 `wget` 从网络内直接抓一次。
 - 隧道连不上：先确认 `sshd -T | grep allowtcpforwarding` 不是 `no`，再看本地端口有没有被占用（`ExitOnForwardFailure yes` 会让它当场报错），最后确认服务端确实只监听了回环（`ss -ltnp | grep -E ':9999|:9090'`）。
 - 面板里所有图都是空的：多半是 Prometheus 还没抓满一个窗口，或者 Grafana 的时间范围比 10m 还短。

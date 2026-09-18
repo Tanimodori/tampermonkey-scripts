@@ -59,7 +59,12 @@ sudo docker compose --env-file .env.production.local up -d --build   # 重建镜
 ```bash
 sudo docker compose exec nginx nginx -t         # 检查配置语法
 sudo docker compose exec nginx nginx -s reload  # 重新加载配置
+sudo docker compose up -d --force-recreate nginx   # 上传的文件是新增的 inode 时才需要
 ```
+
+`nginx -s reload` 只在原地改了文件时有意义。解压 zip 或 tar 会替换掉配置文件（新的 inode），而容器的绑定挂载仍指着旧的那个，这时 reload 之后跑的还是旧配置——判据是容器里 `nginx -T | grep listen 8080` 没有输出，那就 `--force-recreate nginx`。
+
+- 交给 `--env-file` 的值文件里若含 `$`（文档 id 就是 `300000000$…`），compose 解析它做插值时会把 `$` 后面的部分当变量并打印 `level=warning … variable is not set`。这是插值命名空间里的告警：容器拿到的值不受影响，因为 `env_file` 用 `format: raw` 读同一个文件。
 
 ## 日志
 

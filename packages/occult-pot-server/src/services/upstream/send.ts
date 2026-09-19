@@ -1,12 +1,15 @@
 import { getLogger } from '@logtape/logtape';
 import type { Dispatcher } from 'undici';
+import { z } from 'zod';
 import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
 import { LOG_CATEGORIES } from '@/logger.ts';
 import { upstreamRequestDuration, upstreamRequests, upstreamRetries } from '@/services/metrics.ts';
 import { now } from '@/services/time.ts';
+import { answerHeaderSchema } from '@/validation/upstream.ts';
+import { formatIssues } from '@/validation/utils.ts';
 import type { CallShape, ResponseHeaders, Verdict } from './classify.ts';
-import { classifyResponse, parseBody, retOf, transportFailure } from './classify.ts';
+import { classifyResponse, describeBody, transportFailure } from './classify.ts';
 import { getClient } from './client.ts';
 import { throttle } from './throttle.ts';
 
@@ -45,19 +48,28 @@ export interface UpstreamCall {
 
 /**
  * Sends one call whose answer is worded in the smartsheet envelope — where an HTTP 200 can still be a
- * failure, and only the business `ret` says so. Hands back the parsed body.
+ * failure, and only the business `ret` says so.
+ *
+ * `responseSchema` is the endpoint's own response type (`GetRecordsResponseSchema` and friends): this
+ * parses the answer once, into it, and the caller reads sections off a typed value. A body that is not
+ * JSON, or is JSON in a shape that type does not describe, is the upstream's failure to answer — named
+ * for the field that broke, quoting the body it did send.
  */
-export function sendEnvelope(call: UpstreamCall): Promise<unknown> {
-  return sendCall(call, true);
+export function sendEnvelope<S extends z.ZodType>(call: UpstreamCall, responseSchema: S): Promise<z.infer<S>> {
+  return sendCall(call, true).then((answer) => parseAnswer(responseSchema, answer, call.operation));
 }
 
 /**
  * Sends one call whose answer is the endpoint's own — the token endpoint, which answers a bad
  * credential with a `400` and a body its caller reads itself. Transport failures and a 429/5xx/401/403
- * are still judged; a business code is not, and whatever came back is handed over as the answer.
+ * are still judged; a business code is not.
+ *
+ * `responseSchema` describes that answer, but every field of it is optional: the point is to read the
+ * fields that are there, and leave the endpoint's own failure for the caller to word. Its schema is
+ * what makes that readable without a cast.
  */
-export function sendBare(call: UpstreamCall): Promise<unknown> {
-  return sendCall(call, false);
+export function sendBare<S extends z.ZodType>(call: UpstreamCall, responseSchema: S): Promise<z.infer<S>> {
+  return sendCall(call, false).then((answer) => parseAnswer(responseSchema, answer, call.operation));
 }
 
 /** One call under the shared pacing, retried until the policy runs out. */
@@ -102,38 +114,67 @@ async function oneAttempt(call: UpstreamCall, shape: CallShape): Promise<Outcome
   const described = { operation: call.operation, method: call.method, path: displayPath(call.path) };
   const startedAt = now();
 
+  let statusCode: number;
+  let headers: ResponseHeaders;
+  let answer: unknown;
   try {
     const response = await getClient().request({ origin: call.origin, path: call.path, method: call.method, headers: call.headers, body: call.body });
-    const body = parseBody(await response.body.text());
-    const failure = classifyResponse({ status: response.statusCode, body, headers: headerRecord(response.headers) }, shape);
-    const durationMs = now() - startedAt;
-
-    countAttempt(shape, failure?.code ?? 'ok', durationMs);
-    if (failure !== undefined) {
-      logger.warning('Tencent Docs call failed', {
-        ...described,
-        status: response.statusCode,
-        ret: retOf(body),
-        code: failure.code,
-        retryable: failure.retryable,
-        durationMs,
-      });
-      return { kind: 'failure', failure };
-    }
-
-    logger.info('Tencent Docs call answered', { ...described, status: response.statusCode, ret: retOf(body), durationMs });
-    return { kind: 'answer', answer: body };
+    statusCode = response.statusCode;
+    headers = { ...response.headers };
+    answer = await response.body.json();
   } catch (error) {
-    // The upstream never answered (or answered with something unreadable): nothing was classified, so
-    // this failure is worded from the transport's own report. The record carries *that* wording, never
-    // the error's own message — a transport error quotes the URL it failed on, query string included,
-    // and two of our calls carry their credential there.
+    // Three ways to get here and no answer: the upstream never replied, its body never finished
+    // arriving, or what arrived was not JSON at all. None of them is classified — there is nothing to
+    // read a verdict out of — so this failure is worded from the transport's own report, and retried
+    // like one, which is the cost of not inspecting a body this code cannot read.
+    //
+    // The record carries *that* wording, never the error's own message: a transport error quotes the
+    // URL it failed on, query string included, and two of our calls carry their credential there.
     const durationMs = now() - startedAt;
     const failure = transportFailure(error, `${call.origin}${displayPath(call.path)}`);
     countAttempt(shape, failure.code, durationMs);
     logger.warning('Tencent Docs call could not be sent', { ...described, durationMs, reason: failure.message });
     return { kind: 'failure', failure };
   }
+
+  // The bytes arrived, so whether they are the answer this call asked for is the table's question and
+  // not the transport's: an HTML error page from something in the middle is not going to read better
+  // on a second attempt, and the table already says so (`ret` missing means an unexpected response).
+  const header = answerHeaderSchema.safeParse(answer);
+  const { ret, msg } = header.success ? header.data : {};
+  const durationMs = now() - startedAt;
+  const failure = classifyResponse({ status: statusCode, headers, body: answer, ret, msg }, shape);
+
+  countAttempt(shape, failure?.code ?? 'ok', durationMs);
+  if (failure !== undefined) {
+    logger.warning('Tencent Docs call failed', {
+      ...described,
+      status: statusCode,
+      ret: ret ?? null,
+      code: failure.code,
+      retryable: failure.retryable,
+      durationMs,
+    });
+    return { kind: 'failure', failure };
+  }
+
+  logger.info('Tencent Docs call answered', { ...described, status: statusCode, ret: ret ?? null, durationMs });
+  return { kind: 'answer', answer };
+}
+
+/**
+ * Validates one part of an answer, reporting a shape this service cannot read as the upstream's
+ * failure rather than as an internal error: it is the answer that is wrong, and the message says which
+ * field of it, quoting the body the way the table does.
+ */
+export function parseAnswer<S extends z.ZodType>(schema: S, value: unknown, what: string): z.infer<S> {
+  const result = schema.safeParse(value);
+  if (result.success) return result.data;
+
+  const said = formatIssues(result.error)
+    .map((issue) => `${issue.path}: ${issue.message}`)
+    .join('; ');
+  throw new AppError('ERR_UPSTREAM_FAILED', `Tencent Docs answered ${what} with a shape this service cannot read (${said}; body: ${describeBody(value)})`);
 }
 
 /** Records one attempt, by what it was for, how it ended, and how long it took. */
@@ -149,11 +190,6 @@ function toAppError(failure: Verdict): AppError {
     ...(failure.retryAfterSeconds === undefined ? {} : { retryAfterSeconds: failure.retryAfterSeconds }),
     ...(failure.cause === undefined ? {} : { cause: failure.cause }),
   });
-}
-
-/** undici reports headers as a Node dictionary; the classification table reads a plain one. */
-function headerRecord(headers: Dispatcher.ResponseData['headers']): ResponseHeaders {
-  return headers as ResponseHeaders;
 }
 
 /**

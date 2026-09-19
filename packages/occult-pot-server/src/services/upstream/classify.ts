@@ -18,11 +18,20 @@ import { now } from '@/services/time.ts';
 /** Response headers, as undici reports them and `Retry-After` is read from. */
 export type ResponseHeaders = Record<string, string | string[] | undefined>;
 
-/** One upstream response, already parsed. */
-export interface JsonResponse {
+/**
+ * One attempt's answer, already read: the transport's own report, plus the two header fields of the
+ * smartsheet envelope, plus the body itself.
+ *
+ * `ret` and `msg` arrive typed because reading them is `send.ts`'s job — it is what holds the schema.
+ * `body` stays `unknown` and is used for exactly one thing: quoting what came back, masked, when the
+ * envelope cannot be read at all.
+ */
+export interface UpstreamAnswer {
   readonly status: number;
-  readonly body: unknown;
   readonly headers: ResponseHeaders;
+  readonly ret?: number;
+  readonly msg?: string;
+  readonly body: unknown;
 }
 
 /** How the answer is worded, and which call it answers for. */
@@ -60,11 +69,9 @@ const RATE_LIMIT_RET_CODES = new Set([400007]);
 /** A failure the policy will not retry: the same request would fail the same way. */
 const NO_RETRY = { retryable: false, delayMs: 0 } as const;
 
-/** Maps a response onto the taxonomy, saying whether the policy should try again. `undefined` means the response is a usable answer. */
-export function classifyResponse(response: JsonResponse, call: CallShape): Verdict | undefined {
-  const body = asRecord(response.body);
-  const ret = typeof body.ret === 'number' ? body.ret : undefined;
-  const msg = typeof body.msg === 'string' ? body.msg : undefined;
+/** Maps one answer onto the taxonomy, saying whether the policy should try again. `undefined` means the answer is a usable one. */
+export function classifyResponse(response: UpstreamAnswer, call: CallShape): Verdict | undefined {
+  const { ret, msg } = response;
   const said = joined([ret === undefined ? undefined : `ret=${ret}`, msg === undefined ? undefined : `msg=${msg}`]);
   const because = said === '' ? '' : ` (${said})`;
 
@@ -132,34 +139,6 @@ export function transportFailure(cause: unknown, target: string): Verdict {
   };
 }
 
-/** Parses a JSON body, tolerating the `text/plain` content type Tencent Docs sometimes uses. */
-export function parseBody(body: unknown): unknown {
-  if (typeof body !== 'string') return body;
-  const trimmed = body.trim();
-  if (trimmed === '') return undefined;
-  try {
-    return JSON.parse(trimmed);
-  } catch {
-    return undefined;
-  }
-}
-
-/** A response body as an object; anything else reads as an empty one. */
-export function asRecord(value: unknown): Record<string, unknown> {
-  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
-}
-
-/** A response body as a list; anything else reads as an empty one. */
-export function asArray(value: unknown): readonly unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
-/** The smartsheet envelope's business code, when the response carried one. */
-export function retOf(body: unknown): number | null {
-  const ret = asRecord(body).ret;
-  return typeof ret === 'number' ? ret : null;
-}
-
 /**
  * A bounded, printable form of a response body, for an error message.
  *
@@ -181,7 +160,7 @@ function maskCredentials(body: unknown): unknown {
   if (typeof body !== 'object' || body === null) return body;
 
   const masked: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
+  for (const [key, value] of Object.entries(body)) {
     masked[key] = CREDENTIAL_KEYS.test(key) ? '[redacted]' : maskCredentials(value);
   }
   return masked;

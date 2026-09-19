@@ -29,7 +29,7 @@
     "test": "npm run test:unit && npm run test:redis && npm run test:api",
     "test:unit": "vitest --run --passWithNoTests",
     "test:redis": "cross-env OPS_ENV_PATH=.env.test-redis vitest --run --no-file-parallelism --tags-filter=redis",
-    "test:api": "cross-env OPS_ENV_PATH=.env.test-api vitest --run --tags-filter=api",
+    "test:api": "cross-env OPS_ENV_PATH=.env.test-api vitest --run --no-file-parallelism --tags-filter=api",
     "test:watch": "vitest"
   },
   "dependencies": {

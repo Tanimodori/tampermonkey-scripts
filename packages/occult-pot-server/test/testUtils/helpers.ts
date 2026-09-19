@@ -1,3 +1,6 @@
+import { getSheetAnswer } from '@test/testUtils/upstream/file.ts';
+import { deleteRecordsAnswer, getRecordsAnswer, readRows, writtenRecordsAnswer, writtenRecordsWithoutId } from '@test/testUtils/upstream/record.ts';
+import { refreshTokenAnswer, userInfoAnswer } from '@test/testUtils/upstream/token.ts';
 import { defu } from 'defu';
 import Redis from 'ioredis';
 import RedisMock from 'ioredis-mock';
@@ -6,9 +9,9 @@ import type { Dispatcher } from 'undici';
 import { loadConfig, loadEnv } from '@/config.ts';
 import { configureLogging } from '@/logger.ts';
 import type { LogLevel } from '@/logger.ts';
-import type { RawRecordDto } from '@/services/upstream/api/record.ts';
 import { getClient } from '@/services/upstream/client.ts';
 import type { AppConfig } from '@/validation/index.ts';
+import type { CommonRecord } from '@/validation/upstream.ts';
 
 /** The document coordinates every test app is configured with; the mock reports the same ids. */
 export const FILE_ID = '300000000$ExAmPlEfIlEiD';
@@ -116,7 +119,7 @@ export function rawRecord(input: {
   values?: Record<string, unknown>;
   createTime?: string;
   updateTime?: string;
-}): RawRecordDto {
+}): CommonRecord {
   const values: Record<string, unknown> = {
     区服: [{ text: input.world ?? '鸟', type: 'text' }],
     地图: [{ text: input.map ?? '北岛', type: 'text' }],
@@ -169,13 +172,13 @@ export interface MockFailure {
 
 export interface TencentDocsMockState {
   /** Rows the sheet holds. Mutate to simulate sheet changes. */
-  records: RawRecordDto[];
+  records: CommonRecord[];
   /** How many rows the mock hands back per request; lets a test force pagination. */
   pageSize: number | undefined;
   /** Every `addRecords` payload the service sent, in order. */
   added: Array<Record<string, unknown>>;
   /** The same appends as the sheet stored them: what a later read hands back, id and times included. */
-  addedRecords: RawRecordDto[];
+  addedRecords: CommonRecord[];
   /** Every `updateRecords` request the service sent, in order: which row, and the values it was given. */
   updated: Array<{ recordID: string; values: Record<string, unknown> }>;
   /** Every `deleteRecords` request's record ids, in order. */
@@ -190,8 +193,8 @@ export interface TencentDocsMockState {
   writeFailure: MockFailure | undefined;
   /** Set to make `updateRecords` answer with this business error instead. */
   updateFailure: MockFailure | undefined;
-  /** Answers `addRecords` with no `recordID`, the way a shape we cannot read would. */
-  omitAddedRecordId: boolean;
+  /** Answers `addRecords` with rows that carry no `recordID`, a mutation the measured answer does not have. */
+  addRecordsWithoutId: boolean;
   /**
    * The instant the sheet stamps on an appended row, as a 13 digit string. The real document keeps
    * its own `createTime`/`updateTime` per row and never reports them on a write, so a case that cares
@@ -200,7 +203,7 @@ export interface TencentDocsMockState {
    */
   sheetTime: string;
   /** The document's sub-sheets, as `查询子表` reports them; the store checks its `sheetId` against them. */
-  sheets: Array<{ sheetID: string; title: string; isVibile?: boolean }>;
+  sheets: Record<string, unknown>[];
   /** Set to make the sub-sheet list fail. */
   sheetListFailure: MockFailure | undefined;
   /** Set to make `userinfo` fail (a rejected credential, for instance). */
@@ -208,12 +211,15 @@ export interface TencentDocsMockState {
   /** The Open-Id `userinfo` reports; must match the configured one unless a test says otherwise. */
   userInfoOpenId: string;
   /** What the token endpoint answers; `undefined` means the default refreshed token. */
-  refresh: { accessToken: string; expiresIn?: number; userId?: string } | undefined;
+  refresh: { accessToken: string; expiresIn?: number; userId?: string; refreshToken?: string } | undefined;
   /** Set to make the token endpoint fail. */
   refreshFailure: { status: number; body: Record<string, unknown> } | undefined;
-  /** Answers `getRecords` with this body verbatim, to exercise an unexpected shape. */
-  rawReadReply: { status: number; body: Record<string, unknown> } | undefined;
-  /** Fails this many sheet calls before any response exists, as a dropped connection would. */
+  /**
+   * Answers the next call — at whichever endpoint it arrives — with this body verbatim: an object is
+   * sent as JSON of that shape, a string is sent as-is for a body that is not JSON at all.
+   */
+  rawReply: { status: number; body: Record<string, unknown> | string } | undefined;
+  /** Fails this many calls before any response exists, as a dropped connection would. */
   networkFailures: number;
 }
 
@@ -248,11 +254,11 @@ interface MockRequest {
 
 interface MockReply {
   readonly statusCode: number;
-  readonly data: Record<string, unknown>;
+  readonly data: Record<string, unknown> | string;
   readonly responseOptions: { readonly headers: Record<string, string> };
 }
 
-function mockReply(statusCode: number, data: Record<string, unknown>, headers: Record<string, string> = JSON_HEADERS): MockReply {
+function mockReply(statusCode: number, data: MockReply['data'], headers: Record<string, string> = JSON_HEADERS): MockReply {
   return { statusCode, data, responseOptions: { headers } };
 }
 
@@ -284,8 +290,8 @@ function lowerHeaders(headers: unknown): Record<string, string> {
  */
 export function setupTencentDocsMock(
   options: {
-    records?: RawRecordDto[];
-    sheets?: Array<{ sheetID: string; title: string; isVibile?: boolean }>;
+    records?: CommonRecord[];
+    sheets?: Record<string, unknown>[];
     userInfoOpenId?: string;
   } = {},
 ): TencentDocsMock {
@@ -300,16 +306,16 @@ export function setupTencentDocsMock(
     readFailure: undefined,
     writeFailure: undefined,
     updateFailure: undefined,
-    omitAddedRecordId: false,
+    addRecordsWithoutId: false,
     sheetTime: '1789534000000',
     deleteFailure: undefined,
-    sheets: options.sheets ?? [{ sheetID: SHEET_ID, title: '智能表1' }],
+    sheets: options.sheets ?? [{ sheetID: SHEET_ID, title: '智能表1', isVisible: true, type: 'smartsheet' }],
     sheetListFailure: undefined,
     userInfoFailure: undefined,
     userInfoOpenId: options.userInfoOpenId ?? 'test-open-id',
     refresh: undefined,
     refreshFailure: undefined,
-    rawReadReply: undefined,
+    rawReply: undefined,
     networkFailures: 0,
   };
 
@@ -329,13 +335,32 @@ export function setupTencentDocsMock(
     state.calls.push({ method: request.method, url: `${origin}${request.path}`, body, headers: lowerHeaders(request.headers) });
   };
 
+  /**
+   * Records the call, then applies whatever failure the case asked for — a dropped connection, or a
+   * body that is not JSON. Both short-circuit the endpoint's own answer, and both are counted from
+   * `calls` either way, which is how a test counts attempts.
+   */
+  function prelude(request: MockRequest, body: unknown): MockReply | undefined {
+    record(request, body);
+    if (state.networkFailures > 0) {
+      state.networkFailures -= 1;
+      throw new Error('simulated transport failure');
+    }
+    return state.rawReply === undefined
+      ? undefined
+      : mockReply(state.rawReply.status, state.rawReply.body, {
+          'content-type': typeof state.rawReply.body === 'string' ? 'text/plain' : JSON_HEADERS['content-type'],
+        });
+  }
+
   // `查询子表`: the document's sub-sheets, which the store checks its configured id against.
   pool
     .intercept({ path: (path) => path.startsWith('/openapi/smartbook/v2/files/') && path.endsWith('/sheets'), method: 'GET' })
     .reply((request) => {
-      record(request, undefined);
+      const early = prelude(request, undefined);
+      if (early !== undefined) return early;
       if (state.sheetListFailure !== undefined) return failureReply(state.sheetListFailure);
-      return mockReply(200, { ret: 0, msg: 'Succeed', data: { getSheet: state.sheets } });
+      return mockReply(200, getSheetAnswer(state.sheets));
     })
     .persist();
 
@@ -343,26 +368,30 @@ export function setupTencentDocsMock(
   pool
     .intercept({ path: (path) => path.startsWith('/oauth/v2/userinfo'), method: 'GET' })
     .reply((request) => {
-      record(request, undefined);
+      const early = prelude(request, undefined);
+      if (early !== undefined) return early;
       if (state.userInfoFailure !== undefined) return failureReply(state.userInfoFailure);
-      return mockReply(200, { ret: 0, msg: 'Succeed', data: { openID: state.userInfoOpenId, nick: 'tester' } });
+      return mockReply(200, userInfoAnswer({ openID: state.userInfoOpenId, nick: 'tester' }));
     })
     .persist();
 
   pool
     .intercept({ path: (path) => path.startsWith('/oauth/v2/token'), method: 'GET' })
     .reply((request) => {
-      record(request, undefined);
+      const early = prelude(request, undefined);
+      if (early !== undefined) return early;
       if (state.refreshFailure !== undefined) return mockReply(state.refreshFailure.status, state.refreshFailure.body);
       const refreshed = state.refresh ?? { accessToken: 'refreshed-access-token', expiresIn: 2_592_000, userId: state.userInfoOpenId };
-      return mockReply(200, {
-        access_token: refreshed.accessToken,
-        token_type: 'Bearer',
-        // A response without a lifetime makes the store fall back to the token's own `exp`.
-        ...(refreshed.expiresIn === undefined ? {} : { expires_in: refreshed.expiresIn }),
-        scope: 'scope.smartsheet',
-        user_id: refreshed.userId ?? state.userInfoOpenId,
-      });
+      // A response without a lifetime makes the store fall back to the token's own `exp`.
+      return mockReply(
+        200,
+        refreshTokenAnswer({
+          accessToken: refreshed.accessToken,
+          expiresIn: refreshed.expiresIn,
+          userId: refreshed.userId ?? state.userInfoOpenId,
+          refreshToken: refreshed.refreshToken,
+        }),
+      );
     })
     .persist();
 
@@ -371,16 +400,10 @@ export function setupTencentDocsMock(
     .reply((request) => {
       const raw = bodyText(request.body);
       const body = raw === '' ? undefined : (JSON.parse(raw) as Record<string, unknown>);
-      record(request, body);
-
-      // Recorded above, then failed: a test can count attempts from `calls` either way.
-      if (state.networkFailures > 0) {
-        state.networkFailures -= 1;
-        throw new Error('simulated transport failure');
-      }
+      const early = prelude(request, body);
+      if (early !== undefined) return early;
 
       if (body !== undefined && 'getRecords' in body) {
-        if (state.rawReadReply !== undefined) return mockReply(state.rawReadReply.status, state.rawReadReply.body);
         if (state.readFailure !== undefined) return failureReply(state.readFailure);
 
         const payload = body.getRecords as { offset?: number; limit?: number };
@@ -389,11 +412,10 @@ export function setupTencentDocsMock(
         const limit = Math.min(payload.limit ?? 100, state.pageSize ?? 100);
         const page = state.records.slice(offset, offset + limit);
         const nextOffset = offset + page.length;
-        return mockReply(200, {
-          ret: 0,
-          msg: 'Succeed',
-          data: { getRecords: { records: page, total: state.records.length, hasMore: nextOffset < state.records.length, next: nextOffset } },
-        });
+        return mockReply(
+          200,
+          getRecordsAnswer({ records: readRows(page), total: state.records.length, hasMore: nextOffset < state.records.length, next: nextOffset }),
+        );
       }
 
       if (body !== undefined && 'deleteRecords' in body) {
@@ -402,7 +424,7 @@ export function setupTencentDocsMock(
         const ids = (body.deleteRecords as { recordIDs: string[] }).recordIDs;
         state.deleted.push(...ids);
         state.records = state.records.filter((record) => !ids.includes(record.recordID));
-        return mockReply(200, { ret: 0, msg: 'Succeed' });
+        return mockReply(200, deleteRecordsAnswer());
       }
 
       if (body !== undefined && 'addRecords' in body) {
@@ -410,24 +432,26 @@ export function setupTencentDocsMock(
 
         const records = (body.addRecords as { records: Array<{ values: Record<string, unknown> }> }).records;
         const stamps = { createTime: state.sheetTime, updateTime: state.sheetTime };
-        const stored: RawRecordDto[] = records.map((entry) => {
+        const stored: CommonRecord[] = records.map((entry) => {
           state.added.push(entry.values);
-          // A real answer carries the record id (and nothing about the row's times): see the live
-          // probe in `docs/data/pot.md`. `omitAddedRecordId` is the shape a document that answers
-          // without one would have.
           return { recordID: `rNew${nextRecordId++}`, ...stamps, values: entry.values };
         });
-        const answered = state.omitAddedRecordId ? stored.map((entry) => ({ values: entry.values })) : stored;
+        // The document keeps its own times on the row, and says nothing about them on the answer: see
+        // the live probe in `docs/data/pot.md`. `addRecordsWithoutId` is the shape a document that
+        // answers without an id would have.
+        const answered = state.addRecordsWithoutId
+          ? writtenRecordsWithoutId(stored)
+          : stored.map((entry) => ({ recordID: entry.recordID, values: entry.values }));
         state.addedRecords.push(...stored);
         state.records.push(...stored);
-        return mockReply(200, { ret: 0, msg: 'Succeed', data: { addRecords: { records: answered } } });
+        return mockReply(200, writtenRecordsAnswer('addRecords', answered));
       }
 
       if (body !== undefined && 'updateRecords' in body) {
         if (state.updateFailure !== undefined) return failureReply(state.updateFailure);
 
         const records = (body.updateRecords as { records: Array<{ recordID: string; values: Record<string, unknown> }> }).records;
-        const stored: RawRecordDto[] = records.map((entry) => {
+        const stored: CommonRecord[] = records.map((entry) => {
           state.updated.push(entry);
           // The row keeps its own identity and times; only the cells are replaced, which is what the
           // API does — and why `docs` cannot take its timestamps from this answer.
@@ -435,7 +459,13 @@ export function setupTencentDocsMock(
           return { ...before, recordID: entry.recordID, values: entry.values };
         });
         for (const entry of stored) state.records = state.records.map((row) => (row.recordID === entry.recordID ? entry : row));
-        return mockReply(200, { ret: 0, msg: 'Succeed', data: { updateRecords: { records: stored } } });
+        return mockReply(
+          200,
+          writtenRecordsAnswer(
+            'updateRecords',
+            stored.map((entry) => ({ recordID: entry.recordID, values: entry.values })),
+          ),
+        );
       }
 
       return mockReply(200, { ret: 0, msg: 'Succeed' });
@@ -459,7 +489,7 @@ export function setupTencentDocsMock(
       state.readFailure = undefined;
       state.writeFailure = undefined;
       state.updateFailure = undefined;
-      state.omitAddedRecordId = false;
+      state.addRecordsWithoutId = false;
       state.sheetTime = '1789534000000';
       state.deleteFailure = undefined;
       state.pageSize = undefined;
@@ -469,7 +499,7 @@ export function setupTencentDocsMock(
       state.userInfoOpenId = 'test-open-id';
       state.refresh = undefined;
       state.refreshFailure = undefined;
-      state.rawReadReply = undefined;
+      state.rawReply = undefined;
       state.networkFailures = 0;
       // The numbering restarts with the state, so a case can name the row its own append produced.
       nextRecordId = 1;

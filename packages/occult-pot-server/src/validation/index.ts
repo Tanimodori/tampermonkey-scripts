@@ -3,6 +3,7 @@
  *
  * - `pot.ts`     — everything about the pot: its rules, types, state, and modifications.
  * - `sheet.ts`   — how a `Pot` maps onto a smartsheet row.
+ * - `upstream.ts` — the wire shapes of the Tencent Docs answer: the envelope, its sections, a row.
  * - `config.ts`  — the environment.
  * - `utils.ts`   — the shared parsing and error-shaping helpers.
  *
@@ -12,5 +13,6 @@
  */
 export * from './pot.ts';
 export * from './sheet.ts';
+export * from './upstream.ts';
 export * from './config.ts';
 export * from './utils.ts';

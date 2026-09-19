@@ -1,7 +1,9 @@
 import { getConfig } from '@/config.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
-import { asArray, asRecord } from '../classify.ts';
+import type { Sheet } from '@/validation/upstream.ts';
+import { GetSheetResponseSchema } from '@/validation/upstream.ts';
 import { sendEnvelope } from '../send.ts';
+import { encodePathSegment } from '../url.ts';
 
 /**
  * The file side of the smartsheet API: what a document holds.
@@ -15,24 +17,18 @@ import { sendEnvelope } from '../send.ts';
  */
 
 /** The document's sub-sheets, as `查询子表` reports them; the store checks its `sheetId` against them. */
-export async function getSheetList(fileId: string): Promise<readonly Record<string, unknown>[]> {
+export async function getSheetList(fileId: string): Promise<readonly Sheet[]> {
   const parsed = new URL(`${getConfig().docs.apiBase}/openapi/smartbook/v2/files/${encodePathSegment(fileId)}/sheets`);
-  const body = await sendEnvelope({
-    origin: parsed.origin,
-    path: `${parsed.pathname}${parsed.search}`,
-    method: 'GET',
-    headers: await upstreamStore.headers(),
-    operation: 'getSheet',
-  });
+  const answer = await sendEnvelope(
+    {
+      origin: parsed.origin,
+      path: `${parsed.pathname}${parsed.search}`,
+      method: 'GET',
+      headers: await upstreamStore.headers(),
+      operation: 'getSheet',
+    },
+    GetSheetResponseSchema,
+  );
 
-  const data = asRecord(asRecord(body).data);
-  return asArray(data.getSheet ?? data).map((entry) => asRecord(entry));
-}
-
-/**
- * A file ID is `[0-9A-Za-z$_-]` in the documented examples and must keep its literal `$`
- * (`300000000$ExAmPlEfIlEiD`), so only genuinely unsafe characters are escaped.
- */
-function encodePathSegment(value: string): string {
-  return encodeURIComponent(value).replace(/%24/g, '$').replace(/%3A/gi, ':');
+  return answer.data.getSheet;
 }

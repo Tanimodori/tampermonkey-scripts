@@ -100,10 +100,11 @@
 - HTTP：502
 - `message`：
   - `Tencent Docs returned HTTP ${status} for ${operation}` 上游 5xx
-  - `Request to ${url} failed` 连不上或超时
-  - `Unexpected response from Tencent Docs for ${operation} (status=${status}, body=${body})` 响应读不懂
+  - `Request to ${url} failed` 连不上、超时，或正文不是 JSON
+  - `Unexpected response from Tencent Docs for ${operation} (status=${status}, body=${body})` 回答里没有可读的业务码
+  - `Tencent Docs answered ${operation} with a shape this service cannot read (${issues}; body: ${body})` 有业务码，但回答的形状与该端点的类型不符
   - `Tencent Docs user info carried no openID (body: ${body})` 用户信息里没有 `openID`
-- 出错原因：上游 5xx、连不上或超时会重试；读不懂的响应与用户信息里没有 `openID` 不重试。重试次数与退避参数见 [与腾讯文档通讯](upstream.md)。
+- 出错原因：上游 5xx、连不上、超时与读不出的正文（不是 JSON）会重试；读不出业务码的信封、字段形状不符、用户信息里没有 `openID` 不重试。重试次数与退避参数见 [与腾讯文档通讯](upstream/README.md)。
 
 ### 配置不可用
 

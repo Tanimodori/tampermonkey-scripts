@@ -5,9 +5,10 @@ import { formatInstant, LOG_CATEGORIES } from '@/logger.ts';
 import { now } from '@/services/time.ts';
 import { getSheetList } from '@/services/upstream/api/file.ts';
 import { getUserInfo, refreshAccessToken } from '@/services/upstream/api/token.ts';
-import { asRecord, describeBody } from '@/services/upstream/classify.ts';
+import { describeBody } from '@/services/upstream/classify.ts';
 import { getRedis, traced } from '@/stores/redis.ts';
-import type { AppConfig } from '@/validation/index.ts';
+import { accessTokenClaimsSchema } from '@/validation/index.ts';
+import type { AccessTokenClaims, AppConfig } from '@/validation/index.ts';
 
 /**
  * Which document this service talks to, and with which credential.
@@ -80,14 +81,6 @@ export interface UpstreamStore {
   readiness(): UpstreamReadiness;
 }
 
-/** The subset of access-token claims this service reads. */
-interface AccessTokenClaims {
-  /** Expiry, in epoch **seconds** (JWT convention). */
-  exp?: number;
-  /** Open-Id of the authorising user. */
-  sub?: string;
-}
-
 /** Decodes one base64url segment, tolerating missing padding. */
 function decodeSegment(segment: string): unknown {
   const padded = segment.replace(/-/g, '+').replace(/_/g, '/');
@@ -107,9 +100,9 @@ function readAccessTokenClaims(token: string): AccessTokenClaims | undefined {
   const parts = token.split('.');
   if (parts.length !== 3) return undefined;
   try {
-    const payload = decodeSegment(parts[1]!);
-    if (typeof payload !== 'object' || payload === null) return undefined;
-    return payload as AccessTokenClaims;
+    // A payload that is not an object, or that carries an `exp` of the wrong type, is not a token this
+    // service can read a lifetime out of — which is what `undefined` means to its callers.
+    return accessTokenClaimsSchema.parse(decodeSegment(parts[1]!));
   } catch {
     return undefined;
   }
@@ -236,7 +229,7 @@ export function useUpstreamStore(): UpstreamStore {
    */
   async function checkSheet(fileId: string, sheetId: string): Promise<void> {
     const sheets = await getSheetList(fileId);
-    const available = sheets.map((entry) => entry.sheetID).filter((id): id is string => typeof id === 'string' && id.length > 0);
+    const available = sheets.map((entry) => entry.sheetID);
 
     if (!available.includes(sheetId)) {
       const known = available.length > 0 ? ` (available: ${available.join(', ')})` : '';
@@ -278,10 +271,10 @@ export function useUpstreamStore(): UpstreamStore {
    */
   async function validate(): Promise<{ openId: string }> {
     load();
-    const data = asRecord(await getUserInfo(accessTokenValue));
-    const openId = data.openID;
-    if (typeof openId !== 'string' || openId.length === 0) {
-      throw new AppError('ERR_UPSTREAM_FAILED', `Tencent Docs user info carried no openID (body: ${describeBody(data)})`);
+    const info = await getUserInfo(accessTokenValue);
+    const openId = info.openID;
+    if (openId === undefined || openId.length === 0) {
+      throw new AppError('ERR_UPSTREAM_FAILED', `Tencent Docs user info carried no openID (body: ${describeBody(info)})`);
     }
 
     // A configured Open-Id is authoritative: every Open API call would fail with 10303 if it
@@ -384,19 +377,17 @@ export function useUpstreamStore(): UpstreamStore {
       const body = await refreshAccessToken({ clientId: clientIdValue, clientSecret, refreshToken });
       const accessToken = body.access_token;
 
-      if (typeof accessToken !== 'string' || accessToken.length === 0) {
+      if (accessToken === undefined || accessToken.length === 0) {
         throw new AppError('ERR_UPSTREAM_AUTH_FAILED', `Tencent Docs refused to refresh the access token (body: ${describeBody(body)})`);
       }
 
       accessTokenValue = accessToken;
       const expiresIn = body.expires_in;
-      expiresAtValue =
-        typeof expiresIn === 'number' && Number.isFinite(expiresIn) && expiresIn > 0
-          ? now() + Math.round(expiresIn * 1000)
-          : readAccessTokenExpiresAt(accessToken);
-      if (!openIdFromEnv && typeof body.user_id === 'string' && body.user_id.length > 0) openIdValue = body.user_id;
+      // A lifetime the answer did not give is the token's own to know: the `exp` claim takes over.
+      expiresAtValue = expiresIn !== undefined && expiresIn > 0 ? now() + Math.round(expiresIn * 1000) : readAccessTokenExpiresAt(accessToken);
+      if (!openIdFromEnv && body.user_id !== undefined && body.user_id.length > 0) openIdValue = body.user_id;
       // Some flows hand back a rotated refresh token; keeping it is what makes the next refresh work.
-      if (typeof body.refresh_token === 'string' && body.refresh_token.length > 0) refreshTokenValue = body.refresh_token;
+      if (body.refresh_token !== undefined && body.refresh_token.length > 0) refreshTokenValue = body.refresh_token;
       // The new token has not been checked yet; the next `validate()` will stamp it again.
       validatedAtValue = undefined;
 

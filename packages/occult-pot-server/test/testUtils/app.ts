@@ -4,8 +4,8 @@ import { createApp } from '@/app.ts';
 import type { CreatedApp } from '@/app.ts';
 import { startServer } from '@/server.ts';
 import type { RunningServer } from '@/server.ts';
-import type { RawRecordDto } from '@/services/upstream/api/record.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
+import type { CommonRecord } from '@/validation/upstream.ts';
 import { captureLogs, loadTestConfig, rawRecord, resetRedis, sheetInstant, setupTencentDocsMock, testClient } from './helpers.ts';
 
 /**
@@ -24,7 +24,7 @@ import { captureLogs, loadTestConfig, rawRecord, resetRedis, sheetInstant, setup
 export const NOW = sheetInstant('2026-09-12 15:45');
 
 /** Mirrors the live sheet, plus invalid rows and a duplicate pair for the edge cases. */
-export function fixtureRows(): RawRecordDto[] {
+export function fixtureRows(): CommonRecord[] {
   return [
     rawRecord({
       recordId: 'rA',

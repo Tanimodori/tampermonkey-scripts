@@ -1,7 +1,8 @@
 import { loadTestConfig } from '@test/testUtils/helpers.ts';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { classifyResponse, describeBody, parseBody, retOf, transportFailure } from '@/services/upstream/classify.ts';
-import type { JsonResponse, Verdict } from '@/services/upstream/classify.ts';
+import { classifyResponse, describeBody, transportFailure } from '@/services/upstream/classify.ts';
+import type { ResponseHeaders, UpstreamAnswer, Verdict } from '@/services/upstream/classify.ts';
+import { answerHeaderSchema } from '@/validation/upstream.ts';
 
 /**
  * The classification table on its own: a response goes in, and either `undefined` (a usable answer) or
@@ -16,9 +17,14 @@ import type { JsonResponse, Verdict } from '@/services/upstream/classify.ts';
 const SHEET_CALL = { operation: 'getRecords', envelope: true } as const;
 const TOKEN_CALL = { operation: 'refreshToken', envelope: false } as const;
 
-/** One answered response, as `send.ts` hands the table a parsed body and undici's headers. */
-function answered(status: number, body: unknown, headers: JsonResponse['headers'] = {}): JsonResponse {
-  return { status, body, headers };
+/**
+ * One answered response, built the way `send.ts` builds it: the body arrives as the answer, and the
+ * envelope's header fields are read out of it. Deriving them here rather than writing them twice is
+ * what makes these cases pin the same pair the production path produces.
+ */
+function answered(status: number, body: unknown, headers: ResponseHeaders = {}): UpstreamAnswer {
+  const header = answerHeaderSchema.safeParse(body);
+  return { status, headers, body, ...(header.success ? header.data : {}) };
 }
 
 beforeEach(() => {
@@ -38,7 +44,7 @@ beforeEach(() => {
 const MATRIX: ReadonlyArray<{
   readonly case: string;
   readonly envelope: boolean;
-  readonly response: JsonResponse;
+  readonly response: UpstreamAnswer;
   readonly expect: Pick<Verdict, 'code' | 'retryable'> | undefined;
 }> = [
   // The envelope contract: the business code is the verdict.
@@ -139,13 +145,6 @@ describe('a usable answer', () => {
     // table has no business wording that, so it says "answer".
     expect(classifyResponse(answered(400, { error: 'invalid_grant' }), TOKEN_CALL)).toBeUndefined();
     expect(classifyResponse(answered(200, { access_token: 'a-value' }), TOKEN_CALL)).toBeUndefined();
-  });
-
-  it('is a body the caller may not even be JSON', () => {
-    expect(parseBody('')).toBeUndefined();
-    expect(parseBody('not json')).toBeUndefined();
-    expect(parseBody('{"ret":0}')).toEqual({ ret: 0 });
-    expect(parseBody({ ret: 0 })).toEqual({ ret: 0 });
   });
 });
 
@@ -262,10 +261,12 @@ describe('reading a body without leaking what it may carry', () => {
     expect(describeBody({ huge: 'x'.repeat(1000) }).length).toBeLessThanOrEqual(300);
   });
 
-  it('reads the business code out of whatever shape arrived', () => {
-    expect(retOf({ ret: 400007 })).toBe(400007);
-    expect(retOf(undefined)).toBeNull();
-    expect(retOf('not an object')).toBeNull();
-    expect(retOf({ ret: '0' })).toBeNull();
+  it('reads an answer that is not JSON as one carrying no business code', () => {
+    // What used to be a tolerant parse that yielded `undefined` is now an explicit outcome: the table is
+    // handed the text, finds no `ret`, and says the answer is not one it can read.
+    expect(classifyResponse(answered(200, '<html>gateway error</html>'), SHEET_CALL)).toMatchObject({ code: 'ERR_UPSTREAM_FAILED', retryable: false });
+    expect(classifyResponse(answered(200, ''), SHEET_CALL)?.message).toContain('status=200');
+    // The same text quoted back, because that is the only evidence of what actually answered.
+    expect(classifyResponse(answered(200, '<html>gateway error</html>'), SHEET_CALL)?.message).toContain('gateway error');
   });
 });

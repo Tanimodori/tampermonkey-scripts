@@ -1,6 +1,6 @@
 # 出站调用
 
-访问腾讯文档的节奏、重试与缓存。上游本身的限制与失败如何呈现见 [与腾讯文档通讯](../api/upstream.md) 和 [错误处理](../api/errors.md)。
+访问腾讯文档的节奏、重试与缓存。上游本身的限制与失败如何呈现见 [与腾讯文档通讯](../api/upstream/README.md) 和 [错误处理](../api/errors.md)。
 
 ## OPS_UPSTREAM_MAX_PER_INTERVAL
 

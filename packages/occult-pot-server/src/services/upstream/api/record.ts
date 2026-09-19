@@ -1,7 +1,10 @@
+import { z } from 'zod';
 import { getConfig } from '@/config.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
-import { asRecord } from '../classify.ts';
+import type { CommonRecords, WrittenRecords } from '@/validation/upstream.ts';
+import { AddRecordsResponseSchema, DeleteRecordsResponseSchema, GetRecordsResponseSchema, UpdateRecordsResponseSchema } from '@/validation/upstream.ts';
 import { sendEnvelope } from '../send.ts';
+import { encodePathSegment } from '../url.ts';
 
 /**
  * The record endpoints: read the rows of the configured sub-sheet, append rows, update rows, delete
@@ -13,18 +16,11 @@ import { sendEnvelope } from '../send.ts';
  * from `stores/upstream.ts`, the document's own sub-sheet list from `file.ts`.
  *
  * All four calls are one endpoint and one verb: only the payload keyword differs (`getRecords`,
- * `addRecords`, `updateRecords`, `deleteRecords`).
+ * `addRecords`, `updateRecords`, `deleteRecords`), and each names its own response type, which is
+ * also the key its answer is filed under (`data.getRecords` …).
  *
  * See https://docs.qq.com/open/document/app/openapi/v2/smartsheet/record/params.html
  */
-
-/** One row as the sheet sends it, before `fromSheetValues` turns it into a `Pot`. */
-export interface RawRecordDto {
-  readonly recordID: string;
-  readonly createTime?: unknown;
-  readonly updateTime?: unknown;
-  readonly values?: unknown;
-}
 
 /** One record as `addRecords` takes it: the cell values keyed by column title. */
 export interface RecordValues {
@@ -46,17 +42,15 @@ export interface GetRecordsParams {
  * One page of raw rows. The page is returned in the envelope's own terms (`records`, `hasMore`,
  * `next`, `total`): paging is the caller's business here.
  */
-export async function getRecords(params: GetRecordsParams): Promise<Record<string, unknown>> {
-  const body = await sheetCall('getRecords', { getRecords: { offset: params.offset, limit: params.limit } });
-  const data = asRecord(asRecord(body).data);
-  return asRecord(data.getRecords ?? data);
+export async function getRecords(params: GetRecordsParams): Promise<CommonRecords> {
+  const answer = await sheetCall('getRecords', { getRecords: { offset: params.offset, limit: params.limit } }, GetRecordsResponseSchema);
+  return answer.data.getRecords;
 }
 
 /** Appends rows, in the order given, and hands back the response's own `records` section. */
-export async function addRecords(records: readonly RecordValues[]): Promise<Record<string, unknown>> {
-  const body = await sheetCall('addRecords', { addRecords: { records } });
-  const data = asRecord(asRecord(body).data);
-  return asRecord(data.addRecords ?? data);
+export async function addRecords(records: readonly RecordValues[]): Promise<WrittenRecords> {
+  const answer = await sheetCall('addRecords', { addRecords: { records } }, AddRecordsResponseSchema);
+  return answer.data.addRecords;
 }
 
 /**
@@ -66,42 +60,39 @@ export async function addRecords(records: readonly RecordValues[]): Promise<Reco
  * The answer carries the rows that were updated (`records`), the same shape `addRecords` answers
  * with; both are one `CommonRecords` object in the API's own vocabulary.
  */
-export async function updateRecords(records: readonly RecordUpdate[]): Promise<Record<string, unknown>> {
-  const body = await sheetCall('updateRecords', { updateRecords: { records } });
-  const data = asRecord(asRecord(body).data);
-  return asRecord(data.updateRecords ?? data);
+export async function updateRecords(records: readonly RecordUpdate[]): Promise<WrittenRecords> {
+  const answer = await sheetCall('updateRecords', { updateRecords: { records } }, UpdateRecordsResponseSchema);
+  return answer.data.updateRecords;
 }
 
 /**
  * Removes rows by record id. The pot service uses it to sweep the rows it will not serve — the ones
  * whose last visit is too old and the ones that are not a pot — and it is paced like every other
  * call, because it spends the same upstream quota.
+ *
+ * The answer is the header alone (measured against the live document), so there is nothing to read
+ * here beyond the verdict `sendEnvelope` already applied.
  */
 export async function deleteRecords(recordIDs: readonly string[]): Promise<void> {
-  await sheetCall('deleteRecords', { deleteRecords: { recordIDs } });
+  await sheetCall('deleteRecords', { deleteRecords: { recordIDs } }, DeleteRecordsResponseSchema);
 }
 
 /** One call to the configured sub-sheet: the ids and the credential come from the upstream store. */
-async function sheetCall(operation: string, payload: Record<string, unknown>): Promise<unknown> {
+async function sheetCall<R extends z.ZodType>(operation: string, payload: Record<string, unknown>, responseSchema: R): Promise<z.infer<R>> {
   const ids = await upstreamStore.ids();
   const headers = await upstreamStore.headers();
   const base = `${getConfig().docs.apiBase}/openapi/smartbook/v2/files/${encodePathSegment(ids.fileId)}/sheets`;
   const parsed = new URL(`${base}/${encodePathSegment(ids.sheetId)}`);
 
-  return sendEnvelope({
-    origin: parsed.origin,
-    path: `${parsed.pathname}${parsed.search}`,
-    method: 'POST',
-    headers,
-    body: JSON.stringify(payload),
-    operation,
-  });
-}
-
-/**
- * File and sheet IDs are `[0-9A-Za-z$_-]` in the documented examples and must keep their
- * literal `$` (`300000000$ExAmPlEfIlEiD`), so only genuinely unsafe characters are escaped.
- */
-function encodePathSegment(value: string): string {
-  return encodeURIComponent(value).replace(/%24/g, '$').replace(/%3A/gi, ':');
+  return sendEnvelope(
+    {
+      origin: parsed.origin,
+      path: `${parsed.pathname}${parsed.search}`,
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+      operation,
+    },
+    responseSchema,
+  );
 }

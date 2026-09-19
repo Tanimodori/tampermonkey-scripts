@@ -6,11 +6,11 @@ import { captureLogs, loadTestConfig, rawRecord, resetRedis, setupTencentDocsMoc
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPot, listPots, potState, usePotService } from '@/services/pot.ts';
 import type { PotService } from '@/services/pot.ts';
-import type { RawRecordDto } from '@/services/upstream/api/record.ts';
 import type { ClientOptions } from '@/services/upstream/client.ts';
 import { getRedis } from '@/stores/redis.ts';
 import { fromSheetValues } from '@/validation/index.ts';
 import type { Pot, PotRecord, PotState } from '@/validation/index.ts';
+import type { CommonRecord } from '@/validation/upstream.ts';
 
 // The service reads the time through `@/services/time.ts`; this replaces it with `@test/testUtils/clock.ts`, so
 // a TTL or staleness case moves time instead of waiting for it.
@@ -51,7 +51,7 @@ function pot(potId: string, overrides: Partial<Pot> = {}): Pot {
 }
 
 /** One sheet row, fresh unless the overrides say otherwise (the fixture timestamps are minutes old). */
-function row(recordId: string, overrides: Parameters<typeof rawRecord>[0] = {}): RawRecordDto {
+function row(recordId: string, overrides: Parameters<typeof rawRecord>[0] = {}): CommonRecord {
   return rawRecord({ recordId, ...overrides });
 }
 
@@ -458,7 +458,7 @@ describe('writes', () => {
   });
 
   it('caches a pot the sheet answered without a record id, without inventing one', async () => {
-    docs.state.omitAddedRecordId = true;
+    docs.state.addRecordsWithoutId = true;
     const service = useService();
     await service.list();
     const logs = captureLogs();

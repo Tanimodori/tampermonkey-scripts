@@ -5,6 +5,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vites
 import { metricsRegistry, renderMetrics } from '@/services/metrics.ts';
 import type { UpstreamCall } from '@/services/upstream/send.ts';
 import { sendBare, sendEnvelope } from '@/services/upstream/send.ts';
+import { GetRecordsResponseSchema, RefreshTokenResponseSchema, UserInfoResponseSchema } from '@/validation/upstream.ts';
 
 /**
  * One logical call to the upstream, end to end over a mocked document: the attempts, what each one
@@ -49,6 +50,12 @@ function call(overrides: Partial<UpstreamCall> = {}): UpstreamCall {
   };
 }
 
+/** One call to the record endpoint, and one to the token endpoint, each on its own response type. */
+const sendRecord = (one: UpstreamCall) => sendEnvelope(one, GetRecordsResponseSchema);
+const sendToken = (one: UpstreamCall) => sendBare(one, RefreshTokenResponseSchema);
+/** The `userinfo` call, whose answer is the identity rather than a page of rows. */
+const sendUserInfo = (one: UpstreamCall) => sendEnvelope(one, UserInfoResponseSchema);
+
 /** Every intercepted record read, in order: one per attempt. */
 const readCalls = (): number => docs.state.calls.filter((entry) => (entry.body as Record<string, unknown> | undefined)?.getRecords !== undefined).length;
 
@@ -76,7 +83,7 @@ describe('an answered call', () => {
   it('hands its caller the parsed body, and nothing else decides the outcome', async () => {
     loadTestConfig();
 
-    await expect(sendEnvelope(call())).resolves.toMatchObject({ ret: 0, msg: 'Succeed', data: { getRecords: { records: [], total: 0 } } });
+    await expect(sendRecord(call())).resolves.toMatchObject({ ret: 0, msg: 'Succeed', data: { getRecords: { records: [], total: 0 } } });
   });
 
   it('answers a call whose endpoint speaks for itself with whatever came back', async () => {
@@ -84,7 +91,7 @@ describe('an answered call', () => {
     loadTestConfig();
     docs.state.refreshFailure = { status: 400, body: { error: 'invalid_grant' } };
 
-    await expect(sendBare(call({ path: TOKEN_PATH, method: 'GET', body: undefined, headers: {}, operation: 'refreshToken' }))).resolves.toEqual({
+    await expect(sendToken(call({ path: TOKEN_PATH, method: 'GET', body: undefined, headers: {}, operation: 'refreshToken' }))).resolves.toEqual({
       error: 'invalid_grant',
     });
   });
@@ -93,7 +100,7 @@ describe('an answered call', () => {
     loadTestConfig();
     docs.state.records = [rawRecord({})];
 
-    await expect(sendEnvelope(call())).resolves.toMatchObject({ data: { getRecords: { records: [{ recordID: 'r00001' }] } } });
+    await expect(sendRecord(call())).resolves.toMatchObject({ data: { getRecords: { records: [{ recordID: 'r00001' }] } } });
   });
 });
 
@@ -102,7 +109,7 @@ describe('a failed call, as its caller sees it', () => {
     loadTestConfig();
     docs.state.networkFailures = 1;
 
-    const error = await sendEnvelope(call()).catch((caught: unknown) => caught);
+    const error = await sendRecord(call()).catch((caught: unknown) => caught);
 
     expect(error).toMatchObject({ code: 'ERR_UPSTREAM_FAILED', status: 502 });
     expect((error as { cause?: { message?: string } }).cause?.message).toContain('simulated transport failure');
@@ -116,7 +123,7 @@ describe('a failed call, as its caller sees it', () => {
     });
     docs.reset();
 
-    await expect(sendEnvelope(call({ origin, path: '/slow', method: 'GET', body: undefined, headers: {} }))).rejects.toMatchObject({
+    await expect(sendRecord(call({ origin, path: '/slow', method: 'GET', body: undefined, headers: {} }))).rejects.toMatchObject({
       code: 'ERR_UPSTREAM_FAILED',
       status: 502,
     });
@@ -125,12 +132,12 @@ describe('a failed call, as its caller sees it', () => {
   it('is an authentication failure at 503, whether the status or the business code said so', async () => {
     loadTestConfig();
     docs.state.readFailure = { status: 401, ret: 10303, msg: 'token 无效' };
-    await expect(sendEnvelope(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_AUTH_FAILED', status: 503 });
+    await expect(sendRecord(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_AUTH_FAILED', status: 503 });
 
     docs.reset();
     loadTestConfig();
     docs.state.readFailure = { status: 200, ret: 10007, msg: 'No corresponding permissions required' };
-    await expect(sendEnvelope(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_AUTH_FAILED', status: 503 });
+    await expect(sendRecord(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_AUTH_FAILED', status: 503 });
     expect(readCalls()).toBe(1);
   });
 
@@ -138,7 +145,7 @@ describe('a failed call, as its caller sees it', () => {
     loadTestConfig({ OPS_UPSTREAM_INTERVAL_MS: '30000' });
     docs.state.readFailure = { status: 200, ret: 400007, msg: '请求数超过限制' };
 
-    const error = await sendEnvelope(call()).catch((caught: unknown) => caught);
+    const error = await sendRecord(call()).catch((caught: unknown) => caught);
 
     expect(error).toMatchObject({ code: 'ERR_UPSTREAM_RATE_LIMITED', status: 503, retryAfterSeconds: 30 });
     expect((error as Error).message).toContain('ret=400007');
@@ -149,7 +156,7 @@ describe('a failed call, as its caller sees it', () => {
     loadTestConfig();
     docs.state.readFailure = { status: 400, ret: 400001, msg: '请求参数错误' };
 
-    await expect(sendEnvelope(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_BAD_REQUEST', status: 400 });
+    await expect(sendRecord(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_BAD_REQUEST', status: 400 });
     expect(readCalls()).toBe(1);
   });
 
@@ -157,21 +164,38 @@ describe('a failed call, as its caller sees it', () => {
     loadTestConfig();
     docs.state.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
 
-    const error = await sendEnvelope(call()).catch((caught: unknown) => caught);
+    const error = await sendRecord(call()).catch((caught: unknown) => caught);
 
     expect((error as Error).message).toBe('Tencent Docs returned HTTP 500 for getRecords (ret=400010, msg=服务内部错误)');
   });
 
   it('quotes the body of an answer it cannot read, without the credential nested in it', async () => {
     loadTestConfig();
-    docs.state.rawReadReply = { status: 200, body: { data: { access_token: 'live-token-value', records: [] } } };
+    docs.state.rawReply = { status: 200, body: { data: { access_token: 'live-token-value', records: [] } } };
 
-    const error = await sendEnvelope(call()).catch((caught: unknown) => caught);
+    const error = await sendRecord(call()).catch((caught: unknown) => caught);
 
     // That message is what `errorHandler` may put on the wire, so the masking has to reach the depth
     // a real answer nests a token at.
     expect((error as Error).message).toContain('[redacted]');
     expect((error as Error).message).not.toContain('live-token-value');
+  });
+
+  it('retries an answer that is not JSON at all, because nothing in it can be judged', async () => {
+    // The consequence of reading with `.json()`: a plain-text error page from a gateway has no business
+    // code to classify, so it is a transport failure and is retried like one. It used to be reported as
+    // an unreadable answer and *not* retried — which is the wrong call for a transient gateway fault
+    // and the right one for a permanent 405; `maxRetries` is the bound either way.
+    loadTestConfig({ OPS_UPSTREAM_MAX_RETRIES: '1' });
+    docs.state.rawReply = { status: 200, body: '- - - HTTP Status: 405 Service Error - - -' };
+    const records = captureLogs();
+
+    await expect(sendRecord(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED', status: 502 });
+
+    expect(readCalls()).toBe(2);
+    expect(about(records, 'Tencent Docs call could not be sent')).toHaveLength(2);
+    // The text never reaches the record: the failure is worded from the URL, which is query-stripped.
+    expect(JSON.stringify(records)).not.toContain('Service Error');
   });
 });
 
@@ -180,13 +204,13 @@ describe('the retry policy over those verdicts', () => {
     loadTestConfig({ OPS_UPSTREAM_MAX_RETRIES: '1' });
     docs.state.networkFailures = 1;
 
-    await expect(sendEnvelope(call())).resolves.toMatchObject({ ret: 0 });
+    await expect(sendRecord(call())).resolves.toMatchObject({ ret: 0 });
     expect(readCalls()).toBe(2);
 
     docs.reset();
     loadTestConfig({ OPS_UPSTREAM_MAX_RETRIES: '1' });
     docs.state.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
-    await expect(sendEnvelope(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
+    await expect(sendRecord(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
     expect(readCalls()).toBe(2);
   });
 
@@ -195,7 +219,7 @@ describe('the retry policy over those verdicts', () => {
     docs.state.readFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
     const startedAt = Date.now();
 
-    await expect(sendEnvelope(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_RATE_LIMITED' });
+    await expect(sendRecord(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_RATE_LIMITED' });
 
     // A zero backoff and no `Retry-After`: the retry follows immediately.
     expect(readCalls()).toBe(2);
@@ -207,7 +231,7 @@ describe('the retry policy over those verdicts', () => {
     docs.state.readFailure = { status: 429, ret: 400007, msg: '请求数超过限制', headers: { 'retry-after': '1' } };
     const startedAt = Date.now();
 
-    await expect(sendEnvelope(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_RATE_LIMITED' });
+    await expect(sendRecord(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_RATE_LIMITED' });
 
     expect(readCalls()).toBe(2);
     expect(Date.now() - startedAt).toBeGreaterThanOrEqual(900);
@@ -217,7 +241,7 @@ describe('the retry policy over those verdicts', () => {
     loadTestConfig({ OPS_UPSTREAM_MAX_RETRIES: '2' });
     docs.state.networkFailures = 5;
 
-    await expect(sendEnvelope(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
+    await expect(sendRecord(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
     expect(readCalls()).toBe(3);
   });
 
@@ -233,14 +257,14 @@ describe('the retry policy over those verdicts', () => {
       loadTestConfig({ OPS_UPSTREAM_MAX_RETRIES: '2' });
       docs.state.readFailure = failure;
 
-      await expect(sendEnvelope(call())).rejects.toMatchObject({ code: expect.stringMatching(/^ERR_UPSTREAM_/) });
+      await expect(sendRecord(call())).rejects.toMatchObject({ code: expect.stringMatching(/^ERR_UPSTREAM_/) });
       expect(readCalls()).toBe(1);
     }
 
     docs.reset();
     loadTestConfig({ OPS_UPSTREAM_MAX_RETRIES: '2' });
-    docs.state.rawReadReply = { status: 200, body: { unexpected: true } };
-    await expect(sendEnvelope(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
+    docs.state.rawReply = { status: 200, body: { unexpected: true } };
+    await expect(sendRecord(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
     expect(readCalls()).toBe(1);
   });
 
@@ -251,7 +275,7 @@ describe('the retry policy over those verdicts', () => {
     docs.state.networkFailures = 1;
     const startedAt = Date.now();
 
-    await expect(sendEnvelope(call())).resolves.toMatchObject({ ret: 0 });
+    await expect(sendRecord(call())).resolves.toMatchObject({ ret: 0 });
 
     expect(Date.now() - startedAt).toBeLessThan(3000);
     expect(readCalls()).toBe(2);
@@ -268,7 +292,7 @@ describe('what an attempt records', () => {
     loadTestConfig();
     const records = captureLogs();
 
-    await sendEnvelope(call());
+    await sendRecord(call());
 
     expect(about(records, 'Tencent Docs call answered')).toEqual([
       expect.objectContaining({
@@ -289,7 +313,7 @@ describe('what an attempt records', () => {
     docs.state.readFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
     const records = captureLogs();
 
-    await sendEnvelope(call()).catch(() => undefined);
+    await sendRecord(call()).catch(() => undefined);
 
     expect(records).toContainEqual(
       expect.objectContaining({
@@ -309,7 +333,7 @@ describe('what an attempt records', () => {
     docs.state.networkFailures = 1;
     const records = captureLogs();
 
-    await sendEnvelope(call()).catch(() => undefined);
+    await sendRecord(call()).catch(() => undefined);
 
     expect(records).toContainEqual(
       expect.objectContaining({ level: 'warning', message: 'Tencent Docs call could not be sent', operation: 'getRecords', reason: expect.any(String) }),
@@ -322,7 +346,7 @@ describe('what an attempt records', () => {
     docs.state.networkFailures = 1;
     const records = captureLogs();
 
-    await sendEnvelope(call());
+    await sendRecord(call());
 
     expect(records).toContainEqual(
       expect.objectContaining({
@@ -341,7 +365,7 @@ describe('what an attempt records', () => {
     docs.state.records = [rawRecord({})];
     const records = captureLogs();
 
-    await sendEnvelope(call());
+    await sendRecord(call());
 
     expect(JSON.stringify(records)).not.toContain('54-1-4000E8F3');
     const answeredRecord = about(records, 'Tencent Docs call answered')[0];
@@ -354,7 +378,7 @@ describe('what an attempt records', () => {
     const records = captureLogs();
     const secret = 'access-token-value';
 
-    await sendEnvelope(call({ operation: 'userinfo', method: 'GET', path: `/oauth/v2/userinfo?access_token=${secret}`, body: undefined, headers: {} }));
+    await sendUserInfo(call({ operation: 'userinfo', method: 'GET', path: `/oauth/v2/userinfo?access_token=${secret}`, body: undefined, headers: {} }));
 
     expect(about(records, 'Tencent Docs call answered')).toEqual([
       expect.objectContaining({ message: 'Tencent Docs call answered', path: '/oauth/v2/userinfo' }),
@@ -369,9 +393,7 @@ describe('what an attempt records', () => {
     // failure message used to spell out in full.
     const path = '/oauth/v2/refresh?client_secret=client-secret-value&refresh_token=refresh-secret-value';
 
-    const error = await sendEnvelope(call({ operation: 'refreshToken', method: 'GET', path, body: undefined, headers: {} })).catch(
-      (failure: unknown) => failure,
-    );
+    const error = await sendRecord(call({ operation: 'refreshToken', method: 'GET', path, body: undefined, headers: {} })).catch((failure: unknown) => failure);
 
     expect(String((error as Error).message)).toContain('/oauth/v2/refresh');
     expect(String((error as Error).message)).not.toContain('client-secret-value');
@@ -384,11 +406,11 @@ describe('the upstream metrics', () => {
     loadTestConfig();
     metricsRegistry.resetMetrics();
 
-    await sendEnvelope(call());
+    await sendRecord(call());
     docs.reset();
     loadTestConfig();
     docs.state.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
-    await expect(sendEnvelope(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
+    await expect(sendRecord(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
 
     const body = await renderMetrics();
     expect(body).toMatch(/occult_pot_upstream_requests_total\{operation="getRecords",result="ok"\} 1/);
@@ -401,7 +423,7 @@ describe('the upstream metrics', () => {
     metricsRegistry.resetMetrics();
     docs.state.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
 
-    await expect(sendEnvelope(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
+    await expect(sendRecord(call())).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
 
     // One logical call, two attempts: the counter counts the second one's decision, not the call.
     expect(await renderMetrics()).toMatch(/occult_pot_upstream_retries_total\{operation="getRecords"\} 1/);

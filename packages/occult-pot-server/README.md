@@ -56,17 +56,17 @@ rushx test    # 依次运行单元测试、Redis 测试、真实腾讯文档测�
 
 ## 文档
 
-| 文档                                   | 内容                               |
-| -------------------------------------- | ---------------------------------- |
-| [Pot 数据](docs/data/pot.md)           | 表格的列、刷新周期、清洗规则       |
-| [存储设计](docs/data/store.md)         | 缓存与回退行为、多实例边界         |
-| [API 端点](docs/api/endpoints.md)      | 端点、请求与响应约定、限流         |
-| [错误处理](docs/api/errors.md)         | 响应信封、错误码与状态码           |
-| [与腾讯文档通讯](docs/api/upstream.md) | 文档坐标、上游限制、凭据生命周期   |
-| [配置](docs/config/README.md)          | 全部配置项的类型、默认值与含义     |
-| [日志](docs/deploy/logging.md)         | 记录格式、去处、级别、脱敏与轮转   |
-| [限速](docs/deploy/rate-limit.md)      | nginx、应用与 fail2ban 三层限速    |
-| [监控](docs/deploy/monitoring.md)      | `stats` profile、端口、指标与访问  |
-| [部署与运维](docs/deploy/setup.md)     | 打包、部署、迁移与对外暴露面       |
-| [本地开发](docs/development.md)        | 运行前置、环境文件、测试与检查命令 |
-| [外部文档](docs/reference.md)          | 依赖库与工具的官方链接             |
+| 文档                                          | 内容                               |
+| --------------------------------------------- | ---------------------------------- |
+| [Pot 数据](docs/data/pot.md)                  | 表格的列、刷新周期、清洗规则       |
+| [存储设计](docs/data/store.md)                | 缓存与回退行为、多实例边界         |
+| [API 端点](docs/api/endpoints.md)             | 端点、请求与响应约定、限流         |
+| [错误处理](docs/api/errors.md)                | 响应信封、错误码与状态码           |
+| [与腾讯文档通讯](docs/api/upstream/README.md) | 文档坐标、上游限制、凭据生命周期   |
+| [配置](docs/config/README.md)                 | 全部配置项的类型、默认值与含义     |
+| [日志](docs/deploy/logging.md)                | 记录格式、去处、级别、脱敏与轮转   |
+| [限速](docs/deploy/rate-limit.md)             | nginx、应用与 fail2ban 三层限速    |
+| [监控](docs/deploy/monitoring.md)             | `stats` profile、端口、指标与访问  |
+| [部署与运维](docs/deploy/setup.md)            | 打包、部署、迁移与对外暴露面       |
+| [本地开发](docs/development.md)               | 运行前置、环境文件、测试与检查命令 |
+| [外部文档](docs/reference.md)                 | 依赖库与工具的官方链接             |

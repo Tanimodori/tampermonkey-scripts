@@ -3,11 +3,9 @@ import { getConfig } from '@/config.ts';
 import { LOG_CATEGORIES } from '@/logger.ts';
 import { now } from '@/services/time.ts';
 import { addRecords, deleteRecords, getRecords, updateRecords } from '@/services/upstream/api/record.ts';
-import type { RawRecordDto } from '@/services/upstream/api/record.ts';
-import { asArray, asRecord } from '@/services/upstream/classify.ts';
 import { clearPotState, readPotState, writePotState } from '@/stores/pot.ts';
-import { docsOf, fromSheetValues, isValidPot, potKey, potOf, toSheetValues } from '@/validation/index.ts';
-import type { Pot, PotDocs, PotRecord, PotState } from '@/validation/index.ts';
+import { cellValuesSchema, docsOf, fromSheetValues, isValidPot, potKey, potOf, toSheetValues } from '@/validation/index.ts';
+import type { CommonRecord, Pot, PotDocs, PotRecord, PotState, WrittenRecords } from '@/validation/index.ts';
 
 /**
  * The pot service: where the online sheet, the Redis cache and the rules about them meet.
@@ -48,15 +46,14 @@ interface SheetRow {
 }
 
 /** The cell values of a raw record, or an empty object when the upstream sent none. */
-function valuesOf(record: RawRecordDto): Record<string, unknown> {
-  return typeof record.values === 'object' && record.values !== null ? (record.values as Record<string, unknown>) : {};
+function valuesOf(record: CommonRecord): Record<string, unknown> {
+  return cellValuesSchema.parse(record.values);
 }
 
 /** The record id an `addRecords` answer reports for the row that was just written, when it reports one. */
-function addedRecordId(body: Record<string, unknown>): string | undefined {
-  const first = asArray(body.records)[0];
-  const recordID = asRecord(first).recordID;
-  return typeof recordID === 'string' && recordID.length > 0 ? recordID : undefined;
+function addedRecordId(body: WrittenRecords): string | undefined {
+  const recordID = body.records?.[0]?.recordID;
+  return recordID === undefined || recordID === '' ? undefined : recordID;
 }
 
 /** The row that wins a key: the most recently visited one, preferring a readable record id on a tie. */
@@ -140,13 +137,13 @@ export function usePotService(): PotService {
    * The API caps a page at 100 records, so this loops until the sheet says it has no more — trusting
    * its `next` offset when it sends a usable one, and otherwise counting the rows it just read.
    */
-  async function readTable(): Promise<readonly RawRecordDto[]> {
-    const records: RawRecordDto[] = [];
+  async function readTable(): Promise<readonly CommonRecord[]> {
+    const records: CommonRecord[] = [];
     let offset = 0;
 
     for (;;) {
       const data = await getRecords({ offset, limit: PAGE_LIMIT });
-      const page = asArray(data.records) as unknown as readonly RawRecordDto[];
+      const page = data.records ?? [];
       records.push(...page);
 
       if (data.hasMore !== true) break;

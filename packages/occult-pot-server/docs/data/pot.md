@@ -39,7 +39,7 @@
 
 ## 文档侧元数据
 
-缓存里的每一条是 `PotRecord`：五个字段加上 `docs`（`{ recordId, createTime, updateTime }`），记录它在表里是哪一行、以及本地什么时候写过它。两个时间戳都是**本地写入时刻**的 epoch 毫秒：新增时 `createTime = updateTime = now()`；更新时保留该行已有的 `createTime`，只把 `updateTime` 推到本次写入。腾讯文档自己的 `createTime`/`updateTime` 只在[查询记录](https://docs.qq.com/open/document/app/openapi/v2/smartsheet/record/get_records.html)里返回，新增与更新接口都不回传，因此不能作为这两个字段的来源。
+缓存里的每一条是 `PotRecord`：五个字段加上 `docs`（`{ recordId, createTime, updateTime }`），记录它在表里是哪一行、以及本地什么时候写过它。两个时间戳都是**本地写入时刻**的 epoch 毫秒：新增时 `createTime = updateTime = now()`；更新时保留该行已有的 `createTime`，只把 `updateTime` 推到本次写入。腾讯文档自己的 `createTime`/`updateTime` 只在查询记录时返回，新增与更新都不回传（见 [记录](../api/upstream/record.md)），因此不能作为这两个字段的来源。写入的回答没有给出 `recordID` 时，该罐子被缓存为没有 `docs`，并记一条 warning。
 
 `docs` 只在写入成功时更新：上游拒绝写入时，表、缓存与 `docs` 都不变。`docs` 不进入任何 API 响应——调用方只看到 `Pot` 的五个字段。
 

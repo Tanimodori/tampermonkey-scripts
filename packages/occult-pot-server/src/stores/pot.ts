@@ -1,5 +1,6 @@
 import { getRedis, traced } from '@/stores/redis.ts';
-import type { Pot, PotState } from '@/validation/index.ts';
+import { potStateSchema } from '@/validation/index.ts';
+import type { PotState } from '@/validation/index.ts';
 
 /**
  * The pot list as Redis holds it — and nothing else.
@@ -24,9 +25,8 @@ function emptyState(): PotState {
 function parseState(raw: string | null): PotState {
   if (raw === null) return emptyState();
   try {
-    const parsed = JSON.parse(raw) as { data?: unknown; updateTime?: unknown };
-    if (typeof parsed !== 'object' || parsed === null || !Array.isArray(parsed.data)) return emptyState();
-    return { data: parsed.data as readonly Pot[], updateTime: typeof parsed.updateTime === 'number' ? parsed.updateTime : 0 };
+    const parsed = potStateSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : emptyState();
   } catch {
     return emptyState();
   }

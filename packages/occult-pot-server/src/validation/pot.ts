@@ -183,3 +183,13 @@ export interface PotState {
   /** Epoch ms of the sheet read this list came from; `0` means the sheet has never been read. */
   readonly updateTime: number;
 }
+
+/**
+ * The cache's own format, so reading it back is a check rather than an assertion.
+ *
+ * The two halves fail differently, and deliberately: a payload whose `data` is not a list is not this
+ * cache at all, so the caller discards it whole, while a state that never says when it was read is
+ * still the list it carries — it is only treated as never read. Both are the answers the hand-written
+ * checks they replace used to give.
+ */
+export const potStateSchema = z.object({ data: potRecordSchema.array(), updateTime: z.number().catch(0) });

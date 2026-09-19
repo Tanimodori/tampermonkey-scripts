@@ -63,7 +63,7 @@ export const upstreamRequests = new Counter({
   registers: [metricsRegistry],
 });
 
-/** How long those calls took: the pacing queue's wait, the connection and the upstream's own time. */
+/** How long one attempt took: the connection and the upstream's own time, with no queue or backoff wait in it. */
 export const upstreamRequestDuration = new Histogram({
   name: `${PREFIX}upstream_request_duration_seconds`,
   help: 'Tencent Docs call duration in seconds, by operation and result.',

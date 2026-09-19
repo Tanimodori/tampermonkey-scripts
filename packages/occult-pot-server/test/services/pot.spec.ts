@@ -30,7 +30,7 @@ const docs = setupTencentDocsMock();
 
 /**
  * What the production modules reach the upstream with: the no-argument `getClient()`. The transport
- * is built on first call — through the real `useClient()`, so the interceptors stay the real ones —
+ * is built on first call — over the bare mock transport, so everything above it is the production path —
  * and by then the case has loaded the configuration it reads.
  */
 const transport = lazyTransport(docs);

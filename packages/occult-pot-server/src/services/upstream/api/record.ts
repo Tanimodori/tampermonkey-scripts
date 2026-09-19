@@ -1,17 +1,16 @@
 import { getConfig } from '@/config.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
-import { getClient } from '../client.ts';
-import { asRecord, parseBody } from '../interceptors/classify.ts';
-import { throttle } from '../throttle.ts';
+import { asRecord } from '../classify.ts';
+import { sendEnvelope } from '../send.ts';
 
 /**
  * The record endpoints: read the rows of the configured sub-sheet, append rows, update rows, delete
  * rows.
  *
  * One function per call, and nothing else — no paging, no mapping onto this service's own types, no
- * idea of when any of this should run. Those are `services/pot.ts`'s business, the transport (pool,
- * retry, classification) is `client.ts`'s, and the pacing is `throttle.ts`'s. Which sub-sheet the
- * call addresses comes from `stores/upstream.ts`, the document's own sub-sheet list from `file.ts`.
+ * idea of when any of this should run. Those are `services/pot.ts`'s business, and the call itself —
+ * pacing, attempts, classification, metrics — is `send.ts`'s. Which sub-sheet the call addresses comes
+ * from `stores/upstream.ts`, the document's own sub-sheet list from `file.ts`.
  *
  * All four calls are one endpoint and one verb: only the payload keyword differs (`getRecords`,
  * `addRecords`, `updateRecords`, `deleteRecords`).
@@ -88,19 +87,15 @@ async function sheetCall(operation: string, payload: Record<string, unknown>): P
   const headers = await upstreamStore.headers();
   const base = `${getConfig().docs.apiBase}/openapi/smartbook/v2/files/${encodePathSegment(ids.fileId)}/sheets`;
   const parsed = new URL(`${base}/${encodePathSegment(ids.sheetId)}`);
-  const response = await throttle(() =>
-    getClient().request({
-      origin: parsed.origin,
-      path: `${parsed.pathname}${parsed.search}`,
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
-      operation,
-      envelope: true,
-    }),
-  );
 
-  return parseBody(await response.body.text());
+  return sendEnvelope({
+    origin: parsed.origin,
+    path: `${parsed.pathname}${parsed.search}`,
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+    operation,
+  });
 }
 
 /**

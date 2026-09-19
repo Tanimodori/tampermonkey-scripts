@@ -8,9 +8,8 @@ import { createPot, listPots } from '@/services/pot.ts';
 import { getSheetList } from '@/services/upstream/api/file.ts';
 import { addRecords, getRecords } from '@/services/upstream/api/record.ts';
 import { getUserInfo } from '@/services/upstream/api/token.ts';
-import { getClient } from '@/services/upstream/client.ts';
-import { asArray, asRecord, parseBody } from '@/services/upstream/interceptors/classify.ts';
-import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
+import { asArray, asRecord } from '@/services/upstream/classify.ts';
+import { sendEnvelope } from '@/services/upstream/send.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 import { POT_ID_PATTERN, toSheetValues } from '@/validation/index.ts';
 import type { Pot } from '@/validation/index.ts';
@@ -98,18 +97,17 @@ async function deleteRecords(recordIDs: readonly string[]): Promise<void> {
   const url = new URL(`${getConfig().docs.apiBase}/openapi/smartbook/v2/files/${encodeURIComponent(ids.fileId).replace(/%24/g, '$')}/sheets`);
   url.pathname += `/${encodeURIComponent(ids.sheetId)}`;
 
-  const options: CallOptions = {
+  // The service's own call path, with the payload this suite has to speak for itself: a non-zero
+  // `ret` is what `sendEnvelope` turns into the throw, which is the check this function used to make
+  // by hand.
+  await sendEnvelope({
     origin: url.origin,
     path: `${url.pathname}${url.search}`,
     method: 'POST',
     headers: await upstreamStore.headers(),
     body: JSON.stringify({ deleteRecords: { recordIDs } }),
     operation: 'deleteRecords',
-    envelope: true,
-  };
-  const response = await getClient().request(options);
-  const body = asRecord(parseBody(await response.body.text()));
-  if (body.ret !== 0) throw new Error(`deleteRecords answered ret=${String(body.ret)} msg=${String(body.msg)}`);
+  });
 }
 
 describe.skipIf(!live)('the real Tencent Docs document', () => {

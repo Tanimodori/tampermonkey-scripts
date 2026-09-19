@@ -117,8 +117,8 @@ Prometheus 没有鉴权，默认只在回环上；要暴露它，先配 `--web.c
 
 ### 腾讯文档上游
 
-- `occult_pot_upstream_requests_total`（counter，标签 `operation`、`result`）：上游可用情况的主指标。每次尝试结束时记一次；`result` 是 `ok` 或错误码（`ERR_UPSTREAM_BAD_REQUEST`、`ERR_UPSTREAM_AUTH_FAILED`、`ERR_UPSTREAM_RATE_LIMITED`、`ERR_UPSTREAM_FAILED`）。`operation` 取值是 `getRecords`、`addRecords`、`deleteRecords`、`getSheet`、`userinfo`、`refreshToken`。
-- `occult_pot_upstream_request_duration_seconds`（histogram，标签 `operation`、`result`，桶 0.05 到 30 秒）：上游调用的耗时，含在出站队列里等待的时间。它变慢可能是上游慢，也可能是自己被限流后排队。
+- `occult_pot_upstream_requests_total`（counter，标签 `operation`、`result`）：上游可用情况的主指标。每次尝试结束时记一次；`result` 是 `ok` 或错误码（`ERR_UPSTREAM_BAD_REQUEST`、`ERR_UPSTREAM_AUTH_FAILED`、`ERR_UPSTREAM_RATE_LIMITED`、`ERR_UPSTREAM_FAILED`）。`operation` 取值是 `getRecords`、`addRecords`、`updateRecords`、`deleteRecords`、`getSheet`、`userinfo`、`refreshToken`。
+- `occult_pot_upstream_request_duration_seconds`（histogram，标签 `operation`、`result`，桶 0.05 到 30 秒）：上游单次尝试的耗时：从交给连接池到读完响应体。等令牌与重试退避都不在内，所以它变慢只可能是网络或对端慢；排队的迹象在别处——`occult_pot_upstream_retries_total`，以及出站队列自身那条 debug 日志。
 - `occult_pot_upstream_retries_total`（counter，标签 `operation`）：决定重试的次数。它比可用率先动，是上游开始抖动的信号。
 - `occult_pot_upstream_ready`（gauge，抓取时现算）：1 表示坐标已核对且凭据未过期。不访问腾讯文档。
 - `occult_pot_credential_expires_at_timestamp_seconds`（gauge，抓取时现算）：凭据到期时刻的 Unix 时间戳，0 表示未知。用 `- time()` 得到剩余秒数，可以提前安排轮换。

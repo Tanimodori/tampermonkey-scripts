@@ -1,20 +1,17 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { apiOrigin, loadTestConfig, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
+import { loadTestConfig } from '@test/testUtils/helpers.ts';
+import type { Dispatcher } from 'undici';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import { getClient, invalidateClient, useClient } from '@/services/upstream/client.ts';
-import type { CallOptions } from '@/services/upstream/interceptors/classify.ts';
 
 /**
- * `client.ts` is the composition and nothing else: a pool sized by the configuration — or a
- * dispatcher it is handed — with the classification and retry interceptors injected. These cases pin
- * exactly that, plus the two things the process-wide transport adds: it is built once per
- * configuration, and `loadConfig()`/`invalidateClient()` drop it so the next caller rebuilds it.
- * What each interceptor then does is `interceptors/classify.spec.ts` and
- * `interceptors/retry.spec.ts`.
+ * `client.ts` is the connection and nothing else: a pool sized by the configuration, or the dispatcher
+ * it is handed. These cases pin exactly that, plus the two things the process-wide transport adds: it
+ * is built once per configuration, and `loadConfig()`/`invalidateClient()` drop it so the next caller
+ * rebuilds it. What a call then does — judging an answer, counting attempts, retrying — is
+ * `classify.spec.ts` and `send.spec.ts`.
  */
-
-const docs = setupTencentDocsMock();
 
 const servers: Array<{ close(): Promise<void> }> = [];
 
@@ -32,29 +29,11 @@ async function listen(handler: Parameters<typeof createServer>[1]): Promise<stri
   return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 }
 
-/** One request as `api/record.ts` builds it. */
-function options(overrides: Partial<CallOptions> = {}): CallOptions {
-  return {
-    origin: apiOrigin(),
-    path: '/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets/tXXXXXX',
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ getRecords: { offset: 0, limit: 100 } }),
-    operation: 'getRecords',
-    envelope: true,
-    ...overrides,
-  };
-}
-
-/** Every intercepted record read, in order: one per attempt. */
-const readCalls = (): number => docs.state.calls.filter((call) => (call.body as Record<string, unknown> | undefined)?.getRecords !== undefined).length;
-
 afterAll(async () => {
-  await docs.close();
+  await Promise.all(servers.splice(0).map((server) => server.close()));
 });
 
 afterEach(async () => {
-  docs.reset();
   await Promise.all(servers.splice(0).map((server) => server.close()));
 });
 
@@ -66,7 +45,7 @@ describe('useClient', () => {
     });
     loadTestConfig();
 
-    const response = await useClient().request(options({ origin, path: '/anything' }));
+    const response = await useClient().request({ origin, path: '/anything', method: 'GET' });
 
     expect(response.statusCode).toBe(200);
     await expect(response.body.text()).resolves.toBe('{"ret":0}');
@@ -76,27 +55,24 @@ describe('useClient', () => {
     const origin = await listen(() => {
       // Deliberately never responds.
     });
-    // No retries: this is about the timeout, which the pool's own timers impose.
-    loadTestConfig({ OPS_UPSTREAM_TIMEOUT_MS: '50', OPS_UPSTREAM_MAX_RETRIES: '0' });
+    loadTestConfig({ OPS_UPSTREAM_TIMEOUT_MS: '50' });
     const startedAt = Date.now();
 
-    await expect(useClient().request(options({ origin, path: '/slow', method: 'GET' }))).rejects.toMatchObject({ code: 'ERR_UPSTREAM_FAILED' });
+    // The pool's own timers impose this: what the failure then reads as is `send.spec.ts`.
     // undici's own timer resolution is a whole second, so this is "the configured timeout, not the
     // ten-second default" rather than an exact figure.
+    await expect(useClient().request({ origin, path: '/slow', method: 'GET' })).rejects.toMatchObject({ code: 'UND_ERR_HEADERS_TIMEOUT' });
     expect(Date.now() - startedAt).toBeLessThan(2_000);
   });
 
-  it('injects both interceptors over a dispatcher it is handed', async () => {
-    loadTestConfig({ OPS_UPSTREAM_MAX_RETRIES: '1' });
-    const client = useClient({ dispatcher: docs.agent });
-    // One dropped connection: only the retry interceptor can turn this into a 200, and only the
-    // classifier can turn the transport error into the failure that policy retries.
-    docs.state.networkFailures = 1;
+  it('sends on the dispatcher it is handed, wrapping nothing over it', () => {
+    loadTestConfig();
+    const dispatcher = {} as Dispatcher;
 
-    const response = await client.request(options());
-
-    expect(response.statusCode).toBe(200);
-    expect(readCalls()).toBe(2);
+    // The tests reach the mock upstream this way, so what is *not* wrapped here is what stays real:
+    // classification and retry sit above the transport, in `send.ts`.
+    expect(useClient({ dispatcher })).toBe(dispatcher);
+    expect(getClient({ dispatcher })).toBe(dispatcher);
   });
 });
 
@@ -109,15 +85,14 @@ describe('getClient', () => {
 
     expect(getClient()).toBe(first);
     // A transport built from a dispatcher the caller owns is never the default one.
-    expect(useClient({ dispatcher: docs.agent })).not.toBe(first);
-    expect(getClient({ dispatcher: docs.agent })).not.toBe(first);
+    expect(getClient({ dispatcher: {} as Dispatcher })).not.toBe(first);
   });
 
   it('builds a transport from the options it is given, without caching it', () => {
     loadTestConfig();
     const defaultClient = getClient();
 
-    expect(getClient({ dispatcher: docs.agent })).not.toBe(getClient({ dispatcher: docs.agent }));
+    expect(getClient({ dispatcher: {} as Dispatcher })).not.toBe(getClient({ dispatcher: {} as Dispatcher }));
     expect(getClient()).toBe(defaultClient);
   });
 

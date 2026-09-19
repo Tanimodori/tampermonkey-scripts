@@ -4,7 +4,7 @@ import { LOG_CATEGORIES } from '@/logger.ts';
 import { now } from '@/services/time.ts';
 import { addRecords, deleteRecords, getRecords, updateRecords } from '@/services/upstream/api/record.ts';
 import type { RawRecordDto } from '@/services/upstream/api/record.ts';
-import { asArray, asRecord } from '@/services/upstream/interceptors/classify.ts';
+import { asArray, asRecord } from '@/services/upstream/classify.ts';
 import { clearPotState, readPotState, writePotState } from '@/stores/pot.ts';
 import { docsOf, fromSheetValues, isValidPot, potKey, potOf, toSheetValues } from '@/validation/index.ts';
 import type { Pot, PotDocs, PotRecord, PotState } from '@/validation/index.ts';

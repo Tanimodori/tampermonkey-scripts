@@ -221,7 +221,7 @@ export interface TencentDocsMock {
   readonly state: TencentDocsMockState;
   /** The bare mock pool, for a spec that wants to compose a client of its own over it. */
   readonly agent: MockAgent;
-  /** The transport the app under test runs on: the real interceptors over the mocked upstream. */
+  /** The transport the app under test runs on: the mock upstream itself, with nothing wrapped over it. */
   readonly client: Dispatcher;
   reset(): void;
   close(): Promise<void>;

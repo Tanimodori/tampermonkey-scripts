@@ -1,18 +1,16 @@
 import { getConfig } from '@/config.ts';
-import { getClient } from '../client.ts';
-import { asRecord, parseBody } from '../interceptors/classify.ts';
-import type { CallOptions } from '../interceptors/classify.ts';
-import { throttle } from '../throttle.ts';
+import { asRecord } from '../classify.ts';
+import { sendBare, sendEnvelope } from '../send.ts';
 
 /**
  * The OAuth endpoints: who the credential belongs to, and how a refresh token becomes an access
  * token.
  *
  * They speak their own vocabulary — `userinfo` answers with the smartsheet envelope, the token
- * endpoint answers with the token itself and no envelope at all — which is why each function says
- * so on its request rather than leaving the classifier to guess. The credential lives in
- * `stores/upstream.ts`; this module only performs the two calls, over the transport `client.ts`
- * builds and under the pacing `throttle.ts` keeps.
+ * endpoint answers with the token itself and no envelope at all — which is why each function names
+ * which answer to expect by picking `sendEnvelope` or `sendBare`. The credential lives in
+ * `stores/upstream.ts`; this module only describes the two calls, and `send.ts` performs them under
+ * the shared pacing.
  *
  * See https://docs.qq.com/open/document/app/oauth2/refresh_token.html
  */
@@ -26,12 +24,11 @@ export interface RefreshTokenInput {
 
 /** The credential's own identity, as `/oauth/v2/userinfo` reports it; the caller reads `openID`. */
 export async function getUserInfo(accessToken: string): Promise<Record<string, unknown>> {
-  const body = await send({
+  const body = await sendEnvelope({
     ...target(apiUrl('/oauth/v2/userinfo', { access_token: accessToken })),
     method: 'GET',
     headers: {},
     operation: 'userinfo',
-    envelope: true,
   });
   return asRecord(unwrap(body, 'userinfo'));
 }
@@ -44,13 +41,7 @@ export async function refreshAccessToken(input: RefreshTokenInput): Promise<Reco
     grant_type: 'refresh_token',
     refresh_token: input.refreshToken,
   });
-  return asRecord(await send({ ...target(url), method: 'GET', headers: {}, operation: 'refreshToken', envelope: false }));
-}
-
-/** Runs one call under the shared pacing and hands back its parsed body. */
-async function send(options: CallOptions): Promise<unknown> {
-  const response = await throttle(() => getClient().request(options));
-  return parseBody(await response.body.text());
+  return asRecord(await sendBare({ ...target(url), method: 'GET', headers: {}, operation: 'refreshToken' }));
 }
 
 /** The section an envelope names, or the whole `data` when it names nothing. */
@@ -59,7 +50,7 @@ function unwrap(body: unknown, operation: string): unknown {
   return data[operation] ?? data;
 }
 
-/** An absolute URL split the way undici wants it. */
+/** An absolute URL split the way the transport wants it. */
 function target(url: string): { origin: string; path: string } {
   const parsed = new URL(url);
   return { origin: parsed.origin, path: `${parsed.pathname}${parsed.search}` };

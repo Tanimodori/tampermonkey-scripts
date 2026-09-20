@@ -3,20 +3,15 @@ import { describe, expect, it, vi } from 'vitest';
 import { isProviderError } from '@/entries/core.ts';
 import {
   assetUrl,
-  classifyPackage,
   composedMapUrl,
   createXivApiClient,
-  editionForHost,
   EDITION_LANGUAGES,
   EDITIONS,
-  isInterestingUrl,
   isKnownSheet,
   knownSheetNames,
   languageRejectionKind,
   listSheetsUrl,
   openApiUrl,
-  RICH_TRANSIENT,
-  rowName,
   searchUrl,
   sheetRowsUrl,
   sheetRowUrl,
@@ -95,13 +90,6 @@ describe('edition descriptors', () => {
     expect(languageRejectionKind('invalid request: Failed to deserialize query string: language: invalid or unsupported language "zh"')).toBe('unknown-token');
     expect(languageRejectionKind('not found: something else')).toBe('other');
   });
-
-  it('identify an edition from its host and nothing else', () => {
-    expect(editionForHost('v2.xivapi.com')).toBe('international');
-    expect(editionForHost('xivapi-v2.xivcdn.com')).toBe('chinese-server');
-    expect(editionForHost('xivapi.com')).toBeNull();
-    expect(editionForHost('example.test')).toBeNull();
-  });
 });
 
 describe('url construction', () => {
@@ -119,8 +107,10 @@ describe('url construction', () => {
   });
 
   it('carries the transient decorator through unmodified', () => {
-    const url = sheetRowUrl('chinese-server', 'Action', 1, { transient: [RICH_TRANSIENT] });
-    expect(url.searchParams.get('transient')).toBe(RICH_TRANSIENT);
+    // The decorator is the caller's own string: the builder knows nothing about the set of them, and
+    // an unknown one is the API's answer to give.
+    const url = sheetRowUrl('chinese-server', 'Action', 1, { transient: ['Description@as(html)'] });
+    expect(url.searchParams.get('transient')).toBe('Description@as(html)');
   });
 
   it('builds every remaining xivapi route', () => {
@@ -167,66 +157,11 @@ describe('envelope schemas', () => {
   });
 });
 
-describe('classification', () => {
-  it('reads one envelope and names the edition its host belongs to', () => {
-    const classified = classifyPackage({ url: 'https://xivapi-v2.xivcdn.com/api/sheet/Item/1?language=chs', body: rowBody(7) });
-    expect(classified?.edition).toBe('chinese-server');
-    if (classified === null) return;
-    expect(classified.sheet).toBe('Item');
-    expect(classified.version).toBe(VERSION);
-    expect(classified.rows.map((row) => row.row_id)).toEqual([7]);
-  });
-
-  it('classifies the older /api/1/ path by the body it answers with today', () => {
-    // Measured 2026-09-20: beta.xivapi.com/api/1/sheet/Action answers 200 with `version` present, on the same
-    // data revision v2.xivapi.com serves. The path is a shape a page still uses; it is not a generation.
-    const classified = classifyPackage({ url: 'https://beta.xivapi.com/api/1/sheet/Action', body: rowsBody(1) });
-    if (classified === null) throw new Error('expected the live beta.xivapi.com body shape to classify');
-    expect(classified.sheet).toBe('Action');
-    expect(classified.version).toBe(VERSION);
-    // Honest: beta.xivapi.com is neither configured edition.
-    expect(classified.edition).toBeNull();
-  });
-
-  it('has stopped modeling the two envelopes that went out of service', () => {
-    // The v1 xivapi body: the same list without `version`. Nothing answers that any more, so nothing reads it.
-    expect(classifyPackage({ url: 'https://beta.xivapi.com/api/1/sheet/Action', body: { schema: SCHEMA_TAG, rows: [{ row_id: 1, fields: {} }] } })).toBeNull();
-    // The v1 cafemaker search body, which shared no field name with the xivapi envelopes and now returns 530.
-    const cafemaker = { Pagination: { Results: 1 }, Results: [{ ID: 46246, Name: 'x', Icon: '/i/000000/046246.png' }], SpeedMs: 3 };
-    expect(classifyPackage({ url: 'https://cafemaker.wakingsands.com/search?string=q&indexes=item&language=chs', body: cafemaker })).toBeNull();
-    // The retired XIVAPI application's own error body, which that host still sends for every path.
-    const retired = { Error: true, Subject: 'XIVAPI ERROR', Note: 'Get on discord', Message: 'No route found for "GET /api/1/sheet/Action"' };
-    expect(classifyPackage({ url: 'https://xivapi.com/api/1/sheet/Action', body: retired })).toBeNull();
-  });
-
-  it('marks the rich variant by the decorator the caller asked for', () => {
-    const plain = classifyPackage({ url: 'https://v2.xivapi.com/api/sheet/Action', body: rowsBody(1) });
-    const rich = classifyPackage({ url: `https://v2.xivapi.com/api/sheet/Action?transient=${encodeURIComponent(RICH_TRANSIENT)}`, body: rowsBody(1) });
-    if (plain === null || rich === null) throw new Error('expected both to classify');
-    expect([plain.rich, rich.rich]).toEqual([false, true]);
-  });
-
-  it('refuses to guess at bodies and paths it does not know', () => {
-    expect(classifyPackage({ url: 'https://v2.xivapi.com/api/sheet/Item', body: { rows: [{ no_row_id: true }] } })).toBeNull();
-    expect(classifyPackage({ url: 'https://universalis.app/api/v2/Cosmos/1', body: rowsBody(1) })).toBeNull();
-    expect(classifyPackage({ url: 'not a url', body: rowsBody(1) })).toBeNull();
-  });
-
-  it('pre-filters urls so unrelated requests are never cloned', () => {
-    expect(isInterestingUrl('https://xivapi-v2.xivcdn.com/api/sheet/Item?language=chs')).toBe(true);
-    expect(isInterestingUrl('https://beta.xivapi.com/api/1/sheet/Action')).toBe(true);
-    expect(isInterestingUrl('https://cafemaker.wakingsands.com/search?indexes=item')).toBe(false);
-    expect(isInterestingUrl('https://universalis.app/api/v2/Cosmos/1')).toBe(false);
-    expect(isInterestingUrl('https://xivanalysis.com/manifest.json')).toBe(false);
-    expect(isInterestingUrl('garbage')).toBe(false);
-  });
-
+describe('sheet names', () => {
   it('knows which sheets have a declared field shape', () => {
     expect(knownSheetNames).toContain('Item');
     expect(isKnownSheet('Item')).toBe(true);
     expect(isKnownSheet('NotInThisPackage')).toBe(false);
-    expect(rowName({ row_id: 1, fields: { Name: 'a' } })).toBe('a');
-    expect(rowName({ row_id: 1, fields: { Name: 3 } })).toBeUndefined();
   });
 });
 

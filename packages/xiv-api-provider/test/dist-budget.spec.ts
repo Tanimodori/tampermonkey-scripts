@@ -143,7 +143,7 @@ const unionBytes = (entries: string[]): number => {
  */
 const BUDGETS: Record<string, number> = {
   'core.js': 8_000,
-  'xivapi.js': 26_000,
+  'xivapi.js': 17_500,
   'garlands.js': 11_000,
   'datamine.js': 15_000,
   'schemas.js': 17_000,

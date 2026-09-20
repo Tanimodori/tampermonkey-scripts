@@ -8,9 +8,10 @@ import { EDITIONS, type Edition, type LanguageToken } from './editions.ts';
  * `rows=1%2C2` alike, and both accept `transient=Description@as(html)` and its `%40…%28…%29` form, so no
  * builder has to hand-assemble a query string to stay on the safe side.
  *
- * The path this package builds carries no version segment (`/api/sheet/…`). The older `/api/1/sheet/…` is
- * still answered by `beta.xivapi.com` and is recognised when reading a page's own traffic — see
- * `./detect.ts`; the data version is a query parameter and `GET /version` enumerates them.
+ * The path this package builds carries no version segment (`/api/sheet/…`): the data version is a query
+ * parameter and `GET /version` enumerates them. The older `/api/1/sheet/…` is still answered by
+ * `beta.xivapi.com` with the same envelope, and what it serves today is recorded in
+ * `docs/providers/xivapi.md`.
  */
 
 export interface RowReaderQuery {
@@ -123,6 +124,3 @@ export const composedMapUrl = (edition: Edition, territory: number, index: numbe
 
 /** The OpenAPI document, which is what a drift check compares against. */
 export const openApiUrl = (edition: Edition): URL => at(edition, '/openapi.json');
-
-/** Any `xivapi.com` host. Matched by suffix so `v2.` and `beta.` are both covered. */
-export const isXivApiHost = (hostname: string): boolean => hostname === 'xivapi.com' || hostname.endsWith('.xivapi.com');

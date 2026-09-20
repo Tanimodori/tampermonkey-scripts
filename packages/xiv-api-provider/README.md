@@ -50,4 +50,4 @@ rushx test:drift        # OpenAPI 漂移报告,同样仅手动
 
 两个 edition 的能力差别(国服表更少、`/version` 与 `/asset/map` 没有、检索命中取决于 `language`)逐条列在 [xivapi：能力差异](docs/providers/xivapi.md#能力差异),并由 `rushx test:live` 的第二组断言逐条测。这些差异不改变 `XivApiClient` 的方法集合:客户端照发请求,服务端怎么答由测试记录。
 
-`cafemaker.wakingsands.com`(国服镜像的 v1 检索服务,`universalis-zh-data` 当前拦截的主机名)实测 530 `error code: 1016`,那个信封在这个包里也不再建模,详见 [xivapi：当前限制](docs/providers/xivapi.md#当前限制)。
+`cafemaker.wakingsands.com`(国服镜像的 v1 检索服务)实测 530 `error code: 1016`,那个信封在这个包里也不再建模,详见 [xivapi：当前限制](docs/providers/xivapi.md#当前限制)。

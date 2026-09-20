@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fetchSheetCsv, NotFoundError, readSheet, useSheetTable } from '@/entries/datamine.ts';
 import { createGarlandClient } from '@/entries/garlands.ts';
-import { ALL_EDITIONS, classifyPackage, createXivApiClient, EDITIONS, isInterestingUrl, isProviderError } from '@/entries/xivapi.ts';
+import { ALL_EDITIONS, createXivApiClient, EDITIONS, isApiErrorResponse, isProviderError, isSheetResponse } from '@/entries/xivapi.ts';
 import { garlands as garlandSchemas, xivapi as schemas } from '@/schemas.ts';
 
 /**
@@ -148,10 +148,9 @@ describe.skipIf(!live)('edition capabilities', { tags: ['live'] }, () => {
 });
 
 describe.skipIf(!live)('dead and legacy hosts', { tags: ['live'] }, () => {
-  it('records that the v1 cafemaker host a userscript still intercepts is unreachable', async () => {
-    // Not a failure to fix, but a fact to notice: `universalis-zh-data` matches this hostname, so while it is
-    // down the userscript is polyfilling nothing. Its `{Pagination, Results, SpeedMs}` envelope is no longer
-    // modeled here at all, so a recovery is that script's migration, not a change in this package.
+  it('records that the v1 cafemaker host is unreachable', async () => {
+    // Not a failure to fix, but a fact to notice: that `{Pagination, Results, SpeedMs}` envelope is not
+    // modeled here at all, so a host coming back to life is its readers' migration, not a change owed by this package.
     const status = await fetch('https://cafemaker.wakingsands.com/search?string=x&indexes=item')
       .then((response) => response.status)
       .catch(() => 0);
@@ -163,20 +162,23 @@ describe.skipIf(!live)('dead and legacy hosts', { tags: ['live'] }, () => {
     const response = await fetch('https://xivapi.com/api/1/sheet/Action?limit=1');
     const body: unknown = await response.json().catch(() => null);
     expect(response.status).toBe(404);
-    // A body from a different application: no `schema`, so nothing here reads it, and `classifyPackage` says so.
+    // A body from a different application: no `schema`, no `version`, and not even the `{code, message}` both
+    // live editions send, so none of this package's predicates claim it.
     expect(schemas.sheetResponseSchema.safeParse(body).success).toBe(false);
-    expect(classifyPackage({ url: response.url, body })).toBeNull();
+    expect([isSheetResponse(body), isApiErrorResponse(body)]).toEqual([false, false]);
   });
 
   it('still serves the v2 envelope under beta.xivapi.com’s older /api/1/ path', async () => {
     const url = 'https://beta.xivapi.com/api/1/sheet/Action?limit=1';
     const body = (await fetch(url).then((response) => response.json())) as unknown;
     expect(schemas.sheetResponseSchema.safeParse(body).success).toBe(true);
-    expect(isInterestingUrl(url)).toBe(true);
-    const classified = classifyPackage({ url, body });
-    // Neither configured edition, but a package this package can read.
-    expect(classified?.edition).toBeNull();
-    expect(classified?.version).toBeTruthy();
+    if (!isSheetResponse(body)) throw new Error('beta.xivapi.com no longer answers the v2 envelope — the older path has changed');
+    // The path keeps a version segment the body does not: same envelope, same data revision as v2.xivapi.com
+    // serves, which is why `/api/1/` is a URL a page still uses rather than a generation of data.
+    expect(body.version).toBeTruthy();
+    // And it is not one of the configured editions, which is a fact about the host, not about the body.
+    const editionHosts = ALL_EDITIONS.map((edition) => new URL(EDITIONS[edition].apiBase).hostname);
+    expect(editionHosts).not.toContain(new URL(url).hostname);
   });
 });
 

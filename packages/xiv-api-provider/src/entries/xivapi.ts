@@ -16,17 +16,7 @@ export {
 } from '@/providers/xivapi/editions.ts';
 export type { Edition, EditionDescriptor, LanguageToken } from '@/providers/xivapi/editions.ts';
 
-export {
-  assetUrl,
-  composedMapUrl,
-  isXivApiHost,
-  listSheetsUrl,
-  openApiUrl,
-  searchUrl,
-  sheetRowUrl,
-  sheetRowsUrl,
-  versionsUrl,
-} from '@/providers/xivapi/endpoints.ts';
+export { assetUrl, composedMapUrl, listSheetsUrl, openApiUrl, searchUrl, sheetRowUrl, sheetRowsUrl, versionsUrl } from '@/providers/xivapi/endpoints.ts';
 export type { AssetQuery, RowReaderQuery, SearchQuery, SheetRowsQuery } from '@/providers/xivapi/endpoints.ts';
 
 export {
@@ -46,12 +36,6 @@ export {
 
 export { createXivApiClient } from '@/providers/xivapi/client.ts';
 export type { XivApiClient, XivApiClientOptions } from '@/providers/xivapi/client.ts';
-
-export { classifyPackage, editionForHost, isInterestingUrl, isRow, RICH_TRANSIENT, rowName } from '@/providers/xivapi/detect.ts';
-export type { ClassifiedPackage, PackageSource } from '@/providers/xivapi/detect.ts';
-
-export { captureNativeFetch, installFetchInterceptor, jsonResponseFrom, urlFromFetchInput } from '@/providers/xivapi/intercept.ts';
-export type { InterceptOptions, Package, PackageInjector } from '@/providers/xivapi/intercept.ts';
 
 export type {
   ApiErrorResponse,

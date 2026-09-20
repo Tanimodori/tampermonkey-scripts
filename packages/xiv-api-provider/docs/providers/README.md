@@ -13,7 +13,7 @@
 一个子路径对应 `src/entries/` 下一个文件,文件只做挑选与命名再导出,不写逻辑。没有汇总入口:汇总入口意味着消费方删不掉任何一个 provider。
 
 - `xiv-api-provider/core`(7,100 B)—— `createMemo`、图标 id 与路径换算、`ProviderError` / `isProviderError` / `NotFoundError` 与传输层类型。
-- `xiv-api-provider/xivapi`(21,721 B)—— edition 描述符、端点构造、信封判定、客户端、fetch 拦截。
+- `xiv-api-provider/xivapi`(14,812 B)—— edition 描述符、端点构造、信封判定、客户端。
 - `xiv-api-provider/garlands`(9,466 B)—— 端点构造、判定、客户端、文档与检索类型、语言选择。
 - `xiv-api-provider/datamine`(12,154 B)—— 取一张解包 CSV 并解析成 `SheetRawData`,附 `useSheetTable` 把网格读成可寻址的表与 `trim`。这是唯一 import `csv-parse` 的入口。
 - `xiv-api-provider/schemas`(13,845 B)—— 两个在线 provider 的 zod 定义,是唯一 import zod 的入口。
@@ -26,7 +26,7 @@
 
 ## 体积
 
-只导入 `xivapi`、`garlands` 与 `core` 的消费方闭包是 31,417 B,不含任何 CSV 代码;`xivapi` 与 `datamine` 两个入口的闭包是 30,440 B——两者共用一个传输 chunk,所以后者不是前者"加上"一个入口。`csv-parse` 约 47 KB 由消费者自己的打包器负责,不进本包产物。历史上它曾被内联进唯一的入口,来龙去脉见 [datamine：依赖与体积](datamine.md#依赖与体积)。
+只导入 `xivapi`、`garlands` 与 `core` 的消费方闭包是 24,508 B,不含任何 CSV 代码;`xivapi` 与 `datamine` 两个入口的闭包是 23,531 B——两者共用一个传输 chunk,所以后者不是前者"加上"一个入口。`csv-parse` 约 47 KB 由消费者自己的打包器负责,不进本包产物。历史上它曾被内联进唯一的入口,来龙去脉见 [datamine：依赖与体积](datamine.md#依赖与体积)。
 
 判定在 `test/dist-budget.spec.ts`,四条:
 

@@ -9,7 +9,7 @@
 - `src/index.ts` + `vite.config.ts` —— 插件在真实构建里把 `xiv-datamine-polyfill/ItemUICategory.csv` 与 `…/Addon.csv` 解析成模块,目标代码用 `useSheetTable` 读它们并断言:声明过的列与顺序、类型行、键列仍是第一列且没有重复、`dropEmptyIn` 之后没有空名行、`onlyRowKeys` 只要了两行所以带 `<Switch(...)>` 的那行根本拿不到。`rushx test` 先构建再 `node dist/index.js`,断言不过就是非零退出。
 - 离线是默认。上面那次构建的取数由 `vite.config.ts` 里的一个 stub `fetch` 回答(两张几行的小表),所以 `rush build` 不需要网络,产物字节可复现;`rushx test:live` 撤掉 stub 并设 `maxAge: 0`,同一段目标代码对 `raw.githubusercontent.com` 的 `HEAD` 再跑一遍。
 - `probes/xiv-api-provider.ts` —— 五个子路径(`core`/`xivapi`/`garlands`/`datamine`/`schemas`)在 `skipLibCheck: false` 下能被解析成可用的类型。产物声明里有一条真的 `import { z } from 'zod'`,所以本项目的依赖表里有 `zod`:那是被检查的声明需要的,不是这里自己用。
-- `probes/xiv-datamine-polyfill.ts` —— `./plugin` 与 `./load` 的声明能被外部解析(相对路径、`export {}` 的形状、以及它们引到的 `xiv-api-provider` 类型),以及那份 `*.csv` 通配声明真的能匹配上一张没在规则里列出的表。
+- `probes/xiv-datamine-polyfill.ts` —— `./plugin` 与 `./load` 的声明能被外部解析(相对路径、`export {}` 的形状、以及它们引到的 `xiv-api-provider` 类型)。
 
 缓存按模式分开:`node_modules/.cache/xiv-datamine-polyfill-e2e-test`(离线)与同级的 `…-e2e-test-live`(活体)。分开是因为共用一个目录时,一次活体运行会把真表留在离线构建读的缓存里,`rushx test` 就不再是它声称的那次确定性构建。stub 会打印它被问到的路径,所以第二次离线构建打印 0 行就是"缓存命中、零请求"的现场证据。暖缓存零请求、`HEAD` 移动换文件、断网沿用过期副本这些行为的断言在包自己的 `test/load.spec.ts` 里,这里不重复。
 

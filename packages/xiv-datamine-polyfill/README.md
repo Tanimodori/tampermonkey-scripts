@@ -30,6 +30,8 @@ export default defineConfig({
 /// <reference types="xiv-datamine-polyfill/client" />
 ```
 
+等价的写法是 tsconfig 里的一项:`"types": ["node", "xiv-datamine-polyfill/client"]`。两种写法指向同一个文件,那份声明对 `xiv-datamine-polyfill/<任意表名>.csv` 都生效。
+
 ```ts
 import { useSheetTable } from 'xiv-api-provider/datamine';
 import itemUICategory from 'xiv-datamine-polyfill/ItemUICategory.csv';

@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node", "xiv-datamine-polyfill/client"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    /*
+      `src/` here is a consumer's own code, not a library: it imports the checked packages by subpath, through
+      their `package.json#exports`, exactly as a userscript project would — no relative path into their source
+      and no `@/…` alias, so what typechecks is the published shape rather than the tree on disk. `vite.config.ts`
+      is in this program too, because that is where the plugin is configured and the sheet rules are written.
+    */
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src/**/*.ts", "vite.config.ts"]
+}

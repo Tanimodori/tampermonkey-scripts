@@ -375,9 +375,6 @@ importers:
       '@types/node':
         specifier: ^22.10.5
         version: 22.19.3
-      cross-env:
-        specifier: ^10.1.0
-        version: 10.1.0
       oxfmt:
         specifier: ^0.67.0
         version: 0.67.0
@@ -430,6 +427,49 @@ importers:
       vitest:
         specifier: ^5.0.1
         version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
+    optionalDependencies:
+      '@oxfmt/binding-win32-x64-msvc':
+        specifier: ^0.67.0
+        version: 0.67.0
+      '@oxlint/binding-win32-x64-msvc':
+        specifier: ^1.82.0
+        version: 1.82.0
+      '@rolldown/binding-win32-x64-msvc':
+        specifier: ~1.2.6
+        version: 1.2.8
+      lightningcss-win32-x64-msvc:
+        specifier: ^1.33.0
+        version: 1.33.0
+
+  ../../tests/xiv-datamine-polyfill-e2e-test:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.19.3
+      cross-env:
+        specifier: ^10.1.0
+        version: 10.1.0
+      oxfmt:
+        specifier: ^0.67.0
+        version: 0.67.0
+      oxlint:
+        specifier: ^1.82.0
+        version: 1.82.0
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
+      xiv-api-provider:
+        specifier: workspace:*
+        version: link:../../packages/xiv-api-provider
+      xiv-datamine-polyfill:
+        specifier: workspace:*
+        version: link:../../packages/xiv-datamine-polyfill
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
     optionalDependencies:
       '@oxfmt/binding-win32-x64-msvc':
         specifier: ^0.67.0

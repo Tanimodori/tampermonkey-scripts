@@ -8,12 +8,10 @@ import { dataminePolyfill } from 'xiv-datamine-polyfill/plugin';
 /**
  * The consumer's side of the contract, typechecked against the built `dist/` with `skipLibCheck: false`.
  *
- * Two things are checked here that no in-package test can: that the two subpaths resolve to declarations a
- * consumer can use, and that the ambient wildcard gives an unlisted sheet the same shape as a listed one. The
- * declarations themselves arrive through `probe/tsconfig.json` including `../client.d.ts` — a real consumer
- * writes `/// <reference types="xiv-datamine-polyfill/client" />` instead, which is the same file reached by
- * package name; this package is not linked inside its own `node_modules`, so a type reference by name would
- * resolve for a consumer and not here.
+ * Two things no in-package test can check: that `./plugin` and `./load` resolve to declarations a consumer can
+ * actually use — relative paths, `export {}` shapes, and the `xiv-api-provider` types they name — and that the
+ * ambient wildcard gives a sheet nobody listed the same shape as one it did, which is why an undeclared sheet
+ * is imported below. How that wildcard gets pulled in here is the project README's subject.
  */
 export const plugin = dataminePolyfill({ ref: 'v7.56-hf2', sheets: { ItemUICategory: { columns: ['#', 'Name'] } } });
 

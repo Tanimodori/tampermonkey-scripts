@@ -5,9 +5,10 @@ import { xivapi as schemas } from 'xiv-api-provider/schemas';
 import { createXivApiClient, sheetRowUrl, type SheetRow, type XivApiClient } from 'xiv-api-provider/xivapi';
 
 /**
- * Imports the built `dist/` through `package.json#exports` the way a sibling package would — by subpath,
+ * Imports the built `dist/` through `package.json#exports` the way a consuming package would — by subpath,
  * never by a relative file path, so the entry map is part of what is checked. Typechecked by
- * `rushx test:dist` with `skipLibCheck: false`; see `./README.md` for why that check exists.
+ * `tsc -p tsconfig.probes.json`, which is the second half of `rushx build`; see `../README.md` for why that
+ * check exists and why `zod` is a dependency of this project.
  */
 
 const intl = sheetRowUrl('international', 'Item', 19890, { fields: ['Name'] });

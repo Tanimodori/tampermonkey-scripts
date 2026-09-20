@@ -43,7 +43,6 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
-    "test:dist": "tsc -p probe/tsconfig.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest --passWithNoTests",
     "test:live": "cross-env XIV_LIVE=1 vitest run --tags-filter=live",

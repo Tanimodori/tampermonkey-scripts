@@ -1,8 +1,8 @@
 {
-  "name": "xiv-datamine-polyfill",
+  "name": "xiv-datamine-polyfill-e2e-test",
   "version": "0.0.1",
   "private": true,
-  "description": "Turn an import of xiv-datamine-polyfill/<Sheet>.csv into the datamining table itself, fetched and trimmed at build time.",
+  "description": "Consumer-side checks for the xiv packages: probe files that typecheck the built dist/ through package.json#exports, and the vite build and dev-server end-to-end tests for xiv-datamine-polyfill.",
   "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
   "bugs": {
     "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
@@ -14,42 +14,25 @@
   "license": "MIT",
   "author": "Tanimodori",
   "type": "module",
-  "sideEffects": false,
-  "exports": {
-    "./plugin": {
-      "types": "./dist/plugin.d.ts",
-      "default": "./dist/plugin.js"
-    },
-    "./load": {
-      "types": "./dist/load.d.ts",
-      "default": "./dist/load.js"
-    },
-    "./client": {
-      "types": "./client.d.ts"
-    },
-    "./package.json": "./package.json"
-  },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.probes.json && vite build",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
-    "test": "vitest --passWithNoTests",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "xiv-api-provider": "workspace:*"
-  },
-  "peerDependencies": {
-    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
+    "test": "vite build && node dist/index.js",
+    "test:live": "cross-env XIV_LIVE=1 vite build && node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
+    "cross-env": "^10.1.0",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",
     "typescript": "~5.9.3",
     "vite": "^8.3.0",
-    "vitest": "^5.0.1"
+    "xiv-api-provider": "workspace:*",
+    "xiv-datamine-polyfill": "workspace:*",
+    "zod": "^4.6.5"
   },
   "optionalDependencies": {
     "@oxfmt/binding-win32-x64-msvc": "^0.67.0",

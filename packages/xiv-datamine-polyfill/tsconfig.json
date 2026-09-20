@@ -11,11 +11,11 @@
     "rewriteRelativeImportExtensions": true,
     /* Imports *inside `src/`* are relative, because tsc emits these files as-is for Node to load and it
        copies every specifier verbatim into the declarations too — an `@/…` would reach a consumer that has no
-       idea what it means. `@/` and `@test/` are therefore reserved for `test/` and `e2e/`, which are never
-       emitted, and the aliases below exist only so vitest and the type check agree on that. */
+       idea what it means. `@/` is therefore reserved for `test/`, which is never emitted, and the alias below
+       exists only so vitest and the type check agree on it. The end-to-end specs and the consumer probes live
+       in `tests/xiv-datamine-polyfill-e2e-test`, where every import goes through this package's `exports`. */
     "paths": {
-      "@/*": ["./src/*"],
-      "@test/*": ["./test/*"]
+      "@/*": ["./src/*"]
     },
     "isolatedModules": true,
     "moduleDetection": "force",

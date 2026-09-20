@@ -48,14 +48,12 @@
 
 ## 测试
 
+包内三份 spec 管的是零件;把它接到 vite 上之后的样子、以及生成的模块能不能被消费方读,归 `tests/xiv-datamine-polyfill-e2e-test`(见 [那个项目的说明](../../../tests/xiv-datamine-polyfill-e2e-test/README.md))。
+
 - `test/options.spec.ts` — specifier 的匹配边界、`node_modules/.cache` 的推导、缓存键对 ref/语种/内容/规则的敏感性,以及对"配置写法等价"的稳定。
 - `test/load.spec.ts` — 冷缓存只发一次请求、暖缓存零请求、改规则用缓存的 CSV 重建、`HEAD` 移动后换文件、`maxAge` 到点重拉、断网用过期缓存并告警、没有缓存就失败。
-- `test/e2e/plugin.spec.ts` — 用 `vite build` 真打 `test/e2e/fixture`,断言生成物进了产物、被裁掉的行不在产物里、第二次构建零请求,并用 `createServer` 确认 dev 路径下 `resolveId` 同样命中。
 - `test/acceptance.spec.ts` — 用 `universalis-zh-data/src/` 已提交的两份 CSV 配一份消费者规则,逐行复现那 738 行手抄表;同时断言"按 Icon 连接两张表"确实与按 `Category` 父子连接不同。
-- `test/e2e/live.spec.ts` — 需要 `XIV_LIVE=1`:走 `HEAD` 取 `ItemUICategory`、断言 `chs` 没有 `DataCenter`。
 
 ## 当前限制
-
-包内的 `probe/` 通过 `tsconfig` 引入 `client.d.ts` 拿类型,而不是通过 `/// <reference types="xiv-datamine-polyfill/client" />`:TS 的 type 引用要经 `node_modules` 解析,而一个包不在自己的 `node_modules` 里。真正的消费者写那一行即可,两种写法指向同一个文件。
 
 默认 `HEAD` 意味着同一份源码在不同日期可能构建出不同数据,追新也不会有提醒;要固定就在配置里写 `ref`。

@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    /*
+      The point of this project. `skipLibCheck: true` would let a broken declaration pass: the packages emit
+      `.d.ts` files whose specifiers and re-exports are a property of their build (for `xiv-api-provider`, of
+      `build/finalize-types.ts`), and nothing in either package checks that a consumer can read them. Here the
+      library files are checked, so a declaration that cannot be resolved fails this compile.
+    */
+    "skipLibCheck": false
+  },
+  "include": ["probes/*.ts"]
+}

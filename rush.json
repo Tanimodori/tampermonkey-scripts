@@ -458,6 +458,10 @@
     {
       "packageName": "xiv-datamine-polyfill",
       "projectFolder": "packages/xiv-datamine-polyfill"
+    },
+    {
+      "packageName": "xiv-datamine-polyfill-e2e-test",
+      "projectFolder": "tests/xiv-datamine-polyfill-e2e-test"
     }
   ]
 }

@@ -14,6 +14,7 @@ Javascript userscripts for various websites, plus the occasional backend service
 | [occult-pot-server](packages/occult-pot-server/README.md)                   | Express API proxying the Tencent Docs smartsheet of occult pot refresh times       |
 | [xiv-api-provider](packages/xiv-api-provider/README.md)                     | Online access to xivapi, the Garland Tools mirror and the datamining CSV dumps     |
 | [xiv-datamine-polyfill](packages/xiv-datamine-polyfill/README.md)           | Vite plugin turning a datamining sheet import into a build-time generated module   |
+| [xiv-datamine-polyfill-e2e-test](tests/xiv-datamine-polyfill-e2e-test/README.md) | Consumer-side probes and vite end-to-end checks for the two packages above     |
 
 ## Build
 

@@ -15,7 +15,7 @@ describe('specifiers', () => {
   });
 
   it('leaves anything else to vite', () => {
-    expect(sheetFromSpecifier('xiv-api-provider/datamine')).toBeNull();
+    expect(sheetFromSpecifier('xiv-api-provider')).toBeNull();
     expect(sheetFromSpecifier('./ItemUICategory.csv')).toBeNull();
     expect(sheetFromSpecifier('other-package/Item.csv')).toBeNull();
     expect(sheetFromSpecifier('xiv-datamine-polyfill/nested/Item.csv')).toBeNull();

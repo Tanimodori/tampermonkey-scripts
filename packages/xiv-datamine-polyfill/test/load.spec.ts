@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { sheetCsvUrl, useSheetTable, type FetchLike, type SheetRawData } from 'xiv-api-provider/datamine';
+import { sheetCsvUrl, useSheetTable, type FetchLike, type SheetRawData } from 'xiv-api-provider';
 import { loadTable, type LoadOptions } from '@/load';
 
 /**

@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-// Imported through the entries a consumer would use, so the public surface is what these tests cover.
-import { isProviderError } from '@/entries/core.ts';
+// Imported through the entry a consumer would use, so the public surface is what these tests cover.
 import {
   assetUrl,
   composedMapUrl,
@@ -8,6 +7,7 @@ import {
   EDITION_LANGUAGES,
   EDITIONS,
   isKnownSheet,
+  isProviderError,
   knownSheetNames,
   languageRejectionKind,
   listSheetsUrl,
@@ -17,9 +17,9 @@ import {
   sheetRowUrl,
   supportsLanguage,
   versionsUrl,
-} from '@/entries/xivapi.ts';
-// Schemas come from the opt-in entry, the same way a consumer that wants runtime validation would import them.
-import { xivapi as schemas } from '@/schemas.ts';
+} from '@/index.ts';
+// The zod definitions are test-time only, so they come from the file that holds them rather than from the entry.
+import * as schemas from '@/providers/xivapi/types/schema.ts';
 
 /**
  * The xivapi provider, checked against hand-written bodies.

@@ -1,8 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { fetchSheetCsv, NotFoundError, readSheet, useSheetTable } from '@/entries/datamine.ts';
-import { createGarlandClient } from '@/entries/garlands.ts';
-import { ALL_EDITIONS, createXivApiClient, EDITIONS, isApiErrorResponse, isProviderError, isSheetResponse } from '@/entries/xivapi.ts';
-import { garlands as garlandSchemas, xivapi as schemas } from '@/schemas.ts';
+import {
+  ALL_EDITIONS,
+  createGarlandClient,
+  createXivApiClient,
+  EDITIONS,
+  fetchSheetCsv,
+  isApiErrorResponse,
+  isProviderError,
+  isSheetResponse,
+  NotFoundError,
+  readSheet,
+  useSheetTable,
+} from '@/index.ts';
+import * as garlandSchemas from '@/providers/garlands/types/schema.ts';
+import * as schemas from '@/providers/xivapi/types/schema.ts';
 
 /**
  * Against the real services, run by hand: `rushx test:live`.

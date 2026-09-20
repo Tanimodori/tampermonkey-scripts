@@ -1,8 +1,8 @@
 /// <reference types="node" />
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import type { FetchLike } from 'xiv-api-provider/datamine';
-import { dataminePolyfill } from 'xiv-datamine-polyfill/plugin';
+import type { FetchLike } from 'xiv-api-provider';
+import { dataminePolyfill } from 'xiv-datamine-polyfill';
 
 /**
  * A consumer's own vite config: `src/index.ts` imports two `xiv-datamine-polyfill/<Sheet>.csv` modules, so the

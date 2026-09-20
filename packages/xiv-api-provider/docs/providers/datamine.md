@@ -63,13 +63,11 @@ sheet.column('Icon'); // 整列;也可以给下标
 
 `sheet.trim(rules)` 是唯一会改变表的动作,而它的结果又是 `SheetRawData`:`columns`(顺序即输出顺序)、`onlyRowKeys`(按 `#` 的值选,不是位置)、`dropEmptyIn`(该列为 `''` 的行丢掉,占位行就是这么来的)。列不存在直接抛错并列出该表实际列名;`onlyRowKeys` 里的未知键给空结果,因为"这版没有"本来就有这个形状。裁完仍是合法文件:下标行按留下的列重排(`key` 之后从 `0` 数起),名字行与类型行按同一批列切出。
 
-## 依赖与体积
+## 依赖
 
-`csv-parse` 是这个包唯一的运行时依赖,并且**外部化**:`dist/datamine.js` 里只有 `import { parse } from "csv-parse/sync"`,由消费者的打包器自己解析。把它内联进来曾经是 47,423 B(占当时单入口产物的 33.6%),所以 `test/dist-budget.spec.ts` 现在盯着两件事:任何产物都不得内联依赖,且 `csv-parse` 只能被 `datamine` 这一个入口 import。
+`csv-parse` 是这个包唯一的运行时依赖,并且**外部化**:产物里只有一句 `import { parse } from "csv-parse/sync"`,由消费者的打包器自己解析。它只被 `fetchSheetCsv` 与 `readSheet` 这条路用到,所以一个只命名了表读函数的消费者,其打包器会把整条链连同那句 import 一起摇掉——包声明 `sideEffects: false`,不靠拆入口来替它省。
 
-只导入在线 API 的消费方闭包不含任何 CSV 代码;`datamine` 入口自身加上共享 chunk 的闭包、以及各入口的预算判定见 [数据来源：体积](README.md#体积)。
-
-宽表是真实的体积来源:`ClassJobCategory.csv` 48 列、`ClassJob.csv` 52 列。网格形式已经省掉每行重复的键名(实测:同一批数据 `ClassJob` 前三列是 1,230 B,写成每行一个对象是 2,322 B),进一步缩只有一条路——`trim` 选列,或者在 `xiv-datamine-polyfill` 的构建配置里选。
+宽表是数据量的主要来源:`ClassJobCategory.csv` 48 列、`ClassJob.csv` 52 列。网格形式本身就省掉了每行重复的键名(写成每行一个对象会明显更大),要再缩只有一条路——`trim` 选列,或者在 `xiv-datamine-polyfill` 的构建配置里选。
 
 ## 相关链接
 

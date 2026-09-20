@@ -383,6 +383,9 @@ importers:
       csv-parse:
         specifier: ^7.0.2
         version: 7.0.2
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
       '@microsoft/api-extractor':
         specifier: ^7.59.1
@@ -414,9 +417,6 @@ importers:
       vitest:
         specifier: ^5.0.1
         version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
-      zod:
-        specifier: ^4.6.5
-        version: 4.6.5
     optionalDependencies:
       '@oxfmt/binding-win32-x64-msvc':
         specifier: ^0.67.0

@@ -1,13 +1,4 @@
-import {
-  DEFAULT_REF,
-  fetchSheetCsv,
-  isProviderError,
-  NotFoundError,
-  parseSheetCsv,
-  useSheetTable,
-  type FetchLike,
-  type SheetRawData,
-} from 'xiv-api-provider/datamine';
+import { DEFAULT_REF, fetchSheetCsv, isProviderError, NotFoundError, parseSheetCsv, useSheetTable, type FetchLike, type SheetRawData } from 'xiv-api-provider';
 import { ageOf, contentHash, csvPath, hoursSince, modulePath, readText, writeText } from './cache.ts';
 import { cacheKey, DEFAULT_LOCALE, DEFAULT_MAX_AGE_MS, rulesFor, type DataminePolyfillOptions, type SheetRules, type TableIdentity } from './options.ts';
 

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { garlandDocUrl } from '@/entries/garlands.ts';
-import { ALL_EDITIONS, EDITIONS, type Edition } from '@/entries/xivapi.ts';
+import { ALL_EDITIONS, EDITIONS, garlandDocUrl, type Edition } from '@/index.ts';
 
 /**
  * Drift detection, run by hand: `rushx test:drift`.

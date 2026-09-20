@@ -2,7 +2,7 @@
 
 把 `xiv-datamine-polyfill/<Sheet>.csv` 变成一个 vite 的 import:构建时从解包仓库取那张表、按你声明的规则裁剪、写成 `node_modules/.cache` 里的一个模块,resolve 时把那个模块交回打包器。数据因此在**下游构建时**取,而不是在这个包发版时取。
 
-在线取数与 CSV 解析本身在另一个包:`xiv-api-provider/datamine`(见 [datamine provider 的文档](../xiv-api-provider/docs/providers/datamine.md))。这个包只做"把表固化进产物"这一件事,不提供查询 helper。插件怎么接进 vite、缓存与规则为什么这么设计,见 [插件的设计](docs/design.md)。
+在线取数与 CSV 解析本身在另一个包:`xiv-api-provider`(见 [datamine provider 的文档](../xiv-api-provider/docs/providers/datamine.md))。这个包只做"把表固化进产物"这一件事,不提供查询 helper。插件怎么接进 vite、缓存与规则为什么这么设计,见 [插件的设计](docs/design.md)。
 
 ## 接入
 
@@ -11,7 +11,7 @@
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vitest/config';
-import { dataminePolyfill } from 'xiv-datamine-polyfill/plugin';
+import { dataminePolyfill } from 'xiv-datamine-polyfill';
 
 export default defineConfig({
   plugins: [
@@ -33,7 +33,7 @@ export default defineConfig({
 等价的写法是 tsconfig 里的一项:`"types": ["node", "xiv-datamine-polyfill/client"]`。两种写法指向同一个文件,那份声明对 `xiv-datamine-polyfill/<任意表名>.csv` 都生效。
 
 ```ts
-import { useSheetTable } from 'xiv-api-provider/datamine';
+import { useSheetTable } from 'xiv-api-provider';
 import itemUICategory from 'xiv-datamine-polyfill/ItemUICategory.csv';
 
 const ui = useSheetTable(itemUICategory);
@@ -55,7 +55,7 @@ ui.rowCount;
 
 ## 取值
 
-导入的是 `SheetRawData`:`origin` 是 `<Sheet>.csv@<ref>`,`data` 是整张网格——三行表头加数据行,格子全是字符串,列名照文件原样(首列 `#`,匿名列是空串)。读要用 `xiv-api-provider/datamine` 的 `useSheetTable`:它给出 `columns` / `types` / `rows` / `row(i)` / `column(…)` / `cell(i, …)` / `trim(rules)`,行一律按位置。值的含义(`'True'`、`'-1'`、`'60101'`)与"把一行变成对象"那一步都由调用方自己做。
+导入的是 `SheetRawData`:`origin` 是 `<Sheet>.csv@<ref>`,`data` 是整张网格——三行表头加数据行,格子全是字符串,列名照文件原样(首列 `#`,匿名列是空串)。读要用 `xiv-api-provider` 的 `useSheetTable`:它给出 `columns` / `types` / `rows` / `row(i)` / `column(…)` / `cell(i, …)` / `trim(rules)`,行一律按位置。值的含义(`'True'`、`'-1'`、`'60101'`)与"把一行变成对象"那一步都由调用方自己做。
 
 ## 缓存与离线
 
@@ -71,22 +71,9 @@ node_modules/.cache/xiv-datamine-polyfill/
 
 不删旧文件:同一次构建里两个入口用不同规则导同一张表是合法的,按"同名新键"清理会删掉另一个入口还指着的文件。缓存目录本就可以整个删掉。
 
-## 体积
-
-按 `HEAD`(2026-09-20)实测。数字是生成模块里那段 JSON 的裸字节(`origin` 加 `data`,不含头部那行注释),`整表` 是不写规则时的同一算法:
-
-- `ItemUICategory` 3,674(113 行,`#`/`Name`/`Icon` + `dropEmptyIn: 'Name'`),整表 4,761(116 行 5 列)
-- `ItemSearchCategory` 3,003(92 行,再加 `Category` + `dropEmptyIn`),整表 4,899(101 行 7 列)
-- `ActionCategory` 398(19 行,`#`/`Name`)
-- `ClassJob` 1,230(46 行,`#`/`Name`/`Abbreviation`),整表 14,669(52 列)
-- `ClassJobCategory` 13,732(206 行,`#`/`Name`),整表 88,647(48 列)
-- `Addon` 140(`#`/`Text` + `onlyRowKeys` 三条),整表 944,520(19,592 行)
-
-网格形式省下的是每行重复的键名:同一批数据写成每行一个对象,`ItemUICategory` 是 5,604、`ClassJob` 是 2,322、`ClassJobCategory` 是 15,911。行数与列数越多差距越大,只有 `Addon` 这种三行的裁剪反而对象更省(97)。宽表要自己写 `columns`。
-
 ## 不经 vite 使用
 
-`xiv-datamine-polyfill/load` 导出 `loadTable(sheet, { cacheDir, ref, sheets, fetch })`,返回生成的文件路径、`raw`(与模块内容同一份 `SheetRawData`)、以及这次的数据是从模块、缓存还是网络来的。非 vite 的构建脚本、或想看清楚生成物长什么样时用。
+`loadTable(sheet, { cacheDir, ref, sheets, fetch })` 与插件同出一个入口,返回生成的文件路径、`raw`(与模块内容同一份 `SheetRawData`)、以及这次的数据是从模块、缓存还是网络来的。非 vite 的构建脚本、或想看清楚生成物长什么样时用。
 
 ## 当前限制
 

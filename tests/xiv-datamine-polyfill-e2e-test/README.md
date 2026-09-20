@@ -15,7 +15,7 @@
 两份都 `skipLibCheck: false`,也就是都去检查读到的 `.d.ts` 的内容本身,而不只是解析它:
 
 - `tsconfig.json` 只管 `src/`。包里交出去的声明是构建的性质:`xiv-api-provider` 的 `.d.ts` 由 `unplugin-dts` 在打包那一步生成、说明符由它解析,那一步坏了在包内任何一次编译里都不留痕迹,只有站在包外读它的人才看得见。`types` 只有 `xiv-datamine-polyfill/client`,没有 `node` —— 目标代码是浏览器侧的,不装 Node 类型也能编译同样是被检查的事实。
-- `tsconfig.node.json` 管 `vite.config.ts` 与 `test/`,即 Node 侧的全部代码,`xiv-datamine-polyfill/plugin` 的声明在这里被读。它也要求声明干净,所以 `vite.config.ts` 的 `defineConfig` 取自 `vite` 而不是 `vitest/config`:后者会带进一批自身不通过这项检查的第三方声明,把真正要看的东西埋掉,而消费方的构建配置本来也不会带 `test` 段。
+- `tsconfig.node.json` 管 `vite.config.ts` 与 `test/`,即 Node 侧的全部代码,`xiv-datamine-polyfill` 默认入口的声明在这里被读。它也要求声明干净,所以 `vite.config.ts` 的 `defineConfig` 取自 `vite` 而不是 `vitest/config`:后者会带进一批自身不通过这项检查的第三方声明,把真正要看的东西埋掉,而消费方的构建配置本来也不会带 `test` 段。
 
 ## 缓存与模式
 
@@ -51,5 +51,5 @@ rushx format:check   # 另有 format / lint
 
 - 活体腿在 CI 门禁里:`rush rebuild` 会真去下载两张表,`raw.githubusercontent.com` 不可用即门禁红。缓解的改法是给活体腿固定 `ref`,那会让它不再覆盖 `HEAD` 这条路径。
 - 断言只覆盖对桩数据与真实数据同时成立的性质,离线腿的逐格相等除外:两张表在真与桩之间差两个数量级,钉住数字会让活体运行变成第二份数据快照。
-- `xiv-datamine-polyfill/load` 的声明不再被本项目读取:示例消费方不需要在构建期之外取表,那条入口的可达性由包自己的测试负责。
+- `loadTable` 的声明随默认入口一起被读到,但本项目不调用它:示例消费方不需要在构建期之外取表。
 - 本项目在构建图里排在两包之后,它的失败既可能来自"包坏了"也可能来自"消费方视角坏了":前者在包自己的 `rushx build` 里就会复现,后者只有这里能发现。

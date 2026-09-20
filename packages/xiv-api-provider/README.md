@@ -8,15 +8,14 @@ FFXIV 数据源的在线访问层,供本仓库的中文本地化 userscript(`uni
 
 分界与入口的选择见 [docs/providers](docs/providers/README.md);三个 provider 各自的设计见 [xivapi](docs/providers/xivapi.md)、[garlands](docs/providers/garlands.md)、[datamine](docs/providers/datamine.md)。
 
-构建期把某张表固化进产物的做法在另一个包:`xiv-datamine-polyfill` 提供一个 vite 插件,把 `xiv-datamine-polyfill/<Sheet>.csv` 变成生成好的模块,取数与解析用的就是这里的 `datamine`。
+构建期把某张表固化进产物的做法在另一个包:`xiv-datamine-polyfill` 提供一个 vite 插件,把 `xiv-datamine-polyfill/<Sheet>.csv` 变成生成好的模块,取数与解析用的就是这里交出的函数。
 
 ## 用法
 
-按子路径导入,没有汇总入口:
+一个默认入口,导出面按 provider 分组:
 
 ```ts
-import { createXivApiClient } from 'xiv-api-provider/xivapi';
-import { readSheet, useSheetTable } from 'xiv-api-provider/datamine';
+import { createXivApiClient, readSheet, useSheetTable } from 'xiv-api-provider';
 import { origFetch } from './hooks';
 
 const client = createXivApiClient('chinese-server', { language: 'chs', fetch: origFetch });
@@ -26,6 +25,8 @@ const ui = useSheetTable(await readSheet('ItemUICategory', { fetch: origFetch })
 ui.cell(1, 'Name'); // 格斗武器
 ```
 
+三个 provider 都从这里出,用不到的那几个由调用方的打包器删掉:包声明了 `sideEffects: false`,没有命名的导出不进产物,`csv-parse` 也只跟着 `readSheet` 那一条路走。
+
 `readSheet` 交回的是一份纯数据(整张网格,含三行表头),`useSheetTable` 才是有寻址能力的那个对象。不带 `ref` 时取分支头 `HEAD` 的那份文件;要复现同一次构建就写死一个 ref(tag、分支名或 commit sha 都可)。行按位置寻址,`#` 既不递增也不连续,所以按 `#` 查要自己 `new Map([...ui.rows].map((r) => [r[0], r]))`。
 
 `fetch` 必须显式注入的情况:userscript 自己拦截了 `window.fetch`,出站请求要走拦截前的原生 `fetch`,否则会自顶穿过自己的 hook。
@@ -34,17 +35,17 @@ provider 不内置任何一张表的类型:列名与值都照文件原样,含义
 
 ## 校验与测试
 
-zod 是开发依赖,运行产物里只有 `dist/schemas.js` 引用它。需要自带运行时校验的调用方安装 zod 并从 `xiv-api-provider/schemas` 导入,取舍见 [zod 只在开发期](docs/providers/README.md#zod-只在开发期)。
+zod 只在测试里跑:业务代码对各 provider 的 schema 只 `import type`,运行时的判定是 `guards.ts` 里的手写谓词。生成的声明仍以 zod 的类型书写,所以 zod 记在 `dependencies`——消费方读声明时要能解析它,运行时不会 import 它。取舍见 [zod 只在测试里](docs/providers/README.md#zod-只在测试里)。
 
 ```bash
-rushx test              # 离线,CI 门禁;含产物体积、依赖归属与 provider 隔离的判定
+rushx test              # 离线,CI 门禁
 rushx test:live         # 真实打两端 + Garland + 解包仓库,需 XIV_LIVE=1,仅手动
 rushx test:drift        # OpenAPI 漂移报告,同样仅手动
 ```
 
 活体测试有两道闸:`{ tags: ['live'] }` 与 `describe.skipIf(!live)`。只有标签挡不住网络请求——不带 `--tags-filter` 时 vitest 认为所有测试都匹配。`test/providers/*/` 与 `src/providers/*/` 一一对应。
 
-构建产物能否被消费方读懂,分两处守。本包的 `test/dist-budget.spec.ts` 看产物形状:五个子路径各自的 `.js` 与 `.d.ts` 都在、声明里不留 `@/` 也不留指向 `node_modules` 的路径。至于"读不读得懂",那要在包外才看得见:[xiv-datamine-polyfill-e2e-test](../../tests/xiv-datamine-polyfill-e2e-test/README.md) 的 `src/` 按子路径引全部五个入口,它的 `tsconfig.json` 是 `skipLibCheck: false`,随 `rush build` 一起进 CI 门禁。
+交出去的声明能否被读懂,要到包外才看得见:[xiv-datamine-polyfill-e2e-test](../../tests/xiv-datamine-polyfill-e2e-test/README.md) 经 `package.json#exports` 导入这两个包,两份 tsconfig 都是 `skipLibCheck: false`,随 `rush build` 一起进 CI 门禁。
 
 ## 已知问题
 

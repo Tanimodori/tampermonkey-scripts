@@ -1,25 +1,20 @@
-import { iconIdFromImageUrl, siteIconUrl } from 'xiv-api-provider/core';
-import { useSheetTable, type SheetTable } from 'xiv-api-provider/datamine';
-import { garlandDocUrl } from 'xiv-api-provider/garlands';
-import { xivapi as schemas } from 'xiv-api-provider/schemas';
-import { sheetRowUrl } from 'xiv-api-provider/xivapi';
+import { garlandDocUrl, iconIdFromImageUrl, sheetRowUrl, siteIconUrl, useSheetTable, type SheetTable } from 'xiv-api-provider';
 import addon from 'xiv-datamine-polyfill/Addon.csv';
 import itemUICategory from 'xiv-datamine-polyfill/ItemUICategory.csv';
 
 /**
  * The example consumer: what a userscript that wants these two sheets actually writes.
  *
- * Every import goes through the checked package's `package.json#exports` — by subpath, never by a relative
- * path into its source and never through an alias — because the entry map is part of what this project
+ * Every import goes through the checked package's `package.json#exports` — the entry it names, never a
+ * relative path into its source and never an alias — because the entry map is part of what this project
  * checks. Nothing is asserted here: `test/` reads this module back out of `dist/` and does the judging, so
  * what sits below is only what a caller does with the data.
  *
  * The two `.csv` imports are answered by the plugin in `vite.config.ts`, which is what makes this file a
  * build's target code rather than a test's fixture: the grids are already trimmed, and `useSheetTable` is
- * the same reading a caller with a hand-copied table would do. `xiv-api-provider`'s other subpaths are
- * reached from the business functions below — `universalis-zh-data` and `xivanalysis-zh` really do call the
- * icon arithmetic, the link builders and the response schemas — so a consumer touching all five subpaths is
- * a fact about the example rather than a probe written to hold a type check open.
+ * the same reading a caller with a hand-copied table would do. The rest of what a userscript reaches for —
+ * the icon arithmetic, the link builders — comes out of the one entry, so a consumer importing a handful of
+ * names is a fact about the example rather than a probe written to hold a type check open.
  */
 
 /** The host `siteIconUrl` puts the root-relative icon path against; the same one the two userscripts use. */
@@ -82,19 +77,6 @@ export const linksFor = (itemId: number, categoryKey: string): { xivapi: string;
   categoryName: categoryName(categoryKey),
 });
 
-/** A body shaped like `/sheet/Item/19890`'s answer, for the check below to have something to say about. */
-const SAMPLE_ROWS: schemas.RowResult[] = [
-  { row_id: 19890, fields: { Name: 'Cindersaur', 'ItemUICategory@opt': { value: 4, sheet: 'ItemUICategory', row_id: 1, fields: {} } } },
-];
-
-/**
- * Whether the opt-in schema entry still validates a response a caller got.
- *
- * Left as `unknown` rather than typed `schemas.SheetResponse` on purpose: `safeParse` is only worth running
- * if its argument can be wrong, and a literal the type already guarantees is not a verdict.
- */
-export const parseXivapiRows = (payload: unknown): boolean => schemas.sheetResponseSchema.safeParse(payload).success;
-
 /** One sheet as data: the header lines it declares, the rows that survived the rules, and a trimmed subset. */
 export interface SheetSnapshot {
   /** `<Sheet>.csv@<ref>`, carried through from whatever fetched the CSV. */
@@ -120,7 +102,6 @@ export interface ExampleResult {
     /** The two keys the rules asked for, and one they never mentioned. */
     readonly texts: Record<string, string | undefined>;
     readonly links: { xivapi: string; garlands: string; categoryName: string | undefined };
-    readonly xivapiPayloadIsWellFormed: boolean;
   };
 }
 
@@ -150,7 +131,6 @@ export const getData = (): ExampleResult => {
       icons: keys.map((key) => ({ key, ...categoryIconSrc(key) })),
       texts: { '699': addonText('699'), '700': addonText('700'), '999': addonText('999') },
       links: linksFor(19890, '1'),
-      xivapiPayloadIsWellFormed: parseXivapiRows({ schema: 'exdschema@2:rev:9a3f1c', version: '2026092000010000', rows: SAMPLE_ROWS }),
     },
   };
 };

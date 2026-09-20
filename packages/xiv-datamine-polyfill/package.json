@@ -16,13 +16,9 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    "./plugin": {
-      "types": "./dist/plugin.d.ts",
-      "default": "./dist/plugin.js"
-    },
-    "./load": {
-      "types": "./dist/load.d.ts",
-      "default": "./dist/load.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./client": {
       "types": "./client.d.ts"

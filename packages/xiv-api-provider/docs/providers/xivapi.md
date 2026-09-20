@@ -32,7 +32,7 @@
 
 ## 客户端
 
-`createXivApiClient(edition, { fetch, language, timeoutMs })` 只读,`language` 一次性注入到每个需要语言的读取。响应先用 `guards.ts` 的手写谓词确认落在预期信封里,再返回;完整校验是测试期的事,见 [zod 只在开发期](README.md#zod-只在开发期)。
+`createXivApiClient(edition, { fetch, language, timeoutMs })` 只读,`language` 一次性注入到每个需要语言的读取。响应先用 `guards.ts` 的手写谓词确认落在预期信封里,再返回;完整校验是测试期的事,见 [zod 只在测试里](README.md#zod-只在测试里)。
 
 失败统一抛 `ProviderError`,带 `kind`(`http` / `network` / `timeout` / `shape` / `unsupported`)、`provider`、`url`、`status`、`apiCode`。两侧都回答 `{code, message}`,所以 `apiCode` 直接来自服务端。
 

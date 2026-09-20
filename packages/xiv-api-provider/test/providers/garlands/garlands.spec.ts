@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createGarlandClient, garlandDocUrl, garlandHitId, garlandHitKind, garlandLangFor, isGarlandTradeable, looksCjk } from '@/entries/garlands.ts';
-import { garlands as schemas } from '@/schemas.ts';
+import { createGarlandClient, garlandDocUrl, garlandHitId, garlandHitKind, garlandLangFor, isGarlandTradeable, looksCjk } from '@/index.ts';
+import * as schemas from '@/providers/garlands/types/schema.ts';
 
 /**
  * The Garland mirror.

@@ -10,8 +10,9 @@ export default defineConfig({
       // consumer's type check would be a bug in the wrong direction.
       tsconfigPath: 'tsconfig.build.json',
       bundleTypes: true,
-      // `package.json#exports` is hand-maintained: which subpath resolves to which declaration is part of what
-      // `test/dist-budget.spec.ts` and the consumer-side project check, so a build must not rewrite it.
+      // `package.json#exports` is hand-maintained: which subpath resolves to which declaration is part of the
+      // surface this package publishes, so a build must not rewrite it. Whether a consumer can read the result
+      // is checked from outside, by `tests/xiv-datamine-polyfill-e2e-test`.
       insertTypesEntry: false,
     }),
   ],
@@ -26,26 +27,21 @@ export default defineConfig({
     minify: false,
     sourcemap: true,
     lib: {
-      // One entry per subpath in `package.json#exports`, plus `schemas`. There is deliberately no entry that
-      // reaches everything: an aggregation export is what forced every table and every dependency into every
-      // bundle, and `export * as ns` in particular cannot be tree-shaken because the namespace object has to
-      // be materialised. `test/dist-budget.spec.ts` bundles shadow consumers to prove the split holds.
-      entry: {
-        core: resolve(import.meta.dirname, 'src', 'entries', 'core.ts'),
-        xivapi: resolve(import.meta.dirname, 'src', 'entries', 'xivapi.ts'),
-        garlands: resolve(import.meta.dirname, 'src', 'entries', 'garlands.ts'),
-        datamine: resolve(import.meta.dirname, 'src', 'entries', 'datamine.ts'),
-        schemas: resolve(import.meta.dirname, 'src', 'schemas.ts'),
-      },
+      // One entry, one file: `src/index.ts` is the whole surface. Trimming it down to what a particular caller
+      // used is that caller's bundler's job — the package is `sideEffects: false`, so an export nobody names
+      // is deleted along with whatever it reached.
+      entry: { index: resolve(import.meta.dirname, 'src', 'index.ts') },
       formats: ['es'],
     },
     rolldownOptions: {
-      // Neither dependency is inlined, and a consumer resolves them itself: `zod` is a development
-      // dependency that only the `schemas` entry mentions, and `csv-parse` is a runtime dependency that only
-      // the `datamine` entry mentions. `test/dist-budget.spec.ts` keeps both of those "only"s true.
+      // `csv-parse` is imported by the shipped code and is not inlined: the consumer resolves it, which is also
+      // how it ends up in a browser bundle at all. The regex form matters — the import is the `csv-parse/sync`
+      // subpath, and a bare string in `external` would match that one specifier only.
       //
-      // The regex form matters for csv-parse: the import is the `csv-parse/sync` subpath, and a bare string in
-      // `external` matches that one specifier only.
+      // Nothing in `src/index.ts` imports `zod` — it is reachable through `import type` only, and the runtime
+      // checks are `guards.ts`. It is listed anyway because the alternative failure is silent: drop this line,
+      // and the day a value import appears, 47 KB of schema engine is inlined into the entry and the consumer
+      // finds out from a bundle that will not load.
       external: ['zod', /^csv-parse(\/|$)/],
       // Declaration generation is most of this build and always will be; the timing check reads that as a
       // warning, and a warning nobody intends to fix is a warning people learn to ignore.

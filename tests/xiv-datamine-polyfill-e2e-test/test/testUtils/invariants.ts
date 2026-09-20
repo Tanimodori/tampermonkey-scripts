@@ -76,6 +76,4 @@ export const expectSharedShape = (result: ExampleResult): void => {
   const garlands = new URL(result.reads.links.garlands);
   expect(garlands.pathname.endsWith('/db/doc/Item/chs/3/19890.json'), `the mirror names the kind, the locale and the schema: ${garlands.pathname}`).toBe(true);
   expect(result.reads.links.categoryName, 'the category the page would print').toBeTruthy();
-
-  expect(result.reads.xivapiPayloadIsWellFormed, 'the opt-in schema entry rejects a body shaped like one').toBe(true);
 };

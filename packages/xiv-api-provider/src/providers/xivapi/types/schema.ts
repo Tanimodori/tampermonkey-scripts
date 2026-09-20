@@ -4,7 +4,11 @@ import { z } from 'zod';
  * Zod definitions for the xivapi provider, and the only place zod is mentioned in it.
  *
  * Everything here is a **type import** for business code: `import type { RowResponse } from './types/schema.ts'`
- * brings the shape without bringing zod. The schemas themselves are used by tests, which validate
+ * brings the shape without bringing zod into the JavaScript. The generated declarations do spell those shapes
+ * out with zod's own types, which is why zod is a dependency rather than a build tool — a consumer resolves it
+ * when it reads `dist/index.d.ts`, and never at runtime.
+ *
+ * The schemas themselves are used by tests, which validate
  * *returned* values against them — that is where a shape change gets caught. Request parameters are not
  * validated at runtime: a caller passing a bad sheet name is answered by the API's own 404, and re-checking
  * locally would only duplicate that in the bundle.

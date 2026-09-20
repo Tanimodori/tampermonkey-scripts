@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseSheetCsv, useSheetTable, type SheetRawData, type SheetTable, type TrimRules } from 'xiv-api-provider/datamine';
+import { parseSheetCsv, useSheetTable, type SheetRawData, type SheetTable, type TrimRules } from 'xiv-api-provider';
 import { SearchCategory, UICategory } from '../../universalis-zh-data/src/ItemCategory.ts';
 
 /**

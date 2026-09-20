@@ -9,12 +9,13 @@ import { defineConfig } from 'vite';
 const nodeBuiltins = new Set([...builtinModules, ...builtinModules.map((name) => `node:${name}`)]);
 
 /**
- * Two subpaths, one per thing a caller does with a sheet: `./plugin` inside a build, and `./load` outside one.
+ * One entry, one file: `src/index.ts` holds both things a caller does with a sheet — install the plugin in a
+ * build, or take a table outside one.
  *
- * Both entries used to be emitted module-by-module by tsc, which is why `@/` is reserved for `test/` here and
- * every import inside `src/` is relative. Bundling does not change that rule — it just means the declarations
- * are generated in the same pass as the JavaScript, by the same resolver, so a specifier a consumer cannot
- * read has no way to survive into `dist/`.
+ * Every import inside `src/` is relative, which is what keeps the generated declarations free of a specifier
+ * only this package understands; `@/` is reserved for `test/`. That predates the bundling and survives it:
+ * the declarations are now generated in the same pass as the JavaScript, by the same resolver, so a specifier
+ * a consumer cannot read has no way to survive into `dist/`.
  */
 export default defineConfig({
   plugins: [
@@ -34,7 +35,7 @@ export default defineConfig({
     minify: false,
     sourcemap: true,
     lib: {
-      entry: { plugin: resolve(import.meta.dirname, 'src/plugin.ts'), load: resolve(import.meta.dirname, 'src/load.ts') },
+      entry: { index: resolve(import.meta.dirname, 'src/index.ts') },
       formats: ['es'],
     },
     rolldownOptions: {

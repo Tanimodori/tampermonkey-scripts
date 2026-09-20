@@ -3,7 +3,7 @@ import type { ApiErrorResponse, Fields, IconField, RowResult, SheetName } from '
 /**
  * Runtime shape checks for the xivapi provider — hand-written, with no zod in sight.
  *
- * zod is a development dependency here: it validates *returned* values from tests, never at runtime, and
+ * zod never runs here: it validates *returned* values from tests, never at runtime, and
  * it never validates outgoing parameters (a bad sheet name is answered by the API's own 404). What stays
  * in the shipped code is the bare minimum needed to tell one envelope from another and to avoid reading a
  * field that is not there, which is a handful of `typeof` checks rather than a schema engine.

@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import type { FetchLike, SheetRawData, TrimRules } from 'xiv-api-provider/datamine';
+import type { FetchLike, SheetRawData, TrimRules } from 'xiv-api-provider';
 import { contentHash } from './cache.ts';
 
 /**

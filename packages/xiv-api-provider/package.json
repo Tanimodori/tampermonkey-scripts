@@ -16,25 +16,9 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    "./core": {
-      "types": "./dist/core.d.ts",
-      "default": "./dist/core.js"
-    },
-    "./xivapi": {
-      "types": "./dist/xivapi.d.ts",
-      "default": "./dist/xivapi.js"
-    },
-    "./garlands": {
-      "types": "./dist/garlands.d.ts",
-      "default": "./dist/garlands.js"
-    },
-    "./datamine": {
-      "types": "./dist/datamine.d.ts",
-      "default": "./dist/datamine.js"
-    },
-    "./schemas": {
-      "types": "./dist/schemas.d.ts",
-      "default": "./dist/schemas.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -58,8 +42,7 @@
     "typescript": "~5.9.3",
     "unplugin-dts": "^1.1.1",
     "vite": "^8.3.0",
-    "vitest": "^5.0.1",
-    "zod": "^4.6.5"
+    "vitest": "^5.0.1"
   },
   "optionalDependencies": {
     "@oxfmt/binding-win32-x64-msvc": "^0.67.0",
@@ -68,6 +51,7 @@
     "lightningcss-win32-x64-msvc": "^1.33.0"
   },
   "dependencies": {
-    "csv-parse": "^7.0.2"
+    "csv-parse": "^7.0.2",
+    "zod": "^4.6.5"
   }
 }

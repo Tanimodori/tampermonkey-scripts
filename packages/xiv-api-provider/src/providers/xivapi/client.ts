@@ -24,9 +24,9 @@ import type { ApiErrorResponse, Fields, RowResult, SheetName, SheetRow, VersionI
  * lines. It is also required inside a userscript, because a script that intercepts `window.fetch` must not
  * route its own outbound requests through itself — callers pass the pre-patch native fetch.
  *
- * A response is checked with the guards in `./guards.ts`, which is enough to know it is a row of the
- * expected envelope and nothing more. Full validation is a test-time concern; a caller that wants it at
- * runtime installs zod and imports from `xiv-api-provider/schemas` — see `docs/providers/README.md`.
+ * A response is checked with the guards in `./guards.ts`, which is enough to know it is a row of the expected
+ * envelope and nothing more. Full validation is a test-time concern: the zod definitions are applied there,
+ * not on a page.
  */
 
 export interface XivApiClientOptions {

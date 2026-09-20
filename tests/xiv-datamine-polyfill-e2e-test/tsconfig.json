@@ -11,9 +11,10 @@
     "types": ["xiv-datamine-polyfill/client"],
     /*
       The point of the project. `skipLibCheck: true` would let a broken declaration pass: the packages emit
-      `.d.ts` files whose specifiers and re-exports are a property of their build (for `xiv-api-provider`, of
-      `build/finalize-types.ts`), and nothing inside either package checks that a consumer can read them. Here
-      the library files are checked, so a declaration that cannot be resolved fails this compile.
+      `.d.ts` files whose specifiers and re-exports are a property of how they were built (for
+      `xiv-api-provider`, of the declaration step in its `vite.config.ts`), and nothing inside either package
+      checks that a consumer can read them. Here the library files are checked, so a declaration that cannot be
+      resolved fails this compile.
     */
     "skipLibCheck": false,
     "moduleResolution": "bundler",

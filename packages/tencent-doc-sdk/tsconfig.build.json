@@ -1,14 +1,7 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "noEmit": false,
-    "declaration": true,
-    "declarationMap": true,
-    // Only the declarations are emitted here: `vite build` produced `dist/index.js` first, resolving the
-    // `@/…` aliases as it bundled. `build/finalize-types.ts` relativizes what is left in these files.
-    "emitDeclarationOnly": true,
-    "outDir": "dist",
-    "rootDir": "src"
-  },
+  // Not an emit configuration any more: vite bundles the JavaScript and `unplugin-dts` generates the
+  // declarations from it, in the same pass. This file answers a different question — which sources are public
+  // surface — and `tsconfig.json` cannot answer it because it also names `test/` and `vite.config.ts`.
   "include": ["src/**/*.ts"]
 }

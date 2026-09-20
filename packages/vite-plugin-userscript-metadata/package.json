@@ -23,7 +23,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc --noEmit && vite build",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
@@ -38,10 +38,12 @@
     "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.59.1",
     "@types/node": "^22.10.5",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",
     "typescript": "~5.9.3",
+    "unplugin-dts": "^1.1.1",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"
   },

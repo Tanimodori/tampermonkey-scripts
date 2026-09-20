@@ -1,6 +1,7 @@
 {
   "name": "tenhou-pairi-kokei-display",
   "version": "0.1.0",
+  "private": true,
   "description": "Display Kokei percentage of ii-shan-ten in Tenhou-Pairi",
   "keywords": [
     "tenhou",

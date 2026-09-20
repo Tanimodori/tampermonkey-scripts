@@ -9,10 +9,10 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     /* `@/…` is a module under `src/`, `@test/…` one under `test/`; the aliases are declared for vite in
-       vite.config.ts, which is what vitest and the bundle resolve through. The same mapping is repeated
-       in tsconfig.build.json, and `build/finalize-types.ts` turns the aliased specifiers back into
-       relative ones in the emitted declarations — tsc copies non-relative specifiers verbatim, and a
-       consumer package has no idea what `@/` means. */
+       vite.config.ts, which is what vitest and the bundle resolve through, and `tsconfig.build.json` narrows
+       the same mapping to `src/` alone because that is the public surface. Declarations are generated in the
+       bundling pass by `unplugin-dts`, which resolves the aliases itself — a plain tsc emit would copy
+       `@/…` verbatim into a file no consumer can read. */
     "paths": {
       "@/*": ["./src/*"],
       "@test/*": ["./test/*"]

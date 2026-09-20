@@ -1,11 +1,23 @@
 /// <reference types="node" />
 import { resolve } from 'path';
+import dts from 'unplugin-dts/vite';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  plugins: [
+    dts({
+      // Only `src/` is public surface: the default file list comes from `tsconfig.json`, which also names
+      // `test/` and this config file.
+      tsconfigPath: 'tsconfig.build.json',
+      bundleTypes: true,
+      // `main`, `types` and `exports` are hand-maintained; the consumer-side checks read them as authored.
+      insertTypesEntry: false,
+    }),
+  ],
   // The package is a library other packages import, so `dist/` is a bundle rather than a per-module tsc
-  // emit. That is what makes `@/…` usable throughout `src/`: the alias is resolved here and disappears
-  // from the output. Declarations are emitted separately by tsc and fixed up by `build/finalize-types.ts`.
+  // emit. That is what makes `@/…` usable throughout `src/`: the alias is resolved here and disappears from
+  // the output — and the declarations come out of the same pass for the same reason, which is what the
+  // separate tsc emit needed a repair script for.
   build: {
     outDir: resolve(import.meta.dirname, 'dist'),
     emptyOutDir: true,

@@ -112,6 +112,55 @@ describe('entry surface', () => {
   });
 });
 
+const declarationFiles = (dir: string): string[] => {
+  const out: string[] = [];
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) out.push(...declarationFiles(full));
+    else if (/\.d\.(m|c)?ts$/.test(entry)) out.push(full);
+  }
+  return out;
+};
+
+/**
+ * The declarations are the half a consumer's type check reads, and the half that can break without any
+ * consumer noticing: an alias left in a re-export resolves for this package and for nobody else, so the
+ * generating step is guarded here rather than repaired afterwards.
+ */
+describe.skipIf(!built)('declarations', () => {
+  it('emits one file per exported subpath and nothing else', () => {
+    const emitted = declarationFiles(DIST)
+      .map((file) => relative(DIST, file).replace(/\\/g, '/'))
+      .sort();
+    const mapped = Object.entries(packageJson.exports)
+      .filter(([subpath]) => subpath !== './package.json')
+      .map(([, targets]) => targets.types.replace(/^\.\/dist\//, ''))
+      .sort();
+    expect(emitted, 'a declaration no subpath exports is either a leaked test file or an orphan').toEqual(mapped);
+  });
+
+  /** The module specifiers a declaration names — the only part a consumer's resolver ever looks at. */
+  const specifiersOf = (text: string): string[] =>
+    [...text.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g), ...text.matchAll(/\bimport\s*\(\s*['"]([^'"]+)['"]/g)].map((match) => match[1] as string);
+
+  it('names no specifier a consumer cannot resolve', () => {
+    for (const file of declarationFiles(DIST)) {
+      const name = relative(DIST, file).replace(/\\/g, '/');
+      const specifiers = specifiersOf(readFileSync(file, 'utf8'));
+      // A leftover `@/…` resolves for this package and for nobody else, and a path into `node_modules` names
+      // an install layout rather than a dependency. Comments may mention both words, so only specifiers count.
+      expect(
+        specifiers.filter((specifier) => specifier.startsWith('@/')),
+        `${name} keeps an internal alias`,
+      ).toEqual([]);
+      expect(
+        specifiers.filter((specifier) => specifier.includes('node_modules')),
+        `${name} reaches into node_modules`,
+      ).toEqual([]);
+    }
+  });
+});
+
 /** What a consumer of one subpath ships: the entry plus every chunk it imports, transitively. */
 const closureBytes = (entry: string): { total: number; files: string[] } => {
   const byName = new Map(artefacts.map((artefact) => [artefact.name, artefact.text]));

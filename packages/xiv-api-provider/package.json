@@ -17,19 +17,19 @@
   "sideEffects": false,
   "exports": {
     "./core": {
-      "types": "./dist/entries/core.d.ts",
+      "types": "./dist/core.d.ts",
       "default": "./dist/core.js"
     },
     "./xivapi": {
-      "types": "./dist/entries/xivapi.d.ts",
+      "types": "./dist/xivapi.d.ts",
       "default": "./dist/xivapi.js"
     },
     "./garlands": {
-      "types": "./dist/entries/garlands.d.ts",
+      "types": "./dist/garlands.d.ts",
       "default": "./dist/garlands.js"
     },
     "./datamine": {
-      "types": "./dist/entries/datamine.d.ts",
+      "types": "./dist/datamine.d.ts",
       "default": "./dist/datamine.js"
     },
     "./schemas": {
@@ -39,7 +39,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "vite build && tsc -p tsconfig.build.json && tsx build/finalize-types.ts",
+    "build": "tsc --noEmit && vite build",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
@@ -49,12 +49,14 @@
     "test:drift": "cross-env XIV_LIVE=1 vitest run test/live"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.59.1",
     "@types/node": "^22.10.5",
     "cross-env": "^10.1.0",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",
     "tsx": "^4.19.2",
     "typescript": "~5.9.3",
+    "unplugin-dts": "^1.1.1",
     "vite": "^8.3.0",
     "vitest": "^5.0.1",
     "zod": "^4.6.5"

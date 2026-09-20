@@ -12,9 +12,9 @@
     "skipLibCheck": true,
 
     /* `@/…` is a module under `src/`, `@test/…` one under `test/`; the aliases are declared for vite in
-       vite.config.ts, which is what vitest and the bundle resolve through. `build/finalize-types.ts` turns
-       the aliased specifiers back into relative ones in the emitted declarations — tsc copies non-relative
-       specifiers verbatim, and a consumer package has no idea what `@/` means. */
+       vite.config.ts, which is what vitest and the bundle resolve through. `unplugin-dts` resolves them the
+       same way while it generates the declarations, so nothing a consumer cannot read reaches `dist/` — the
+       alias is affordable here precisely because a bundler, and not `tsc`, emits this package. */
     "paths": {
       "@/*": ["./src/*"],
       "@test/*": ["./test/*"]

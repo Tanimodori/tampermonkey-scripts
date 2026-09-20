@@ -1,12 +1,25 @@
 /// <reference types="node" />
 import { resolve } from 'path';
+import dts from 'unplugin-dts/vite';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  plugins: [
+    dts({
+      // Only `src/` is public surface: `tsconfig.json` also names `test/`, and a spec that reached a
+      // consumer's type check would be a bug in the wrong direction.
+      tsconfigPath: 'tsconfig.build.json',
+      bundleTypes: true,
+      // `package.json#exports` is hand-maintained: which subpath resolves to which declaration is part of what
+      // `test/dist-budget.spec.ts` and the consumer-side project check, so a build must not rewrite it.
+      insertTypesEntry: false,
+    }),
+  ],
   // The package is a library other packages import, so each entry in `dist/` is a bundle rather than a
   // per-module tsc emit. That is what makes `@/…` usable throughout `src/`: the alias is resolved here and
-  // disappears from the output. Declarations are emitted separately by tsc and fixed up by
-  // `build/finalize-types.ts`.
+  // disappears from the output. The declarations come out of the same pass and for the same reason —
+  // `unplugin-dts` resolves `paths` while generating them, so an alias a consumer cannot read never reaches
+  // `dist/`, which is what the separate tsc emit used to need a repair script for.
   build: {
     outDir: resolve(import.meta.dirname, 'dist'),
     emptyOutDir: true,
@@ -34,6 +47,9 @@ export default defineConfig({
       // The regex form matters for csv-parse: the import is the `csv-parse/sync` subpath, and a bare string in
       // `external` matches that one specifier only.
       external: ['zod', /^csv-parse(\/|$)/],
+      // Declaration generation is most of this build and always will be; the timing check reads that as a
+      // warning, and a warning nobody intends to fix is a warning people learn to ignore.
+      checks: { pluginTimings: false },
       output: { entryFileNames: '[name].js' },
     },
   },

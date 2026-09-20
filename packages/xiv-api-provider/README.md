@@ -44,7 +44,7 @@ rushx test:drift        # OpenAPI 漂移报告,同样仅手动
 
 活体测试有两道闸:`{ tags: ['live'] }` 与 `describe.skipIf(!live)`。只有标签挡不住网络请求——不带 `--tags-filter` 时 vitest 认为所有测试都匹配。`test/providers/*/` 与 `src/providers/*/` 一一对应。
 
-构建产物能否被消费方按子路径解析,不在本包里检查:`build/finalize-types.ts` 把声明里的 `@/` 还原成相对路径,这一步坏了要在包外才看得见。包外的那道检查住在 [xiv-datamine-polyfill-e2e-test](../../tests/xiv-datamine-polyfill-e2e-test/README.md):那个项目的 `src/` 按子路径引全部五个入口,它的 `tsconfig.json` 是 `skipLibCheck: false`,随 `rush build` 一起进 CI 门禁。
+构建产物能否被消费方读懂,分两处守。本包的 `test/dist-budget.spec.ts` 看产物形状:五个子路径各自的 `.js` 与 `.d.ts` 都在、声明里不留 `@/` 也不留指向 `node_modules` 的路径。至于"读不读得懂",那要在包外才看得见:[xiv-datamine-polyfill-e2e-test](../../tests/xiv-datamine-polyfill-e2e-test/README.md) 的 `src/` 按子路径引全部五个入口,它的 `tsconfig.json` 是 `skipLibCheck: false`,随 `rush build` 一起进 CI 门禁。
 
 ## 已知问题
 

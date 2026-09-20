@@ -1,12 +1,7 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "noEmit": false,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "rootDir": "src"
-  },
+  // Not an emit configuration any more: vite bundles the JavaScript and `unplugin-dts` generates the
+  // declarations from it. This file is the answer to a different question — which sources are public surface —
+  // and `tsconfig.json` cannot answer it because it also names `test/`.
   "include": ["src/**/*.ts"]
 }

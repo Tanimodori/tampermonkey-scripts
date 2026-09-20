@@ -14,7 +14,7 @@
 
 两份都 `skipLibCheck: false`,也就是都去检查读到的 `.d.ts` 的内容本身,而不只是解析它:
 
-- `tsconfig.json` 只管 `src/`。包里交出去的声明是构建的性质:`xiv-api-provider` 的 `build/finalize-types.ts` 把声明里的 `@/` 还原成相对路径,那一步坏了在包内任何一次编译里都不留痕迹,只有站在包外读它的人才看得见。`types` 只有 `xiv-datamine-polyfill/client`,没有 `node` —— 目标代码是浏览器侧的,不装 Node 类型也能编译同样是被检查的事实。
+- `tsconfig.json` 只管 `src/`。包里交出去的声明是构建的性质:`xiv-api-provider` 的 `.d.ts` 由 `unplugin-dts` 在打包那一步生成、说明符由它解析,那一步坏了在包内任何一次编译里都不留痕迹,只有站在包外读它的人才看得见。`types` 只有 `xiv-datamine-polyfill/client`,没有 `node` —— 目标代码是浏览器侧的,不装 Node 类型也能编译同样是被检查的事实。
 - `tsconfig.node.json` 管 `vite.config.ts` 与 `test/`,即 Node 侧的全部代码,`xiv-datamine-polyfill/plugin` 的声明在这里被读。它也要求声明干净,所以 `vite.config.ts` 的 `defineConfig` 取自 `vite` 而不是 `vitest/config`:后者会带进一批自身不通过这项检查的第三方声明,把真正要看的东西埋掉,而消费方的构建配置本来也不会带 `test` 段。
 
 ## 缓存与模式

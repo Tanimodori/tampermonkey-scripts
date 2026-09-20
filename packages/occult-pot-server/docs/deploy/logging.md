@@ -18,7 +18,7 @@
 
 - stdout 与 stderr：应用始终输出，`info` 及以下写 stdout，`warning` 及以上写 stderr，`docker compose logs` 读的就是它。
 - 文件：配置 `OPS_LOG_FILE_PATH` 或 `OPS_LOG_ROTATING_FILE_PATH` 之一，两者互斥；生产使用轮转文件，写入 `logs/occult-pot-server.log`。
-- nginx 的访问日志：写入 `logs/nginx-access.log`，由 fail2ban 与 logrotate 读取，两者的安装步骤见 [部署与运维](setup.md)。
+- nginx 的访问日志：写入 `logs/nginx-access.log`，由 fail2ban 与 logrotate 读取，两者的安装步骤见 [部署与运维](deployment.md)。
 
 日志路径不可写时服务在启动阶段退出。
 

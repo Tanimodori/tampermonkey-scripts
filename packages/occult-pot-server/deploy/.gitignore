@@ -1,4 +1,4 @@
-# The outputs of "rush deploy" (see docs/deploy/setup.md): the deployment folder the image is built
+# The outputs of "rush deploy" (see docs/deploy/deployment.md): the deployment folder the image is built
 # from, and the archive that gets copied to the server. Both are build artifacts, never committed.
 server/
 occult-pot-server.zip

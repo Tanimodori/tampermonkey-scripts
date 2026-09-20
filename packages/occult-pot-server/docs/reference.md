@@ -68,4 +68,5 @@
 - [Pot 数据](data/pot.md)与[存储设计](data/store.md)
 - [API 端点](api/endpoints.md)、[错误处理](api/errors.md)与[与腾讯文档通讯](api/upstream/README.md)（其下按领域分为[子表](api/upstream/file.md)、[记录](api/upstream/record.md)、[凭据](api/upstream/token.md)）
 - [本地开发](development.md)：运行前置、环境文件、测试与检查命令
-- [部署与运维](deploy/setup.md)、[日志](deploy/logging.md)、[限速](deploy/rate-limit.md)与[监控](deploy/monitoring.md)
+- [运行环境](deploy/setup.md)、[部署与运维](deploy/deployment.md)、[日志](deploy/logging.md)与[限速](deploy/rate-limit.md)
+- [指标](deploy/metrics.md)与[Grafana 面板](deploy/grafana.md)

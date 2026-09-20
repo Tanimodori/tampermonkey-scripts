@@ -23,7 +23,7 @@
 
 ## fail2ban
 
-jail 与过滤规则在 `fail2ban/` 下，读 `logs/nginx-access.log`，动作是 `iptables-allports[chain="DOCKER-USER"]`：发布端口的流量走 FORWARD，只有这条链上的规则才真的丢弃。它不随容器启动，装在宿主机上（安装、核对与手工封禁的步骤见 [部署与运维](setup.md)）；与容器之间只有日志目录这一处交界。
+jail 与过滤规则在 `fail2ban/` 下，读 `logs/nginx-access.log`，动作是 `iptables-allports[chain="DOCKER-USER"]`：发布端口的流量走 FORWARD，只有这条链上的规则才真的丢弃。它不随容器启动，装在宿主机上（安装、核对与手工封禁的步骤见 [部署与运维](deployment.md)）；与容器之间只有日志目录这一处交界。
 
 它覆盖的是 nginx 与应有限流都放过的部分：低于速率、但一直在请求不存在路径的扫描。代价是判定有延迟（10 分钟窗口），且依赖访问日志里 `status` 字段的位置——`log_format` 把 `status` 排在 `uri` 之前，规则才不受 URI 里转义引号的影响。
 

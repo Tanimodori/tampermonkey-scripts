@@ -1,7 +1,5 @@
 # 编排
 
-# 编排
-
 [`docker-compose.yml`](../../deploy/docker-compose.yml) 的可配置项，以及几个变量在容器之间的去向。`OPS_COMPOSE_*` 只有 compose 用得到，名字不会进入任何容器。
 
 ## OPS_ENV_PATH
@@ -38,7 +36,7 @@
 
 - 类型：`字符串`
 - 默认值：`无（必填）`
-- Grafana 管理员账号的密码，只在账号第一次创建时生效：之后改这个变量不会改掉已有密码，轮换要用界面里的「修改密码」，或者执行 `docker compose exec grafana grafana cli --homepath /usr/share/grafana admin reset-admin-password`。没配时容器拒绝启动，而不是退回 `admin`/`admin`。
+- Grafana 管理员账号的密码。没配时容器拒绝启动，而不是退回 `admin`/`admin`；它只在账号第一次创建时生效，之后的轮换见 [运行环境](../deploy/setup.md)。
 
 ## GF_SECURITY_ADMIN_USER
 

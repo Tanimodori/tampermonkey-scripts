@@ -29,7 +29,7 @@ rushx test    # 依次运行单元测试、Redis 测试、真实腾讯文档测�
 
 ## 部署
 
-完整的打包与部署流程、服务器目录与运维命令见 [部署与运维](docs/deploy/setup.md)。要点：
+完整的打包与部署流程、服务器目录与运维命令见 [部署与运维](docs/deploy/deployment.md)。要点：
 
 - 镜像不构建、不联网，只把 `rush deploy` 的产物解到 `/app`：先在开发机打包，再把产物交给服务器，服务器不需要仓库源码与 Node 工具链。
 - 产物必须先传到服务器解压再构建，因为 Docker 不解压 zip；更新时 compose 需要带 `--build`，否则会复用已有镜像。
@@ -48,7 +48,7 @@ rushx test    # 依次运行单元测试、Redis 测试、真实腾讯文档测�
 | `nginx-exporter`    | `nginx/nginx-prometheus-exporter:1.5.3`   |
 | `node-exporter`     | `prom/node-exporter:v1.12.1`              |
 
-后五个属于 `stats` profile，默认不启动。对外只有 nginx 发布端口，其余容器的端口与发布方式见 [配置：编排](docs/config/compose.md)，三层限速见下表；TLS 在更前面的一层终止。多实例部署的边界见 [存储设计](docs/data/store.md)。
+后五个属于 `stats` profile，默认不启动。对外只有 nginx 发布端口，其余容器的端口与发布方式见 [运行环境](docs/deploy/setup.md)，三层限速见下表；TLS 在更前面的一层终止。多实例部署的边界见 [存储设计](docs/data/store.md)。
 
 ## 日志
 
@@ -56,17 +56,19 @@ rushx test    # 依次运行单元测试、Redis 测试、真实腾讯文档测�
 
 ## 文档
 
-| 文档                                          | 内容                               |
-| --------------------------------------------- | ---------------------------------- |
-| [Pot 数据](docs/data/pot.md)                  | 表格的列、刷新周期、清洗规则       |
-| [存储设计](docs/data/store.md)                | 缓存与回退行为、多实例边界         |
-| [API 端点](docs/api/endpoints.md)             | 端点、请求与响应约定、限流         |
-| [错误处理](docs/api/errors.md)                | 响应信封、错误码与状态码           |
-| [与腾讯文档通讯](docs/api/upstream/README.md) | 文档坐标、上游限制、凭据生命周期   |
-| [配置](docs/config/README.md)                 | 全部配置项的类型、默认值与含义     |
-| [日志](docs/deploy/logging.md)                | 记录格式、去处、级别、脱敏与轮转   |
-| [限速](docs/deploy/rate-limit.md)             | nginx、应用与 fail2ban 三层限速    |
-| [监控](docs/deploy/monitoring.md)             | `stats` profile、端口、指标与访问  |
-| [部署与运维](docs/deploy/setup.md)            | 打包、部署、迁移与对外暴露面       |
-| [本地开发](docs/development.md)               | 运行前置、环境文件、测试与检查命令 |
-| [外部文档](docs/reference.md)                 | 依赖库与工具的官方链接             |
+| 文档                                          | 内容                                 |
+| --------------------------------------------- | ------------------------------------ |
+| [Pot 数据](docs/data/pot.md)                  | 表格的列、刷新周期、清洗规则         |
+| [存储设计](docs/data/store.md)                | 缓存与回退行为、多实例边界           |
+| [API 端点](docs/api/endpoints.md)             | 端点、请求与响应约定、限流           |
+| [错误处理](docs/api/errors.md)                | 响应信封、错误码与状态码             |
+| [与腾讯文档通讯](docs/api/upstream/README.md) | 文档坐标、上游限制、凭据生命周期     |
+| [配置](docs/config/README.md)                 | 全部配置项的类型、默认值与含义       |
+| [运行环境](docs/deploy/setup.md)              | compose 构成、端口、启停、访问与排错 |
+| [日志](docs/deploy/logging.md)                | 记录格式、去处、级别、脱敏与轮转     |
+| [限速](docs/deploy/rate-limit.md)             | nginx、应用与 fail2ban 三层限速      |
+| [指标](docs/deploy/metrics.md)                | 各数据来源提供的指标、类型与含义     |
+| [Grafana 面板](docs/deploy/grafana.md)        | 面板的分组与每块的表达式             |
+| [部署与运维](docs/deploy/deployment.md)       | 打包、部署、迁移与对外暴露面         |
+| [本地开发](docs/development.md)               | 运行前置、环境文件、测试与检查命令   |
+| [外部文档](docs/reference.md)                 | 依赖库与工具的官方链接               |

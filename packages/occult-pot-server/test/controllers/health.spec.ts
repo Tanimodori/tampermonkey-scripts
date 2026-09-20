@@ -1,37 +1,21 @@
-import { callsMatching, docs, NOW, startApp } from '@test/testUtils/app.ts';
+import { callsOf, NOW, startApp } from '@test/testUtils/app.ts';
 import { clock } from '@test/testUtils/clock.ts';
-import { lazyTransport } from '@test/testUtils/helpers.ts';
+import { credentialExpires } from '@test/testUtils/fakeDocument.ts';
 /**
  * @module-tag redis
  */
 import { describe, expect, it, vi } from 'vitest';
-import type { ClientOptions } from '@/services/upstream/client.ts';
 
 // Every module under test reads the time through `@/services/time.ts`, which this replaces with
 // `@test/testUtils/clock.ts`.
 vi.mock('@/services/time.ts', () => import('@test/testUtils/clock.ts'));
 
-/**
- * What the production modules reach the upstream with: the no-argument `getClient()`. The transport
- * is built on first call — over the bare mock transport, so everything above it is the production path —
- * and by then the case has loaded the configuration it reads.
- */
-const transport = lazyTransport(docs);
-
-vi.mock('@/services/upstream/client.ts', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/services/upstream/client.ts')>();
-  return { ...actual, getClient: (options?: ClientOptions) => (options === undefined ? (transport() as never) : actual.getClient(options)) };
+// The upstream fake stands in for the library's two factories. `vi.mock` is hoisted above the
+// imports, so the fake is reached with a dynamic import: a static one would not be initialized yet.
+vi.mock('tencent-doc-sdk', async (importOriginal) => {
+  const { fakeTencentDocsModule } = await import('@test/testUtils/fakeDocument.ts');
+  return fakeTencentDocsModule(await importOriginal<typeof import('tencent-doc-sdk')>());
 });
-
-/** A JWT-shaped token whose payload anyone can read — this service never verifies the signature. */
-function encodeSegment(payload: Record<string, unknown>): string {
-  return Buffer.from(JSON.stringify(payload), 'utf8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-/** A token whose expiry is `seconds` away from the pinned instant the fixtures are written against. */
-function makeTokenExpiringIn(seconds: number): string {
-  return `${encodeSegment({ alg: 'HS256', typ: 'JWT' })}.${encodeSegment({ exp: Math.round(NOW / 1000) + seconds })}.signature`;
-}
 
 /**
  * The probes, `src/controllers/health.ts`: liveness that touches nothing, and readiness that answers
@@ -47,7 +31,7 @@ describe('GET /healthz, /readyz', () => {
     const response = await client.get('/healthz').expect(200);
     expect((response.body as { data: { status: string } }).data.status).toBe('ok');
     // Startup resolves the document, so what matters is that the probe itself calls nothing.
-    expect(callsMatching('getRecords')).toHaveLength(0);
+    expect(callsOf('getRecords')).toHaveLength(0);
   });
 
   it('answers readiness with the status and nothing else', async () => {
@@ -69,8 +53,9 @@ describe('GET /healthz, /readyz', () => {
   });
 
   it('answers offline with 503 once the credential is unusable', async () => {
-    // A token that is still valid when the app starts, and expired by the time the probe asks.
-    const { client } = await startApp({ OPS_DOCS_ACCESS_TOKEN: makeTokenExpiringIn(60) });
+    // A credential that is still valid when the app starts, and expired by the time the probe asks.
+    const { client } = await startApp();
+    credentialExpires(NOW + 60_000);
     clock.set(NOW + 120_000);
 
     const response = await client.get('/readyz').expect(503);
@@ -78,7 +63,8 @@ describe('GET /healthz, /readyz', () => {
   });
 
   it('records the reason once per transition, not once per poll', async () => {
-    const { client, logs } = await startApp({ OPS_DOCS_ACCESS_TOKEN: makeTokenExpiringIn(60) });
+    const { client, logs } = await startApp();
+    credentialExpires(NOW + 60_000);
 
     await client.get('/readyz').expect(200);
     await client.get('/readyz').expect(200);

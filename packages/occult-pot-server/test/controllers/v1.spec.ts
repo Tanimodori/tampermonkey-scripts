@@ -1,31 +1,25 @@
-import { callsMatching, docs, NOW, startApp } from '@test/testUtils/app.ts';
-import { lazyTransport, sheetInstant } from '@test/testUtils/helpers.ts';
+import { callsOf, NOW, sheet, startApp } from '@test/testUtils/app.ts';
+import { sheetInstant } from '@test/testUtils/helpers.ts';
 /**
  * @module-tag redis
  */
 import { describe, expect, it, vi } from 'vitest';
-import type { ClientOptions } from '@/services/upstream/client.ts';
 import type { Pot } from '@/validation/index.ts';
 
 // Every module under test reads the time through `@/services/time.ts`, which this replaces with
 // `@test/testUtils/clock.ts`.
 vi.mock('@/services/time.ts', () => import('@test/testUtils/clock.ts'));
 
-/**
- * What the production modules reach the upstream with: the no-argument `getClient()`. The transport
- * is built on first call — over the bare mock transport, so everything above it is the production path —
- * and by then the case has loaded the configuration it reads.
- */
-const transport = lazyTransport(docs);
-
-vi.mock('@/services/upstream/client.ts', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/services/upstream/client.ts')>();
-  return { ...actual, getClient: (options?: ClientOptions) => (options === undefined ? (transport() as never) : actual.getClient(options)) };
+// The upstream fake stands in for the library's two factories. `vi.mock` is hoisted above the
+// imports, so the fake is reached with a dynamic import: a static one would not be initialized yet.
+vi.mock('tencent-doc-sdk', async (importOriginal) => {
+  const { fakeTencentDocsModule } = await import('@test/testUtils/fakeDocument.ts');
+  return fakeTencentDocsModule(await importOriginal<typeof import('tencent-doc-sdk')>());
 });
 
 /**
  * The versioned surface, `src/controllers/v1/index.ts`: the index, the two reads, the write, and the
- * 404/405 this router answers itself. The harness (fixture sheet, mock upstream, server per case)
+ * 404/405 this router answers itself. The harness (fixture sheet, upstream fake, server per case)
  * comes from `@test/testUtils/app.ts`.
  */
 
@@ -95,8 +89,8 @@ describe('GET /api/v1/pots', () => {
 
     // One delete call, carrying the stale row and the two unusable ones, and they are gone from the
     // sheet afterwards — not merely filtered out of the answer.
-    expect(docs.state.deleted).toEqual(expect.arrayContaining(['rStale', 'rBad', 'rZero']));
-    expect(docs.state.records.map((record) => record.recordID)).not.toEqual(expect.arrayContaining(['rStale', 'rBad', 'rZero']));
+    expect(sheet.deleted).toEqual(expect.arrayContaining(['rStale', 'rBad', 'rZero']));
+    expect(sheet.records.map((record) => record.recordID)).not.toEqual(expect.arrayContaining(['rStale', 'rBad', 'rZero']));
   });
 
   it('serves the cache: a second read does not touch the upstream', async () => {
@@ -105,12 +99,12 @@ describe('GET /api/v1/pots', () => {
     await client.get('/api/v1/pots').expect(200);
     await client.get('/api/v1/pots').expect(200);
 
-    expect(callsMatching('getRecords')).toHaveLength(1);
+    expect(callsOf('getRecords')).toHaveLength(1);
   });
 
   it('propagates an upstream read failure instead of returning an empty list', async () => {
     const { client, logs } = await startApp();
-    docs.state.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
+    sheet.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
 
     const response = await client.get('/api/v1/pots').expect(502);
     expect((response.body as { code: string }).code).toBe('ERR_UPSTREAM_FAILED');
@@ -158,8 +152,8 @@ describe('POST /api/v1/pots', () => {
       lastVisitAtMs: NOW,
     });
     // The row reached the sheet before the response did; there is no queue behind this.
-    expect(docs.state.added).toHaveLength(1);
-    expect(docs.state.added[0]).toEqual({
+    expect(sheet.added).toHaveLength(1);
+    expect(sheet.added[0]).toEqual({
       区服: [{ type: 'text', text: '鸟' }],
       地图: [{ type: 'text', text: '北岛' }],
       ID: [{ type: 'text', text: '60-0-4000ABCD' }],
@@ -178,19 +172,19 @@ describe('POST /api/v1/pots', () => {
     expect(list.data.filter((pot) => pot.potId === '60-0-4000ABCD')).toHaveLength(1);
     // Folded into the cached list, so the second read is answered from Redis; the one extra read is
     // the write's own look at the sheet, which is how it knows this pot has no row yet.
-    expect(callsMatching('getRecords')).toHaveLength(2);
+    expect(callsOf('getRecords')).toHaveLength(2);
   });
 
   it('fails the request when the sheet refuses the write, and leaves the list alone', async () => {
     const { client, logs } = await startApp();
     await client.get('/api/v1/pots').expect(200);
-    docs.state.writeFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
+    sheet.writeFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
 
     const response = await client.post('/api/v1/pots').send(newPot).expect(503);
     expect((response.body as { code: string }).code).toBe('ERR_UPSTREAM_RATE_LIMITED');
 
     // Nothing was written and nothing is served: the caller's failure is the whole story.
-    expect(docs.state.added).toHaveLength(0);
+    expect(sheet.added).toHaveLength(0);
     const list = (await client.get('/api/v1/pots').expect(200)).body as { data: Pot[] };
     expect(list.data.some((pot) => pot.potId === '60-0-4000ABCD')).toBe(false);
     expect(logs.find((entry) => entry.message === 'Request failed')?.code).toBe('ERR_UPSTREAM_RATE_LIMITED');
@@ -213,7 +207,7 @@ describe('POST /api/v1/pots', () => {
       .send({ ...newPot, map: 0 })
       .expect(400);
 
-    expect(docs.state.added).toHaveLength(0);
+    expect(sheet.added).toHaveLength(0);
   });
 
   it('accepts a string epoch and passes the exact integer through', async () => {
@@ -224,8 +218,8 @@ describe('POST /api/v1/pots', () => {
       .send({ world: '猫', map: '南岛', potId: '61-1-4000FFFF', northRefreshAt: String(sheetInstant('2026-09-12 16:30')), lastVisitAt: String(NOW) })
       .expect(200);
 
-    expect(docs.state.added[0]?.['北罐刷新时间']).toBe(String(sheetInstant('2026-09-12 16:30')));
-    expect(docs.state.added[0]?.['最后一次进岛时间']).toBe(String(NOW));
+    expect(sheet.added[0]?.['北罐刷新时间']).toBe(String(sheetInstant('2026-09-12 16:30')));
+    expect(sheet.added[0]?.['最后一次进岛时间']).toBe(String(NOW));
   });
 
   it('accepts a numeric epoch and passes the exact integer through', async () => {
@@ -238,8 +232,8 @@ describe('POST /api/v1/pots', () => {
       .send({ ...newPot, northRefreshAt: north, lastVisitAt: NOW })
       .expect(200);
 
-    expect(docs.state.added[0]?.['北罐刷新时间']).toBe(String(north));
-    expect(docs.state.added[0]?.['最后一次进岛时间']).toBe(String(NOW));
+    expect(sheet.added[0]?.['北罐刷新时间']).toBe(String(north));
+    expect(sheet.added[0]?.['最后一次进岛时间']).toBe(String(NOW));
   });
 
   it('accepts one epoch as a number and the other as a string', async () => {
@@ -250,7 +244,7 @@ describe('POST /api/v1/pots', () => {
       .send({ ...newPot, lastVisitAt: String(NOW) })
       .expect(200);
 
-    expect(docs.state.added[0]?.['北罐刷新时间']).toBe(String(sheetInstant('2026-09-12 16:20')));
+    expect(sheet.added[0]?.['北罐刷新时间']).toBe(String(sheetInstant('2026-09-12 16:20')));
   });
 
   it('tolerates surrounding whitespace in a string epoch', async () => {
@@ -261,7 +255,7 @@ describe('POST /api/v1/pots', () => {
       .send({ ...newPot, northRefreshAt: ` ${sheetInstant('2026-09-12 16:20')} ` })
       .expect(200);
 
-    expect(docs.state.added[0]?.['北罐刷新时间']).toBe(String(sheetInstant('2026-09-12 16:20')));
+    expect(sheet.added[0]?.['北罐刷新时间']).toBe(String(sheetInstant('2026-09-12 16:20')));
   });
 
   it('does not parse date or time strings', async () => {
@@ -284,7 +278,7 @@ describe('POST /api/v1/pots', () => {
       .send({ ...newPot, lastVisitAt: '16:20' })
       .expect(400);
 
-    expect(docs.state.added).toHaveLength(0);
+    expect(sheet.added).toHaveLength(0);
   });
 
   it('rejects epochs of the wrong length or precision', async () => {
@@ -314,7 +308,7 @@ describe('POST /api/v1/pots', () => {
       expect((response.body as { message: string }).message).toContain('northRefreshAt');
     }
 
-    expect(docs.state.added).toHaveLength(0);
+    expect(sheet.added).toHaveLength(0);
   });
 
   it('requires both instants — the server never substitutes its own clock', async () => {
@@ -347,7 +341,7 @@ describe('POST /api/v1/pots', () => {
       .send({ ...newPot, northRefreshAt: '' })
       .expect(400);
 
-    expect(docs.state.added).toHaveLength(0);
+    expect(sheet.added).toHaveLength(0);
   });
 
   it('updates the row the sheet already carries instead of adding a second one', async () => {
@@ -361,10 +355,10 @@ describe('POST /api/v1/pots', () => {
 
     // `54-1-4000E8F3` is a pot the sheet already carries, so the row it lives in is rewritten and no
     // second row appears: the key is the combination the document is expected to hold once.
-    expect(docs.state.added).toHaveLength(0);
-    expect(docs.state.updated).toHaveLength(1);
-    expect(docs.state.updated[0]?.recordID).toBe('rA');
-    expect(docs.state.records.filter((record) => JSON.stringify(record.values).includes('54-1-4000E8F3'))).toHaveLength(1);
+    expect(sheet.added).toHaveLength(0);
+    expect(sheet.updated).toHaveLength(1);
+    expect(sheet.updated[0]?.recordID).toBe('rA');
+    expect(sheet.records.filter((record) => JSON.stringify(record.values).includes('54-1-4000E8F3'))).toHaveLength(1);
   });
 
   it('turns a repeated upload into one row and one served pot', async () => {
@@ -381,9 +375,9 @@ describe('POST /api/v1/pots', () => {
       .expect(200);
 
     // One append, then one update of that same row: the repeat is the same pot, not a second one.
-    expect(docs.state.added).toHaveLength(1);
-    expect(docs.state.updated).toHaveLength(1);
-    expect(docs.state.records.filter((record) => JSON.stringify(record.values).includes('64-0-40004444'))).toHaveLength(1);
+    expect(sheet.added).toHaveLength(1);
+    expect(sheet.updated).toHaveLength(1);
+    expect(sheet.records.filter((record) => JSON.stringify(record.values).includes('64-0-40004444'))).toHaveLength(1);
 
     const list = (await client.get('/api/v1/pots').expect(200)).body as { data: Pot[] };
     const written = list.data.filter((pot) => pot.potId === '64-0-40004444');
@@ -421,7 +415,7 @@ describe('POST /api/v1/pots', () => {
 
     const arrayBody = await client.post('/api/v1/pots').send([newPot]).expect(400);
     expect((arrayBody.body as { message: string }).message).toMatch(/Invalid body/);
-    expect(docs.state.added).toHaveLength(0);
+    expect(sheet.added).toHaveLength(0);
   });
 
   it('requires a JSON content type', async () => {
@@ -445,7 +439,7 @@ describe('POST /api/v1/pots', () => {
 
     const response = await client.post('/api/v1/pots').send(newPot, { contentType: false }).expect(415);
     expect((response.body as { code: string }).code).toBe('ERR_UNSUPPORTED_MEDIA_TYPE');
-    expect(docs.state.added).toHaveLength(0);
+    expect(sheet.added).toHaveLength(0);
   });
 
   it('rejects a body over the configured limit with 413', async () => {
@@ -486,7 +480,7 @@ describe('POST /api/v1/pots', () => {
 
   it('republicises an upstream auth failure as ERR_UPSTREAM_AUTH_FAILED', async () => {
     const { client } = await startApp();
-    docs.state.readFailure = { status: 200, ret: 37019, msg: 'Token 校验失败，错误或过期' };
+    sheet.readFailure = { status: 200, ret: 37019, msg: 'Token 校验失败，错误或过期' };
 
     const response = await client.get('/api/v1/pots?refresh=true').expect(503);
     expect((response.body as { code: string }).code).toBe('ERR_UPSTREAM_AUTH_FAILED');

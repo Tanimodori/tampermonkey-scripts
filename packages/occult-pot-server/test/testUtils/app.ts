@@ -1,19 +1,20 @@
 import { clock } from '@test/testUtils/clock.ts';
-import { afterAll, afterEach, beforeEach } from 'vitest';
+import { afterEach, beforeEach } from 'vitest';
 import { createApp } from '@/app.ts';
 import type { CreatedApp } from '@/app.ts';
 import { startServer } from '@/server.ts';
 import type { RunningServer } from '@/server.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 import type { CommonRecord } from '@/validation/index.ts';
-import { captureLogs, loadTestConfig, rawRecord, resetRedis, sheetInstant, setupTencentDocsMock, testClient } from './helpers.ts';
+import { sheet } from './fakeDocument.ts';
+import { captureLogs, loadTestConfig, rawRecord, resetRedis, sheetInstant, testClient } from './helpers.ts';
 
 /**
- * The app under test, for the specs that go through real HTTP: one fixture sheet, one mocked
- * upstream, one server per case, and the hooks that keep the cases apart.
+ * The app under test, for the specs that go through real HTTP: one fixture sheet, one server per case,
+ * and the hooks that keep the cases apart.
  *
  * A spec imports this module — which registers that lifecycle — and adds its own `vi.mock` calls:
- * mocking is per file, so the timer stand-in and the transport swap cannot live here.
+ * mocking is per file, so neither the timer stand-in nor the upstream fake can live here.
  */
 
 /**
@@ -98,7 +99,8 @@ export function fixtureRows(): CommonRecord[] {
   ];
 }
 
-export const docs = setupTencentDocsMock();
+/** The sheet the app under test reads and writes; a case arranges it and asserts on it here. */
+export { callsOf, sheet } from './fakeDocument.ts';
 
 export interface Harness {
   readonly created: CreatedApp;
@@ -110,12 +112,7 @@ export interface Harness {
 
 const started: Array<{ close(): Promise<void> }> = [];
 
-/** The intercepted calls carrying one payload keyword, e.g. the record reads. */
-export function callsMatching(keyword: string): Array<{ url: string }> {
-  return docs.state.calls.filter((call) => call.body !== undefined && keyword in (call.body as object));
-}
-
-/** Boots the real HTTP server (port 0) with a `MockAgent` intercepting the Tencent Docs upstream. */
+/** Boots the real HTTP server (port 0) with this service's own fake standing in for the upstream. */
 export async function startApp(overrides: Record<string, string | undefined> = {}): Promise<Harness> {
   // The environment carries the configuration; `testEnv` already sets a fast flush interval.
   loadTestConfig(overrides);
@@ -132,13 +129,9 @@ export async function startApp(overrides: Record<string, string | undefined> = {
   return { created, running: server, client: testClient(server.url), logs: records };
 }
 
-afterAll(async () => {
-  await docs.close();
-});
-
 beforeEach(async () => {
-  docs.reset();
-  docs.state.records = fixtureRows();
+  sheet.reset();
+  sheet.records = fixtureRows();
   // The mock Redis is shared between clients, so every case starts from an empty one.
   await resetRedis();
 });

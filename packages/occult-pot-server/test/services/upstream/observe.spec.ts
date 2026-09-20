@@ -1,7 +1,7 @@
-import { captureLogs, loadTestConfig, setupTencentDocsMock } from '@test/testUtils/helpers.ts';
-import type { TencentDocsMock } from '@test/testUtils/helpers.ts';
-import { TencentDocsError, createDocClient, createTokenManager } from 'tencent-doc-sdk';
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { captureLogs, loadTestConfig } from '@test/testUtils/helpers.ts';
+import { TencentDocsError } from 'tencent-doc-sdk';
+import type { CallDescriptor, CallOutcome } from 'tencent-doc-sdk';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { AppError } from '@/errors.ts';
 import type { ErrorCode } from '@/errors.ts';
 import { metricsRegistry, renderMetrics } from '@/services/metrics.ts';
@@ -12,55 +12,33 @@ import { serviceCodeOf, toAppError, upstreamHooks } from '@/services/upstream/ob
  * log lines an operator reads, and the error a caller is answered with.
  *
  * The library decides what went wrong and says so in its own words; everything here is the translation
- * on this side of that line. The verdict table itself is `tencent-doc-sdk`'s own suite, and the calls
- * are made over the fake document it ships.
+ * on this side of that line, so the translations are driven directly — one hook call in, the records and
+ * metrics it left out. That a real call produces exactly these outcomes is `tencent-doc-sdk`'s own
+ * suite, over the fake HTTP upstream it ships.
  */
 
-const docs: TencentDocsMock = setupTencentDocsMock();
+const hooks = upstreamHooks();
 
-function client(): ReturnType<typeof createDocClient> {
-  const tokens = createTokenManager({
-    apiBase: process.env.OPS_DOCS_API_BASE ?? 'https://docs.qq.com',
-    initial: { accessToken: 'test-access-token-value', clientId: 'test-client-id', openId: 'test-open-id' },
-    transport: docs.agent,
-    hooks: upstreamHooks(),
-  });
-  return createDocClient({
-    apiBase: process.env.OPS_DOCS_API_BASE ?? 'https://docs.qq.com',
-    coordinates: { fileId: '300000000$ExAmPlEfIlEiD', sheetId: 'tXXXXXX' },
-    tokens,
-    transport: docs.agent,
-    hooks: upstreamHooks(),
-  });
-}
+const CALL: CallDescriptor = { operation: 'getRecords', method: 'POST', path: '/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets/tXXXXXX/records' };
 
-const PAGE = { offset: 0, limit: 100 };
+const ANSWERED: CallOutcome = { kind: 'answered', status: 200, ret: 0, durationMs: 42 };
+const RATE_LIMITED: CallOutcome = { kind: 'failed', status: 429, ret: 400007, code: 'rate_limited', retryAfterSeconds: 7, durationMs: 31 };
+const UNSENT: CallOutcome = { kind: 'unsent', code: 'transport', reason: 'Request to getRecords failed', durationMs: 5 };
 
-/** The records about the one thing a case sent, ignoring whatever the pacing queue added. */
+/** The records about the one thing a case is looking at, ignoring whatever else the run wrote. */
 function about(records: Array<Record<string, unknown>>, message: string): Array<Record<string, unknown>> {
   return records.filter((record) => record.message === message);
 }
 
-const failure = async (call: Promise<unknown>): Promise<TencentDocsError> => (await call.catch((caught: unknown) => caught)) as TencentDocsError;
-
-beforeAll(() => {
-  loadTestConfig();
-});
-
 beforeEach(() => {
-  docs.reset();
   loadTestConfig();
-});
-
-afterEach(() => {
-  docs.reset();
 });
 
 describe('the log lines a call leaves', () => {
-  it('records an answered call: operation, status, business code, duration', async () => {
+  it('records an answered call: operation, method, status, business code, duration', () => {
     const records = captureLogs();
 
-    await client().getRecords(PAGE);
+    hooks.onCall?.(CALL, ANSWERED);
 
     expect(about(records, 'Tencent Docs call answered')).toEqual([
       expect.objectContaining({
@@ -68,18 +46,18 @@ describe('the log lines a call leaves', () => {
         message: 'Tencent Docs call answered',
         operation: 'getRecords',
         method: 'POST',
+        path: CALL.path,
         status: 200,
         ret: 0,
-        durationMs: expect.any(Number),
+        durationMs: 42,
       }),
     ]);
   });
 
-  it('records a failure at warning, with the service code it will be answered as', async () => {
-    docs.state.readFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
+  it('records a failure at warning, with the service code it will be answered as', () => {
     const records = captureLogs();
 
-    await failure(client().getRecords(PAGE));
+    hooks.onCall?.(CALL, RATE_LIMITED);
 
     expect(records).toContainEqual(
       expect.objectContaining({
@@ -95,75 +73,71 @@ describe('the log lines a call leaves', () => {
     expect(JSON.stringify(records)).not.toContain('retryable');
   });
 
-  it('records a call that never got an answer, without inventing a status', async () => {
-    docs.state.networkFailures = 1;
+  it('records a call that never got an answer, without inventing a status', () => {
     const records = captureLogs();
 
-    await failure(client().getRecords(PAGE));
+    hooks.onCall?.(CALL, UNSENT);
 
-    expect(records).toContainEqual(
-      expect.objectContaining({ level: 'warning', message: 'Tencent Docs call could not be sent', operation: 'getRecords', reason: expect.any(String) }),
-    );
-    expect(records.some((record) => record.message === 'Tencent Docs call could not be sent' && 'status' in record)).toBe(false);
+    expect(about(records, 'Tencent Docs call could not be sent')).toEqual([
+      expect.objectContaining({ level: 'warning', operation: 'getRecords', reason: 'Request to getRecords failed', durationMs: 5 }),
+    ]);
+    expect(about(records, 'Tencent Docs call could not be sent')[0]).not.toHaveProperty('status');
+    // The transport's wording is what is written down, never the error's own, which quotes the URL.
+    expect(JSON.stringify(records)).not.toContain('access_token=');
   });
 
-  it('records an answer that arrived in a shape nobody can read', async () => {
-    docs.state.rawReply = { status: 200, body: { ret: 0, msg: 'Succeed' } };
+  it('records an answer that arrived in a shape nobody can read', () => {
     const records = captureLogs();
 
-    await failure(client().getRecords(PAGE));
+    hooks.onParseFailure?.(
+      CALL,
+      new TencentDocsError('invalid_answer', 'Tencent Docs answered getRecords with a shape that cannot be read (body: {"ret":"Succeed"})'),
+    );
 
     expect(about(records, 'Tencent Docs answer could not be read')).toEqual([
       expect.objectContaining({ level: 'warning', operation: 'getRecords', code: 'ERR_UPSTREAM_FAILED', reason: expect.any(String) }),
     ]);
-    // The attempt itself was counted as answered, so the read is the only extra record.
-    expect(about(records, 'Tencent Docs call answered')).toHaveLength(1);
+    // The attempt itself was counted as answered, so the read is the only record this call leaves.
+    expect(about(records, 'Tencent Docs call answered')).toHaveLength(0);
     expect(about(records, 'Tencent Docs call failed')).toHaveLength(0);
   });
 
-  it('never records the response body, which for a read is the whole sheet', async () => {
-    docs.state.records = [{ recordID: 'r00001', values: { ID: [{ text: '54-1-4000E8F3', type: 'text' }] } }];
+  it('writes down no body, which for a read is the whole sheet', () => {
     const records = captureLogs();
 
-    await client().getRecords(PAGE);
+    hooks.onCall?.(CALL, ANSWERED);
+    hooks.onParseFailure?.(CALL, new TencentDocsError('invalid_answer', 'unreadable (body: {"records":[]})'));
 
-    expect(JSON.stringify(records)).not.toContain('54-1-4000E8F3');
-    expect(about(records, 'Tencent Docs call answered')[0]).not.toHaveProperty('body');
-  });
-
-  it('records a call path without its query string, so a credential in it is never written down', async () => {
-    const records = captureLogs();
-    docs.state.networkFailures = 1;
-
-    // Nothing intercepts the OAuth paths in this mock, so the failure is worded from a URL — and the
-    // transport's own message spells that URL out in full.
-    await failure(client().getRecords(PAGE));
-
-    expect(JSON.stringify(records)).not.toContain('access_token=');
+    expect(JSON.stringify(records)).not.toContain('"body"');
   });
 });
 
 describe('the metrics a call feeds', () => {
-  it('counts each call by operation and result', async () => {
+  it('counts each call by operation and result, and times it the same way', async () => {
     metricsRegistry.resetMetrics();
-    const one = client();
 
-    await one.getRecords(PAGE);
-    docs.reset();
-    docs.state.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
-    await failure(one.getRecords(PAGE));
+    hooks.onCall?.(CALL, ANSWERED);
+    hooks.onCall?.(CALL, { ...RATE_LIMITED, status: 500, ret: 400010, code: 'server', retryAfterSeconds: undefined });
 
     const body = await renderMetrics();
     expect(body).toMatch(/occult_pot_upstream_requests_total\{operation="getRecords",result="ok"\} 1/);
     expect(body).toMatch(/occult_pot_upstream_requests_total\{operation="getRecords",result="ERR_UPSTREAM_FAILED"\} 1/);
     expect(body).toContain('occult_pot_upstream_request_duration_seconds_count{operation="getRecords",result="ok"} 1');
+    expect(body).toContain('occult_pot_upstream_request_duration_seconds_sum{operation="getRecords",result="ok"} 0.042');
+  });
+
+  it('counts a call that never left as its own result', async () => {
+    metricsRegistry.resetMetrics();
+
+    hooks.onCall?.(CALL, UNSENT);
+
+    expect(await renderMetrics()).toMatch(/occult_pot_upstream_requests_total\{operation="getRecords",result="ERR_UPSTREAM_FAILED"\} 1/);
   });
 
   it('has no retry counter, because nothing retries', async () => {
     metricsRegistry.resetMetrics();
-    docs.state.networkFailures = 1;
 
-    await failure(client().getRecords(PAGE));
+    hooks.onCall?.(CALL, UNSENT);
 
     expect(await renderMetrics()).not.toContain('occult_pot_upstream_retries_total');
   });
@@ -187,17 +161,23 @@ describe("translating the library's verdict", () => {
   });
 
   it("keeps the upstream's own wording, and says nothing about another attempt", () => {
-    docs.state.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
+    const error = new TencentDocsError('server', 'Tencent Docs returned HTTP 500 for getRecords (ret=400010, msg=服务内部错误)', { status: 500 });
 
-    const error = toAppError(new TencentDocsError('server', 'Tencent Docs returned HTTP 500 for getRecords (ret=400010, msg=服务内部错误)', { status: 500 }));
+    const mapped = toAppError(error);
 
-    expect(error).toBeInstanceOf(AppError);
-    expect(error.code).toBe('ERR_UPSTREAM_FAILED');
-    expect(error.status).toBe(502);
-    expect(error.message).toBe('Tencent Docs returned HTTP 500 for getRecords (ret=400010, msg=服务内部错误)');
+    expect(mapped).toBeInstanceOf(AppError);
+    expect(mapped.code).toBe('ERR_UPSTREAM_FAILED');
+    expect(mapped.status).toBe(502);
+    expect(mapped.message).toBe('Tencent Docs returned HTTP 500 for getRecords (ret=400010, msg=服务内部错误)');
   });
 
-  it('tells a rate-limited client to wait as long as our own pacing window, not a guessed minute', () => {
+  it('carries the cause across the translation', () => {
+    const cause = new Error('socket hang up');
+
+    expect(toAppError(new TencentDocsError('transport', 'Request to getRecords failed', { cause })).cause).toBe(cause);
+  });
+
+  it('tells a rate-limited client to wait as long as our own pacing window, not the upstream’s minute', () => {
     const error = new TencentDocsError('rate_limited', 'Tencent Docs rate limit reached (status=429)', { status: 429, retryAfterSeconds: 7 });
 
     // A sub-second window still says "a second", which is the smallest thing a `Retry-After` can say.
@@ -205,6 +185,12 @@ describe("translating the library's verdict", () => {
     expect(toAppError(error).retryAfterSeconds).toBe(30);
     loadTestConfig({ OPS_UPSTREAM_INTERVAL_MS: '1' });
     expect(toAppError(error).retryAfterSeconds).toBe(1);
+  });
+
+  it('leaves the upstream hint with any other failure', () => {
+    const error = new TencentDocsError('auth', 'Tencent Docs rejected the credential (ret=10303)', { status: 401, retryAfterSeconds: 7 });
+
+    expect(toAppError(error).retryAfterSeconds).toBeUndefined();
   });
 
   it("leaves an error that is not the library's to the internal code, keeping the cause", () => {

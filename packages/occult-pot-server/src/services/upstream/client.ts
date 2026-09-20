@@ -26,8 +26,8 @@ import { getConfig, onConfigReload } from '@/config.ts';
 
 export interface ClientOptions {
   /**
-   * The dispatcher to send on instead of building a pool. Tests hand in a `MockAgent`, which is the
-   * only way to intercept the calls and cannot be derived from config.
+   * The dispatcher to send on instead of building a pool. A test hands in one it can watch, which is
+   * the only way to intercept the calls and cannot be derived from config.
    */
   readonly dispatcher?: Dispatcher;
 }

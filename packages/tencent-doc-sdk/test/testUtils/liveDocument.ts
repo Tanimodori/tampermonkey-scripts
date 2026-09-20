@@ -1,17 +1,18 @@
 import { afterAll } from 'vitest';
-import { createDocClient } from '../../src/docClient.js';
-import type { DocClient, DocCoordinates } from '../../src/docClient.js';
-import { EXAMPLE_FILE_ID } from '../../src/testing/index.js';
-import { createTokenManager } from '../../src/tokenManager.js';
-import type { TokenManager } from '../../src/tokenManager.js';
-import type { CommonRecord, CommonRecords } from '../../src/types.js';
+import type { DocCoordinates } from '@/api/address.js';
+import { createDocClient } from '@/api/docClient.js';
+import type { DocClient } from '@/api/docClient.js';
+import { createTokenManager } from '@/token/tokenManager.js';
+import type { TokenManager } from '@/token/tokenManager.js';
+import type { CommonRecord, CommonRecords } from '@/validation/types.js';
 import { liveEnv } from './env.js';
+import { EXAMPLE_FILE_ID } from './mockUpstream.js';
 
 /**
  * The shared front of the live suite: what it takes to point a spec file at a real Tencent Docs
  * document, and what it takes to leave that document as it was found.
  *
- * Three files use this (`live/{file,record,token}.spec.ts`), which is why the guard and the
+ * Three files use this (`api/live/{sheet,record,oauth}.spec.ts`), which is why the guard and the
  * bookkeeping live here rather than in each: the run conditions are one rule, and the rows the suite
  * writes are cleaned by the file that wrote them.
  *

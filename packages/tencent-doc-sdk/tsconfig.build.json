@@ -4,7 +4,9 @@
     "noEmit": false,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
+    // Only the declarations are emitted here: `vite build` produced `dist/index.js` first, resolving the
+    // `@/…` aliases as it bundled. `build/finalize-types.ts` relativizes what is left in these files.
+    "emitDeclarationOnly": true,
     "outDir": "dist",
     "rootDir": "src"
   },

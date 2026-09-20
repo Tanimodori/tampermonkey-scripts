@@ -9,8 +9,8 @@ import { getClient, invalidateClient, useClient } from '@/services/upstream/clie
  * `client.ts` is the connection and nothing else: a pool sized by the configuration, or the dispatcher
  * it is handed. These cases pin exactly that, plus the two things the process-wide transport adds: it
  * is built once per configuration, and `loadConfig()`/`invalidateClient()` drop it so the next caller
- * rebuilds it. What a call then does — judging an answer, counting attempts, retrying — is
- * `classify.spec.ts` and `send.spec.ts`.
+ * rebuilds it. What a call then does — judging an answer, counting attempts — is `tencent-doc-sdk`'s
+ * own suite: `test/validation/classify.spec.ts` and `test/client/request.spec.ts` over there.
  */
 
 const servers: Array<{ close(): Promise<void> }> = [];
@@ -58,7 +58,8 @@ describe('useClient', () => {
     loadTestConfig({ OPS_UPSTREAM_TIMEOUT_MS: '50' });
     const startedAt = Date.now();
 
-    // The pool's own timers impose this: what the failure then reads as is `send.spec.ts`.
+    // The pool's own timers impose this: what the failure then reads as is `test/client/request.spec.ts`
+    // in `tencent-doc-sdk`.
     // undici's own timer resolution is a whole second, so this is "the configured timeout, not the
     // ten-second default" rather than an exact figure.
     await expect(useClient().request({ origin, path: '/slow', method: 'GET' })).rejects.toMatchObject({ code: 'UND_ERR_HEADERS_TIMEOUT' });
@@ -69,8 +70,8 @@ describe('useClient', () => {
     loadTestConfig();
     const dispatcher = {} as Dispatcher;
 
-    // The tests reach the mock upstream this way, so what is *not* wrapped here is what stays real:
-    // classification and retry sit above the transport, in `send.ts`.
+    // What a caller hands in is what it gets back, unwrapped: the pool the options above would build is
+    // never built, which is how the library ends up sending on a dispatcher of the test's choosing.
     expect(useClient({ dispatcher })).toBe(dispatcher);
     expect(getClient({ dispatcher })).toBe(dispatcher);
   });

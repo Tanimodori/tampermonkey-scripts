@@ -1,26 +1,19 @@
-import { docs, startApp } from '@test/testUtils/app.ts';
-import { lazyTransport } from '@test/testUtils/helpers.ts';
+import { startApp } from '@test/testUtils/app.ts';
 /**
  * @module-tag redis
  */
 import { describe, expect, it, vi } from 'vitest';
-import type { ClientOptions } from '@/services/upstream/client.ts';
 import { getRedis } from '@/stores/redis.ts';
 
 // Every module under test reads the time through `@/services/time.ts`, which this replaces with
 // `@test/testUtils/clock.ts`.
 vi.mock('@/services/time.ts', () => import('@test/testUtils/clock.ts'));
 
-/**
- * What the production modules reach the upstream with: the no-argument `getClient()`. The transport
- * is built on first call — over the bare mock transport, so everything above it is the production path —
- * and by then the case has loaded the configuration it reads.
- */
-const transport = lazyTransport(docs);
-
-vi.mock('@/services/upstream/client.ts', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/services/upstream/client.ts')>();
-  return { ...actual, getClient: (options?: ClientOptions) => (options === undefined ? (transport() as never) : actual.getClient(options)) };
+// The upstream fake stands in for the library's two factories. `vi.mock` is hoisted above the
+// imports, so the fake is reached with a dynamic import: a static one would not be initialized yet.
+vi.mock('tencent-doc-sdk', async (importOriginal) => {
+  const { fakeTencentDocsModule } = await import('@test/testUtils/fakeDocument.ts');
+  return fakeTencentDocsModule(await importOriginal<typeof import('tencent-doc-sdk')>());
 });
 
 /**

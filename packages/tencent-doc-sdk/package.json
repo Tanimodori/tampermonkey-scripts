@@ -2,7 +2,7 @@
   "name": "tencent-doc-sdk",
   "version": "0.0.1",
   "private": true,
-  "description": "Tencent Docs smartsheet Open API client: credential lifecycle and sheet/record data calls, with transport, pacing and retries left to the caller.",
+  "description": "Tencent Docs smartsheet Open API client: credential lifecycle and sheet/record data calls, with transport, pacing and reporting left to the caller.",
   "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
   "bugs": {
     "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
@@ -20,17 +20,13 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./testing": {
-      "types": "./dist/testing/index.d.ts",
-      "default": "./dist/testing/index.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "vite build && tsc -p tsconfig.build.json && node build/finalize-types.ts",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",

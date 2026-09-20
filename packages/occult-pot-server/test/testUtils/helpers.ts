@@ -1,57 +1,49 @@
 import { defu } from 'defu';
 import Redis from 'ioredis';
 import RedisMock from 'ioredis-mock';
-import type { TencentDocsMock } from 'tencent-doc-sdk/testing';
-import type { Dispatcher } from 'undici';
 import { loadConfig, loadEnv } from '@/config.ts';
 import { configureLogging } from '@/logger.ts';
 import type { LogLevel } from '@/logger.ts';
-import type { AppConfig } from '@/validation/index.ts';
+import type { AppConfig, CommonRecord } from '@/validation/index.ts';
 
 /**
- * The scaffolding a test app builds on: the environment it runs with, the Redis it talks to, the log
- * records it can assert on, and an HTTP client for the app under test.
+ * The scaffolding a test app builds on: the environment it runs with, the Redis it talks to, the rows a
+ * fake sheet holds, the log records it can assert on, and an HTTP client for the app under test.
  *
- * Everything about the Tencent Docs upstream — the fake document, the shapes it answers with, the row
- * builder — lives with the library that talks to it, and is re-exported from here so a spec imports its
- * test helpers from one place.
+ * What the app asks of Tencent Docs is faked by `fakeDocument.ts`, which stands in for
+ * `tencent-doc-sdk`'s two factories; the shapes of the upstream's own answers are that library's tests.
  */
 
-/** The document coordinates every test app is configured with; the mock reports the same ids. */
+/** The document coordinates every test app is configured with. */
 export const FILE_ID = '300000000$ExAmPlEfIlEiD';
 export const SHEET_ID = 'tXXXXXX';
 
-export {
-  apiOrigin,
-  EXAMPLE_FILE_ID,
-  EXAMPLE_SHEET_ID,
-  rawRecord,
-  setupTencentDocsMock,
-  sheet,
-  sheetWithDocumentedSpelling,
-  getSheetAnswer,
-  getRecordsAnswer,
-  readRow,
-  readRows,
-  writtenRecordsAnswer,
-  writtenRecordsWithoutId,
-  deleteRecordsAnswer,
-  userInfoAnswer,
-  refreshTokenAnswer,
-  refreshTokenRefused,
-} from 'tencent-doc-sdk/testing';
-
-export type { MockFailure, TencentDocsMock, TencentDocsMockState } from 'tencent-doc-sdk/testing';
-
-/**
- * A stand-in for the no-argument `getClient()`, for the specs that swap the transport with `vi.mock`.
- *
- * The first call is what asks the fake document for its pool; that is the only way a spec can put one
- * under the production modules without those modules knowing a spec exists.
- */
-export function lazyTransport(mock: TencentDocsMock): () => Dispatcher {
-  let built: Dispatcher | undefined;
-  return () => (built ??= mock.client);
+/** One row of the sheet this service reads, addressed by its own column titles. */
+export function rawRecord(input: {
+  recordId?: string;
+  world?: string;
+  map?: string;
+  potId?: string;
+  northRefreshAtMs?: number | string;
+  lastVisitAtMs?: number | string;
+  values?: Record<string, unknown>;
+  createTime?: string;
+  updateTime?: string;
+}): CommonRecord {
+  const values: Record<string, unknown> = {
+    区服: [{ text: input.world ?? '鸟', type: 'text' }],
+    地图: [{ text: input.map ?? '北岛', type: 'text' }],
+    ID: [{ text: input.potId ?? '54-1-4000E8F3', type: 'text' }],
+    北罐刷新时间: String(input.northRefreshAtMs ?? 1789200000000),
+    最后一次进岛时间: String(input.lastVisitAtMs ?? 1789199000000),
+    ...input.values,
+  };
+  return {
+    recordID: input.recordId ?? 'r00001',
+    createTime: input.createTime ?? '1789100000000',
+    updateTime: input.updateTime ?? '1789199000000',
+    values,
+  };
 }
 
 /**
@@ -86,8 +78,8 @@ function redisIsReal(): boolean {
 }
 
 /**
- * The environment a test app runs with: the variables the configuration requires, the mock upstream
- * and the credential the upstream mock expects.
+ * The environment a test app runs with: the variables the configuration requires, and the document
+ * coordinates and credential the upstream fake answers for.
  *
  * Highest priority first: an explicit override in the case, then **the env files** (the `test` mode
  * chain, plus whatever `OPS_ENV_PATH` names and its `.local`), then the real environment, then the

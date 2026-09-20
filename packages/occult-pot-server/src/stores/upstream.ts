@@ -102,7 +102,7 @@ function fromStored(stored: Record<string, string>): StoredCredential {
 }
 
 /** The library's `CredentialStore`, on the Redis this service already keeps its state in. */
-function redisCredentialStore(): CredentialStore {
+export function redisCredentialStore(): CredentialStore {
   return {
     async load() {
       const stored = fromStored(await traced('storedCredential', 'HGETALL', [CREDENTIAL_KEY], getRedis().hgetall(CREDENTIAL_KEY)));

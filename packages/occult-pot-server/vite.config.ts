@@ -61,11 +61,9 @@ export default defineConfig({
       // stays untouched — the order just makes the two aliases unambiguous.
       '@test': resolve(import.meta.dirname, 'test'),
       '@': resolve(import.meta.dirname, 'src'),
-      // The sibling package's source, so editing it needs no rebuild here. Type checking still reads
-      // its built `dist/index.d.ts`, which `rush build --to occult-pot-server` produces first. The
-      // `testing` entry comes first: a string alias matches by prefix.
-      'tencent-doc-sdk/testing': resolve(import.meta.dirname, '../tencent-doc-sdk/src/testing/index.ts'),
-      'tencent-doc-sdk': resolve(import.meta.dirname, '../tencent-doc-sdk/src/index.ts'),
+      // `tencent-doc-sdk` gets no alias: it is imported through its own entry, which is a bundle whose
+      // `@/…` specifiers vite has already resolved. Pointing here at that package's `src/` would instead
+      // resolve *its* `@/…` against this package's `src/`.
     },
   },
 });

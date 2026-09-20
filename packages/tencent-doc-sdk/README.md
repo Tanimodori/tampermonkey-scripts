@@ -22,7 +22,7 @@ const sheet = createDocClient({
 });
 
 const page = await sheet.getRecords({ offset: 0, limit: 100 });
-const written = await sheet.addRecords([{ values: { 区服: [{ text: '鸟', type: 'text' }] } }]);
+const written = await sheet.addRecords([{ values: { 名称: [{ text: '甲', type: 'text' }] } }]);
 await sheet.deleteRecords(written.records?.map((row) => row.recordID) ?? []);
 ```
 
@@ -105,20 +105,21 @@ Given nothing, calls are sent as they are asked for.
 
 ## Testing without the upstream
 
-`tencent-doc-sdk/testing` is a programmable fake document, on undici's `MockAgent`:
+Nothing is published for it: this package's own fake document lives in `test/testUtils`, alongside the tests that use it, and speaks the protocol only — no caller's columns, no caller's rules.
 
 ```ts
-import { setupTencentDocsMock } from 'tencent-doc-sdk/testing';
+const upstream = testUpstream(); // a `DocClient` and a `TokenManager` over the fake document
+const { client, state } = upstream;
 
-const docs = setupTencentDocsMock({ records: [rawRecord({ recordId: 'r00001' })] });
-const client = createDocClient({ apiBase, coordinates, tokens, transport: docs.agent });
-
-docs.state.readFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
-docs.state.networkFailures = 1; // the next call fails before any response exists
-docs.state.calls; // every intercepted request: method, url, body, headers
+state.records = [rawRecord({ recordId: 'r00001' })];
+state.readFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
+state.networkFailures = 1; // the next call fails before any response exists
+state.calls; // every intercepted request: method, url, body, headers
 ```
 
-Its answers are the shapes measured against a real document, including the columns nobody reads, and they are pinned against the response types by `test/fixtures.spec.ts`.
+Its answers are the shapes measured against a real document, including the columns nobody reads, and they are pinned against the response types by `test/testUtils/fixtures.spec.ts`.
+
+A caller of this package tests itself the same way it tests any dependency: at its own boundary, with whatever stand-in that boundary wants. Nothing here asks to be observed from the outside.
 
 ## Development
 

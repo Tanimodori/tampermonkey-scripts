@@ -1,19 +1,25 @@
-export type { ClientOptions } from './internal/context.js';
-export { DEFAULT_TIMEOUT_MS, newDispatcher } from './internal/transport.js';
-export { encodePathSegment } from './internal/url.js';
-export { describeBody } from './internal/classify.js';
-export { readAccessTokenClaims, readAccessTokenExpiresAt } from './internal/jwt.js';
-export type { TencentDocsErrorCode, TencentDocsErrorOptions } from './errors.js';
-export { TencentDocsError } from './errors.js';
-export type { CallDescriptor, CallOutcome, UpstreamHooks } from './hooks.js';
-export type { DispatchContext, DispatchGate } from './dispatch.js';
-export { unpaced } from './dispatch.js';
-export type { CredentialRecord, CredentialStore } from './credentials.js';
-export { compact, memoryCredentialStore } from './credentials.js';
-export type { DocClient, DocClientOptions, DocCoordinates, GetRecordsParams, RecordUpdate, RecordValues } from './docClient.js';
-export { createDocClient } from './docClient.js';
-export type { RefreshTokenInput, TokenManager, TokenManagerOptions } from './tokenManager.js';
-export { createTokenManager } from './tokenManager.js';
+export type { ClientOptions } from './client/context.js';
+export { DEFAULT_TIMEOUT_MS, newDispatcher } from './client/transport.js';
+export type { CallContext, CallRequest } from './client/request.js';
+export type { CallDescriptor, CallOutcome, UpstreamHooks } from './client/hooks.js';
+export type { DispatchContext, DispatchGate } from './client/dispatch.js';
+export { unpaced } from './client/dispatch.js';
 
-export * from './schemas.js';
-export * from './types.js';
+export type { TencentDocsErrorCode, TencentDocsErrorOptions } from './validation/errors.js';
+export { TencentDocsError } from './validation/errors.js';
+export { describeBody } from './validation/classify.js';
+export * from './validation/schemas.js';
+export * from './validation/types.js';
+
+export { encodePathSegment } from './api/address.js';
+export type { DocCoordinates, EndpointTarget } from './api/address.js';
+export type { DocClient, DocClientOptions } from './api/docClient.js';
+export { createDocClient } from './api/docClient.js';
+export type { GetRecordsParams, RecordUpdate, RecordValues } from './api/record.js';
+export type { RefreshTokenInput } from './api/oauth.js';
+
+export type { CredentialRecord, CredentialStore } from './token/credentials.js';
+export { compact, memoryCredentialStore } from './token/credentials.js';
+export { readAccessTokenClaims, readAccessTokenExpiresAt } from './token/jwt.js';
+export type { TokenManager, TokenManagerOptions } from './token/tokenManager.js';
+export { createTokenManager } from './token/tokenManager.js';

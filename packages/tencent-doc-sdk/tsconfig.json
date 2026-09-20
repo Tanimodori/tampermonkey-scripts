@@ -11,6 +11,15 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
 
+    /* `@/…` is a module under `src/`, `@test/…` one under `test/`; the aliases are declared for vite in
+       vite.config.ts, which is what vitest and the bundle resolve through. `build/finalize-types.ts` turns
+       the aliased specifiers back into relative ones in the emitted declarations — tsc copies non-relative
+       specifiers verbatim, and a consumer package has no idea what `@/` means. */
+    "paths": {
+      "@/*": ["./src/*"],
+      "@test/*": ["./test/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -18,5 +27,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "vite.config.ts"]
+  "include": ["src/**/*.ts", "build/**/*.ts", "test/**/*.ts", "vite.config.ts"]
 }

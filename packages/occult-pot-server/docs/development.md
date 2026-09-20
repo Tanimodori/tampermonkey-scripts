@@ -2,7 +2,7 @@
 
 ## 运行前置
 
-Node.js 与 pnpm 由 Rush 管理：在仓库根执行 `rush update` 安装依赖，包内脚本用 `rushx` 运行。与腾讯文档通讯的部分是仓库里的独立包，构建本服务时会先构建它：在它自己的目录里同样有 `rushx test:unit` 与 `rushx test:api`。
+Node.js 与 pnpm 由 Rush 管理：在仓库根执行 `rush update` 安装依赖，包内脚本用 `rushx` 运行。与腾讯文档通讯的部分是仓库里的独立包，本服务用的是它的构建产物：`rush build --to occult-pot-server` 会先构建那个包，改动它之后要重新构建才会在这里生效；在它自己的目录里同样有 `rushx test:unit` 与 `rushx test:api`。
 
 未配置 `OPS_SERVER_REDIS_URL` 时使用进程内 Redis mock，开发模式的上游地址指向本地，因此没有外部服务也能启动。连接真实腾讯文档需要一份测试文档的坐标与凭据；运行 Redis 测试需要一个本机 Redis：
 
@@ -49,6 +49,8 @@ docker run -d --name test-redis -p 6399:6379 --restart unless-stopped redis:7-al
 | `rushx test`       | 上面三个任务依次运行   | 同上                     |
 
 `test:redis` 通过 `OPS_ENV_PATH` 指定配置（跨平台由 [cross-env](https://github.com/kentcdodds/cross-env) 提供），并关闭文件并行：并行的用例会互相清空对方的数据。`test:api` 的 live 用例只在配置指向测试文档时发出真实请求。
+
+服务侧不模拟腾讯文档的问答：取数据的通讯包整体被换成一个内存里的假表，用例只断言本服务对一页数据的处理。请求与响应的形状、信封里的业务码、凭据的取用与刷新规则由 `tencent-doc-sdk` 自己的用例覆盖，那里的假文档只讲协议。live 用例在两边各有一份：通讯包逐个端点地打真实文档，服务侧只走一遍 `GET`/`POST /api/v1/pots` 的端到端。
 
 ## 质量检查
 

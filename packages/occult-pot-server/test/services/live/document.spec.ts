@@ -13,12 +13,12 @@ import type { Pot } from '@/validation/index.ts';
 /**
  * The service end to end against a **real** Tencent Docs document: what one upload writes, what the
  * list reads back, and which rows the read sweeps on its way past. Every response shape here is the
- * document's own, which is what the mocked upstream in `tencent-doc-sdk/testing` can only imitate —
- * the paging fields, the columns a row carries beyond the five, the write that reports no timestamps.
+ * document's own, which is what a fake upstream can only imitate — the paging fields, the columns a
+ * row carries beyond the five, the write that reports no timestamps.
  *
- * The library's endpoints are tested directly by that package (`test/live/*`); the cache, the paging
- * loop and the sweep rules are `services/pot.spec.ts` over the mock. This is the one place all three
- * run against the same document at once.
+ * The library's endpoints are tested directly by that package (`test/api/live/*`); the cache, the
+ * paging loop and the sweep rules are `services/pot.spec.ts` over the fake. This is the one place all
+ * three run against the same document at once.
  *
  * It writes one row, named by a pot id nothing else uses, and deletes it again whatever the run did.
  */

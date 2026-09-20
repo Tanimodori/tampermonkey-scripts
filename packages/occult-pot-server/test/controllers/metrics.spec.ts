@@ -1,21 +1,19 @@
-import { docs, NOW, startApp } from '@test/testUtils/app.ts';
-import { lazyTransport, sheetInstant } from '@test/testUtils/helpers.ts';
+import { NOW, startApp } from '@test/testUtils/app.ts';
+import { sheetInstant } from '@test/testUtils/helpers.ts';
 /**
  * @module-tag redis
  */
 import { describe, expect, it, vi } from 'vitest';
-import type { ClientOptions } from '@/services/upstream/client.ts';
 
 // Every module under test reads the time through `@/services/time.ts`, which this replaces with
 // `@test/testUtils/clock.ts`.
 vi.mock('@/services/time.ts', () => import('@test/testUtils/clock.ts'));
 
-/** The upstream transport the production modules reach for, mocked exactly as the v1 spec does. */
-const transport = lazyTransport(docs);
-
-vi.mock('@/services/upstream/client.ts', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/services/upstream/client.ts')>();
-  return { ...actual, getClient: (options?: ClientOptions) => (options === undefined ? (transport() as never) : actual.getClient(options)) };
+// The upstream fake stands in for the library's two factories. `vi.mock` is hoisted above the
+// imports, so the fake is reached with a dynamic import: a static one would not be initialized yet.
+vi.mock('tencent-doc-sdk', async (importOriginal) => {
+  const { fakeTencentDocsModule } = await import('@test/testUtils/fakeDocument.ts');
+  return fakeTencentDocsModule(await importOriginal<typeof import('tencent-doc-sdk')>());
 });
 
 /**
@@ -48,17 +46,19 @@ describe('GET /metrics', () => {
     expect(body).not.toContain('route="/metrics"');
   });
 
-  it('counts upstream calls by operation and result', async () => {
+  it('exposes the upstream families, whose labels are counted by the hooks', async () => {
     const { client } = await startApp();
     const newPot = { world: '鸟', map: '北岛', potId: '60-0-4000ABCD', northRefreshAt: String(sheetInstant('2026-09-12 16:20')), lastVisitAt: String(NOW) };
 
     await client.post('/api/v1/pots').send(newPot).expect(200);
 
     const body = (await client.get('/metrics').expect(200)).text;
-    // The write reads the sheet first and then appends to it: two operations, both answered.
-    expect(body).toMatch(/occult_pot_upstream_requests_total\{operation="getRecords",result="ok"\} [1-9]/);
-    expect(body).toMatch(/occult_pot_upstream_requests_total\{operation="addRecords",result="ok"\} [1-9]/);
-    expect(body).toContain('occult_pot_upstream_request_duration_seconds_bucket');
+    expect(body).toContain('# HELP occult_pot_upstream_requests_total');
+    expect(body).toContain('# TYPE occult_pot_upstream_request_duration_seconds histogram');
+    // A call is counted by `upstreamHooks()`, which the library is built with; this suite stands in
+    // below that line, so the scrape carries the families and no samples — what the labels are is
+    // `test/services/upstream/observe.spec.ts`.
+    expect(body).not.toMatch(/occult_pot_upstream_requests_total\{/);
   });
 
   it('reports readiness, and marks an unknown credential expiry as zero', async () => {

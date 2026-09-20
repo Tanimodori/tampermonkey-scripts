@@ -2,42 +2,35 @@
  * @module-tag redis
  */
 import { clock } from '@test/testUtils/clock.ts';
-import { captureLogs, loadTestConfig, rawRecord, resetRedis, setupTencentDocsMock, lazyTransport } from '@test/testUtils/helpers.ts';
-import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { callsOf, sheet } from '@test/testUtils/fakeDocument.ts';
+import { captureLogs, loadTestConfig, rawRecord, resetRedis } from '@test/testUtils/helpers.ts';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPot, listPots, potState, usePotService } from '@/services/pot.ts';
 import type { PotService } from '@/services/pot.ts';
-import type { ClientOptions } from '@/services/upstream/client.ts';
 import { getRedis } from '@/stores/redis.ts';
 import { fromSheetValues } from '@/validation/index.ts';
-import type { Pot, PotRecord, PotState } from '@/validation/index.ts';
-import type { CommonRecord } from '@/validation/index.ts';
-
-// The service reads the time through `@/services/time.ts`; this replaces it with `@test/testUtils/clock.ts`, so
-// a TTL or staleness case moves time instead of waiting for it.
-vi.mock('@/services/time.ts', () => import('@test/testUtils/clock.ts'));
+import type { CommonRecord, Pot, PotRecord, PotState } from '@/validation/index.ts';
 
 /**
  * The pot service: the layer that decides *when* the sheet is read, what a read may return, and how a
  * write lands.
  *
- * The sheet is the mocked upstream and the cache is the in-process Redis, so these cases pin the
- * integration: the read TTL, single-flight reads, de-duplication by row key, the stale-cache
- * fallback, the sweep that deletes the rows nobody should see any more, and the upsert a write
- * performs — update the row the pot already has, append when it has none.
+ * The sheet is the fake this service installs over `tencent-doc-sdk` and the cache is the in-process
+ * Redis, so these cases pin the integration: the read TTL, single-flight reads, de-duplication by row
+ * key, the stale-cache fallback, the sweep that deletes the rows nobody should see any more, and the
+ * upsert a write performs — update the row the pot already has, append when it has none.
  */
 
-const docs = setupTencentDocsMock();
+// The service reads the time through `@/services/time.ts`; this replaces it with `@test/testUtils/clock.ts`, so
+// a TTL or staleness case moves time instead of waiting for it.
+vi.mock('@/services/time.ts', () => import('@test/testUtils/clock.ts'));
 
-/**
- * What the production modules reach the upstream with: the no-argument `getClient()`. The transport
- * is built on first call — over the bare mock transport, so everything above it is the production path —
- * and by then the case has loaded the configuration it reads.
- */
-const transport = lazyTransport(docs);
-
-vi.mock('@/services/upstream/client.ts', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/services/upstream/client.ts')>();
-  return { ...actual, getClient: (options?: ClientOptions) => (options === undefined ? (transport() as never) : actual.getClient(options)) };
+// `vi.mock` is hoisted into the file that calls it, which is why the upstream fake is installed here.
+// The upstream fake stands in for the library's two factories. `vi.mock` is hoisted above the
+// imports, so the fake is reached with a dynamic import: a static one would not be initialized yet.
+vi.mock('tencent-doc-sdk', async (importOriginal) => {
+  const { fakeTencentDocsModule } = await import('@test/testUtils/fakeDocument.ts');
+  return fakeTencentDocsModule(await importOriginal<typeof import('tencent-doc-sdk')>());
 });
 
 /** The fixture world's "now": every row below is stamped relative to it. */
@@ -92,15 +85,15 @@ const fixtureRecords = (): PotRecord[] =>
     docs: docsOfRow(record.recordID),
   }));
 
-const getRecordsCalls = (): number => docs.state.calls.filter((call) => call.body !== undefined && 'getRecords' in (call.body as object)).length;
-const deleteCalls = (): number => docs.state.calls.filter((call) => call.body !== undefined && 'deleteRecords' in (call.body as object)).length;
-const rowsWritten = (): number => docs.state.added.length;
+const getRecordsCalls = (): number => callsOf('getRecords').length;
+const deleteCalls = (): number => callsOf('deleteRecords').length;
+const rowsWritten = (): number => sheet.added.length;
 
 beforeEach(async () => {
   clock.set(START);
-  docs.reset();
+  sheet.reset();
   // The two fixture rows, stamped so their document side is knowable rather than incidental.
-  docs.state.records = [
+  sheet.records = [
     row('r1', { createTime: String(DOCS_CREATE), updateTime: String(DOCS_UPDATE) }),
     row('r2', { potId: '44-1-4000AE40', createTime: String(DOCS_CREATE), updateTime: String(DOCS_UPDATE) }),
   ];
@@ -108,12 +101,8 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  docs.reset();
+  sheet.reset();
   vi.restoreAllMocks();
-});
-
-afterAll(async () => {
-  await docs.close();
 });
 
 describe('reads', () => {
@@ -146,7 +135,7 @@ describe('reads', () => {
     await service.list();
 
     clock.advance(TTL);
-    docs.state.records = [row('r3', { potId: '55-0-40001D05' })];
+    sheet.records = [row('r3', { potId: '55-0-40001D05' })];
     const second = await service.list();
 
     expect(ids(second)).toEqual(['55-0-40001D05']);
@@ -157,7 +146,7 @@ describe('reads', () => {
   it('serves one pot per row key, keeping the most recently visited row', async () => {
     // The same pot twice, the way a client that uploaded twice used to leave it: the read answers
     // once, from the fresher row, and the sheet still holds both until a write cleans them up.
-    docs.state.records = [
+    sheet.records = [
       row('rOld', { potId: '55-0-40001D05', lastVisitAtMs: START - 60 * 60_000 }),
       row('rNew', { potId: '55-0-40001D05', lastVisitAtMs: START - 60_000 }),
     ];
@@ -174,7 +163,7 @@ describe('reads', () => {
   it('keeps the row with a usable record id when two rows carry the same instant', async () => {
     // The same pot twice at the same instant; only one of the two rows has metadata that reads back.
     const { createTime: _ignored, ...noTimes } = row('rNoId', { potId: '55-0-40001D05' });
-    docs.state.records = [noTimes, row('rNew', { potId: '55-0-40001D05' })];
+    sheet.records = [noTimes, row('rNew', { potId: '55-0-40001D05' })];
     const service = useService();
 
     await service.list();
@@ -196,7 +185,7 @@ describe('reads', () => {
   });
 
   it('drains every page in sheet order', async () => {
-    docs.state.records = [
+    sheet.records = [
       row('r1'),
       row('r2', { potId: '44-1-4000AE40' }),
       row('r3', { potId: '55-0-40001D05' }),
@@ -204,17 +193,13 @@ describe('reads', () => {
       row('r5', { potId: '57-0-400076E4' }),
     ];
     // The upstream decides how much a page carries; the service keeps asking until `hasMore` is false.
-    docs.state.pageSize = 2;
+    sheet.pageSize = 2;
     const service = useService();
 
     const read = await service.list();
 
     expect(ids(read)).toEqual(['54-1-4000E8F3', '44-1-4000AE40', '55-0-40001D05', '57-1-4000D7E8', '57-0-400076E4']);
-    expect(
-      docs.state.calls
-        .filter((call) => call.body !== undefined && 'getRecords' in (call.body as object))
-        .map((call) => (call.body as { getRecords: { offset: number } }).getRecords.offset),
-    ).toEqual([0, 2, 4]);
+    expect(callsOf('getRecords').map((call) => (call.args as { offset: number }).offset)).toEqual([0, 2, 4]);
   });
 
   it('serves the cached list when the sheet read fails, and warns', async () => {
@@ -222,7 +207,7 @@ describe('reads', () => {
     const first = await service.list();
 
     clock.advance(TTL);
-    docs.state.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
+    sheet.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
     const logs = captureLogs();
 
     const second = await service.list();
@@ -235,7 +220,7 @@ describe('reads', () => {
 
   it('propagates a sheet read failure when nothing has been read yet', async () => {
     const service = useService();
-    docs.state.readFailure = { status: 401, ret: 10303, msg: 'token 无效' };
+    sheet.readFailure = { status: 401, ret: 10303, msg: 'token 无效' };
 
     await expect(service.list()).rejects.toMatchObject({ code: 'ERR_UPSTREAM_AUTH_FAILED' });
 
@@ -259,27 +244,27 @@ describe('reads', () => {
 
 describe('the sweep', () => {
   it('deletes the rows whose last visit is older than the window, and never serves them', async () => {
-    docs.state.records = [row('rFresh'), row('rOld', { potId: '57-0-400076E4', lastVisitAtMs: START - 4 * 3_600_000 })];
+    sheet.records = [row('rFresh'), row('rOld', { potId: '57-0-400076E4', lastVisitAtMs: START - 4 * 3_600_000 })];
     const service = useService();
 
     const read = await service.list();
 
     expect(ids(read)).toEqual(['54-1-4000E8F3']);
-    expect(docs.state.deleted).toEqual(['rOld']);
+    expect(sheet.deleted).toEqual(['rOld']);
     // Gone from the sheet and from the cache, so no later read can see it either.
-    expect(docs.state.records.map((record) => record.recordID)).toEqual(['rFresh']);
+    expect(sheet.records.map((record) => record.recordID)).toEqual(['rFresh']);
     expect(ids((await storedState()).data)).toEqual(['54-1-4000E8F3']);
   });
 
   it('deletes the rows that are not a pot at all', async () => {
-    docs.state.records = [row('rFresh'), row('rBad', { potId: 'nope' }), row('rZero', { potId: '11-1-4000AAAA', northRefreshAtMs: 0 })];
+    sheet.records = [row('rFresh'), row('rBad', { potId: 'nope' }), row('rZero', { potId: '11-1-4000AAAA', northRefreshAtMs: 0 })];
     const service = useService();
 
     const read = await service.list();
 
     expect(ids(read)).toEqual(['54-1-4000E8F3']);
-    expect(docs.state.deleted).toEqual(['rBad', 'rZero']);
-    expect(docs.state.records.map((record) => record.recordID)).toEqual(['rFresh']);
+    expect(sheet.deleted).toEqual(['rBad', 'rZero']);
+    expect(sheet.records.map((record) => record.recordID)).toEqual(['rFresh']);
   });
 
   it('deletes nothing, and does not call the upstream, when every row is servable', async () => {
@@ -291,18 +276,18 @@ describe('the sweep', () => {
   });
 
   it('keeps a row that is only just inside the window', async () => {
-    docs.state.records = [row('rEdge', { lastVisitAtMs: START - 3 * 3_600_000 + 1 })];
+    sheet.records = [row('rEdge', { lastVisitAtMs: START - 3 * 3_600_000 + 1 })];
     const service = useService();
 
     const read = await service.list();
 
     expect(ids(read)).toEqual(['54-1-4000E8F3']);
-    expect(docs.state.deleted).toEqual([]);
+    expect(sheet.deleted).toEqual([]);
   });
 
   it('does not fail the read when the deletion does', async () => {
-    docs.state.records = [row('rFresh'), row('rOld', { potId: '57-0-400076E4', lastVisitAtMs: START - 4 * 3_600_000 })];
-    docs.state.deleteFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
+    sheet.records = [row('rFresh'), row('rOld', { potId: '57-0-400076E4', lastVisitAtMs: START - 4 * 3_600_000 })];
+    sheet.deleteFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
     const service = useService();
     const logs = captureLogs();
 
@@ -329,7 +314,7 @@ describe('the sweep', () => {
 
 describe('writes', () => {
   /** The row the sheet holds for one pot, as the read side parses it back. */
-  const rowsFor = (potId: string) => docs.state.records.filter((record) => JSON.stringify(record.values ?? '').includes(potId));
+  const rowsFor = (potId: string) => sheet.records.filter((record) => JSON.stringify(record.values ?? '').includes(potId));
 
   it('appends a pot the sheet does not carry, then folds it into the cached list', async () => {
     const service = useService();
@@ -338,8 +323,8 @@ describe('writes', () => {
     await service.create(pot('60-0-4000ABCD'));
 
     expect(rowsWritten()).toBe(1);
-    expect(docs.state.updated).toEqual([]);
-    expect(docs.state.added[0]).toEqual({
+    expect(sheet.updated).toEqual([]);
+    expect(sheet.added[0]).toEqual({
       区服: [{ type: 'text', text: '鸟' }],
       地图: [{ type: 'text', text: '北岛' }],
       ID: [{ type: 'text', text: '60-0-4000ABCD' }],
@@ -371,7 +356,7 @@ describe('writes', () => {
     await service.create(pot('54-1-4000E8F3', { northRefreshAtMs: START + 60_000 }));
 
     expect(rowsWritten()).toBe(0);
-    expect(docs.state.updated).toEqual([
+    expect(sheet.updated).toEqual([
       {
         recordID: 'r1',
         values: {
@@ -388,7 +373,7 @@ describe('writes', () => {
 
   it('keeps the first write time and moves the second one when a pot is uploaded twice', async () => {
     // The document stamps the row it is handed, so this is what the second write reads back.
-    docs.state.sheetTime = String(START);
+    sheet.sheetTime = String(START);
     const service = useService();
     await service.list();
 
@@ -396,7 +381,7 @@ describe('writes', () => {
     const first = (await service.state()).data.find((entry) => entry.potId === '60-0-4000ABCD');
 
     clock.advance(60_000);
-    docs.state.sheetTime = String(START + 60_000);
+    sheet.sheetTime = String(START + 60_000);
     await service.create(pot('60-0-4000ABCD', { northRefreshAtMs: START + 120_000 }));
     const second = (await service.state()).data.find((entry) => entry.potId === '60-0-4000ABCD');
 
@@ -404,8 +389,8 @@ describe('writes', () => {
     expect(rowsWritten()).toBe(1);
     expect(rowsFor('60-0-4000ABCD')).toHaveLength(1);
     expect(ids((await service.state()).data)).toEqual(['54-1-4000E8F3', '44-1-4000AE40', '60-0-4000ABCD']);
-    expect(docs.state.updated).toHaveLength(1);
-    expect(docs.state.updated[0]?.recordID).toBe('rNew1');
+    expect(sheet.updated).toHaveLength(1);
+    expect(sheet.updated[0]?.recordID).toBe('rNew1');
     // The row keeps the create time the first upload left on it, and takes this write's update time.
     expect(first?.docs).toEqual({ recordId: 'rNew1', createTime: START, updateTime: START });
     expect(second?.docs).toEqual({ recordId: 'rNew1', createTime: START, updateTime: START + 60_000 });
@@ -426,7 +411,7 @@ describe('writes', () => {
   });
 
   it('updates the freshest of several rows carrying the same key and deletes the rest', async () => {
-    docs.state.records = [
+    sheet.records = [
       row('rStale', { potId: '55-0-40001D05', lastVisitAtMs: START - 60 * 60_000 }),
       row('rFresh', { potId: '55-0-40001D05', lastVisitAtMs: START - 60_000 }),
     ];
@@ -435,15 +420,15 @@ describe('writes', () => {
 
     await service.create(pot('55-0-40001D05', { northRefreshAtMs: START + 60_000 }));
 
-    expect(docs.state.updated.map((entry) => entry.recordID)).toEqual(['rFresh']);
-    expect(docs.state.deleted).toEqual(['rStale']);
+    expect(sheet.updated.map((entry) => entry.recordID)).toEqual(['rFresh']);
+    expect(sheet.deleted).toEqual(['rStale']);
     expect(rowsFor('55-0-40001D05')).toHaveLength(1);
     expect(ids((await service.state()).data)).toEqual(['55-0-40001D05']);
   });
 
   it('keeps the write when the duplicated rows cannot be deleted, and warns', async () => {
-    docs.state.records = [row('rOld', { potId: '55-0-40001D05', lastVisitAtMs: START - 60 * 60_000 }), row('rNew', { potId: '55-0-40001D05' })];
-    docs.state.deleteFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
+    sheet.records = [row('rOld', { potId: '55-0-40001D05', lastVisitAtMs: START - 60 * 60_000 }), row('rNew', { potId: '55-0-40001D05' })];
+    sheet.deleteFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
     const service = useService();
     await service.list();
     const logs = captureLogs();
@@ -451,14 +436,14 @@ describe('writes', () => {
     await expect(service.create(pot('55-0-40001D05'))).resolves.toMatchObject({ potId: '55-0-40001D05' });
 
     // The winner was written; only the cleanup failed, and the answer is still the write.
-    expect(docs.state.updated.map((entry) => entry.recordID)).toEqual(['rNew']);
+    expect(sheet.updated.map((entry) => entry.recordID)).toEqual(['rNew']);
     expect(logs.some((entry) => entry.message === 'Could not delete the duplicate rows of a pot; they stay out of every answer until a later write')).toBe(
       true,
     );
   });
 
   it('caches a pot the sheet answered without a record id, without inventing one', async () => {
-    docs.state.addRecordsWithoutId = true;
+    sheet.addRecordsWithoutId = true;
     const service = useService();
     await service.list();
     const logs = captureLogs();
@@ -475,28 +460,29 @@ describe('writes', () => {
     const service = useService();
     await service.list();
     const logs = captureLogs();
-    docs.state.writeFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
+    sheet.writeFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
 
     await expect(service.create(pot('60-0-4000ABCD'))).rejects.toMatchObject({ code: 'ERR_UPSTREAM_RATE_LIMITED' });
 
     expect(rowsWritten()).toBe(0);
     expect((await service.state()).data).toEqual(fixtureRecords());
     // A failed append is the caller's failure; it is not this service's to retry or to log as one.
-    // The one warning on the record is the transport reporting the refused call — nothing here.
-    expect(logs.filter((entry) => entry.level === 'warning').map((entry) => entry.message)).toEqual(['Tencent Docs call failed']);
+    // What a refused call writes down is `upstreamHooks()`'s own business (observe.spec.ts).
+    expect(logs.filter((entry) => entry.level === 'warning')).toEqual([]);
+    expect(callsOf('addRecords')).toHaveLength(1);
   });
 
   it('fails the write when the sheet refuses the update, and leaves the duplicate rows alone', async () => {
-    docs.state.records = [row('rOld', { potId: '54-1-4000E8F3', lastVisitAtMs: START - 60 * 60_000 }), row('r1')];
+    sheet.records = [row('rOld', { potId: '54-1-4000E8F3', lastVisitAtMs: START - 60 * 60_000 }), row('r1')];
     const service = useService();
     await service.list();
-    docs.state.updateFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
+    sheet.updateFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
 
     await expect(service.create(pot('54-1-4000E8F3'))).rejects.toMatchObject({ code: 'ERR_UPSTREAM_RATE_LIMITED' });
 
     // Nothing was written and nothing was deleted: a refused write leaves the sheet exactly as it was.
-    expect(docs.state.updated).toEqual([]);
-    expect(docs.state.deleted).toEqual([]);
+    expect(sheet.updated).toEqual([]);
+    expect(sheet.deleted).toEqual([]);
     expect(rowsFor('54-1-4000E8F3')).toHaveLength(2);
   });
 
@@ -533,7 +519,7 @@ describe('writes', () => {
     await service.create(pot('61-0-4000FFFF'));
 
     expect(rowsWritten()).toBe(2);
-    expect(docs.state.added.map((entry) => entry['ID'])).toEqual([[{ type: 'text', text: '60-0-4000ABCD' }], [{ type: 'text', text: '61-0-4000FFFF' }]]);
+    expect(sheet.added.map((entry) => entry['ID'])).toEqual([[{ type: 'text', text: '60-0-4000ABCD' }], [{ type: 'text', text: '61-0-4000FFFF' }]]);
     expect(ids((await service.state()).data)).toEqual(['54-1-4000E8F3', '44-1-4000AE40', '60-0-4000ABCD', '61-0-4000FFFF']);
   });
 
@@ -587,7 +573,7 @@ describe('the surface the routes call', () => {
 
     await expect(createPot(updated)).resolves.toEqual(updated);
     expect(rowsWritten()).toBe(0);
-    expect(docs.state.updated.map((entry) => entry.recordID)).toEqual(['r2']);
+    expect(sheet.updated.map((entry) => entry.recordID)).toEqual(['r2']);
   });
 
   it('reports the cached list to the probes without reading the sheet', async () => {

@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    /*
+      The Node side of the example: the config file that configures the plugin, and the specs that read the
+      built artifact back. `src/` reaches this program through `typeof import(…)` in `testUtils/artifact.ts`,
+      which is why the wildcard client types have to be in `types` here too.
+
+      `skipLibCheck: false` is inherited, so the plugin's own declaration is checked the same way the target
+      code's are. That is also why `vite.config.ts` takes `defineConfig` from `vite` rather than from
+      `vitest/config`: the latter drags in declarations that do not survive this flag, and a consumer's config
+      would not carry a test section anyway.
+    */
+    "types": ["node", "xiv-datamine-polyfill/client"]
+  },
+  "include": ["vite.config.ts", "test/**/*.ts"]
+}

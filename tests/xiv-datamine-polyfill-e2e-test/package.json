@@ -2,7 +2,7 @@
   "name": "xiv-datamine-polyfill-e2e-test",
   "version": "0.0.1",
   "private": true,
-  "description": "Consumer-side checks for the xiv packages: probe files that typecheck the built dist/ through package.json#exports, and the vite build and dev-server end-to-end tests for xiv-datamine-polyfill.",
+  "description": "The example consumer of xiv-datamine-polyfill and xiv-api-provider: target code that reads two generated sheets, the vite config that hooks the plugin up to it, and the end-to-end specs that judge the built artifact.",
   "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
   "bugs": {
     "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
@@ -15,13 +15,15 @@
   "author": "Tanimodori",
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig.probes.json && vite build",
+    "build": "npm run typecheck && npm run build-only && npm test",
+    "build-only": "vite build",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
-    "test": "vite build && node dist/index.js",
-    "test:live": "cross-env XIV_LIVE=1 vite build && node dist/index.js",
-    "typecheck": "tsc -p tsconfig.json"
+    "test": "npm run test:offline && npm run test:online",
+    "test:offline": "vite build && vitest run test/offline.spec.ts",
+    "test:online": "cross-env XIV_LIVE=1 vite build && cross-env XIV_LIVE=1 vitest run test/online.spec.ts",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
@@ -30,6 +32,7 @@
     "oxlint": "^1.82.0",
     "typescript": "~5.9.3",
     "vite": "^8.3.0",
+    "vitest": "^5.0.1",
     "xiv-api-provider": "workspace:*",
     "xiv-datamine-polyfill": "workspace:*",
     "zod": "^4.6.5"

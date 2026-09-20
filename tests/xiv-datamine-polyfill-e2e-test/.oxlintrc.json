@@ -5,5 +5,14 @@
     "node": true
   },
   "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/.rush/**"],
+  "overrides": [
+    {
+      "files": ["src/**/*.ts"],
+      "env": {
+        "node": false,
+        "browser": true
+      }
+    }
+  ],
   "rules": {}
 }

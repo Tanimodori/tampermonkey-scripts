@@ -1,49 +1,156 @@
-import { useSheetTable } from 'xiv-api-provider/datamine';
+import { iconIdFromImageUrl, siteIconUrl } from 'xiv-api-provider/core';
+import { useSheetTable, type SheetTable } from 'xiv-api-provider/datamine';
+import { garlandDocUrl } from 'xiv-api-provider/garlands';
+import { xivapi as schemas } from 'xiv-api-provider/schemas';
+import { sheetRowUrl } from 'xiv-api-provider/xivapi';
 import addon from 'xiv-datamine-polyfill/Addon.csv';
 import itemUICategory from 'xiv-datamine-polyfill/ItemUICategory.csv';
 
 /**
- * The target code of this project's build: the two sheets the plugin generated are plain data, and the reading
- * happens through the provider's own view — exactly what a userscript entry would do.
+ * The example consumer: what a userscript that wants these two sheets actually writes.
  *
- * Failing here is a run failure, not a skipped assertion: `rushx test` executes the bundle this file is
- * compiled into, so a wrong shape stops the script with a non-zero exit.
+ * Every import goes through the checked package's `package.json#exports` — by subpath, never by a relative
+ * path into its source and never through an alias — because the entry map is part of what this project
+ * checks. Nothing is asserted here: `test/` reads this module back out of `dist/` and does the judging, so
+ * what sits below is only what a caller does with the data.
  *
- * What is checked holds for the stubbed sheet and for the real one (`rushx test:live`), because the two differ
- * in size by two orders of magnitude: the declared columns in the declared order, the key column still being
- * first, the trimming rules having actually removed rows, and the row nobody asked for being unreachable.
+ * The two `.csv` imports are answered by the plugin in `vite.config.ts`, which is what makes this file a
+ * build's target code rather than a test's fixture: the grids are already trimmed, and `useSheetTable` is
+ * the same reading a caller with a hand-copied table would do. `xiv-api-provider`'s other subpaths are
+ * reached from the business functions below — `universalis-zh-data` and `xivanalysis-zh` really do call the
+ * icon arithmetic, the link builders and the response schemas — so a consumer touching all five subpaths is
+ * a fact about the example rather than a probe written to hold a type check open.
  */
 
-const ui = useSheetTable(itemUICategory);
+/** The host `siteIconUrl` puts the root-relative icon path against; the same one the two userscripts use. */
+const ICON_ORIGIN = 'https://img2.finalfantasyxiv.com';
+
+const categories = useSheetTable(itemUICategory);
 const texts = useSheetTable(addon);
 
-const expect = (condition: boolean, message: string): void => {
-  if (!condition) throw new Error(`xiv-datamine-polyfill-e2e-test: ${message}`);
+/**
+ * A lookup by `#`, which the sheet's own addressing does not offer: rows are addressed by position, so the
+ * index is the caller's. This is the whole "row to object" step, and it is one line rather than an API.
+ */
+const rowsByKey = (table: SheetTable): Map<string, readonly string[]> => new Map(table.rows.map((row): [string, readonly string[]] => [String(row[0]), row]));
+const categoryRows = rowsByKey(categories);
+const textRows = rowsByKey(texts);
+
+/** Where a column the rules asked for sits; `-1` means the rules did not ask for it. */
+const at = (table: SheetTable, name: string): number => table.columnIndexOf(name);
+
+/** The localized name of a category row, by its `#`. */
+export const categoryName = (key: string): string | undefined => {
+  const name = at(categories, 'Name');
+  return name < 0 ? undefined : categoryRows.get(key)?.[name];
 };
 
-expect(ui.columns.join('|') === '#|Name', `ItemUICategory columns are ${ui.columns.join('|')}`);
-expect(ui.types.join('|') === 'int32|str', `ItemUICategory types are ${ui.types.join('|')}`);
-expect(ui.rowCount > 0, 'ItemUICategory generated an empty grid');
-expect(ui.rowCount === new Set(ui.column('#')).size, 'the key column repeats, so rows are not what the sheet has');
-expect(
-  ui.column('#').every((key) => key !== '' && !Number.isNaN(Number(key))),
-  'the key column holds non-numeric values',
-);
-// `dropEmptyIn: 'Name'` is why the placeholder row is gone; the name that replaces it at row 0 is stable.
-expect(
-  ui.rows.every((row) => row[1] !== ''),
-  'a row with an empty Name survived the rule',
-);
-expect(ui.cell(0, 'Name') === '格斗武器', `row 0 holds ${String(ui.cell(0, 'Name'))}`);
-expect(ui.row(0)?.[0] === '1', `row 0 is keyed ${String(ui.row(0)?.[0])}`);
-expect(ui.column('Name')[0] === ui.cell(0, 'Name'), 'the column and the cell disagree about row 0');
+/**
+ * The category table, keyed by `#`.
+ *
+ * This is the shape `universalis-zh-data/src/ItemCategory.ts` carries as 738 hand-written lines: that
+ * package copies a CSV into its repository because nothing else turns an import into a table. With the
+ * plugin, the same table is the three lines above.
+ */
+export const categoryTable = (): Record<string, { name: string; icon: string }> => {
+  const name = at(categories, 'Name');
+  const icon = at(categories, 'Icon');
+  return Object.fromEntries(categories.rows.map((row) => [String(row[0]), { name: row[name] ?? '', icon: row[icon] ?? '' }]));
+};
 
-// `onlyRowKeys` selects by `#`, so exactly the two asked-for keys are there and the markup row never arrived.
-expect(texts.column('#').join(',') === '699,700', `Addon holds ${texts.column('#').join(',')} for the two keys the rules asked for`);
-expect(
-  texts.rows.every((row) => !row.some((cell) => cell.includes('Switch'))),
-  'a row the rules excluded is present',
-);
-expect(texts.cell(0, 'Text') !== undefined && texts.cell(0, 'Text') !== '', 'Addon row 0 has no text');
+/** The sheet's `Icon` column holds a texture id, and an `<img>` needs the padded site URL. */
+export const categoryIconSrc = (key: string): { iconId: string | undefined; src: string | undefined; backToId: number | null } => {
+  const iconId = categoryRows.get(key)?.[at(categories, 'Icon')];
+  if (iconId === undefined || iconId === '') return { iconId, src: undefined, backToId: null };
+  const src = siteIconUrl(iconId, ICON_ORIGIN);
+  return { iconId, src, backToId: iconIdFromImageUrl(src) };
+};
 
-console.log(`xiv-datamine-polyfill-e2e-test: ${ui.rowCount} + ${texts.rowCount} rows, origin ${ui.origin} / ${texts.origin}`);
+/** One row of `Addon.Text` — the UI strings the sheets name by `#`. */
+export const addonText = (key: string): string | undefined => textRows.get(key)?.[at(texts, 'Text')];
+
+/**
+ * What a page would link out to for one item, plus what the sheet says about its category.
+ *
+ * An `ItemUICategory` row is a category, not an item, so the item id comes from the page: `garlandDocUrl`
+ * only knows `item`, `action` and `status`, and a category key passed to it would name a document that does
+ * not exist.
+ */
+export const linksFor = (itemId: number, categoryKey: string): { xivapi: string; garlands: string; categoryName: string | undefined } => ({
+  xivapi: sheetRowUrl('chinese-server', 'Item', itemId, { language: 'chs', fields: ['Name', 'ItemUICategory'] }).toString(),
+  garlands: garlandDocUrl('item', itemId).toString(),
+  categoryName: categoryName(categoryKey),
+});
+
+/** A body shaped like `/sheet/Item/19890`'s answer, for the check below to have something to say about. */
+const SAMPLE_ROWS: schemas.RowResult[] = [
+  { row_id: 19890, fields: { Name: 'Cindersaur', 'ItemUICategory@opt': { value: 4, sheet: 'ItemUICategory', row_id: 1, fields: {} } } },
+];
+
+/**
+ * Whether the opt-in schema entry still validates a response a caller got.
+ *
+ * Left as `unknown` rather than typed `schemas.SheetResponse` on purpose: `safeParse` is only worth running
+ * if its argument can be wrong, and a literal the type already guarantees is not a verdict.
+ */
+export const parseXivapiRows = (payload: unknown): boolean => schemas.sheetResponseSchema.safeParse(payload).success;
+
+/** One sheet as data: the header lines it declares, the rows that survived the rules, and a trimmed subset. */
+export interface SheetSnapshot {
+  /** `<Sheet>.csv@<ref>`, carried through from whatever fetched the CSV. */
+  readonly origin: string;
+  /** The sheet's own second header line, unmodified and unnamed-included. */
+  readonly columns: string[];
+  /** Its third header line: `int32`, `str`, `Image`. */
+  readonly types: string[];
+  readonly keys: string[];
+  readonly rows: string[][];
+  readonly rowCount: number;
+  /** `trim({ columns: ['#'] })` — the rebuilt header lines included, so a consumer can see what it keeps. */
+  readonly trimmedToKeyOnly: string[][];
+}
+
+/** Everything the example reads, as plain data for `test/` to judge. */
+export interface ExampleResult {
+  readonly sheets: { itemUICategory: SheetSnapshot; addon: SheetSnapshot };
+  readonly reads: {
+    /** The first few entries of {@link categoryTable}; the whole table is built, only a slice travels. */
+    readonly categoryTable: Record<string, { name: string; icon: string }>;
+    readonly icons: { key: string; iconId: string | undefined; src: string | undefined; backToId: number | null }[];
+    /** The two keys the rules asked for, and one they never mentioned. */
+    readonly texts: Record<string, string | undefined>;
+    readonly links: { xivapi: string; garlands: string; categoryName: string | undefined };
+    readonly xivapiPayloadIsWellFormed: boolean;
+  };
+}
+
+const snapshot = (table: SheetTable): SheetSnapshot => ({
+  origin: table.origin,
+  columns: [...table.columns],
+  types: [...table.types],
+  keys: table.column('#'),
+  rows: table.rows.map((row) => [...row]),
+  rowCount: table.rowCount,
+  trimmedToKeyOnly: table.trim({ columns: ['#'] }).data.map((row) => [...row]),
+});
+
+/**
+ * Run the example and report what it saw.
+ *
+ * Called, never fired on import: a bundle of this module is data plus functions, and `test/` decides what
+ * counts as the shape being wrong.
+ */
+export const getData = (): ExampleResult => {
+  const table = categoryTable();
+  const keys = Object.keys(table).slice(0, 3);
+  return {
+    sheets: { itemUICategory: snapshot(categories), addon: snapshot(texts) },
+    reads: {
+      categoryTable: Object.fromEntries(keys.map((key) => [key, table[key]])),
+      icons: keys.map((key) => ({ key, ...categoryIconSrc(key) })),
+      texts: { '699': addonText('699'), '700': addonText('700'), '999': addonText('999') },
+      links: linksFor(19890, '1'),
+      xivapiPayloadIsWellFormed: parseXivapiRows({ schema: 'exdschema@2:rev:9a3f1c', version: '2026092000010000', rows: SAMPLE_ROWS }),
+    },
+  };
+};

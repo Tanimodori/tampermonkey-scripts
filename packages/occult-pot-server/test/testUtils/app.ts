@@ -5,7 +5,7 @@ import type { CreatedApp } from '@/app.ts';
 import { startServer } from '@/server.ts';
 import type { RunningServer } from '@/server.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
-import type { CommonRecord } from '@/validation/upstream.ts';
+import type { CommonRecord } from '@/validation/index.ts';
 import { captureLogs, loadTestConfig, rawRecord, resetRedis, sheetInstant, setupTencentDocsMock, testClient } from './helpers.ts';
 
 /**

@@ -47,5 +47,5 @@
 
 - `ERR_UPSTREAM_AUTH_FAILED`（503）：凭据对该文档没有权限（业务码 `10007`），或 token 被拒（`10302`、`10303`、`10313`、`37019`）。
 - `ERR_UPSTREAM_RATE_LIMITED`（503）：上游按频率或按次数拒绝，响应带 `Retry-After` 头。
-- `ERR_UPSTREAM_FAILED`（502）：上游 5xx、连不上、超时，或回答读不出业务码、`data` 里没有 `getSheet` 节。前三种会重试，后两种不重试。
+- `ERR_UPSTREAM_FAILED`（502）：上游 5xx、连不上、超时，或回答读不出业务码、`data` 里没有 `getSheet` 节。任何一种都直接返回失败。
 - `ERR_CONFIG_INVALID`（500）：启动时配置的子表不在列表里，`message` 会列出文档实际的子表；服务不进入就绪状态。

@@ -148,8 +148,6 @@ const ENV_PATHS = [
   'rateLimit.writeMax',
   'upstream.maxPerInterval',
   'upstream.intervalMs',
-  'upstream.maxRetries',
-  'upstream.retryBackoffMs',
   'upstream.timeoutMs',
   'upstream.cacheTtl',
   'upstream.staleAfterMs',
@@ -206,8 +204,6 @@ function getDefaultConfig(): AppEnvConfig {
     upstream: {
       maxPerInterval: 10,
       intervalMs: 3000,
-      maxRetries: 2,
-      retryBackoffMs: 500,
       timeoutMs: 10_000,
       cacheTtl: 30_000,
       staleAfterMs: 3 * 60 * 60 * 1000,

@@ -106,12 +106,10 @@ const rateLimitSchema = z.object({
   writeMax: integerFrom({ min: 1 }),
 });
 
-/** The throttled queue's options: pacing for every upstream call, its retry budget, and timeouts. */
+/** The throttled queue's options: the pace of every upstream call, its timeout and the read cache. */
 const upstreamSchema = z.object({
   maxPerInterval: integerFrom({ min: 1 }),
   intervalMs: integerFrom({ min: 1 }),
-  maxRetries: integerFrom({ min: 0, max: 10 }),
-  retryBackoffMs: integerFrom({ min: 0 }),
   timeoutMs: integerFrom({ min: 1 }),
   /** How long a read is answered from the cached pot list before the sheet is read again. */
   cacheTtl: integerFrom({ min: 0 }),

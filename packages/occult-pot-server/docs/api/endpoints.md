@@ -108,7 +108,7 @@ Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 178
 - `ERR_PAYLOAD_TOO_LARGE`（413）：请求体超过 `OPS_SERVER_JSON_BODY_LIMIT`。
 - `ERR_RATE_LIMITED`（429）：超过按客户端 IP 的 `writes` 窗口；它比 `general` 更紧，写入比读取更容易被限流。
 - `ERR_INTERNAL_ERROR`（500）：Redis 读写失败。文档坐标或凭据在启动时没通过校验时，这里也会以 `ERR_CONFIG_INVALID`（500）出现。
-- `ERR_UPSTREAM_FAILED`（502）：写表时传输失败、上游 5xx，或响应无法解析；这几种会按配置重试。
+- `ERR_UPSTREAM_FAILED`（502）：写表时传输失败、上游 5xx，或响应无法解析。服务端不再重发，表和缓存都不变。
 - `ERR_UPSTREAM_AUTH_FAILED`（503）：腾讯文档拒绝凭据，或凭据已过期。
 - `ERR_UPSTREAM_RATE_LIMITED`（503）：腾讯文档返回 429 或业务码 `400007`，响应带 `Retry-After` 头（秒）。
 - `ERR_METHOD_NOT_ALLOWED`（405）：同一路径上换了别的方法，响应带 `Allow`。
@@ -138,7 +138,7 @@ Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 178
 ### 功能
 
 - 就绪探针，回答本实例现在能不能服务。
-- 就绪条件是启动时核对过文档坐标、凭据没有过期，并且当前读得到 Redis。
+- 就绪条件是核对过文档坐标、凭据没有过期，并且当前读得到 Redis。启动时上游不可用会让坐标停留在未核对状态，直到某一次请求或探针把它核对上。
 
 ### 参数
 
@@ -175,6 +175,6 @@ nginx 另有一道更松的限制。被它拒绝同样是 `429` 与 `ERR_RATE_LI
 
 ### 腾讯文档限流
 
-上游按频率与每日次数限制出站调用，服务把调用均匀铺开并按配置重试；数值与重试口径见 [与腾讯文档通讯](upstream/README.md)。
+上游按频率与每日次数限制出站调用，服务把调用均匀铺开；数值与失败口径见 [与腾讯文档通讯](upstream/README.md)。
 
-被上游限流（HTTP 429 或业务码 `400007`）时，服务对外回答 `503` `ERR_UPSTREAM_RATE_LIMITED` 并带 `Retry-After` 头。因为一次写入至少消耗两次上游调用，写入会比读取更容易撞上这道限制、也更容易变慢。
+被上游限流（HTTP 429 或业务码 `400007`）时，服务对外回答 `503` `ERR_UPSTREAM_RATE_LIMITED` 并带 `Retry-After` 头。因为一次写入至少消耗两次上游调用，写入会比读取更容易撞上这道限制、也更容易变慢。失败不会被服务端重发，客户端会自己再写一遍。

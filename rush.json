@@ -448,6 +448,10 @@
       "projectFolder": "packages/feishu-download"
     },
     {
+      "packageName": "tencent-doc-sdk",
+      "projectFolder": "packages/tencent-doc-sdk"
+    },
+    {
       "packageName": "occult-pot-server",
       "projectFolder": "packages/occult-pot-server"
     },

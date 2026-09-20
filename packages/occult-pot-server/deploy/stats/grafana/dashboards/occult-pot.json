@@ -463,7 +463,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
+        "w": 12,
         "x": 0,
         "y": 26
       },
@@ -515,8 +515,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
-        "x": 8,
+        "w": 12,
+        "x": 12,
         "y": 26
       },
       "targets": [
@@ -533,58 +533,6 @@
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "showPoints": "never",
-            "stacking": {
-              "mode": "none"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "id": 12,
-      "type": "timeseries",
-      "title": "重试",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 26
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (operation) (rate(occult_pot_upstream_retries_total[30m]))",
-          "legendFormat": "{{operation}}",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps",
           "custom": {
             "drawStyle": "line",
             "lineWidth": 1,

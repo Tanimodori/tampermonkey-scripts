@@ -1,7 +1,7 @@
 import { getLogger } from '@logtape/logtape';
 import { createApp } from './app.ts';
 import { describeConfig, loadConfig, loadEnv, publishEnv, readLoggingOptions } from './config.ts';
-import { ConfigError } from './errors.ts';
+import { ConfigError, isAppError } from './errors.ts';
 import { configureLogging, flushLogging, LOG_CATEGORIES, LOG_CATEGORY } from './logger.ts';
 import { startServer } from './server.ts';
 import { getRedis, traced } from './stores/redis.ts';
@@ -81,13 +81,24 @@ async function main(): Promise<void> {
   try {
     await upstreamStore.resolve();
   } catch (error) {
-    logger.error('Could not resolve the Tencent Docs document or validate the credential; refusing to start', {
+    // The document itself is wrong — a sub-sheet that does not exist, an Open-Id that does not belong
+    // to the token. Trying again cannot fix either, so this is still a refusal to start.
+    if (isAppError(error) && error.code === 'ERR_CONFIG_INVALID') {
+      logger.error('The Tencent Docs document or the credential is configured wrongly; refusing to start', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      await created.close().catch(() => undefined);
+      flushLogging();
+      process.exitCode = 1;
+      return;
+    }
+
+    // The upstream was unreachable, throttling or answering badly. Nothing retries it here — a failed
+    // call stays failed — so the service starts not-ready and the coordinates are checked again by the
+    // first request that needs them. `/readyz` says why until then.
+    logger.error('Could not verify the Tencent Docs document; starting not ready', {
       error: error instanceof Error ? error.message : String(error),
     });
-    await created.close().catch(() => undefined);
-    flushLogging();
-    process.exitCode = 1;
-    return;
   }
 
   let running;

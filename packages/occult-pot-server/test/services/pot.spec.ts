@@ -10,7 +10,7 @@ import type { ClientOptions } from '@/services/upstream/client.ts';
 import { getRedis } from '@/stores/redis.ts';
 import { fromSheetValues } from '@/validation/index.ts';
 import type { Pot, PotRecord, PotState } from '@/validation/index.ts';
-import type { CommonRecord } from '@/validation/upstream.ts';
+import type { CommonRecord } from '@/validation/index.ts';
 
 // The service reads the time through `@/services/time.ts`; this replaces it with `@test/testUtils/clock.ts`, so
 // a TTL or staleness case moves time instead of waiting for it.

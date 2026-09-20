@@ -1,8 +1,10 @@
 import { getLogger } from '@logtape/logtape';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import { TencentDocsError } from 'tencent-doc-sdk';
 import { AppError, isAppError } from '@/errors.ts';
 import type { ErrorCode } from '@/errors.ts';
 import { LOG_CATEGORIES } from '@/logger.ts';
+import { toAppError } from '@/services/upstream/observe.ts';
 import { getRequestId } from './requestId.ts';
 
 /**
@@ -61,12 +63,15 @@ export function errorHandler(deps: ErrorHandlerDeps): (error: unknown, req: Requ
       return;
     }
 
-    const { status, code, message } = describe(error);
-    const appError = isAppError(error) ? error : undefined;
+    // A failure the upstream library judged reaches here untranslated whenever nothing on the request
+    // path caught it; the code, the status and the wait a client is told all come from that verdict.
+    const claimed = error instanceof TencentDocsError ? toAppError(error) : error;
+    const { status, code, message } = describe(claimed);
+    const appError = isAppError(claimed) ? claimed : undefined;
     const requestId = getRequestId(req);
 
     // `originalUrl`, not `path`: a controller mounted under a prefix rewrites the latter.
-    const fields = { requestId, method: req.method, path: req.originalUrl, status, code, error: reasonFor(error) };
+    const fields = { requestId, method: req.method, path: req.originalUrl, status, code, error: reasonFor(claimed) };
     // An unexpected failure outside production is diagnosable from the top of its stack, which the
     // log line carries instead of the response body.
     const stack = status >= 500 && deps.isProduction !== true && error instanceof Error ? error.stack?.split('\n').slice(0, 5) : undefined;

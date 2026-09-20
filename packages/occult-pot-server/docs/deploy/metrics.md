@@ -37,21 +37,14 @@ Prometheus 有五个抓取目标，也就是五个数据来源：应用自身，
 - 类型：counter
 - 标签：`operation`、`result`
 - 取值范围：`operation` 取 `getRecords`、`addRecords`、`updateRecords`、`deleteRecords`、`getSheet`、`userinfo`、`refreshToken`；`result` 取 `ok` 或 `ERR_UPSTREAM_BAD_REQUEST`、`ERR_UPSTREAM_AUTH_FAILED`、`ERR_UPSTREAM_RATE_LIMITED`、`ERR_UPSTREAM_FAILED`，见 [错误处理](../api/errors.md)。
-- 含义：上游可用情况的主指标。每次尝试结束时记一次。
+- 含义：上游可用情况的主指标。每次调用结束时记一次：失败的调用不会被服务端重发，所以一次调用只记一次。
 
 ### occult_pot_upstream_request_duration_seconds
 
 - 类型：histogram
 - 标签：`operation`、`result`
 - 取值范围：桶边界 0.05、0.1、0.25、0.5、1、2、5、10、30 秒。
-- 含义：上游单次尝试的耗时，从交给连接池到读完响应体。等令牌与重试退避都不在内，所以它变慢只可能是网络或对端慢；排队的迹象在 `occult_pot_upstream_retries_total` 与出站队列的 debug 日志里。
-
-### occult_pot_upstream_retries_total
-
-- 类型：counter
-- 标签：`operation`
-- 取值范围：非负整数，只在失败后决定重试时加一。
-- 含义：重试的次数。它比可用率先动，是上游开始抖动的信号。
+- 含义：一次调用的耗时，从交给连接池到读完响应体。等出站队列令牌的时间不在内，所以它变慢只可能是网络或对端慢；排队的迹象在出站队列的 debug 日志里。
 
 ### occult_pot_upstream_ready
 

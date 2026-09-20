@@ -2,7 +2,7 @@
 
 ## 运行前置
 
-Node.js 与 pnpm 由 Rush 管理：在仓库根执行 `rush update` 安装依赖，包内脚本用 `rushx` 运行。
+Node.js 与 pnpm 由 Rush 管理：在仓库根执行 `rush update` 安装依赖，包内脚本用 `rushx` 运行。与腾讯文档通讯的部分是仓库里的独立包，构建本服务时会先构建它：在它自己的目录里同样有 `rushx test:unit` 与 `rushx test:api`。
 
 未配置 `OPS_SERVER_REDIS_URL` 时使用进程内 Redis mock，开发模式的上游地址指向本地，因此没有外部服务也能启动。连接真实腾讯文档需要一份测试文档的坐标与凭据；运行 Redis 测试需要一个本机 Redis：
 
@@ -33,7 +33,7 @@ docker run -d --name test-redis -p 6399:6379 --restart unless-stopped redis:7-al
 - `.env.local`、`.env.development.local`：本机共享值与本机覆盖（不入库）。
 - `.env`：仓库不发布它；存在时会被读（也是最低优先级的文件来源）。
 - `.env.test-redis`、`.env.test-redis.local`：Redis 测试的地址，前者入库作为示例。
-- `.env.test-api`、`.env.test-api.local`：腾讯文档测试的坐标与凭据，前者入库作为示例。测试文档与生产文档结构相同、数据可以随意写入删除：分享链接里的 `tab=` 是子表 ID，`fileID` 由链接的 encodedID 经[文件 ID 转换](https://docs.qq.com/open/document/app/openapi/v2/file/util/converter.html)得到，凭据是该文档自己的应用（生产凭据对它没有权限）。
+- `.env.test-api`、`.env.test-api.local`：腾讯文档测试的坐标与凭据，前者入库作为示例；通讯包里另有一份同名的，供它自己的 live 用例读。测试文档与生产文档结构相同、数据可以随意写入删除：分享链接里的 `tab=` 是子表 ID，`fileID` 由链接的 encodedID 经[文件 ID 转换](https://docs.qq.com/open/document/app/openapi/v2/file/util/converter.html)得到，凭据是该文档自己的应用（生产凭据对它没有权限）。
 
 容器里没有这些文件，应用读到的是 compose 按 `env_file` 注入的环境变量。配置项本身的类型、默认值与含义，以及 compose 的取值方式，见 [配置](config/compose.md)。
 

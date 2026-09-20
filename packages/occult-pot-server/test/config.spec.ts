@@ -113,7 +113,6 @@ describe('loadConfig and getConfig', () => {
     // The original client script's pace: ten calls per three seconds, shared by reads, writes and deletes.
     expect(config.upstream.maxPerInterval).toBe(10);
     expect(config.upstream.intervalMs).toBe(3_000);
-    expect(config.upstream.maxRetries).toBe(2);
     expect(config.upstream.timeoutMs).toBe(10_000);
   });
 
@@ -136,8 +135,6 @@ describe('loadConfig and getConfig', () => {
         OPS_RATE_LIMIT_WRITE_MAX: '2',
         OPS_UPSTREAM_MAX_PER_INTERVAL: '7',
         OPS_UPSTREAM_INTERVAL_MS: '2000',
-        OPS_UPSTREAM_MAX_RETRIES: '3',
-        OPS_UPSTREAM_RETRY_BACKOFF_MS: '10',
         OPS_UPSTREAM_TIMEOUT_MS: '2000',
         OPS_SERVER_REDIS_URL: 'redis://cache.example:6379/1',
         OPS_LOG_ROTATING_FILE_PATH: './logs/app.log',
@@ -157,7 +154,7 @@ describe('loadConfig and getConfig', () => {
       },
       docs: { tokenExpiryWarnMs: 60_000 },
       rateLimit: { ipWindowMs: 1000, ipMax: 5, writeMax: 2 },
-      upstream: { maxPerInterval: 7, intervalMs: 2000, maxRetries: 3, retryBackoffMs: 10, timeoutMs: 2000, cacheTtl: 1000, staleAfterMs: 7_200_000 },
+      upstream: { maxPerInterval: 7, intervalMs: 2000, timeoutMs: 2000, cacheTtl: 1000, staleAfterMs: 7_200_000 },
       // A camelCase segment in a two-level group: `logRotatingFile.maxSize` → `OPS_LOG_ROTATING_FILE_MAX_SIZE`.
       logRotatingFile: { path: './logs/app.log', maxSize: 2048 },
     });
@@ -195,7 +192,6 @@ describe('loadConfig and getConfig', () => {
   });
 
   it('validates the upstream queue options', () => {
-    expect(() => loadConfig(baseEnv({ OPS_UPSTREAM_MAX_RETRIES: '99' }))).toThrow(/OPS_UPSTREAM_MAX_RETRIES must be <= 10/);
     expect(() => loadConfig(baseEnv({ OPS_UPSTREAM_TIMEOUT_MS: '0' }))).toThrow(/OPS_UPSTREAM_TIMEOUT_MS must be >= 1/);
     expect(() => loadConfig(baseEnv({ OPS_UPSTREAM_INTERVAL_MS: '0' }))).toThrow(/OPS_UPSTREAM_INTERVAL_MS must be >= 1/);
     expect(loadConfig(baseEnv({ OPS_UPSTREAM_MAX_PER_INTERVAL: '5', OPS_UPSTREAM_INTERVAL_MS: '1000' })).upstream).toMatchObject({

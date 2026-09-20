@@ -1,21 +1,58 @@
-import { getSheetAnswer } from '@test/testUtils/upstream/file.ts';
-import { deleteRecordsAnswer, getRecordsAnswer, readRows, writtenRecordsAnswer, writtenRecordsWithoutId } from '@test/testUtils/upstream/record.ts';
-import { refreshTokenAnswer, userInfoAnswer } from '@test/testUtils/upstream/token.ts';
 import { defu } from 'defu';
 import Redis from 'ioredis';
 import RedisMock from 'ioredis-mock';
-import { MockAgent } from 'undici';
+import type { TencentDocsMock } from 'tencent-doc-sdk/testing';
 import type { Dispatcher } from 'undici';
 import { loadConfig, loadEnv } from '@/config.ts';
 import { configureLogging } from '@/logger.ts';
 import type { LogLevel } from '@/logger.ts';
-import { getClient } from '@/services/upstream/client.ts';
 import type { AppConfig } from '@/validation/index.ts';
-import type { CommonRecord } from '@/validation/upstream.ts';
+
+/**
+ * The scaffolding a test app builds on: the environment it runs with, the Redis it talks to, the log
+ * records it can assert on, and an HTTP client for the app under test.
+ *
+ * Everything about the Tencent Docs upstream — the fake document, the shapes it answers with, the row
+ * builder — lives with the library that talks to it, and is re-exported from here so a spec imports its
+ * test helpers from one place.
+ */
 
 /** The document coordinates every test app is configured with; the mock reports the same ids. */
 export const FILE_ID = '300000000$ExAmPlEfIlEiD';
 export const SHEET_ID = 'tXXXXXX';
+
+export {
+  apiOrigin,
+  EXAMPLE_FILE_ID,
+  EXAMPLE_SHEET_ID,
+  rawRecord,
+  setupTencentDocsMock,
+  sheet,
+  sheetWithDocumentedSpelling,
+  getSheetAnswer,
+  getRecordsAnswer,
+  readRow,
+  readRows,
+  writtenRecordsAnswer,
+  writtenRecordsWithoutId,
+  deleteRecordsAnswer,
+  userInfoAnswer,
+  refreshTokenAnswer,
+  refreshTokenRefused,
+} from 'tencent-doc-sdk/testing';
+
+export type { MockFailure, TencentDocsMock, TencentDocsMockState } from 'tencent-doc-sdk/testing';
+
+/**
+ * A stand-in for the no-argument `getClient()`, for the specs that swap the transport with `vi.mock`.
+ *
+ * The first call is what asks the fake document for its pool; that is the only way a spec can put one
+ * under the production modules without those modules knowing a spec exists.
+ */
+export function lazyTransport(mock: TencentDocsMock): () => Dispatcher {
+  let built: Dispatcher | undefined;
+  return () => (built ??= mock.client);
+}
 
 /**
  * What a test app sets for itself. The real environment may override any of it, which is how the
@@ -29,12 +66,10 @@ const TEST_DEFAULTS: NodeJS.ProcessEnv = {
   OPS_DOCS_ACCESS_TOKEN: 'test-access-token-value',
   OPS_DOCS_CLIENT_ID: 'test-client-id',
   OPS_DOCS_OPEN_ID: 'test-open-id',
-  // The throttled queue is effectively unthrottled and never waits between attempts: these tests
-  // assert behaviour, not pacing, and a 500 ms wait per retry would only make them slow.
+  // The throttled queue is effectively unthrottled: these tests assert behaviour, not pacing, and a
+  // wait per call would only make them slow.
   OPS_UPSTREAM_MAX_PER_INTERVAL: '10000',
   OPS_UPSTREAM_INTERVAL_MS: '1',
-  OPS_UPSTREAM_MAX_RETRIES: '0',
-  OPS_UPSTREAM_RETRY_BACKOFF_MS: '0',
 };
 
 /** The one name that decides where the tests' Redis lives: no address means the mock. */
@@ -108,34 +143,6 @@ export function captureLogs(level: LogLevel = 'debug'): Array<Record<string, unk
   return records;
 }
 
-/** One raw smart sheet record, shaped exactly like a `getRecords` response element. */
-export function rawRecord(input: {
-  recordId?: string;
-  world?: string;
-  map?: string;
-  potId?: string;
-  northRefreshAtMs?: number | string;
-  lastVisitAtMs?: number | string;
-  values?: Record<string, unknown>;
-  createTime?: string;
-  updateTime?: string;
-}): CommonRecord {
-  const values: Record<string, unknown> = {
-    区服: [{ text: input.world ?? '鸟', type: 'text' }],
-    地图: [{ text: input.map ?? '北岛', type: 'text' }],
-    ID: [{ text: input.potId ?? '54-1-4000E8F3', type: 'text' }],
-    北罐刷新时间: String(input.northRefreshAtMs ?? 1789200000000),
-    最后一次进岛时间: String(input.lastVisitAtMs ?? 1789199000000),
-    ...input.values,
-  };
-  return {
-    recordID: input.recordId ?? 'r00001',
-    createTime: input.createTime ?? '1789100000000',
-    updateTime: input.updateTime ?? '1789199000000',
-    values,
-  };
-}
-
 /** The five rows the live sheet contained, with their own countdown column for cross-checks. */
 export const LIVE_SHEET_ROWS: ReadonlyArray<{
   world: string;
@@ -155,369 +162,6 @@ export const LIVE_SHEET_ROWS: ReadonlyArray<{
 export function sheetInstant(text: string): number {
   const match = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(text)!;
   return Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]) - 8, Number(match[5]));
-}
-
-// ---------------------------------------------------------------------------
-// Network mocking (undici `MockAgent`) — the Tencent Docs API is intercepted at the dispatcher.
-// ---------------------------------------------------------------------------
-
-/** A business failure the mock can be told to answer with. */
-export interface MockFailure {
-  readonly status: number;
-  readonly ret: number;
-  readonly msg: string;
-  /** Response headers to send with it, such as the `Retry-After` a 429 may carry. */
-  readonly headers?: Record<string, string>;
-}
-
-export interface TencentDocsMockState {
-  /** Rows the sheet holds. Mutate to simulate sheet changes. */
-  records: CommonRecord[];
-  /** How many rows the mock hands back per request; lets a test force pagination. */
-  pageSize: number | undefined;
-  /** Every `addRecords` payload the service sent, in order. */
-  added: Array<Record<string, unknown>>;
-  /** The same appends as the sheet stored them: what a later read hands back, id and times included. */
-  addedRecords: CommonRecord[];
-  /** Every `updateRecords` request the service sent, in order: which row, and the values it was given. */
-  updated: Array<{ recordID: string; values: Record<string, unknown> }>;
-  /** Every `deleteRecords` request's record ids, in order. */
-  deleted: string[];
-  /** Set to make `deleteRecords` answer with this business error instead. */
-  deleteFailure: MockFailure | undefined;
-  /** Every intercepted request, for assertions about method/body/headers. */
-  calls: Array<{ method: string; url: string; body: unknown; headers: Record<string, string> }>;
-  /** Set to make the read fail with this business error instead. */
-  readFailure: MockFailure | undefined;
-  /** Set to make `addRecords` answer with this business error instead. */
-  writeFailure: MockFailure | undefined;
-  /** Set to make `updateRecords` answer with this business error instead. */
-  updateFailure: MockFailure | undefined;
-  /** Answers `addRecords` with rows that carry no `recordID`, a mutation the measured answer does not have. */
-  addRecordsWithoutId: boolean;
-  /**
-   * The instant the sheet stamps on an appended row, as a 13 digit string. The real document keeps
-   * its own `createTime`/`updateTime` per row and never reports them on a write, so a case that cares
-   * about the document's times sets this to its own clock; the service reads them back on the next
-   * read, which is what makes a round trip consistent.
-   */
-  sheetTime: string;
-  /** The document's sub-sheets, as `查询子表` reports them; the store checks its `sheetId` against them. */
-  sheets: Record<string, unknown>[];
-  /** Set to make the sub-sheet list fail. */
-  sheetListFailure: MockFailure | undefined;
-  /** Set to make `userinfo` fail (a rejected credential, for instance). */
-  userInfoFailure: MockFailure | undefined;
-  /** The Open-Id `userinfo` reports; must match the configured one unless a test says otherwise. */
-  userInfoOpenId: string;
-  /** What the token endpoint answers; `undefined` means the default refreshed token. */
-  refresh: { accessToken: string; expiresIn?: number; userId?: string; refreshToken?: string } | undefined;
-  /** Set to make the token endpoint fail. */
-  refreshFailure: { status: number; body: Record<string, unknown> } | undefined;
-  /**
-   * Answers the next call — at whichever endpoint it arrives — with this body verbatim: an object is
-   * sent as JSON of that shape, a string is sent as-is for a body that is not JSON at all.
-   */
-  rawReply: { status: number; body: Record<string, unknown> | string } | undefined;
-  /** Fails this many calls before any response exists, as a dropped connection would. */
-  networkFailures: number;
-}
-
-export interface TencentDocsMock {
-  readonly state: TencentDocsMockState;
-  /** The bare mock pool, for a spec that wants to compose a client of its own over it. */
-  readonly agent: MockAgent;
-  /** The transport the app under test runs on: the mock upstream itself, with nothing wrapped over it. */
-  readonly client: Dispatcher;
-  reset(): void;
-  close(): Promise<void>;
-}
-
-const JSON_HEADERS = { 'content-type': 'application/json' };
-
-/**
- * The origin of the configured upstream: the mock only ever intercepts this one, so it is whatever
- * the run's configuration points at — the local mock origin the vitest config supplies, unless a
- * task's env file names a real service. Specs build their requests on it too.
- */
-export function apiOrigin(): string {
-  return process.env.OPS_DOCS_API_BASE ?? 'https://docs.qq.com';
-}
-
-/** The slice of undici's mock callback this file needs. */
-interface MockRequest {
-  readonly path: string;
-  readonly method: string;
-  readonly headers?: unknown;
-  readonly body?: unknown;
-}
-
-interface MockReply {
-  readonly statusCode: number;
-  readonly data: Record<string, unknown> | string;
-  readonly responseOptions: { readonly headers: Record<string, string> };
-}
-
-function mockReply(statusCode: number, data: MockReply['data'], headers: Record<string, string> = JSON_HEADERS): MockReply {
-  return { statusCode, data, responseOptions: { headers } };
-}
-
-/** One reply for a configured failure, with whatever headers it was told to carry. */
-function failureReply(failure: MockFailure): MockReply {
-  return mockReply(failure.status, { ret: failure.ret, msg: failure.msg }, failure.headers ?? JSON_HEADERS);
-}
-
-function bodyText(body: unknown): string {
-  if (typeof body === 'string') return body;
-  if (body instanceof Uint8Array) return Buffer.from(body).toString('utf8');
-  return '';
-}
-
-/** The mock reports headers as they were sent; assertions read them lowercase. */
-function lowerHeaders(headers: unknown): Record<string, string> {
-  if (typeof headers !== 'object' || headers === null) return {};
-  return Object.fromEntries(Object.entries(headers as Record<string, unknown>).map(([key, value]) => [key.toLowerCase(), String(value)]));
-}
-
-/**
- * Intercepts every Tencent Docs Open API call. Real connections are disabled, so a request the
- * mock does not know about fails loudly instead of reaching the network.
- *
- * A spec swaps this transport in with `vi.mock` on `@/services/upstream/client.ts`: a no-argument
- * `getClient()` — how the `api/` modules reach their transport — returns this client, while the call
- * that carries a dispatcher still goes to the real factory. That is what keeps the production
- * modules free of a test seam.
- */
-export function setupTencentDocsMock(
-  options: {
-    records?: CommonRecord[];
-    sheets?: Record<string, unknown>[];
-    userInfoOpenId?: string;
-  } = {},
-): TencentDocsMock {
-  const state: TencentDocsMockState = {
-    records: options.records ?? [],
-    pageSize: undefined,
-    added: [],
-    addedRecords: [],
-    updated: [],
-    deleted: [],
-    calls: [],
-    readFailure: undefined,
-    writeFailure: undefined,
-    updateFailure: undefined,
-    addRecordsWithoutId: false,
-    sheetTime: '1789534000000',
-    deleteFailure: undefined,
-    sheets: options.sheets ?? [{ sheetID: SHEET_ID, title: '智能表1', isVisible: true, type: 'smartsheet' }],
-    sheetListFailure: undefined,
-    userInfoFailure: undefined,
-    userInfoOpenId: options.userInfoOpenId ?? 'test-open-id',
-    refresh: undefined,
-    refreshFailure: undefined,
-    rawReply: undefined,
-    networkFailures: 0,
-  };
-
-  /** What `reset()` restores the sub-sheet list to; cases that need another one mutate the state. */
-  const initialSheets = state.sheets;
-
-  let nextRecordId = 1;
-  /** The transport `client` hands out, built once and reused for every request of this mock. */
-  let custom: Dispatcher | undefined;
-
-  const origin = apiOrigin();
-  const agent = new MockAgent();
-  agent.disableNetConnect();
-  const pool = agent.get(origin);
-
-  const record = (request: MockRequest, body: unknown): void => {
-    state.calls.push({ method: request.method, url: `${origin}${request.path}`, body, headers: lowerHeaders(request.headers) });
-  };
-
-  /**
-   * Records the call, then applies whatever failure the case asked for — a dropped connection, or a
-   * body that is not JSON. Both short-circuit the endpoint's own answer, and both are counted from
-   * `calls` either way, which is how a test counts attempts.
-   */
-  function prelude(request: MockRequest, body: unknown): MockReply | undefined {
-    record(request, body);
-    if (state.networkFailures > 0) {
-      state.networkFailures -= 1;
-      throw new Error('simulated transport failure');
-    }
-    return state.rawReply === undefined
-      ? undefined
-      : mockReply(state.rawReply.status, state.rawReply.body, {
-          'content-type': typeof state.rawReply.body === 'string' ? 'text/plain' : JSON_HEADERS['content-type'],
-        });
-  }
-
-  // `查询子表`: the document's sub-sheets, which the store checks its configured id against.
-  pool
-    .intercept({ path: (path) => path.startsWith('/openapi/smartbook/v2/files/') && path.endsWith('/sheets'), method: 'GET' })
-    .reply((request) => {
-      const early = prelude(request, undefined);
-      if (early !== undefined) return early;
-      if (state.sheetListFailure !== undefined) return failureReply(state.sheetListFailure);
-      return mockReply(200, getSheetAnswer(state.sheets));
-    })
-    .persist();
-
-  // The credential endpoints: `userinfo` validates the token, `token` refreshes it.
-  pool
-    .intercept({ path: (path) => path.startsWith('/oauth/v2/userinfo'), method: 'GET' })
-    .reply((request) => {
-      const early = prelude(request, undefined);
-      if (early !== undefined) return early;
-      if (state.userInfoFailure !== undefined) return failureReply(state.userInfoFailure);
-      return mockReply(200, userInfoAnswer({ openID: state.userInfoOpenId, nick: 'tester' }));
-    })
-    .persist();
-
-  pool
-    .intercept({ path: (path) => path.startsWith('/oauth/v2/token'), method: 'GET' })
-    .reply((request) => {
-      const early = prelude(request, undefined);
-      if (early !== undefined) return early;
-      if (state.refreshFailure !== undefined) return mockReply(state.refreshFailure.status, state.refreshFailure.body);
-      const refreshed = state.refresh ?? { accessToken: 'refreshed-access-token', expiresIn: 2_592_000, userId: state.userInfoOpenId };
-      // A response without a lifetime makes the store fall back to the token's own `exp`.
-      return mockReply(
-        200,
-        refreshTokenAnswer({
-          accessToken: refreshed.accessToken,
-          expiresIn: refreshed.expiresIn,
-          userId: refreshed.userId ?? state.userInfoOpenId,
-          refreshToken: refreshed.refreshToken,
-        }),
-      );
-    })
-    .persist();
-
-  pool
-    .intercept({ path: (path) => path.startsWith('/openapi/smartbook/v2/files/'), method: 'POST' })
-    .reply((request) => {
-      const raw = bodyText(request.body);
-      const body = raw === '' ? undefined : (JSON.parse(raw) as Record<string, unknown>);
-      const early = prelude(request, body);
-      if (early !== undefined) return early;
-
-      if (body !== undefined && 'getRecords' in body) {
-        if (state.readFailure !== undefined) return failureReply(state.readFailure);
-
-        const payload = body.getRecords as { offset?: number; limit?: number };
-        const offset = payload.offset ?? 0;
-        // The client always asks for the API maximum, so the mock decides how much to hand back.
-        const limit = Math.min(payload.limit ?? 100, state.pageSize ?? 100);
-        const page = state.records.slice(offset, offset + limit);
-        const nextOffset = offset + page.length;
-        return mockReply(
-          200,
-          getRecordsAnswer({ records: readRows(page), total: state.records.length, hasMore: nextOffset < state.records.length, next: nextOffset }),
-        );
-      }
-
-      if (body !== undefined && 'deleteRecords' in body) {
-        if (state.deleteFailure !== undefined) return failureReply(state.deleteFailure);
-
-        const ids = (body.deleteRecords as { recordIDs: string[] }).recordIDs;
-        state.deleted.push(...ids);
-        state.records = state.records.filter((record) => !ids.includes(record.recordID));
-        return mockReply(200, deleteRecordsAnswer());
-      }
-
-      if (body !== undefined && 'addRecords' in body) {
-        if (state.writeFailure !== undefined) return failureReply(state.writeFailure);
-
-        const records = (body.addRecords as { records: Array<{ values: Record<string, unknown> }> }).records;
-        const stamps = { createTime: state.sheetTime, updateTime: state.sheetTime };
-        const stored: CommonRecord[] = records.map((entry) => {
-          state.added.push(entry.values);
-          return { recordID: `rNew${nextRecordId++}`, ...stamps, values: entry.values };
-        });
-        // The document keeps its own times on the row, and says nothing about them on the answer: see
-        // the live probe in `docs/data/pot.md`. `addRecordsWithoutId` is the shape a document that
-        // answers without an id would have.
-        const answered = state.addRecordsWithoutId
-          ? writtenRecordsWithoutId(stored)
-          : stored.map((entry) => ({ recordID: entry.recordID, values: entry.values }));
-        state.addedRecords.push(...stored);
-        state.records.push(...stored);
-        return mockReply(200, writtenRecordsAnswer('addRecords', answered));
-      }
-
-      if (body !== undefined && 'updateRecords' in body) {
-        if (state.updateFailure !== undefined) return failureReply(state.updateFailure);
-
-        const records = (body.updateRecords as { records: Array<{ recordID: string; values: Record<string, unknown> }> }).records;
-        const stored: CommonRecord[] = records.map((entry) => {
-          state.updated.push(entry);
-          // The row keeps its own identity and times; only the cells are replaced, which is what the
-          // API does — and why `docs` cannot take its timestamps from this answer.
-          const before = state.records.find((row) => row.recordID === entry.recordID);
-          return { ...before, recordID: entry.recordID, values: entry.values };
-        });
-        for (const entry of stored) state.records = state.records.map((row) => (row.recordID === entry.recordID ? entry : row));
-        return mockReply(
-          200,
-          writtenRecordsAnswer(
-            'updateRecords',
-            stored.map((entry) => ({ recordID: entry.recordID, values: entry.values })),
-          ),
-        );
-      }
-
-      return mockReply(200, { ret: 0, msg: 'Succeed' });
-    })
-    .persist();
-
-  return {
-    state,
-    agent,
-    // Built on first use: it reads the loaded configuration, which exists only inside a test.
-    get client(): Dispatcher {
-      custom ??= getClient({ dispatcher: agent });
-      return custom;
-    },
-    reset: () => {
-      state.added.length = 0;
-      state.addedRecords.length = 0;
-      state.updated.length = 0;
-      state.deleted.length = 0;
-      state.calls.length = 0;
-      state.readFailure = undefined;
-      state.writeFailure = undefined;
-      state.updateFailure = undefined;
-      state.addRecordsWithoutId = false;
-      state.sheetTime = '1789534000000';
-      state.deleteFailure = undefined;
-      state.pageSize = undefined;
-      state.sheets = initialSheets;
-      state.sheetListFailure = undefined;
-      state.userInfoFailure = undefined;
-      state.userInfoOpenId = 'test-open-id';
-      state.refresh = undefined;
-      state.refreshFailure = undefined;
-      state.rawReply = undefined;
-      state.networkFailures = 0;
-      // The numbering restarts with the state, so a case can name the row its own append produced.
-      nextRecordId = 1;
-    },
-    close: () => agent.close(),
-  };
-}
-
-/**
- * A stand-in for the no-argument `getClient()`, for the specs that swap the transport with `vi.mock`.
- *
- * The first call is what asks the mock for its client (`mock.client`): that one builds a transport
- * by reading the loaded configuration, which does not exist while a spec's module body is being
- * evaluated — by the time a request happens, the case has loaded its own.
- */
-export function lazyTransport(mock: TencentDocsMock): () => Dispatcher {
-  let built: Dispatcher | undefined;
-  return () => (built ??= mock.client);
 }
 
 // ---------------------------------------------------------------------------

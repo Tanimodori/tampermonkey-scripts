@@ -51,10 +51,8 @@ export const httpRequestDuration = new Histogram({
 /**
  * How many Tencent Docs calls were made, and how each one ended.
  *
- * `result` is `ok` or the error code the call was classified as. An attempt that is retried counts
- * once per attempt, so a call that failed and then succeeded shows both an error and an `ok`; that
- * is what makes the success ratio include the cost of retrying, with `upstreamRetries` as the
- * earlier warning that the upstream is getting worse.
+ * `result` is `ok` or the error code the call was classified as. A call is one attempt — nothing here
+ * is sent again — so the two counts are the same number and the success ratio is the whole story.
  */
 export const upstreamRequests = new Counter({
   name: `${PREFIX}upstream_requests_total`,
@@ -63,20 +61,12 @@ export const upstreamRequests = new Counter({
   registers: [metricsRegistry],
 });
 
-/** How long one attempt took: the connection and the upstream's own time, with no queue or backoff wait in it. */
+/** How long one call took: the connection and the upstream's own time, with no queue wait in it. */
 export const upstreamRequestDuration = new Histogram({
   name: `${PREFIX}upstream_request_duration_seconds`,
   help: 'Tencent Docs call duration in seconds, by operation and result.',
   labelNames: ['operation', 'result'],
   buckets: [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 30],
-  registers: [metricsRegistry],
-});
-
-/** How often a failed call was attempted again. */
-export const upstreamRetries = new Counter({
-  name: `${PREFIX}upstream_retries_total`,
-  help: 'Tencent Docs calls that were attempted again, by operation.',
-  labelNames: ['operation'],
   registers: [metricsRegistry],
 });
 

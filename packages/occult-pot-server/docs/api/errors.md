@@ -75,7 +75,7 @@
 - `message`：
   - `Tencent Docs rejected the request (ret=${ret}, msg=${msg})` 参数类业务码
   - `Tencent Docs request failed (ret=${ret})` 其它非零 `ret`
-- 出错原因：读表或写表时，腾讯文档以参数类业务码（`ret` 在 400000–499999）或其它非零 `ret` 拒绝这次调用；不重试。
+- 出错原因：读表或写表时，腾讯文档以参数类业务码（`ret` 在 400000–499999）或其它非零 `ret` 拒绝这次调用。
 
 ### 上游凭据不可用
 
@@ -85,14 +85,14 @@
   - `Tencent Docs returned HTTP ${status} for ${operation}` 上游回 401 或 403
   - `Tencent Docs rejected the credential (ret=${ret}, msg=${msg})` 凭据类业务码
   - `Tencent Docs refused to refresh the access token (body: ${body})` 刷新凭据被拒
-- 出错原因：腾讯文档回 401 或 403，或返回凭据类业务码 `10007`、`10302`、`10303`、`10313`、`37019`，或刷新凭据时被拒；不重试。
+- 出错原因：腾讯文档回 401 或 403，或返回凭据类业务码 `10007`、`10302`、`10303`、`10313`、`37019`，或刷新凭据时被拒。
 
 ### 上游限流
 
 - `code`：`ERR_UPSTREAM_RATE_LIMITED`
 - HTTP：503
 - `message`：`Tencent Docs rate limit reached (status=${status}, ret=${ret}, msg=${msg})`
-- 出错原因：腾讯文档回 429 或业务码 `400007`。先等它给出的等待时长，没有就等配置的退避，再重试；对外用 `Retry-After` 头给出建议等待的秒数。
+- 出错原因：腾讯文档回 429 或业务码 `400007`。服务端不会自己再发一次；对外用 `Retry-After` 头给出建议等待的秒数，也就是本服务出站调用的间隔。
 
 ### 上游调用失败
 
@@ -102,9 +102,9 @@
   - `Tencent Docs returned HTTP ${status} for ${operation}` 上游 5xx
   - `Request to ${url} failed` 连不上、超时，或正文不是 JSON
   - `Unexpected response from Tencent Docs for ${operation} (status=${status}, body=${body})` 回答里没有可读的业务码
-  - `Tencent Docs answered ${operation} with a shape this service cannot read (${issues}; body: ${body})` 有业务码，但回答的形状与该端点的类型不符
+  - `Tencent Docs answered ${operation} with a shape that cannot be read (${issues}; body: ${body})` 有业务码，但回答的形状与该端点的类型不符
   - `Tencent Docs user info carried no openID (body: ${body})` 用户信息里没有 `openID`
-- 出错原因：上游 5xx、连不上、超时与读不出的正文（不是 JSON）会重试；读不出业务码的信封、字段形状不符、用户信息里没有 `openID` 不重试。重试次数与退避参数见 [与腾讯文档通讯](upstream/README.md)。
+- 出错原因：上游 5xx、连不上、超时、读不出的正文（不是 JSON）、读不出业务码的信封、字段形状不符、用户信息里没有 `openID`。任何一种都直接返回失败，服务端不再重发，见 [与腾讯文档通讯](upstream/README.md)。
 
 ### 配置不可用
 
@@ -116,7 +116,7 @@
   - ``OPS_DOCS_OPEN_ID is required unless the access token carries a `sub` claim`` 没配 Open-Id，凭据里也没有
   - `OPS_DOCS_OPEN_ID (${openId}) does not belong to the configured access token (${tokenOpenId})` Open-Id 与凭据不匹配
   - `Refreshing the access token needs OPS_DOCS_CLIENT_SECRET and OPS_DOCS_REFRESH_TOKEN` 刷新凭据缺配置
-- 出错原因：配置、文档坐标与凭据在启动时一次核对完，失败就拒绝启动，服务不会带着坏配置开始服务。运行中再问到坐标或刷新凭据而条件不满足时，才会作为 500 返回。
+- 出错原因：配置、文档坐标与凭据在启动时一次核对完。子表不在该文档里、`OPS_DOCS_OPEN_ID` 与 token 不属于同一个人，这类再试一次也不会变对的问题会拒绝启动；上游当时连不上、被限流或凭据被拒，则带着未就绪状态启动，由后续请求再核对。运行中再问到坐标或刷新凭据而条件不满足时，才作为 500 返回。
 
 ### 未预期的服务端错误
 

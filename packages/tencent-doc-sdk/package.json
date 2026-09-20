@@ -1,0 +1,62 @@
+{
+  "name": "tencent-doc-sdk",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Tencent Docs smartsheet Open API client: credential lifecycle and sheet/record data calls, with transport, pacing and retries left to the caller.",
+  "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
+  "bugs": {
+    "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tanimodori/tampermonkey-scripts.git"
+  },
+  "license": "MIT",
+  "author": "Tanimodori",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "default": "./dist/testing/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run test:unit && npm run test:api",
+    "test:unit": "vitest --run --passWithNoTests",
+    "test:api": "cross-env OPS_ENV_PATH=.env.test-api vitest --run --no-file-parallelism --tags-filter=api",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "undici": "^7.16.0",
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "cross-env": "^10.1.0",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  },
+  "optionalDependencies": {
+    "@oxfmt/binding-win32-x64-msvc": "^0.67.0",
+    "@oxlint/binding-win32-x64-msvc": "^1.82.0",
+    "@rolldown/binding-win32-x64-msvc": "~1.2.6",
+    "lightningcss-win32-x64-msvc": "^1.33.0"
+  }
+}

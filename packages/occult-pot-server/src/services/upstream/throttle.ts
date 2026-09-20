@@ -10,9 +10,9 @@ import { now } from '@/services/time.ts';
  *
  * The queue is what makes the outbound rate a configuration value instead of a hope: the upstream
  * quota is counted per minute and per document, so the calls are spread evenly across the window
- * rather than fired at once. Nothing else belongs here: how hard to try a failed call is the
- * transport's business (`client.ts`), and an attempt it retries does not come back through this
- * queue — this paces *logical* calls.
+ * rather than fired at once. Nothing else belongs here: how a call is sent is the transport's business
+ * (`client.ts`), and what its answer means is the upstream library's. One call takes one slot, because
+ * a call that failed is not sent again.
  *
  * Its window is fixed when the queue is built, so `loadConfig()` invalidates it through
  * `onConfigReload()` and the next call builds one from the configuration in hand.

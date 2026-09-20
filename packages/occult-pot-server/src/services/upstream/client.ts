@@ -6,10 +6,9 @@ import { getConfig, onConfigReload } from '@/config.ts';
  * The transport to Tencent Docs: one undici pool, and nothing else.
  *
  * It does not know what a pot is, which document it lives in, or what a caller does with an answer.
- * All it owns is the connection: a pool whose timeouts come from `OPS_UPSTREAM_TIMEOUT_MS`. Judging a
- * response is `classify.ts`'s; the pacing, the attempt loop, the metrics and the log lines are
- * `send.ts`'s, which is the only caller of what this module hands out. URLs and payloads belong to the
- * `api/` modules.
+ * All it owns is the connection: a pool whose timeouts come from `OPS_UPSTREAM_TIMEOUT_MS`. What an
+ * answer means is `tencent-doc-sdk`'s business, and what this service keeps of it — the counters, the
+ * histograms, the log lines — is `observe.ts`'s.
  *
  * Two ways in, and the difference is who owns the pool:
  *
@@ -17,7 +16,7 @@ import { getConfig, onConfigReload } from '@/config.ts';
  *   handed, or a fresh pool sized from `OPS_UPSTREAM_TIMEOUT_MS` — and nothing is kept.
  * - `getClient(options)` is the process-wide one. With options it is `useClient()` and the caller
  *   owns what it gets; without them it hands back the default transport, building it on first use,
- *   which is how `send.ts` reaches it without holding one of its own.
+ *   which is how the upstream library reaches it without holding one of its own.
  *
  * The default caches the loaded configuration (its pool's timeouts are fixed at the moment it is
  * built), so `loadConfig()` invalidates it and the next `getClient()` rebuilds it. That invalidation

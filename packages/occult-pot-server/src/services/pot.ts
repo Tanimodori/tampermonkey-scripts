@@ -2,7 +2,7 @@ import { getLogger } from '@logtape/logtape';
 import { getConfig } from '@/config.ts';
 import { LOG_CATEGORIES } from '@/logger.ts';
 import { now } from '@/services/time.ts';
-import { addRecords, deleteRecords, getRecords, updateRecords } from '@/services/upstream/api/record.ts';
+import { addRecords, deleteRecords, getRecords, updateRecords } from '@/services/upstream/records.ts';
 import { clearPotState, readPotState, writePotState } from '@/stores/pot.ts';
 import { cellValuesSchema, docsOf, fromSheetValues, isValidPot, potKey, potOf, toSheetValues } from '@/validation/index.ts';
 import type { CommonRecord, Pot, PotDocs, PotRecord, PotState, WrittenRecords } from '@/validation/index.ts';

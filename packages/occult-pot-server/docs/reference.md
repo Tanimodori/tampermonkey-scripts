@@ -17,6 +17,7 @@
 - [@logtape/redaction](https://logtape.org/manual/redaction)：按字段名脱敏凭据
 - [zod](https://zod.dev)：配置与请求校验
 - [undici](https://undici.nodejs.org)：出站请求与[拦截器](https://undici.nodejs.org/api/Interceptors)
+- [tencent-doc-sdk](../../tencent-doc-sdk/README.md)：腾讯文档智能表的读写与凭据生命周期，本仓库内的包
 - [throttled-queue](https://github.com/shaunpersad/throttled-queue)：出站调用的节流
 - [express-rate-limit](https://express-rate-limit.mintlify.app)：按 IP 的入站限流
 - [rate-limit-redis](https://github.com/express-rate-limit/rate-limit-redis)：限流计数存放到 Redis
@@ -65,6 +66,7 @@
 ## 本仓库内的文档
 
 - [occult-pot-server README](../README.md)：服务概况、配置、部署要点、运行时
+- [tencent-doc-sdk README](../../tencent-doc-sdk/README.md)：这个服务读写腾讯文档所用的库，端点、错误、钩子与测试替身
 - [Pot 数据](data/pot.md)与[存储设计](data/store.md)
 - [API 端点](api/endpoints.md)、[错误处理](api/errors.md)与[与腾讯文档通讯](api/upstream/README.md)（其下按领域分为[子表](api/upstream/file.md)、[记录](api/upstream/record.md)、[凭据](api/upstream/token.md)）
 - [本地开发](development.md)：运行前置、环境文件、测试与检查命令

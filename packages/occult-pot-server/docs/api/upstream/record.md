@@ -20,7 +20,7 @@
 - 请求体与响应都是单层包装：请求是 `{ "关键字": … }`，响应位于 `data.关键字`。
 - 写入文本列必须使用带类型的单元格（`[{ "type": "text", "text": "鸟" }]`）；裸字符串会被静默丢弃并回答成功，见 [表格数据](../../data/pot.md)。
 - 回答除本服务读取的字段外还带作者与修改人列，以及 `autoRawRecords`、`newAutoRawRecords`，一律原样保留。
-- 四个操作共用同一套报错：`ERR_UPSTREAM_BAD_REQUEST`（400）参数或列名被拒；`ERR_UPSTREAM_AUTH_FAILED`（503）凭据或权限被拒；`ERR_UPSTREAM_RATE_LIMITED`（503）被上游限流，响应带 `Retry-After` 头；`ERR_UPSTREAM_FAILED`（502）上游 5xx、连不上、超时（会重试），或回答读不出业务码、缺少对应的节（不重试）。消息模板与完整对照见 [错误处理](../errors.md)。
+- 四个操作共用同一套报错：`ERR_UPSTREAM_BAD_REQUEST`（400）参数或列名被拒；`ERR_UPSTREAM_AUTH_FAILED`（503）凭据或权限被拒；`ERR_UPSTREAM_RATE_LIMITED`（503）被上游限流，响应带 `Retry-After` 头；`ERR_UPSTREAM_FAILED`（502）上游 5xx、连不上、超时，或回答读不出业务码、缺少对应的节。消息模板与完整对照见 [错误处理](../errors.md)。
 
 ## 查询记录
 

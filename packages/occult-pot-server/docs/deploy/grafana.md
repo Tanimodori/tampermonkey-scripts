@@ -70,9 +70,9 @@ sum(rate(occult_pot_http_requests_total{route="unmatched"}[10m]))
 sum by (operation, result) (rate(occult_pot_upstream_requests_total[10m]))
 ```
 
-**可用率（成功占全部尝试）— timeseries · percentunit**
+**可用率（成功占全部调用）— timeseries · percentunit**
 
-上游的主指标。窗口用 1h，因为上游调用是慢变量，10m 里往往没有几个样本。分母是全部尝试，所以重试的代价算在里面。
+上游的主指标。窗口用 1h，因为上游调用是慢变量，10m 里往往没有几个样本。分母是全部调用。
 
 ```promql
 sum by (operation) (rate(occult_pot_upstream_requests_total{result="ok"}[1h]))
@@ -89,18 +89,10 @@ sum by (result) (rate(occult_pot_upstream_requests_total{result!="ok"}[30m]))
 
 **上游延迟（p95，按调用）— timeseries · s**
 
-每种调用的 p95。它只计一次尝试的网络与对端时间，等令牌与重试退避不在内。
+每种调用的 p95。它只计一次调用的网络与对端时间，等出站队列令牌的时间不在内。
 
 ```promql
 histogram_quantile(0.95, sum by (le, operation) (rate(occult_pot_upstream_request_duration_seconds_bucket[10m])))
-```
-
-**重试 — timeseries · reqps**
-
-比可用率先动的信号：窗口 30m，只要上游开始抖动这里就会抬起来。
-
-```promql
-sum by (operation) (rate(occult_pot_upstream_retries_total[30m]))
 ```
 
 **实例就绪（1 = 可服务上游）— stat**

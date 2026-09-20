@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    /* `@/…` is a module under `src/`, `@test/…` one under `test/`; the aliases are declared for vite in
+       vite.config.ts, which is what vitest and the bundle resolve through. The same mapping is repeated
+       in tsconfig.build.json, and `build/finalize-types.ts` turns the aliased specifiers back into
+       relative ones in the emitted declarations — tsc copies non-relative specifiers verbatim, and a
+       consumer package has no idea what `@/` means. */
+    "paths": {
+      "@/*": ["./src/*"],
+      "@test/*": ["./test/*"]
+    },
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.json", "build/**/*.ts", "test/**/*.ts", "vite.config.ts"]
+}

@@ -450,6 +450,14 @@
     {
       "packageName": "occult-pot-server",
       "projectFolder": "packages/occult-pot-server"
+    },
+    {
+      "packageName": "xiv-api-provider",
+      "projectFolder": "packages/xiv-api-provider"
+    },
+    {
+      "packageName": "xiv-datamine-polyfill",
+      "projectFolder": "packages/xiv-datamine-polyfill"
     }
   ]
 }

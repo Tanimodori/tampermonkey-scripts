@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    /* Imports *inside `src/`* are relative, because tsc emits these files as-is for Node to load and it
+       copies every specifier verbatim into the declarations too — an `@/…` would reach a consumer that has no
+       idea what it means. `@/` and `@test/` are therefore reserved for `test/` and `e2e/`, which are never
+       emitted, and the aliases below exist only so vitest and the type check agree on that. */
+    "paths": {
+      "@/*": ["./src/*"],
+      "@test/*": ["./test/*"]
+    },
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "client.d.ts", "vite.config.ts"]
+}

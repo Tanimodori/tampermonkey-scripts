@@ -1,0 +1,67 @@
+{
+  "name": "xiv-datamine-polyfill",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Turn an import of xiv-datamine-polyfill/<Sheet>.csv into the datamining table itself, fetched and trimmed at build time.",
+  "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
+  "bugs": {
+    "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tanimodori/tampermonkey-scripts.git"
+  },
+  "license": "MIT",
+  "author": "Tanimodori",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./load": {
+      "types": "./dist/load.d.ts",
+      "default": "./dist/load.js"
+    },
+    "./client": {
+      "types": "./client.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint",
+    "test": "vitest --passWithNoTests",
+    "test:dist": "tsc -p probe/tsconfig.json",
+    "test:e2e": "vitest run test/e2e",
+    "test:live": "cross-env XIV_LIVE=1 vitest run --tags-filter=live",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "xiv-api-provider": "workspace:*"
+  },
+  "peerDependencies": {
+    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "cross-env": "^10.1.0",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  },
+  "optionalDependencies": {
+    "@oxfmt/binding-win32-x64-msvc": "^0.67.0",
+    "@oxlint/binding-win32-x64-msvc": "^1.82.0",
+    "@rolldown/binding-win32-x64-msvc": "~1.2.6",
+    "lightningcss-win32-x64-msvc": "^1.33.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

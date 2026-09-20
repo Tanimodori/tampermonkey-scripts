@@ -319,6 +319,94 @@ importers:
         specifier: ^1.33.0
         version: 1.33.0
 
+  ../../packages/xiv-api-provider:
+    dependencies:
+      csv-parse:
+        specifier: ^7.0.2
+        version: 7.0.2
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.19.3
+      cross-env:
+        specifier: ^10.1.0
+        version: 10.1.0
+      oxfmt:
+        specifier: ^0.67.0
+        version: 0.67.0
+      oxlint:
+        specifier: ^1.82.0
+        version: 1.82.0
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.13
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
+      vitest:
+        specifier: ^5.0.1
+        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+    optionalDependencies:
+      '@oxfmt/binding-win32-x64-msvc':
+        specifier: ^0.67.0
+        version: 0.67.0
+      '@oxlint/binding-win32-x64-msvc':
+        specifier: ^1.82.0
+        version: 1.82.0
+      '@rolldown/binding-win32-x64-msvc':
+        specifier: ~1.2.6
+        version: 1.2.8
+      lightningcss-win32-x64-msvc:
+        specifier: ^1.33.0
+        version: 1.33.0
+
+  ../../packages/xiv-datamine-polyfill:
+    dependencies:
+      xiv-api-provider:
+        specifier: workspace:*
+        version: link:../xiv-api-provider
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.19.3
+      cross-env:
+        specifier: ^10.1.0
+        version: 10.1.0
+      oxfmt:
+        specifier: ^0.67.0
+        version: 0.67.0
+      oxlint:
+        specifier: ^1.82.0
+        version: 1.82.0
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
+      vitest:
+        specifier: ^5.0.1
+        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
+    optionalDependencies:
+      '@oxfmt/binding-win32-x64-msvc':
+        specifier: ^0.67.0
+        version: 0.67.0
+      '@oxlint/binding-win32-x64-msvc':
+        specifier: ^1.82.0
+        version: 1.82.0
+      '@rolldown/binding-win32-x64-msvc':
+        specifier: ~1.2.6
+        version: 1.2.8
+      lightningcss-win32-x64-msvc:
+        specifier: ^1.33.0
+        version: 1.33.0
+
   ../../packages/xivanalysis-zh:
     devDependencies:
       '@types/node':
@@ -1112,6 +1200,9 @@ packages:
 
   css.escape@1.5.1:
     resolution: {integrity: sha512-YUifsXXuknHlUsmlgyY0PKzgPOr7/FjCePfHNt0jxm83wHZi44VDMQ7/fGNkjY3/jV1MC+1CmZbaHzugyeRtpg==}
+
+  csv-parse@7.0.2:
+    resolution: {integrity: sha512-uKZghv9UmPkMVLYy//KZ9HFAIJsl7wkhoEdIL0+rhuSY9pZQlhaeGEDPIe+/w7eh81MOql8Q/9+inAGWG6ZHYA==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -2001,6 +2092,9 @@ packages:
   zod@4.6.2:
     resolution: {integrity: sha512-lh5RCAGFa1Cm2hjtNwLQhSs/AsqdWnTQaBER9fEwN/88pSh7KOtJavtBx/0VlkN/uFd61SwYmljLMDAsHlvzBQ==}
 
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+
 snapshots:
 
   '@epic-web/invariant@1.0.0': {}
@@ -2495,6 +2589,8 @@ snapshots:
       which: 2.0.2
 
   css.escape@1.5.1: {}
+
+  csv-parse@7.0.2: {}
 
   debug@2.6.9:
     dependencies:
@@ -3424,3 +3520,5 @@ snapshots:
   wrappy@1.0.2: {}
 
   zod@4.6.2: {}
+
+  zod@4.6.5: {}

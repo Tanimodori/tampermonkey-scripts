@@ -1,0 +1,72 @@
+{
+  "name": "xiv-api-provider",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Online access to the FFXIV data sources the Chinese-localizing userscripts read: xivapi in two editions, the Garland Tools mirror, and the datamining CSV dumps.",
+  "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
+  "bugs": {
+    "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tanimodori/tampermonkey-scripts.git"
+  },
+  "license": "MIT",
+  "author": "Tanimodori",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./core": {
+      "types": "./dist/entries/core.d.ts",
+      "default": "./dist/core.js"
+    },
+    "./xivapi": {
+      "types": "./dist/entries/xivapi.d.ts",
+      "default": "./dist/xivapi.js"
+    },
+    "./garlands": {
+      "types": "./dist/entries/garlands.d.ts",
+      "default": "./dist/garlands.js"
+    },
+    "./datamine": {
+      "types": "./dist/entries/datamine.d.ts",
+      "default": "./dist/datamine.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas.d.ts",
+      "default": "./dist/schemas.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json && tsx build/finalize-types.ts",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint",
+    "test:dist": "tsc -p probe/tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --passWithNoTests",
+    "test:live": "cross-env XIV_LIVE=1 vitest run --tags-filter=live",
+    "test:drift": "cross-env XIV_LIVE=1 vitest run test/live"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "cross-env": "^10.1.0",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
+    "tsx": "^4.19.2",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1",
+    "zod": "^4.6.5"
+  },
+  "optionalDependencies": {
+    "@oxfmt/binding-win32-x64-msvc": "^0.67.0",
+    "@oxlint/binding-win32-x64-msvc": "^1.82.0",
+    "@rolldown/binding-win32-x64-msvc": "~1.2.6",
+    "lightningcss-win32-x64-msvc": "^1.33.0"
+  },
+  "dependencies": {
+    "csv-parse": "^7.0.2"
+  }
+}

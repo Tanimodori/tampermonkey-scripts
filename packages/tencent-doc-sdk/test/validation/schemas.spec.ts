@@ -7,7 +7,7 @@ import {
   DeleteRecordsResponseSchema,
   GetRecordsResponseSchema,
   GetSheetResponseSchema,
-  RefreshTokenResponseSchema,
+  TokenResponseSchema,
   UserInfoResponseSchema,
   WrittenRecordsSchema,
 } from '@/validation/schemas.js';
@@ -127,12 +127,12 @@ describe('the credential endpoints', () => {
     expect(UserInfoResponseSchema.safeParse({ ret: 0, data: { nick: 'tester' } }).success).toBe(true);
   });
 
-  it('answer a refresh with the token fields, and refuse an envelope it never sends', () => {
+  it('answer a token grant with the token fields, and refuse an envelope it never sends', () => {
     const answer = { access_token: 'fresh', token_type: 'Bearer', expires_in: 2_592_000, scope: 'scope.smartsheet', user_id: 'OpenIDTest' };
-    expect(RefreshTokenResponseSchema.parse(answer).access_token).toBe('fresh');
+    expect(TokenResponseSchema.parse(answer).access_token).toBe('fresh');
     // A refusal is still an answer here: the caller words it, and needs the body to do so.
-    expect(RefreshTokenResponseSchema.parse({ error: 'invalid_grant' })).toEqual({ error: 'invalid_grant' });
-    expect(RefreshTokenResponseSchema.parse({})).toEqual({});
+    expect(TokenResponseSchema.parse({ error: 'invalid_grant' })).toEqual({ error: 'invalid_grant' });
+    expect(TokenResponseSchema.parse({})).toEqual({});
   });
 });
 

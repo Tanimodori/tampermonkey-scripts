@@ -37,14 +37,14 @@ Prometheus 有五个抓取目标，也就是五个数据来源：应用自身，
 - 类型：counter
 - 标签：`operation`、`result`
 - 取值范围：`operation` 取 `getRecords`、`addRecords`、`updateRecords`、`deleteRecords`、`getSheet`、`userinfo`、`refreshToken`；`result` 取 `ok` 或 `ERR_UPSTREAM_BAD_REQUEST`、`ERR_UPSTREAM_AUTH_FAILED`、`ERR_UPSTREAM_RATE_LIMITED`、`ERR_UPSTREAM_FAILED`，见 [错误处理](../api/errors.md)。
-- 含义：上游可用情况的主指标。每次调用结束时记一次：失败的调用不会被服务端重发，所以一次调用只记一次。
+- 含义：上游可用情况的主指标。每次调用结束时记一次：失败的调用不会被服务端重发，所以一次调用只记一次。`ok` 指调用方拿到了一个按端点类型读得出来的回答，回答读不出来记在失败那一侧。
 
 ### occult_pot_upstream_request_duration_seconds
 
 - 类型：histogram
 - 标签：`operation`、`result`
 - 取值范围：桶边界 0.05、0.1、0.25、0.5、1、2、5、10、30 秒。
-- 含义：一次调用的耗时，从交给连接池到读完响应体。等出站队列令牌的时间不在内，所以它变慢只可能是网络或对端慢；排队的迹象在出站队列的 debug 日志里。
+- 含义：一次调用的耗时，从拿到出站队列的令牌到本次调用返回（含把回答按其类型读一遍）。等令牌的时间不在内，所以它变慢只可能是网络、对端或回答的体积；排队的迹象在出站队列的 debug 日志里。
 
 ### occult_pot_upstream_ready
 

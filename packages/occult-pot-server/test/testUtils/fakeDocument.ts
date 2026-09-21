@@ -3,21 +3,21 @@ import type {
   CommonRecord,
   CommonRecords,
   CredentialRecord,
+  CredentialStore,
   DocClient,
   Sheet,
   TencentDocsError,
   TencentDocsErrorCode,
   TencentDocsErrorOptions,
   TokenManager,
-  UserInfo,
   WrittenRecords,
 } from 'tencent-doc-sdk';
 
 /**
  * The fake this service's tests run on: an in-memory sub-sheet behind a `DocClient`, and a credential
- * behind a `TokenManager`.
+ * behind a `CredentialStore` that a `TokenManager` writes.
  *
- * It stands in for `tencent-doc-sdk`'s two factories — see `fakeTencentDocsModule()` — and nothing else:
+ * It stands in for `tencent-doc-sdk`'s three factories — see `fakeTencentDocsModule()` — and nothing else:
  * the envelope, the addresses, the paging of a real page and the shape of a write answer are the
  * library's own business and are tested over there, against a fake HTTP upstream. What is tested here
  * is what this service does with a page it was handed, so the answers this file produces are plain
@@ -76,9 +76,9 @@ export interface FakeSheetState {
   deleteFailure: FakeFailure | undefined;
   sheetListFailure: FakeFailure | undefined;
   userInfoFailure: FakeFailure | undefined;
-  /** The Open-Id `validate()` reports. */
+  /** The Open-Id `getUserInfo()` reports. */
   userInfoOpenId: string;
-  /** What a refresh hands back instead of the default new token. The lifetime is the library's to read off it. */
+  /** What a refresh hands back instead of the default new token; a fake token states no lifetime. */
   refresh: { accessToken: string; userId?: string; refreshToken?: string } | undefined;
   refreshFailure: FakeFailure | undefined;
   /** Fails this many calls before any answer exists. */
@@ -198,28 +198,73 @@ function written(rows: readonly CommonRecord[]): WrittenRecords {
   return { records };
 }
 
-/** What `validate()` and `refresh()` leave the credential holding. The library's own rules are tested there. */
-interface FakeCredential {
+/** The credential a fake holds: the parts a case loaded, plus the lifetime a case names. */
+interface FakeHeldCredential {
   accessToken: string;
-  clientId: string;
+  clientId: string | undefined;
   openId: string | undefined;
   refreshToken: string | undefined;
-  validatedAt: number | undefined;
+}
+
+/** The shape of `CredentialStore`, which the fake keeps as a plain object rather than a JWT to read. */
+function fakeCredentialStore(initial: Partial<CredentialRecord> | undefined, TencentError: TencentDocsErrorClass): CredentialStore {
+  const held: FakeHeldCredential = {
+    accessToken: initial?.accessToken ?? '',
+    clientId: initial?.clientId,
+    openId: initial?.openId,
+    refreshToken: initial?.refreshToken,
+  };
+
+  const said = (value: string | undefined, what: string): string => {
+    if (value === undefined || value.length === 0) throw new TencentError('config', `The fake credential has no ${what}`);
+    return value;
+  };
+
+  return {
+    getCredential: () => ({
+      accessToken: said(held.accessToken, 'access token'),
+      clientId: held.clientId,
+      openId: held.openId,
+      refreshToken: held.refreshToken,
+      expiresAt: credentialExpiresAt,
+    }),
+    // Only what a case or an answer actually says: an empty part means nothing was said about it.
+    update: (record) => {
+      if (record.accessToken !== undefined && record.accessToken.length > 0) held.accessToken = record.accessToken;
+      if (record.clientId !== undefined && record.clientId.length > 0) held.clientId = record.clientId;
+      if (record.openId !== undefined && record.openId.length > 0) held.openId = record.openId;
+      if (record.refreshToken !== undefined && record.refreshToken.length > 0) held.refreshToken = record.refreshToken;
+    },
+    getAccessToken: () => said(held.accessToken, 'access token'),
+    getClientId: () => said(held.clientId, 'client id'),
+    getOpenId: () => said(held.openId, 'Open-Id'),
+    getRefreshToken: () => said(held.refreshToken, 'refresh token'),
+    /**
+     * A lifetime a case sets, and nothing else: a fake token carries no `exp` claim to read one off, so
+     * whether the credential is near its end is stated rather than derived.
+     */
+    getExpiresAt: () => credentialExpiresAt,
+  };
 }
 
 /** The shape of `TokenManagerOptions`, narrowed to what the fake reads. */
 export interface FakeManagerOptions {
-  readonly initial: CredentialRecord;
+  readonly store: CredentialStore;
   readonly clientSecret?: string | undefined;
 }
 
 /** The fake factories, as a `vi.mock` of `tencent-doc-sdk` wants them. */
 export function fakeTencentDocsSdk(TencentError: TencentDocsErrorClass): {
+  createCredentialStore: (initial?: Partial<CredentialRecord>) => CredentialStore;
   createDocClient: (options: unknown) => DocClient;
   createTokenManager: (options: FakeManagerOptions) => TokenManager;
 } {
   const call = failures(TencentError);
-  return { createDocClient: () => fakeDocClient(call), createTokenManager: (options) => fakeTokenManager(options, call) };
+  return {
+    createCredentialStore: (initial) => fakeCredentialStore(initial, TencentError),
+    createDocClient: () => fakeDocClient(call),
+    createTokenManager: (options) => fakeTokenManager(options, call),
+  };
 }
 
 /** `vi.mock('tencent-doc-sdk', …)`, spelled once: the real module with its two factories swapped out. */
@@ -228,48 +273,19 @@ export function fakeTencentDocsModule(actual: { TencentDocsError: TencentDocsErr
 }
 
 function fakeTokenManager(options: FakeManagerOptions, call: FakeFailures): TokenManager {
-  const credential: FakeCredential = {
-    accessToken: options.initial.accessToken,
-    clientId: options.initial.clientId ?? '',
-    openId: options.initial.openId,
-    refreshToken: options.initial.refreshToken,
-    validatedAt: undefined,
+  const store = options.store;
+
+  /** What a grant leaves behind: the answer written into the store, and the store read back out. */
+  const granted = (answer: { accessToken: string; userId?: string; refreshToken?: string }): CredentialRecord => {
+    store.update({ accessToken: answer.accessToken, openId: answer.userId, refreshToken: answer.refreshToken });
+    return store.getCredential();
   };
 
   return {
-    hydrate: async () => undefined,
-    headers: async () => ({
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      'Access-Token': credential.accessToken,
-      'Client-Id': credential.clientId,
-      'Open-Id': credential.openId ?? '',
-    }),
-    accessToken: () => credential.accessToken,
-    refreshToken: () => credential.refreshToken,
-    openId: () => credential.openId,
-    clientId: () => credential.clientId,
-    /**
-     * Unknown unless a case says otherwise: whether a token has expired is read off its own claims by
-     * the library, so the fake is handed a lifetime rather than deriving one.
-     */
-    expiresAt: () => credentialExpiresAt,
-    validatedAt: () => credential.validatedAt,
-    validate: () =>
-      call.begin('userinfo', undefined, sheet.userInfoFailure, () => {
-        credential.validatedAt = Date.now();
-        return { openId: sheet.userInfoOpenId };
-      }),
-    refresh: () =>
-      call.begin('refreshToken', undefined, sheet.refreshFailure, () => {
-        const refreshed = sheet.refresh ?? { accessToken: 'refreshed-access-token' };
-        credential.accessToken = refreshed.accessToken;
-        if (refreshed.refreshToken !== undefined) credential.refreshToken = refreshed.refreshToken;
-        if (refreshed.userId !== undefined) credential.openId = refreshed.userId;
-        credential.validatedAt = undefined;
-      }),
-    getUserInfo: async (): Promise<UserInfo> => ({ openID: sheet.userInfoOpenId, nick: 'tester' }),
-    refreshAccessToken: async () => ({ access_token: (sheet.refresh ?? { accessToken: 'refreshed-access-token' }).accessToken }),
+    /** The identity the upstream reports and nothing else: whose token it is stays the service's judgement. */
+    getUserInfo: () => call.begin('userinfo', undefined, sheet.userInfoFailure, () => ({ openID: sheet.userInfoOpenId })),
+    fetchToken: (input) => call.begin('accessToken', input, sheet.refreshFailure, () => granted({ accessToken: 'granted-access-token' })),
+    refreshToken: () => call.begin('refreshToken', undefined, sheet.refreshFailure, () => granted(sheet.refresh ?? { accessToken: 'refreshed-access-token' })),
   };
 }
 

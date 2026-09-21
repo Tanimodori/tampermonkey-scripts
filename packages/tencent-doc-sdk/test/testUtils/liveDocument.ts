@@ -2,8 +2,11 @@ import { afterAll } from 'vitest';
 import type { DocCoordinates } from '@/api/address.js';
 import { createDocClient } from '@/api/docClient.js';
 import type { DocClient } from '@/api/docClient.js';
-import { createTokenManager } from '@/token/tokenManager.js';
-import type { TokenManager } from '@/token/tokenManager.js';
+import { newDispatcher } from '@/client/transport.js';
+import { createTokenManager } from '@/token/manager.js';
+import type { TokenManager } from '@/token/manager.js';
+import { createCredentialStore } from '@/token/store.js';
+import type { CredentialStore } from '@/token/store.js';
 import type { CommonRecord, CommonRecords } from '@/validation/types.js';
 import { liveEnv } from './env.js';
 import { EXAMPLE_FILE_ID } from './mockUpstream.js';
@@ -47,14 +50,24 @@ export const liveReason: string =
 /** Whether this run may reach the network. */
 export const live = liveReason === '';
 
+/** Where the live document is: the same origin the client below sends to, for a spec that calls an endpoint directly. */
+export const apiBase: string = NAMED.apiBase;
+
 export const coordinates: DocCoordinates = { fileId: NAMED.fileId ?? '', sheetId: NAMED.sheetId ?? '' };
 
-export const tokens: TokenManager = createTokenManager({
-  apiBase: NAMED.apiBase,
-  initial: { accessToken: NAMED.accessToken ?? '', clientId: NAMED.clientId, openId: NAMED.openId },
+/** The credential the live document is read with: the token the environment names, and nothing else. */
+export const store: CredentialStore = createCredentialStore({
+  accessToken: NAMED.accessToken ?? '',
+  clientId: NAMED.clientId,
+  openId: NAMED.openId,
 });
 
-export const client: DocClient = createDocClient({ apiBase: NAMED.apiBase, coordinates, tokens });
+/** One pool for the file's calls, shared by the manager and the client; nothing connects before a call. */
+const dispatcher = newDispatcher();
+
+export const tokens: TokenManager = createTokenManager({ apiBase: NAMED.apiBase, store, dispatch: dispatcher });
+
+export const client: DocClient = createDocClient({ apiBase: NAMED.apiBase, coordinates, store, transport: dispatcher });
 
 /** A row the suite appends and deletes again, named by a value only it writes. */
 export interface LiveMarker {

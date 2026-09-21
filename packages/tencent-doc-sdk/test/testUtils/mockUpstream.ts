@@ -1,4 +1,5 @@
-import { refreshTokenAnswer, userInfoAnswer } from '@test/testUtils/fixtures/oauth.js';
+import { tokenAnswer, userInfoAnswer } from '@test/testUtils/fixtures/oauth.js';
+import type { TokenAnswerInput } from '@test/testUtils/fixtures/oauth.js';
 import { deleteRecordsAnswer, getRecordsAnswer, readRows, writtenRecordsAnswer, writtenRecordsWithoutId } from '@test/testUtils/fixtures/record.js';
 import { getSheetAnswer } from '@test/testUtils/fixtures/sheet.js';
 import { MockAgent } from 'undici';
@@ -10,8 +11,8 @@ import type { CommonRecord } from '@/validation/types.js';
  *
  * It exists so that a caller's own tests can drive the whole vocabulary of the upstream — a page that
  * ends, a write that names its rows, a 429 with a `Retry-After`, a body that is not JSON — without a
- * network, a quota, or a document to clean up afterwards. Every endpoint is intercepted, real
- * connections are disabled, and the four calls answer from one mutable `state`.
+ * network, a quota, or a document to clean up afterwards. Every endpoint is intercepted, real connections
+ * are disabled, and every answer comes from one mutable `state`.
  *
  * Hand it over as the `transport` of a `createDocClient`/`createTokenManager`, or as whatever the code
  * under test uses to reach a dispatcher.
@@ -67,9 +68,11 @@ export interface TencentDocsMockState {
   userInfoFailure: MockFailure | undefined;
   /** The Open-Id `userinfo` reports; must match the configured one unless a test says otherwise. */
   userInfoOpenId: string;
-  /** What the token endpoint answers; `undefined` means the default refreshed token. */
-  refresh: { accessToken: string; expiresIn?: number; userId?: string; refreshToken?: string } | undefined;
-  /** Set to make the token endpoint fail. */
+  /** What the 刷新 Token grant answers; `undefined` means the default refreshed token. */
+  refresh: TokenAnswerInput | undefined;
+  /** What the 获取 Token grant answers; `undefined` means the same default as a refresh. */
+  codeExchange: TokenAnswerInput | undefined;
+  /** Set to make the token endpoint fail, whichever grant reached it. */
   refreshFailure: { status: number; body: Record<string, unknown> } | undefined;
   /**
    * Answers the next call — at whichever endpoint it arrives — with this body verbatim: an object is
@@ -172,6 +175,7 @@ export function setupTencentDocsMock(
     userInfoFailure: undefined,
     userInfoOpenId: options.userInfoOpenId ?? 'test-open-id',
     refresh: undefined,
+    codeExchange: undefined,
     refreshFailure: undefined,
     rawReply: undefined,
     networkFailures: 0,
@@ -218,7 +222,8 @@ export function setupTencentDocsMock(
     })
     .persist();
 
-  // The credential endpoints: `userinfo` validates the token, `token` refreshes it.
+  // The credential endpoints: `userinfo` reports whose token this is, `token` grants a new one — by
+  // authorization code or by refresh token, at the same path.
   pool
     .intercept({ path: (path) => path.startsWith('/oauth/v2/userinfo'), method: 'GET' })
     .reply((request) => {
@@ -235,15 +240,20 @@ export function setupTencentDocsMock(
       const early = prelude(request, undefined);
       if (early !== undefined) return early;
       if (state.refreshFailure !== undefined) return mockReply(state.refreshFailure.status, state.refreshFailure.body);
-      const refreshed = state.refresh ?? { accessToken: 'refreshed-access-token', expiresIn: 2_592_000, userId: state.userInfoOpenId };
+      // One URL, two grants, told apart by nothing but `grant_type` — which is therefore what decides
+      // which half of the state answers here.
+      const granted = new URL(request.path, origin).searchParams.get('grant_type') === 'authorization_code';
+      const answer = granted
+        ? (state.codeExchange ?? { accessToken: 'granted-access-token', userId: state.userInfoOpenId })
+        : (state.refresh ?? { accessToken: 'refreshed-access-token', expiresIn: 2_592_000, userId: state.userInfoOpenId });
       // A response without a lifetime makes the reader fall back to the token's own `exp`.
       return mockReply(
         200,
-        refreshTokenAnswer({
-          accessToken: refreshed.accessToken,
-          expiresIn: refreshed.expiresIn,
-          userId: refreshed.userId ?? state.userInfoOpenId,
-          refreshToken: refreshed.refreshToken,
+        tokenAnswer({
+          accessToken: answer.accessToken,
+          expiresIn: answer.expiresIn,
+          userId: answer.userId ?? state.userInfoOpenId,
+          refreshToken: answer.refreshToken,
         }),
       );
     })
@@ -347,6 +357,7 @@ export function setupTencentDocsMock(
       state.userInfoFailure = undefined;
       state.userInfoOpenId = 'test-open-id';
       state.refresh = undefined;
+      state.codeExchange = undefined;
       state.refreshFailure = undefined;
       state.rawReply = undefined;
       state.networkFailures = 0;

@@ -51,8 +51,9 @@ export const httpRequestDuration = new Histogram({
 /**
  * How many Tencent Docs calls were made, and how each one ended.
  *
- * `result` is `ok` or the error code the call was classified as. A call is one attempt — nothing here
- * is sent again — so the two counts are the same number and the success ratio is the whole story.
+ * `result` is `ok` once the caller was handed an answer the library could read, and the error code the
+ * call was classified as otherwise. A call is one attempt, whatever it came to, and nothing here is sent
+ * again, so the two counts are the same number and the success ratio is the whole story.
  */
 export const upstreamRequests = new Counter({
   name: `${PREFIX}upstream_requests_total`,

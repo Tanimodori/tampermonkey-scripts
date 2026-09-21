@@ -4,8 +4,8 @@ import {
   DeleteRecordsResponseSchema,
   GetRecordsResponseSchema,
   GetSheetResponseSchema,
-  RefreshTokenResponseSchema,
   SheetSchema,
+  TokenResponseSchema,
   UserInfoResponseSchema,
 } from '@/validation/schemas.js';
 import {
@@ -14,10 +14,10 @@ import {
   getSheetAnswer,
   readRow,
   readRows,
-  refreshTokenAnswer,
-  refreshTokenRefused,
   sheet,
   sheetWithDocumentedSpelling,
+  tokenAnswer,
+  tokenRefused,
   userInfoAnswer,
   writtenRecordsAnswer,
   writtenRecordsWithoutId,
@@ -84,15 +84,15 @@ describe('the credential endpoints', () => {
     expect(UserInfoResponseSchema.parse(userInfoAnswer({ openID: 'OpenIDTest' })).data.openID).toBe('OpenIDTest');
   });
 
-  it('answer a refresh with the token, with or without a lifetime and a rotated refresh token', () => {
-    expect(RefreshTokenResponseSchema.parse(refreshTokenAnswer({ accessToken: 'fresh', expiresIn: 2_592_000, refreshToken: 'rotated' }))).toMatchObject({
+  it('answer a token grant with the token, with or without a lifetime and a rotated refresh token', () => {
+    expect(TokenResponseSchema.parse(tokenAnswer({ accessToken: 'fresh', expiresIn: 2_592_000, refreshToken: 'rotated' }))).toMatchObject({
       access_token: 'fresh',
       refresh_token: 'rotated',
     });
-    expect(RefreshTokenResponseSchema.parse(refreshTokenAnswer({ accessToken: 'fresh' })).expires_in).toBeUndefined();
+    expect(TokenResponseSchema.parse(tokenAnswer({ accessToken: 'fresh' })).expires_in).toBeUndefined();
   });
 
   it('answer a refusal with a body the caller words, not an envelope', () => {
-    expect(RefreshTokenResponseSchema.parse(refreshTokenRefused)).toMatchObject({ error: 'invalid_grant' });
+    expect(TokenResponseSchema.parse(tokenRefused)).toMatchObject({ error: 'invalid_grant' });
   });
 });

@@ -44,8 +44,9 @@
 
 ### 可能的报错
 
-- `ERR_UPSTREAM_AUTH_FAILED`（503）：token 被拒、Open-Id 不符，或凭据对该文档没有权限。
-- `ERR_UPSTREAM_FAILED`（502）：回答里没有 `openID`；上游 5xx、连不上、超时同样如此。
+- `ERR_UPSTREAM_AUTH_FAILED`（503）：token 被上游拒绝，或凭据对该文档没有权限。
+- `ERR_CONFIG_INVALID`（500）：配置了 `OPS_DOCS_OPEN_ID` 而上游报告的用户标识与它不一致；回答里没有用户标识时按不一致处理。
+- `ERR_UPSTREAM_FAILED`（502）：上游 5xx、连不上、超时，或回答不是 JSON。
 - `ERR_UPSTREAM_RATE_LIMITED`（503）：被上游限流，响应带 `Retry-After` 头。
 
 ## 刷新 access token

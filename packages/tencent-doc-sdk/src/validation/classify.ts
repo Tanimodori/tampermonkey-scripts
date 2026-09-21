@@ -1,4 +1,4 @@
-import type { TencentDocsErrorOptions } from './errors.js';
+import type { TencentDocsErrorOptions, UpstreamResponse } from './errors.js';
 import { TencentDocsError } from './errors.js';
 
 /**
@@ -37,6 +37,8 @@ export interface UpstreamAnswer {
 export interface CallShape {
   /** The payload keyword (`getRecords`, `addRecords`, `refreshToken`, …), for error wording. */
   readonly operation: string;
+  /** The path that was sent to, query string gone: what an error names the call by. */
+  readonly path: string;
   /** Whether the answer carries the smartsheet envelope this table understands. */
   readonly envelope: boolean;
 }
@@ -54,7 +56,13 @@ export function classifyResponse(response: UpstreamAnswer, call: CallShape): Ten
   const { ret, msg } = response;
   const said = joined([ret === undefined ? undefined : `ret=${ret}`, msg === undefined ? undefined : `msg=${msg}`]);
   const because = said === '' ? '' : ` (${said})`;
-  const details: TencentDocsErrorOptions = { status: response.status, ret, msg };
+  const details: TencentDocsErrorOptions = {
+    status: response.status,
+    ret,
+    msg,
+    path: call.path,
+    response: { status: response.status, headers: response.headers, body: response.body },
+  };
 
   if (response.status === 429 || (ret !== undefined && RATE_LIMIT_RET_CODES.has(ret))) {
     return new TencentDocsError('rate_limited', `Tencent Docs rate limit reached (${joined([`status=${response.status}`, said === '' ? undefined : said])})`, {
@@ -94,16 +102,36 @@ export function classifyResponse(response: UpstreamAnswer, call: CallShape): Ten
 
 /** The error for a call that never got a readable answer: a timeout, a refused connection, a dropped
  * socket, a body that never finished arriving, a body that was not JSON. */
-export function transportFailure(cause: unknown, target: string): TencentDocsError {
-  return new TencentDocsError('transport', `Request to ${target} failed`, { cause });
+export function transportFailure(cause: unknown, target: string, path: string): TencentDocsError {
+  return new TencentDocsError('transport', `Request to ${target} failed`, { cause, path });
 }
 
-/** The error for an answer that carries the envelope but is not the shape the endpoint promises. */
-export function invalidAnswer(what: string, body: unknown, said: string): TencentDocsError {
-  const masked = describeBody(body);
-  return new TencentDocsError('invalid_answer', `Tencent Docs answered ${what} with a shape that cannot be read (${said}; body: ${masked})`, {
+/**
+ * The error for an answer that carries the envelope but is not the shape the endpoint promises.
+ *
+ * `status` is deliberately left off: this answer passed the table above, so the upstream was right and
+ * it is the reading of it that failed. The whole answer is still on `response` for whoever wants to see
+ * what arrived.
+ */
+export function invalidAnswer(call: CallShape, said: string, response: UpstreamResponse): TencentDocsError {
+  const masked = describeBody(response.body);
+  return new TencentDocsError('invalid_answer', `Tencent Docs answered ${call.operation} with a shape that cannot be read (${said}; body: ${masked})`, {
     maskedBody: masked,
+    response,
+    path: call.path,
   });
+}
+
+/**
+ * The error for a call that never became a request: an address built from something that is not a URL, a
+ * body this library cannot write out.
+ *
+ * The reason is quoted, because it names the field that broke, and kept as the cause; neither can carry
+ * a credential here, since both are read before one is put into the address or the headers.
+ */
+export function cannotAssemble(operation: string, cause: unknown): TencentDocsError {
+  const said = cause instanceof Error ? cause.message : String(cause);
+  return new TencentDocsError('config', `The ${operation} call could not be assembled (${said})`, { cause });
 }
 
 /**

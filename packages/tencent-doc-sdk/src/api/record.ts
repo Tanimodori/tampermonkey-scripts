@@ -1,6 +1,6 @@
 import type { z } from 'zod';
-import type { CallContext, CallRequest } from '@/client/request.js';
-import { sendEnvelope } from '@/client/request.js';
+import type { ClientContext } from '@/client/context.js';
+import { assembleCall, sendEnvelope } from '@/client/request.js';
 import { AddRecordsResponseSchema, DeleteRecordsResponseSchema, GetRecordsResponseSchema, UpdateRecordsResponseSchema } from '@/validation/schemas.js';
 import type { CommonRecords, WrittenRecords } from '@/validation/types.js';
 import type { EndpointTarget } from './address.js';
@@ -39,13 +39,13 @@ export interface RecordTarget extends EndpointTarget {
 }
 
 /** One page of raw rows, in the envelope's own terms (`records`, `hasMore`, `next`, `total`). */
-export async function getRecords(page: GetRecordsParams, target: RecordTarget, context: CallContext): Promise<CommonRecords> {
+export async function getRecords(page: GetRecordsParams, target: RecordTarget, context: ClientContext): Promise<CommonRecords> {
   const answer = await sheetCall('getRecords', { getRecords: { offset: page.offset, limit: page.limit } }, GetRecordsResponseSchema, target, context);
   return answer.data.getRecords;
 }
 
 /** Appends rows, in the order given, and hands back the response's own `records` section. */
-export async function addRecords(records: readonly RecordValues[], target: RecordTarget, context: CallContext): Promise<WrittenRecords> {
+export async function addRecords(records: readonly RecordValues[], target: RecordTarget, context: ClientContext): Promise<WrittenRecords> {
   const answer = await sheetCall('addRecords', { addRecords: { records } }, AddRecordsResponseSchema, target, context);
   return answer.data.addRecords;
 }
@@ -55,13 +55,13 @@ export async function addRecords(records: readonly RecordValues[], target: Recor
  * which row it means, so matching is not this module's business, and the answer says nothing about the
  * row's times.
  */
-export async function updateRecords(records: readonly RecordUpdate[], target: RecordTarget, context: CallContext): Promise<WrittenRecords> {
+export async function updateRecords(records: readonly RecordUpdate[], target: RecordTarget, context: ClientContext): Promise<WrittenRecords> {
   const answer = await sheetCall('updateRecords', { updateRecords: { records } }, UpdateRecordsResponseSchema, target, context);
   return answer.data.updateRecords;
 }
 
 /** Removes rows by record id; the answer is the envelope's header alone, so there is nothing to read. */
-export async function deleteRecords(recordIDs: readonly string[], target: RecordTarget, context: CallContext): Promise<void> {
+export async function deleteRecords(recordIDs: readonly string[], target: RecordTarget, context: ClientContext): Promise<void> {
   await sheetCall('deleteRecords', { deleteRecords: { recordIDs } }, DeleteRecordsResponseSchema, target, context);
 }
 
@@ -71,14 +71,13 @@ function sheetCall<R extends z.ZodType>(
   payload: Record<string, unknown>,
   responseSchema: R,
   target: RecordTarget,
-  context: CallContext,
+  context: ClientContext,
 ): Promise<z.infer<R>> {
-  const request: CallRequest = {
+  const request = assembleCall(operation, () => ({
     ...sheetAddress(target),
     method: 'POST',
     headers: target.headers,
     body: JSON.stringify(payload),
-    operation,
-  };
+  }));
   return sendEnvelope(request, responseSchema, context);
 }

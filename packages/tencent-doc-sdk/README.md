@@ -2,23 +2,26 @@
 
 A client for the Tencent Docs Open API's smartsheet endpoints: which sub-sheets a document holds, the rows of one of them, and the credential both are read with.
 
-It speaks the upstream's own vocabulary — the `{ ret, msg, data }` envelope, the payload keywords, the official response type names — and stops there. Pacing, retries, metrics, logging and the meaning of a failure for anything downstream are left to whoever calls it.
+It speaks the upstream's own vocabulary — the `{ ret, msg, data }` envelope, the payload keywords, the official response type names — and stops there. Each method is one endpoint and one round trip: no paging, no retries, no aggregating one answer across two calls. Pacing, metrics, logging and the meaning of a failure for anything downstream are left to whoever calls it.
 
 ## Use
 
 ```ts
-import { createDocClient, createTokenManager } from 'tencent-doc-sdk';
+import { createCredentialStore, createDocClient, createTokenManager } from 'tencent-doc-sdk';
+
+const store = createCredentialStore({ accessToken: '…', clientId: '…', openId: '…', refreshToken: '…' });
 
 const tokens = createTokenManager({
   apiBase: 'https://docs.qq.com',
-  initial: { accessToken: '…', clientId: '…', openId: '…', refreshToken: '…' },
-  clientSecret: '…', // only ever needed by refresh(), and never persisted
+  store,
+  dispatch, // an undici Dispatcher, or a function asked for one
+  clientSecret: '…', // only ever needed by the two token endpoints, and never part of a credential
 });
 
 const sheet = createDocClient({
   apiBase: 'https://docs.qq.com',
   coordinates: { fileId: '300000000$ExAmPlEfIlEiD', sheetId: 'tXXXXXX' },
-  tokens,
+  store,
 });
 
 const page = await sheet.getRecords({ offset: 0, limit: 100 });
@@ -30,85 +33,81 @@ Every call is one round trip. A call that failed is reported as failed and is no
 
 ## The credential
 
-`createTokenManager` holds the access token, the client it was issued to, the Open-Id it belongs to and the refresh token that can replace it, and knows the two endpoints that speak about them: `validate()` asks the upstream whose token this is, and `refresh()` exchanges a refresh token for a new access token.
-
-A refreshed credential outlives the process it was obtained in when the caller hands in a `store`:
+A credential is held by a store and changed by a manager. The store is synchronous and knows no endpoints; the manager is async and knows the three that speak about a credential. Both are given the same store, so a token one of them obtains is the token the other sends on its next call, with nothing wired between them.
 
 ```ts
-createTokenManager({
-  apiBase,
-  initial: configured,
-  clientSecret,
-  store: {
-    async load() {
-      return readFromWhereverItWasKept();
-    },
-    async save(record) {
-      await writeToWhereverItIsKept(record); // only the fields it was given
-    },
-  },
-});
+const store = createCredentialStore(configured);
+const tokens = createTokenManager({ apiBase, store, dispatch, clientSecret });
+
+const refreshed = await tokens.refreshToken(); // the credential as it now stands
+await writeToWhereverItIsKept(store.getCredential());
+
+// …and back again on the next start, from wherever it was kept:
+createCredentialStore(await readFromWhereverItWasKept());
 ```
 
-Given no store, the credential lives in this process only. `hydrate()` prefers a stored credential over the configured one while its access token is still usable; the client secret is never part of a stored record.
+`createCredentialStore({ accessToken, clientId, openId, refreshToken, expiresAt })` holds those parts, and two of them may be unstated: an Open-Id is read off the access token's `sub` claim and a lifetime off its `exp`, unless a value was said outright, which always wins. `update(record)` merges, so a part a record does not speak of keeps what was held; an access token that is replaced sheds a lifetime stated for the old one.
 
-Nothing here schedules a refresh. An expired token is an `auth` failure on the next call.
+The four getters that name a part — `getAccessToken()`, `getClientId()`, `getOpenId()`, `getRefreshToken()` — answer "can this call go out", and fail with `config` when it cannot. `getCredential()` and `getExpiresAt()` answer "what is held", where a part being absent is itself the answer: a credential with no stated lifetime is not an expired one, and a store with no refresh token cannot be refreshed. A caller deciding whether to renew asks the second kind of question.
+
+`createTokenManager({ apiBase, store, dispatch, clientSecret, now })` sends the requests and writes what answers into the store. `getUserInfo()` reports whose access token the store holds and changes nothing; `fetchToken({ code, redirectUri })` and `refreshToken()` are the two grants — the same upstream endpoint, told apart by `grant_type` — and each returns the credential as it stands afterwards. `dispatch` is required: a manager never opens a connection of its own. `now` is the clock an answer's `expires_in` is folded onto, and the client secret is kept by the manager rather than the store, so it is in neither returned record.
+
+Nothing here schedules a refresh, and nothing here decides that a reported Open-Id agrees with a configured one. An expired token is an `auth` failure on the next call.
 
 ## Errors
 
 A failure is a `TencentDocsError` naming which of seven things went wrong, with everything the upstream said alongside it:
 
-| `code`           | what it means                                                                            |
-| ---------------- | ---------------------------------------------------------------------------------------- |
-| `auth`           | the credential was refused, by HTTP 401/403 or by a business code that says so           |
-| `rate_limited`   | the upstream is throttling; `retryAfterSeconds` is what it stated, if anything           |
-| `bad_request`    | the request was refused, usually a business code in the `4xxxxx` range                   |
-| `server`         | the upstream answered `5xx`                                                              |
-| `transport`      | there was no answer to read: refused, timed out, or a body that was not JSON             |
-| `invalid_answer` | the upstream said it succeeded with a body this library's response type has no words for |
-| `config`         | the call cannot be made as configured: no Open-Id to send, no refresh token to exchange  |
+| `code`           | what it means                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| `auth`           | the credential was refused, by HTTP 401/403 or by a business code that says so                      |
+| `rate_limited`   | the upstream is throttling; `retryAfterSeconds` is what it stated, if anything                      |
+| `bad_request`    | the request was refused, usually a business code in the `4xxxxx` range                              |
+| `server`         | the upstream answered `5xx`                                                                         |
+| `transport`      | there was no answer to read: refused, timed out, or a body that was not JSON                        |
+| `invalid_answer` | the upstream said it succeeded with a body this library's response type has no words for            |
+| `config`         | the call never became a request: no Open-Id to send, no refresh token, an address that is not a URL |
 
-`message` quotes the upstream's status and business code, and where a body is quoted it is `describeBody`'s masked, bounded form. An error carries no HTTP status of its own: what a failure is _worth_ downstream is the caller's decision.
+Alongside the code: `status`, `ret` and `msg` are what the upstream said, `path` is the address the call went to with its query string dropped, `cause` is whatever the failure was worded from, and `response` is the whole answer — status, headers, body — for whoever has to look at it again. `message` quotes the status and business code, and where a body is quoted it is `describeBody`'s masked, bounded form. `message` is what belongs on a log line or in an HTTP response; `response` is the undigested version, and a read's body is its whole sheet.
 
-## Watching the calls
+An error carries no HTTP status of its own: what a failure is _worth_ downstream is the caller's decision.
 
-The library records nothing. `hooks` is where a caller's counters, histograms and log lines attach:
+## Wrapping the calls
 
-```ts
-createDocClient({
-  apiBase,
-  coordinates,
-  tokens,
-  hooks: {
-    onCall(descriptor, outcome) {
-      // { operation, method, path } and one of answered / failed / unsent, with durationMs
-    },
-    onParseFailure(descriptor, error) {
-      // the bytes arrived and said `ret: 0`; they were not the shape the endpoint promises
-    },
-  },
-});
-```
+The library paces nothing, records nothing, and offers no hook to attach to. Whoever needs either of those things wraps the calls it makes.
 
-`descriptor.path` never carries a query string, and the `reason` of an unsent call is worded without the URL the transport failed on — two of the upstream's calls carry a credential in their query string, and a transport error quotes it in full.
-
-`dispatch` is the other half of the same idea: a caller that paces its outbound calls passes a gate, and the library wraps one logical call in it.
+Around the client is where a call can be waited for, counted, logged, refused or retried, because that is where its outcome is known:
 
 ```ts
-import { throttledQueue } from 'throttled-queue';
+import { TencentDocsError } from 'tencent-doc-sdk';
+import { throttledQueue } from 'throttled-queue'; // https://github.com/shaunpersad/throttled-queue
 
 const queue = throttledQueue({ maxPerInterval: 10, interval: 3000, evenlySpaced: true });
-createDocClient({ /* … */ dispatch: (_call, next) => queue(next) });
+
+async function getRecords(page) {
+  await queue(async () => {}); // one turn per start: the queue decides when this one may go out
+  const startedAt = Date.now();
+  try {
+    return await sheet.getRecords(page);
+  } catch (error) {
+    // A TencentDocsError names which of seven things went wrong, and carries the answer it judged.
+    throw error;
+  } finally {
+    observe(Date.now() - startedAt);
+  }
+}
 ```
 
-Given nothing, calls are sent as they are asked for.
+The connection is the other seam: `transport` takes an undici `Dispatcher` — a pool, or a function asked per call — so a caller that hands in its own sees every request there. What it cannot see there is the envelope: a smartsheet call that failed answers `200` with a business code naming the reason, and the verdict only exists once the body has been read. Two of the OAuth calls carry their credential in the query string and every Open API call in an `Access-Token` header, so a request seen at either seam is holding a secret; the `path` on an error has its query string dropped for exactly that reason.
+
+Given no `transport`, this library opens one pool per client and gives it `timeoutMs` for connect, headers and body — ten seconds unless the caller says otherwise.
 
 ## Testing without the upstream
 
 Nothing is published for it: this package's own fake document lives in `test/testUtils`, alongside the tests that use it, and speaks the protocol only — no caller's columns, no caller's rules.
 
 ```ts
-const upstream = testUpstream(); // a `DocClient` and a `TokenManager` over the fake document
+const upstream = testUpstream(); // a `DocClient` and a `TokenManager` sharing one store over the fake document
 const { client, state } = upstream;
 
 state.records = [rawRecord({ recordId: 'r00001' })];

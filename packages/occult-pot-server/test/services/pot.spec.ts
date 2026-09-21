@@ -466,9 +466,10 @@ describe('writes', () => {
 
     expect(rowsWritten()).toBe(0);
     expect((await service.state()).data).toEqual(fixtureRecords());
-    // A failed append is the caller's failure; it is not this service's to retry or to log as one.
-    // What a refused call writes down is `upstreamHooks()`'s own business (observe.spec.ts).
-    expect(logs.filter((entry) => entry.level === 'warning')).toEqual([]);
+    // A failed append is the caller's failure; it is not this service's to retry, and the pot service
+    // writes no line of its own about it. The one warning is `upstreamCall`'s record of the call, whose
+    // shape is `observe.spec.ts`'s business.
+    expect(logs.filter((entry) => entry.level === 'warning').map((entry) => entry.message)).toEqual(['Tencent Docs call failed']);
     expect(callsOf('addRecords')).toHaveLength(1);
   });
 

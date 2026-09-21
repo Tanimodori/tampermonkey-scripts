@@ -9,8 +9,8 @@ import type {
   DeleteRecordsResponseSchema,
   GetRecordsResponseSchema,
   GetSheetResponseSchema,
-  RefreshTokenResponseSchema,
   SheetSchema,
+  TokenResponseSchema,
   UserInfoResponseSchema,
   UserInfoSchema,
   UpdateRecordsResponseSchema,
@@ -34,5 +34,5 @@ export type Sheet = z.infer<typeof SheetSchema>;
 export type GetSheetResponse = z.infer<typeof GetSheetResponseSchema>;
 export type UserInfo = z.infer<typeof UserInfoSchema>;
 export type UserInfoResponse = z.infer<typeof UserInfoResponseSchema>;
-export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>;
+export type TokenResponse = z.infer<typeof TokenResponseSchema>;
 export type AccessTokenClaims = z.infer<typeof accessTokenClaimsSchema>;

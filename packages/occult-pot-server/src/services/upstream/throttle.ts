@@ -5,27 +5,31 @@ import { LOG_CATEGORIES } from '@/logger.ts';
 import { now } from '@/services/time.ts';
 
 /**
- * The pacing every upstream call shares: one [`throttled-queue`](https://github.com/shaunpersad/throttled-queue)
+ * The pacing every upstream call waits for: one [`throttled-queue`](https://github.com/shaunpersad/throttled-queue)
  * for the whole process, sized from the `upstream` section of the configuration.
  *
- * The queue is what makes the outbound rate a configuration value instead of a hope: the upstream
- * quota is counted per minute and per document, so the calls are spread evenly across the window
- * rather than fired at once. Nothing else belongs here: how a call is sent is the transport's business
- * (`client.ts`), and what its answer means is the upstream library's. One call takes one slot, because
- * a call that failed is not sent again.
+ * The queue is what makes the outbound rate a configuration value instead of a hope: the upstream quota
+ * is counted per minute and per document, so the calls are spread evenly across the window rather than
+ * fired at once. A turn is granted per *start* — which is all this queue counts on its own, so nothing
+ * is held until a call finishes and a slow answer delays nobody but its own caller.
+ *
+ * `waitTurn` is what a call spends before it is sent, so `upstreamCall` asks for it before it starts the
+ * clock it reports: waiting here moves no duration anybody reads. Nothing else belongs here: how a call is
+ * sent is the transport's business (`client.ts`), what its answer means is the upstream library's, and
+ * what it is worth is `observe.ts`'s.
  *
  * Its window is fixed when the queue is built, so `loadConfig()` invalidates it through
  * `onConfigReload()` and the next call builds one from the configuration in hand.
  */
 
-/** One queued task, as `throttled-queue` takes it: the window decides when it runs. */
+/** One queued turn, as `throttled-queue` takes it: the window decides when it is granted. */
 type Throttle = ReturnType<typeof throttledQueue>;
 
 /** The queue built from the configuration in hand, until it is invalidated. */
 let queue: Throttle | undefined;
 
 /**
- * Drops the queue, so the next `throttle()` builds one from the configuration in hand.
+ * Drops the queue, so the next `waitTurn()` builds one from the configuration in hand.
  *
  * Called by `loadConfig()` itself, through `onConfigReload()`; it is exported for a caller that
  * wants to force the rebuild without reloading (a test pinning the invalidation, an operator
@@ -38,26 +42,25 @@ export function invalidateThrottle(): void {
 onConfigReload('throttle', invalidateThrottle);
 
 /**
- * Runs one task under the shared pacing.
+ * Waits until the next call may start.
  *
  * The queue is built on first use and rebuilt whenever `invalidateThrottle()` drops it — which
  * `loadConfig()` does — so its window stays in step with `OPS_UPSTREAM_INTERVAL_MS`.
+ *
+ * The call it is waited for is named so the log line says which operation was held, and for how long:
+ * that difference is what separates "the upstream was slow" from "we paced ourselves into being slow",
+ * and once the call is sent the two are no longer tellable apart.
  */
-export function throttle<Return>(task: () => Promise<Return>): Promise<Return> {
+export async function waitTurn(operation: string): Promise<void> {
   queue ??= build();
 
-  // How long a call sat in the queue is the difference between "the upstream was slow" and "we paced
-  // ourselves into being slow", so it is recorded when it happened — at `debug`, because a busy
-  // window would otherwise say more about the queue than about the service. The window is read back
-  // here rather than captured above, so the record names the pacing actually in force.
   const queuedAt = now();
-  return queue<Return>(async () => {
+  await queue(async () => {
     const { maxPerInterval, intervalMs } = getConfig().upstream;
     const waitMs = now() - queuedAt;
     if (waitMs > 0) {
-      getLogger(LOG_CATEGORIES.upstream).debug('Tencent Docs call waited in the pacing queue', { waitMs, maxPerInterval, intervalMs });
+      getLogger(LOG_CATEGORIES.upstream).debug('Tencent Docs call waited in the pacing queue', { operation, waitMs, maxPerInterval, intervalMs });
     }
-    return task();
   });
 }
 

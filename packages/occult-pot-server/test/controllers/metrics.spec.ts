@@ -46,7 +46,7 @@ describe('GET /metrics', () => {
     expect(body).not.toContain('route="/metrics"');
   });
 
-  it('exposes the upstream families, whose labels are counted by the hooks', async () => {
+  it('exposes the upstream families, counted by the wrapper the calls leave through', async () => {
     const { client } = await startApp();
     const newPot = { world: '鸟', map: '北岛', potId: '60-0-4000ABCD', northRefreshAt: String(sheetInstant('2026-09-12 16:20')), lastVisitAt: String(NOW) };
 
@@ -55,10 +55,10 @@ describe('GET /metrics', () => {
     const body = (await client.get('/metrics').expect(200)).text;
     expect(body).toContain('# HELP occult_pot_upstream_requests_total');
     expect(body).toContain('# TYPE occult_pot_upstream_request_duration_seconds histogram');
-    // A call is counted by `upstreamHooks()`, which the library is built with; this suite stands in
-    // below that line, so the scrape carries the families and no samples — what the labels are is
-    // `test/services/upstream/observe.spec.ts`.
-    expect(body).not.toMatch(/occult_pot_upstream_requests_total\{/);
+    // Counting lives in this service, around the library rather than inside it, so a call that went
+    // through the faked library still leaves its sample behind. Which labels and values are worth writing
+    // is `test/services/upstream/observe.spec.ts`.
+    expect(body).toMatch(/occult_pot_upstream_requests_total\{operation="addRecords",result="ok"\} [1-9]/);
   });
 
   it('reports readiness, and marks an unknown credential expiry as zero', async () => {

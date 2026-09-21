@@ -13,8 +13,9 @@ import { answerHeaderSchema } from '@/validation/schemas.js';
  * business, and so is deciding that a failure deserves another try. This table never says.
  */
 
-const SHEET_CALL = { operation: 'getRecords', envelope: true } as const;
-const TOKEN_CALL = { operation: 'refreshToken', envelope: false } as const;
+const SHEET_PATH = '/openapi/smartbook/v2/files/f1/sheets/t1';
+const SHEET_CALL = { operation: 'getRecords', path: SHEET_PATH, envelope: true } as const;
+const TOKEN_CALL = { operation: 'refreshToken', path: '/oauth/v2/token', envelope: false } as const;
 
 /**
  * One answered response, built the way the sender builds it: the body arrives as the answer, and the
@@ -79,7 +80,7 @@ const MATRIX: ReadonlyArray<{
 describe('the envelope × business-code matrix', () => {
   for (const row of MATRIX) {
     it(`${row.envelope ? 'envelope' : 'bare'}: ${row.case} → ${row.expect ?? 'an answer'}`, () => {
-      const verdict = classifyResponse(row.response, { operation: 'getRecords', envelope: row.envelope });
+      const verdict = classifyResponse(row.response, { operation: 'getRecords', path: SHEET_PATH, envelope: row.envelope });
 
       if (row.expect === undefined) {
         expect(verdict).toBeUndefined();
@@ -100,6 +101,18 @@ describe('a usable answer', () => {
     // table has no business wording that, so it says "answer".
     expect(classifyResponse(answered(400, { error: 'invalid_grant' }), TOKEN_CALL)).toBeUndefined();
     expect(classifyResponse(answered(200, { access_token: 'a-value' }), TOKEN_CALL)).toBeUndefined();
+  });
+});
+
+describe('what every verdict carries with it', () => {
+  it('names the call it judges and keeps the answer it was worded from', () => {
+    const body = { ret: 10303, msg: 'token 无效' };
+    const failure = classifyResponse(answered(200, body, { 'content-type': 'application/json' }), SHEET_CALL);
+
+    // `path` is how a caller's log line names a call; `response` is the undigested answer behind the
+    // message, kept whole because a masked summary cannot be un-masked later.
+    expect(failure).toMatchObject({ code: 'auth', path: SHEET_PATH, status: 200, ret: 10303, msg: 'token 无效' });
+    expect(failure?.response).toEqual({ status: 200, headers: { 'content-type': 'application/json' }, body });
   });
 });
 
@@ -168,15 +181,17 @@ describe('a call that never got a readable answer', () => {
   const cause = new Error('simulated transport failure');
 
   it('is a transport failure, with the reason kept for whoever reports it', () => {
-    const failure = transportFailure(cause, 'http://127.0.0.1:3100/openapi/smartbook/v2/files/x/sheets/t1');
+    const failure = transportFailure(cause, 'http://127.0.0.1:3100/openapi/smartbook/v2/files/x/sheets/t1', SHEET_PATH);
 
     expect(failure.code).toBe('transport');
+    expect(failure.path).toBe(SHEET_PATH);
+    expect(failure.response).toBeUndefined();
     expect(failure.cause).toBe(cause);
     expect(failure.message).toBe('Request to http://127.0.0.1:3100/openapi/smartbook/v2/files/x/sheets/t1 failed');
   });
 
   it('names a target without its query string, which is where a credential travels', () => {
-    const failure = transportFailure(cause, 'http://127.0.0.1:3100/oauth/v2/token');
+    const failure = transportFailure(cause, 'http://127.0.0.1:3100/oauth/v2/token', '/oauth/v2/token');
 
     expect(failure.message).toContain('/oauth/v2/token');
     expect(failure.message).not.toContain('client_secret');

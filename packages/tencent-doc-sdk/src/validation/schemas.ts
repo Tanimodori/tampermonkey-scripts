@@ -136,14 +136,14 @@ export const UserInfoSchema = z.looseObject({ openID: z.string().optional(), nic
 export const UserInfoResponseSchema = z.looseObject({ ...envelopeHead, data: UserInfoSchema });
 
 /**
- * The token endpoint's answer: a new access token, and nothing else it has to say.
+ * What either token endpoint answers: a new access token, and nothing else it has to say.
  *
  * No envelope — this is the one answer this library reads by the upstream's own vocabulary, which is
  * why it is a bare body and why a `400` here is an answer whose failure its caller words. Every field
  * is optional: `expires_in` is documented but not promised (a caller then falls back to the token's
  * own `exp` claim), and `refresh_token` appears only on the flows that rotate it.
  */
-export const RefreshTokenResponseSchema = z.looseObject({
+export const TokenResponseSchema = z.looseObject({
   access_token: z.string().optional(),
   token_type: z.string().optional(),
   expires_in: z.number().optional(),

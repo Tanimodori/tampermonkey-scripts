@@ -1,40 +1,56 @@
 import type { Dispatcher } from 'undici';
 import type { z } from 'zod';
-import { classifyResponse, invalidAnswer, transportFailure } from '@/validation/classify.js';
-import type { CallShape, ResponseHeaders } from '@/validation/classify.js';
+import { cannotAssemble, classifyResponse, invalidAnswer, transportFailure } from '@/validation/classify.js';
+import type { CallShape, ResponseHeaders, UpstreamAnswer } from '@/validation/classify.js';
 import { answerHeaderSchema } from '@/validation/schemas.js';
-import type { DispatchGate } from './dispatch.js';
-import type { UpstreamHooks } from './hooks.js';
+import type { ClientContext } from './context.js';
 
 /**
- * One call: send it, read it, judge it, report it.
+ * One call: send it, read it, judge it, hand it over.
  *
- * This is where a call's cost is paid. It owns nothing else — the pacing is the caller's (`dispatch`),
- * the accounting is the caller's (`hooks`), and what a failure then *means* to the outside world is the
- * caller's too; this only says which of the six things went wrong.
+ * This is where a call's cost is paid, and it owns the whole of the paying: the address comes from
+ * `api/`, the verdict from `validation/`, and there is nothing in between for a caller to attach itself
+ * to. Whoever paces, measures, logs or refuses a call does so around these functions — with the
+ * `Dispatcher` they hand in, or around the client's own methods — because a library that translates the
+ * upstream's endpoints one for one has no opinion about what those calls are worth to anybody.
  *
- * There is no retry here, and that is the whole design: one entry is one round trip. A caller that
- * wants a second attempt makes it, knowing that a write which failed may already have landed and that
- * the upstream's quota is spent either way.
+ * There is no retry here, and that is the whole design: one method is one round trip. A caller that wants
+ * a second attempt makes it, knowing that a write which failed may already have landed and that the
+ * upstream's quota is spent either way.
  */
 
-/** One call, as its caller describes it. */
+/** One call, as its endpoint describes it. */
 export interface CallRequest {
   /** The payload keyword, and the label every report about this call carries. */
   readonly operation: string;
   readonly origin: string;
+  /** The path to send to, query string included: two of the OAuth calls carry a credential in it. */
   readonly path: string;
   readonly method: Dispatcher.HttpMethod;
   readonly headers?: Record<string, string>;
   readonly body?: string;
 }
 
-/** What a call needs from whoever is making it: a transport, a pacing gate, and somewhere to report. */
-export interface CallContext {
-  readonly transport: () => Dispatcher;
-  readonly dispatch: DispatchGate;
-  readonly hooks?: UpstreamHooks;
-  readonly now: () => number;
+/**
+ * One endpoint's call, put together.
+ *
+ * Assembling a request is the first way a call can fail without the upstream being asked anything: an
+ * `apiBase` that is not a URL, a payload that will not become JSON. Both are the caller's own
+ * configuration talking, so both are worded as a `config` failure with the original kept as its cause —
+ * a bare `TypeError` leaving this package would be the one error a caller could not classify.
+ */
+export function assembleCall(operation: string, build: () => Omit<CallRequest, 'operation'>): CallRequest {
+  try {
+    return { ...build(), operation };
+  } catch (error) {
+    throw cannotAssemble(operation, error);
+  }
+}
+
+/** How one call's answer is to be read: whether it wears the envelope, and which type describes it. */
+interface CallPlan<S extends z.ZodType> {
+  readonly envelope: boolean;
+  readonly responseSchema: S;
 }
 
 /**
@@ -46,8 +62,8 @@ export interface CallContext {
  * JSON, or is JSON in a shape that type does not describe, is the upstream's failure to answer — named
  * for the field that broke, quoting the body it did send.
  */
-export function sendEnvelope<S extends z.ZodType>(request: CallRequest, responseSchema: S, context: CallContext): Promise<z.infer<S>> {
-  return sendCall(request, true, context).then((answer) => parseAnswer(responseSchema, answer, request, context));
+export function sendEnvelope<S extends z.ZodType>(request: CallRequest, responseSchema: S, context: ClientContext): Promise<z.infer<S>> {
+  return sendCall(request, { envelope: true, responseSchema }, context);
 }
 
 /**
@@ -59,93 +75,61 @@ export function sendEnvelope<S extends z.ZodType>(request: CallRequest, response
  * fields that are there, and leave the endpoint's own failure for the caller to word. Its schema is
  * what makes that readable without a cast.
  */
-export function sendBare<S extends z.ZodType>(request: CallRequest, responseSchema: S, context: CallContext): Promise<z.infer<S>> {
-  return sendCall(request, false, context).then((answer) => parseAnswer(responseSchema, answer, request, context));
+export function sendBare<S extends z.ZodType>(request: CallRequest, responseSchema: S, context: ClientContext): Promise<z.infer<S>> {
+  return sendCall(request, { envelope: false, responseSchema }, context);
 }
 
-/** One call, under the caller's pacing. */
-function sendCall(request: CallRequest, envelope: boolean, context: CallContext): Promise<unknown> {
-  const shape: CallShape = { operation: request.operation, envelope };
-  return context.dispatch({ operation: request.operation }, () => oneAttempt(request, shape, context));
+/** One round trip, judged and read: its answer, or the `TencentDocsError` naming which thing went wrong. */
+async function sendCall<S extends z.ZodType>(request: CallRequest, plan: CallPlan<S>, client: ClientContext): Promise<z.infer<S>> {
+  const shape: CallShape = { operation: request.operation, path: displayPath(request.path), envelope: plan.envelope };
+  const answer = await deliver(request, shape, client);
+
+  const failure = classifyResponse(answer, shape);
+  if (failure !== undefined) throw failure;
+
+  const parsed = plan.responseSchema.safeParse(answer.body);
+  if (!parsed.success) throw invalidAnswer(shape, broken(parsed.error), { status: answer.status, headers: answer.headers, body: answer.body });
+  return parsed.data;
 }
 
-/**
- * One round trip, and the one report whoever is watching gets about it: what was asked, how long it
- * took, what came back. Only the envelope's business code and the verdict are reported — never the
- * body itself (a read's body is the whole sheet) and never a request header (the credential travels
- * in one).
- */
-async function oneAttempt(request: CallRequest, shape: CallShape, context: CallContext): Promise<unknown> {
-  const described = { operation: request.operation, method: request.method, path: displayPath(request.path) };
-  const startedAt = context.now();
-
-  let statusCode: number;
+/** The round trip and nothing else: the transport's answer, read as far as this module has to read it. */
+async function deliver(request: CallRequest, shape: CallShape, client: ClientContext): Promise<UpstreamAnswer> {
+  let status: number;
   let headers: ResponseHeaders;
-  let answer: unknown;
+  let body: unknown;
   try {
-    const response = await context
+    const response = await client
       .transport()
       .request({ origin: request.origin, path: request.path, method: request.method, headers: request.headers, body: request.body });
-    statusCode = response.statusCode;
+    status = response.statusCode;
     headers = { ...response.headers };
-    answer = await response.body.json();
+    body = await response.body.json();
   } catch (error) {
     // Three ways to get here and no answer: the upstream never replied, its body never finished
     // arriving, or what arrived was not JSON at all. None of them is classified — there is nothing to
-    // read a verdict out of — so this failure is worded from the transport's own report.
-    //
-    // The report carries *that* wording, never the error's own message: a transport error quotes the
-    // URL it failed on, query string included, and two of the upstream's calls carry a credential
-    // there.
-    const durationMs = context.now() - startedAt;
-    const failure = transportFailure(error, `${request.origin}${displayPath(request.path)}`);
-    context.hooks?.onCall?.(described, { kind: 'unsent', code: failure.code, reason: failure.message, durationMs });
-    throw failure;
+    // read a verdict out of — so this failure is worded from the transport's own report, which keeps the
+    // original as a cause instead of quoting it: that message spells out the URL it failed on, query
+    // string included, and two of the upstream's calls carry a credential there.
+    throw transportFailure(error, `${request.origin}${shape.path}`, shape.path);
   }
 
-  const header = answerHeaderSchema.safeParse(answer);
+  const header = answerHeaderSchema.safeParse(body);
   const { ret, msg } = header.success ? header.data : {};
-  const durationMs = context.now() - startedAt;
-  const failure = classifyResponse({ status: statusCode, headers, body: answer, ret, msg }, shape);
-
-  if (failure !== undefined) {
-    context.hooks?.onCall?.(described, {
-      kind: 'failed',
-      status: statusCode,
-      ret,
-      code: failure.code,
-      retryAfterSeconds: failure.retryAfterSeconds,
-      durationMs,
-    });
-    throw failure;
-  }
-
-  context.hooks?.onCall?.(described, { kind: 'answered', status: statusCode, ret, durationMs });
-  return answer;
+  return { status, headers, body, ret, msg };
 }
 
-/**
- * Validates one part of an answer, reporting a shape this library cannot read as the upstream's
- * failure rather than as an internal one: it is the answer that is wrong, and the message says which
- * field of it, quoting the body the way the table does.
- */
-function parseAnswer<S extends z.ZodType>(schema: S, value: unknown, request: CallRequest, context: CallContext): z.infer<S> {
-  const result = schema.safeParse(value);
-  if (result.success) return result.data;
-
-  const said = result.error.issues.map((issue) => `${issue.path.length === 0 ? '(body)' : issue.path.join('.')}: ${issue.message}`).join('; ');
-  const failure = invalidAnswer(request.operation, value, said);
-  context.hooks?.onParseFailure?.({ operation: request.operation, method: request.method, path: displayPath(request.path) }, failure);
-  throw failure;
+/** Which field of the answer the endpoint's own type had no words for. */
+function broken(issues: z.ZodError): string {
+  return issues.issues.map((issue) => `${issue.path.length === 0 ? '(body)' : issue.path.join('.')}: ${issue.message}`).join('; ');
 }
 
 /**
  * A call's path without its query string.
  *
  * The two OAuth calls carry their credential in the query string (`access_token` for `userinfo`,
- * `client_secret` and `refresh_token` for the refresh), and a report — which can reach a log line or an
- * HTTP response — is no place for either. No call this library makes is identified by its query
- * string, so dropping it loses nothing.
+ * `client_secret` and `refresh_token` for the refresh), and an error — which can reach a log line or an
+ * HTTP response — is no place for either. No call this library makes is identified by its query string,
+ * so dropping it loses nothing.
  */
 function displayPath(path: string): string {
   return path.split('?')[0]!;

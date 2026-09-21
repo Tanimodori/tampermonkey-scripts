@@ -1,12 +1,8 @@
 import type { Dispatcher } from 'undici';
-import { unpaced } from './dispatch.js';
-import type { DispatchGate } from './dispatch.js';
-import type { UpstreamHooks } from './hooks.js';
-import type { CallContext } from './request.js';
 import { DEFAULT_TIMEOUT_MS, newDispatcher } from './transport.js';
 
 /**
- * The three things every way of reaching the upstream needs, resolved once per object built from them.
+ * The things every way of reaching the upstream needs, resolved once per object built from them.
  */
 
 /** What `createDocClient` and `createTokenManager` take in common. */
@@ -14,33 +10,26 @@ export interface ClientOptions {
   /** Where the calls go: `https://docs.qq.com`, or whatever stands in for it under a test. */
   readonly apiBase: string;
   /**
-   * The connection to send on. A caller that owns its pool — or a test that wants to intercept — hands
-   * one in; given a function, it is asked per call, so a pool that gets rebuilt does not need the
-   * client rebuilt with it. Given nothing, this library opens a pool of its own on first use.
+   * The connection to send on — and so the one seam a caller has for its own pacing, metrics or
+   * refusal. A caller that owns its pool hands one in; given a function, it is asked per call, so a pool
+   * that gets rebuilt does not need the client rebuilt with it. Given nothing, this library opens a pool
+   * of its own on first use.
    */
   readonly transport?: Dispatcher | (() => Dispatcher) | undefined;
-  /** How the calls are spread over the upstream's quota. Defaults to no pacing at all. */
-  readonly dispatch?: DispatchGate;
-  /** Where a call is reported. Defaults to nowhere. */
-  readonly hooks?: UpstreamHooks;
   /** Connection, header and body budget of a call that hangs. Defaults to 10 seconds. */
   readonly timeoutMs?: number;
-  /** The clock durations are measured against. Defaults to wall time. */
-  readonly now?: () => number;
 }
 
 /** The options resolved into what a call actually carries. */
-export interface EndpointContext extends CallContext {
+export interface ClientContext {
   readonly apiBase: string;
+  readonly transport: () => Dispatcher;
 }
 
-export function resolveContext(options: ClientOptions): EndpointContext {
+export function resolveContext(options: ClientOptions): ClientContext {
   return {
     apiBase: options.apiBase,
     transport: resolveTransport(options.transport, options.timeoutMs ?? DEFAULT_TIMEOUT_MS),
-    dispatch: options.dispatch ?? unpaced,
-    hooks: options.hooks,
-    now: options.now ?? Date.now,
   };
 }
 

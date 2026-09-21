@@ -1,4 +1,4 @@
-import { live, useLiveDocument, client, coordinates, tokens } from '@test/testUtils/liveDocument.js';
+import { client, coordinates, live, store, tokens, useLiveDocument } from '@test/testUtils/liveDocument.js';
 /**
  * @module-tag api
  */
@@ -16,12 +16,14 @@ import { describe, expect, it } from 'vitest';
 describe.skipIf(!live)('the real document: sub-sheets', () => {
   useLiveDocument();
 
-  it('confirms the credential belongs to the Open-Id it is sent with', async () => {
-    const validated = await tokens.validate();
+  it('lists the sub-sheets of the document the credential it is sent with belongs to', async () => {
+    const reported = (await tokens.getUserInfo()).openID;
+    expect(reported!.length).toBeGreaterThan(0);
 
-    expect(typeof validated.openId).toBe('string');
-    expect(validated.openId.length).toBeGreaterThan(0);
-    if (tokens.openId() !== undefined) expect(validated.openId).toBe(tokens.openId());
+    // The library reports what the upstream said and sends what the store holds; whether the two agree
+    // is the caller's judgement, and here it is the reason the read works at all.
+    const held = store.getCredential().openId;
+    if (held !== undefined) expect(reported).toBe(held);
   });
 
   it('lists the sub-sheets, and the addressed one is among them', async () => {

@@ -1,7 +1,9 @@
 import { createDocClient } from '@/api/docClient.js';
 import type { DocClient } from '@/api/docClient.js';
-import { createTokenManager } from '@/token/tokenManager.js';
-import type { TokenManager } from '@/token/tokenManager.js';
+import { createTokenManager } from '@/token/manager.js';
+import type { TokenManager } from '@/token/manager.js';
+import { createCredentialStore } from '@/token/store.js';
+import type { CredentialStore } from '@/token/store.js';
 import type { CommonRecord } from '@/validation/types.js';
 import { apiOrigin, EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, setupTencentDocsMock } from './mockUpstream.js';
 import type { TencentDocsMock, TencentDocsMockState } from './mockUpstream.js';
@@ -23,6 +25,8 @@ const TEST_CREDENTIAL = {
 export interface TestUpstream {
   readonly client: DocClient;
   readonly tokens: TokenManager;
+  /** The credential the two are built on: what a token grant writes and a document call reads. */
+  readonly store: CredentialStore;
   readonly mock: TencentDocsMock;
   readonly state: TencentDocsMockState;
   /** The coordinates the client was built with, which is what its call paths carry. */
@@ -32,10 +36,10 @@ export interface TestUpstream {
 }
 
 /**
- * A `DocClient` and a `TokenManager` wired onto the fake upstream, for a test that only wants to call
- * the endpoints and watch what the document did. The ids and the credential are the example ones the
- * mock answers for — which is a default, not a rule: the mock answers any file id, so a case that wants
- * to see an address on the wire says so here.
+ * A `DocClient` and a `TokenManager` sharing one credential store, both wired onto the fake upstream, for
+ * a test that only wants to call the endpoints and watch what the document did. The ids and the credential
+ * are the example ones the mock answers for — which is a default, not a rule: the mock answers any file id,
+ * so a case that wants to see an address on the wire says so here.
  */
 export function testUpstream(
   options: { records?: CommonRecord[]; sheets?: Record<string, unknown>[]; userInfoOpenId?: string; fileId?: string; sheetId?: string } = {},
@@ -43,8 +47,9 @@ export function testUpstream(
   const mock = setupTencentDocsMock(options);
   const apiBase = apiOrigin();
   const coordinates = { fileId: options.fileId ?? EXAMPLE_FILE_ID, sheetId: options.sheetId ?? EXAMPLE_SHEET_ID };
-  const tokens = createTokenManager({ apiBase, initial: TEST_CREDENTIAL, clientSecret: 'test-client-secret', transport: mock.agent });
-  const client = createDocClient({ apiBase, coordinates, tokens, transport: mock.agent });
+  const store = createCredentialStore(TEST_CREDENTIAL);
+  const tokens = createTokenManager({ apiBase, store, clientSecret: 'test-client-secret', dispatch: mock.agent });
+  const client = createDocClient({ apiBase, coordinates, store, transport: mock.agent });
 
-  return { client, tokens, mock, state: mock.state, ...coordinates, close: () => mock.close() };
+  return { client, tokens, store, mock, state: mock.state, ...coordinates, close: () => mock.close() };
 }

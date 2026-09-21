@@ -66,7 +66,7 @@
 ## 本仓库内的文档
 
 - [occult-pot-server README](../README.md)：服务概况、配置、部署要点、运行时
-- [tencent-doc-sdk README](../../tencent-doc-sdk/README.md)：这个服务读写腾讯文档所用的库，端点、错误与观测钩子
+- [tencent-doc-sdk README](../../tencent-doc-sdk/README.md)：这个服务读写腾讯文档所用的库，端点、错误与凭据的暂存
 - [Pot 数据](data/pot.md)与[存储设计](data/store.md)
 - [API 端点](api/endpoints.md)、[错误处理](api/errors.md)与[与腾讯文档通讯](api/upstream/README.md)（其下按领域分为[子表](api/upstream/file.md)、[记录](api/upstream/record.md)、[凭据](api/upstream/token.md)）
 - [本地开发](development.md)：运行前置、环境文件、测试与检查命令

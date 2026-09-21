@@ -7,14 +7,15 @@ import { captureLogs, FILE_ID, loadTestConfig, resetRedis, SHEET_ID } from '@tes
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
 import { getRedis } from '@/stores/redis.ts';
-import { redisCredentialStore, upstreamStore } from '@/stores/upstream.ts';
+import { readCredential, rememberCredential, upstreamStore } from '@/stores/upstream.ts';
 
 /**
  * What this store decides about the document and the credential: that the configured sub-sheet exists,
  * that the credential it sends is the one the upstream agrees with, how far from expiry that credential
- * is, and what any of that means for `/readyz`. Reading a credential from Redis, decoding its lifetime
- * and refreshing it is `tencent-doc-sdk`'s business, and its own suite covers it; here the library is
- * the fake this service installs, so the only moving parts are this service's own judgements.
+ * is, what any of that means for `/readyz`, and what of it Redis gets told. Reading the upstream's answers
+ * and deciding which of seven things went wrong is `tencent-doc-sdk`'s business, and its own suite covers
+ * it; here the library is the fake this service installs, so the only moving parts are this service's own
+ * judgements — including where a credential is kept, which is this file's subject as much as any other.
  */
 
 // The credential's expiry is judged against `@/services/time.ts`, so the clock below is what a case
@@ -134,7 +135,7 @@ describe('upstreamStore ids', () => {
 
     loadTestConfig({ OPS_DOCS_FILE_ID: FILE_ID, OPS_DOCS_SHEET_ID: SHEET_ID, OPS_DOCS_ACCESS_TOKEN: 'a-different-token' });
     expect(store.resolved()).toBe(false);
-    await expect(store.headers()).resolves.toMatchObject({ 'Access-Token': 'a-different-token' });
+    expect(store.accessToken).toBe('a-different-token');
     await expect(store.resolve()).resolves.toEqual({ fileId: FILE_ID, sheetId: SHEET_ID });
   });
 });
@@ -179,6 +180,36 @@ describe('upstreamStore credential', () => {
   });
 });
 
+describe('the credential a restart inherits', () => {
+  it('sends the stored token while it still works, because it is newer than the environment’s', async () => {
+    await rememberCredential({ accessToken: 'refreshed-by-an-earlier-run', clientId: 'client-id', openId: 'open-id', expiresAt: NOW + 60_000 });
+    const store = useStore();
+
+    await store.resolve();
+
+    expect(store.accessToken).toBe('refreshed-by-an-earlier-run');
+  });
+
+  it('leaves a stored token whose lifetime has passed behind, and writes the configured one over it', async () => {
+    await rememberCredential({ accessToken: 'expired-stored-token', expiresAt: NOW - 1_000 });
+    const store = useStore();
+
+    await store.resolve();
+
+    expect(store.accessToken).toBe('test-access-token-value');
+    await expect(readCredential()).resolves.toMatchObject({ accessToken: 'test-access-token-value' });
+  });
+
+  it('takes a stored token whose lifetime nothing states, because nothing says it is dead', async () => {
+    await getRedis().hset(KEY, { accessToken: 'opaque-stored-token' });
+    const store = useStore();
+
+    await store.resolve();
+
+    expect(store.accessToken).toBe('opaque-stored-token');
+  });
+});
+
 describe('upstreamStore refresh', () => {
   it('refuses to refresh without the client secret and the refresh token', async () => {
     const store = useStore();
@@ -187,7 +218,7 @@ describe('upstreamStore refresh', () => {
     expect(called('refreshToken')).toBe(false);
   });
 
-  it('hands out the credential the library exchanged', async () => {
+  it('hands out the credential the library exchanged, and keeps it for the next start', async () => {
     sheet.refresh = { accessToken: 'a-brand-new-token' };
     const store = useStore({ OPS_DOCS_CLIENT_SECRET: 'client-secret', OPS_DOCS_REFRESH_TOKEN: 'refresh-token' });
     await store.resolve();
@@ -195,6 +226,7 @@ describe('upstreamStore refresh', () => {
     await store.refresh();
 
     expect(store.accessToken).toBe('a-brand-new-token');
+    await expect(readCredential()).resolves.toMatchObject({ accessToken: 'a-brand-new-token' });
     // The new token has not been checked yet, which is what `/readyz` reports as unvalidated.
     expect(store.describe()).toMatchObject({ validated: false, validatedAt: null });
   });
@@ -298,55 +330,55 @@ describe('upstreamStore startup log', () => {
   });
 });
 
-describe('redisCredentialStore', () => {
-  const store = redisCredentialStore();
+describe('the credential Redis holds', () => {
   const credential = { accessToken: 'access-token', clientId: 'client-id', openId: 'open-id', refreshToken: 'refresh-token' };
 
   it('reads back the record Redis holds', async () => {
     await getRedis().hset(KEY, { accessToken: 'access-token', clientId: 'client-id', openId: 'open-id', refreshToken: 'refresh-token' });
 
-    await expect(store.load()).resolves.toEqual({ accessToken: 'access-token', clientId: 'client-id', openId: 'open-id', refreshToken: 'refresh-token' });
+    await expect(readCredential()).resolves.toEqual({ accessToken: 'access-token', clientId: 'client-id', openId: 'open-id', refreshToken: 'refresh-token' });
   });
 
   it('treats a hash with no access token as nothing stored at all', async () => {
     await getRedis().hset(KEY, { clientId: 'client-id', openId: 'open-id' });
 
-    await expect(store.load()).resolves.toBeUndefined();
+    await expect(readCredential()).resolves.toBeUndefined();
   });
 
-  it('writes the fields it was given, and no others', async () => {
-    await store.save({ accessToken: 'access-token', openId: 'open-id' });
+  it('writes the fields a record carries, and no others', async () => {
+    await rememberCredential({ accessToken: 'access-token', openId: 'open-id' });
 
     await expect(getRedis().hgetall(KEY)).resolves.toEqual({ accessToken: 'access-token', openId: 'open-id' });
   });
 
   it('leaves the fields it was not given alone, so a partial refresh keeps the refresh token', async () => {
-    await store.save(credential);
+    await rememberCredential(credential);
 
-    await store.save({ accessToken: 'a-newer-token' });
+    await rememberCredential({ ...credential, accessToken: 'a-newer-token' });
 
     await expect(getRedis().hgetall(KEY)).resolves.toEqual({ ...credential, accessToken: 'a-newer-token' });
   });
 
   it('writes nothing for a record whose only values are empty', async () => {
-    await store.save(credential);
+    await rememberCredential(credential);
 
-    await store.save({ accessToken: '', openId: undefined, clientId: '' });
+    await rememberCredential({ accessToken: '', openId: undefined, clientId: '' });
 
     await expect(getRedis().hgetall(KEY)).resolves.toEqual(credential);
   });
 
-  it('carries a number as the string Redis stores', async () => {
-    await store.save({ accessToken: 'access-token', expiresAt: 1_789_140_693_000 });
+  it('carries a number as the string Redis stores, and reads it back as a number', async () => {
+    await rememberCredential({ accessToken: 'access-token', expiresAt: 1_789_140_693_000 });
 
-    await expect(getRedis().hget(KEY, 'expiresAt')).resolves.toBe('1789140693000');
+    expect(await getRedis().hget(KEY, 'expiresAt')).toBe('1789140693000');
+    await expect(readCredential()).resolves.toMatchObject({ expiresAt: 1_789_140_693_000 });
   });
 
   it('names each command by the credential work it is doing', async () => {
     const records = captureLogs();
 
-    await store.save({ accessToken: 'access-token' });
-    await store.load();
+    await rememberCredential({ accessToken: 'access-token' });
+    await readCredential();
 
     expect(records.filter((entry) => entry.message === 'Redis command answered').map((entry) => [entry.operation, entry.command, entry.keys])).toEqual([
       ['rememberCredential', 'HSET', [KEY]],

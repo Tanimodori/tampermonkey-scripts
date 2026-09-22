@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderUserscriptMeta } from '../src/render.js';
+import { renderUserscriptMeta } from '../src/render';
 
 /** The block a list of `// @key value` lines renders to, ending where the bundle code starts. */
 const expectedBlock = (lines: readonly string[]): string => ['// ==UserScript==', ...lines.map((line) => `// ${line}`), '// ==/UserScript=='].join('\n') + '\n';

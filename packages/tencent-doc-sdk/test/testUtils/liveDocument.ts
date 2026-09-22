@@ -1,15 +1,15 @@
 import { afterAll } from 'vitest';
-import type { DocCoordinates } from '@/api/address.js';
-import { createDocClient } from '@/api/docClient.js';
-import type { DocClient } from '@/api/docClient.js';
-import { newDispatcher } from '@/client/transport.js';
-import { createTokenManager } from '@/token/manager.js';
-import type { TokenManager } from '@/token/manager.js';
-import { createCredentialStore } from '@/token/store.js';
-import type { CredentialStore } from '@/token/store.js';
-import type { CommonRecord, CommonRecords } from '@/validation/types.js';
-import { liveEnv } from './env.js';
-import { EXAMPLE_FILE_ID } from './mockUpstream.js';
+import type { DocCoordinates } from '@/api/address';
+import { createDocClient } from '@/api/docClient';
+import type { DocClient } from '@/api/docClient';
+import { newDispatcher } from '@/client/transport';
+import { createTokenManager } from '@/token/manager';
+import type { TokenManager } from '@/token/manager';
+import { createCredentialStore } from '@/token/store';
+import type { CredentialStore } from '@/token/store';
+import type { CommonRecord, CommonRecords } from '@/validation/types';
+import { liveEnv } from './env';
+import { EXAMPLE_FILE_ID } from './mockUpstream';
 
 /**
  * The shared front of the live suite: what it takes to point a spec file at a real Tencent Docs

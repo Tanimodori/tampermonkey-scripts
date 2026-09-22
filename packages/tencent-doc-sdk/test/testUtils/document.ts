@@ -1,18 +1,18 @@
-import { createDocClient } from '@/api/docClient.js';
-import type { DocClient } from '@/api/docClient.js';
-import { createTokenManager } from '@/token/manager.js';
-import type { TokenManager } from '@/token/manager.js';
-import { createCredentialStore } from '@/token/store.js';
-import type { CredentialStore } from '@/token/store.js';
-import type { CommonRecord } from '@/validation/types.js';
-import { apiOrigin, EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, setupTencentDocsMock } from './mockUpstream.js';
-import type { TencentDocsMock, TencentDocsMockState } from './mockUpstream.js';
+import { createDocClient } from '@/api/docClient';
+import type { DocClient } from '@/api/docClient';
+import { createTokenManager } from '@/token/manager';
+import type { TokenManager } from '@/token/manager';
+import { createCredentialStore } from '@/token/store';
+import type { CredentialStore } from '@/token/store';
+import type { CommonRecord } from '@/validation/types';
+import { apiOrigin, EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, setupTencentDocsMock } from './mockUpstream';
+import type { TencentDocsMock, TencentDocsMockState } from './mockUpstream';
 
-export * from '@test/testUtils/fixtures/sheet.js';
-export * from '@test/testUtils/fixtures/record.js';
-export * from '@test/testUtils/fixtures/oauth.js';
-export { apiOrigin, EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, setupTencentDocsMock } from './mockUpstream.js';
-export type { MockFailure, TencentDocsMock, TencentDocsMockState } from './mockUpstream.js';
+export * from '@test/testUtils/fixtures/sheet';
+export * from '@test/testUtils/fixtures/record';
+export * from '@test/testUtils/fixtures/oauth';
+export { apiOrigin, EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, setupTencentDocsMock } from './mockUpstream';
+export type { MockFailure, TencentDocsMock, TencentDocsMockState } from './mockUpstream';
 
 /** The credential a test client is built with, unless a case says otherwise. */
 const TEST_CREDENTIAL = {

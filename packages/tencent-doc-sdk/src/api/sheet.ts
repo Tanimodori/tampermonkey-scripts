@@ -1,9 +1,9 @@
-import type { ClientContext } from '@/client/context.js';
-import { assembleCall, sendEnvelope } from '@/client/request.js';
-import { getSheetResponseSchema } from '@/validation/schemas.js';
-import type { Sheet } from '@/validation/types.js';
-import type { EndpointTarget } from './address.js';
-import { sheetsAddress } from './address.js';
+import type { ClientContext } from '@/client/context';
+import { assembleCall, sendEnvelope } from '@/client/request';
+import { getSheetResponseSchema } from '@/validation/schemas';
+import type { Sheet } from '@/validation/types';
+import type { EndpointTarget } from './address';
+import { sheetsAddress } from './address';
 
 /**
  * 查询子表: which sub-sheets a document holds.

@@ -1,9 +1,9 @@
 import type { Dispatcher } from 'undici';
 import type { z } from 'zod';
-import { cannotAssemble, classifyResponse, invalidAnswer, transportFailure } from '@/validation/classify.js';
-import type { CallShape, ResponseHeaders, UpstreamAnswer } from '@/validation/classify.js';
-import { answerHeaderSchema } from '@/validation/schemas.js';
-import type { ClientContext } from './context.js';
+import { cannotAssemble, classifyResponse, invalidAnswer, transportFailure } from '@/validation/classify';
+import type { CallShape, ResponseHeaders, UpstreamAnswer } from '@/validation/classify';
+import { answerHeaderSchema } from '@/validation/schemas';
+import type { ClientContext } from './context';
 
 /**
  * One call: send it, read it, judge it, hand it over.

@@ -1,11 +1,11 @@
 import type { Dispatcher } from 'undici';
-import { fetchAccessToken as fetchGrantedToken, getUserInfo as fetchUserInfo, refreshAccessToken as fetchRefreshedToken } from '@/api/oauth.js';
-import { resolveContext } from '@/client/context.js';
-import { describeBody } from '@/validation/classify.js';
-import { TencentDocsError } from '@/validation/errors.js';
-import type { TokenResponse, UserInfo } from '@/validation/types.js';
-import type { CredentialRecord, CredentialStore } from './store.js';
-import { accessTokenOf, clientIdOf, refreshTokenOf } from './store.js';
+import { fetchAccessToken as fetchGrantedToken, getUserInfo as fetchUserInfo, refreshAccessToken as fetchRefreshedToken } from '@/api/oauth';
+import { resolveContext } from '@/client/context';
+import { describeBody } from '@/validation/classify';
+import { TencentDocsError } from '@/validation/errors';
+import type { TokenResponse, UserInfo } from '@/validation/types';
+import type { CredentialRecord, CredentialStore } from './store';
+import { accessTokenOf, clientIdOf, refreshTokenOf } from './store';
 
 /**
  * The three endpoints that speak about a credential: whose token this is, and the two ways a new one is

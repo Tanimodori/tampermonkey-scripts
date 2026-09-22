@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { readPackage } from 'pkg-types';
-import { normalizeMetaKey } from './order.js';
-import type { MetaScalar, PackageJsonLike, UserscriptMeta } from './types.js';
+import { normalizeMetaKey } from './order';
+import type { MetaScalar, PackageJsonLike, UserscriptMeta } from './types';
 
 /**
  * The keys a package file fills in when the metadata does not spell them out. These are the ones a

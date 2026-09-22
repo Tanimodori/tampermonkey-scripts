@@ -1,5 +1,5 @@
 import type { Dispatcher } from 'undici';
-import { DEFAULT_TIMEOUT_MS, newDispatcher } from './transport.js';
+import { DEFAULT_TIMEOUT_MS, newDispatcher } from './transport';
 
 /**
  * The things every way of reaching the upstream needs, resolved once per object built from them.

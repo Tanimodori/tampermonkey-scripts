@@ -1,15 +1,15 @@
 /// <reference types="node" />
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { apiOrigin, rawRecord, setupTencentDocsMock } from '@test/testUtils/document.js';
+import { apiOrigin, rawRecord, setupTencentDocsMock } from '@test/testUtils/document';
 import type { Dispatcher } from 'undici';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { ClientContext } from '@/client/context.js';
-import { assembleCall, sendBare, sendEnvelope } from '@/client/request.js';
-import type { CallRequest } from '@/client/request.js';
-import { newDispatcher } from '@/client/transport.js';
-import { TencentDocsError } from '@/validation/errors.js';
-import { getRecordsResponseSchema, tokenResponseSchema, userInfoResponseSchema } from '@/validation/schemas.js';
+import type { ClientContext } from '@/client/context';
+import { assembleCall, sendBare, sendEnvelope } from '@/client/request';
+import type { CallRequest } from '@/client/request';
+import { newDispatcher } from '@/client/transport';
+import { TencentDocsError } from '@/validation/errors';
+import { getRecordsResponseSchema, tokenResponseSchema, userInfoResponseSchema } from '@/validation/schemas';
 
 /**
  * One logical call to the upstream, end to end over a mocked document: what it sends, how it fails, and

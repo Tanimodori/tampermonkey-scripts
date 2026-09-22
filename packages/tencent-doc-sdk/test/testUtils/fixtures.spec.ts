@@ -7,7 +7,7 @@ import {
   sheetSchema,
   tokenResponseSchema,
   userInfoResponseSchema,
-} from '@/validation/schemas.js';
+} from '@/validation/schemas';
 import {
   deleteRecordsAnswer,
   getRecordsAnswer,
@@ -21,7 +21,7 @@ import {
   userInfoAnswer,
   writtenRecordsAnswer,
   writtenRecordsWithoutId,
-} from './document.js';
+} from './document';
 
 /**
  * The mock's answer samples, checked against the response types they stand for.

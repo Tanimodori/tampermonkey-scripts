@@ -1,4 +1,4 @@
-import { live, store, tokens } from '@test/testUtils/liveDocument.js';
+import { live, store, tokens } from '@test/testUtils/liveDocument';
 /**
  * @module-tag live
  */

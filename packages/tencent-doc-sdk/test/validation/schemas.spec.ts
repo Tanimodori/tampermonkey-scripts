@@ -12,7 +12,7 @@ import {
   tokenResponseSchema,
   userInfoResponseSchema,
   writtenRecordsSchema,
-} from '@/validation/schemas.js';
+} from '@/validation/schemas';
 
 /**
  * The wire contract itself, one describe per response type.

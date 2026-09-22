@@ -1,5 +1,5 @@
-import { defaultLanguageOrder, defaultLanguageSlot, defaultMetaOrder, knownMetaKeys, normalizeLocale, normalizeMetaKey } from './order.js';
-import type { MetaScalar, UserscriptMeta } from './types.js';
+import { defaultLanguageOrder, defaultLanguageSlot, defaultMetaOrder, knownMetaKeys, normalizeLocale, normalizeMetaKey } from './order';
+import type { MetaScalar, UserscriptMeta } from './types';
 
 /** How the keys are ordered and filtered. */
 export interface RenderOptions {

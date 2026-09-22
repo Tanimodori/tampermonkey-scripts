@@ -17,7 +17,7 @@ import type {
   userInfoSchema,
   writtenRecordSchema,
   writtenRecordsSchema,
-} from './schemas.js';
+} from './schemas';
 
 /** The types the schemas in `schemas.ts` describe, under the upstream's own names. */
 

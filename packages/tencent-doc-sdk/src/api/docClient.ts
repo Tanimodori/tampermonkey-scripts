@@ -1,12 +1,12 @@
-import type { ClientOptions } from '@/client/context.js';
-import { resolveContext } from '@/client/context.js';
-import type { CredentialStore } from '@/token/store.js';
-import { accessTokenOf, clientIdOf, openIdOf } from '@/token/store.js';
-import type { CommonRecords, Sheet, WrittenRecords } from '@/validation/types.js';
-import type { DocCoordinates, EndpointTarget } from './address.js';
-import type { GetRecordsParams, RecordUpdate, RecordValues } from './record.js';
-import { addRecords, deleteRecords, getRecords, updateRecords } from './record.js';
-import { getSheetList } from './sheet.js';
+import type { ClientOptions } from '@/client/context';
+import { resolveContext } from '@/client/context';
+import type { CredentialStore } from '@/token/store';
+import { accessTokenOf, clientIdOf, openIdOf } from '@/token/store';
+import type { CommonRecords, Sheet, WrittenRecords } from '@/validation/types';
+import type { DocCoordinates, EndpointTarget } from './address';
+import type { GetRecordsParams, RecordUpdate, RecordValues } from './record';
+import { addRecords, deleteRecords, getRecords, updateRecords } from './record';
+import { getSheetList } from './sheet';
 
 /**
  * The document, as a caller works with it: which sub-sheets it holds, and the rows of one of them.

@@ -1,11 +1,11 @@
-import { allRecords, appendMarker, client, deleteRecords, live, markerRecordIds, page, useLiveDocument } from '@test/testUtils/liveDocument.js';
-import type { LiveMarker } from '@test/testUtils/liveDocument.js';
+import { allRecords, appendMarker, client, deleteRecords, live, markerRecordIds, page, useLiveDocument } from '@test/testUtils/liveDocument';
+import type { LiveMarker } from '@test/testUtils/liveDocument';
 /**
  * @module-tag live
  */
 import { describe, expect, it } from 'vitest';
-import { cellValuesSchema } from '@/validation/schemas.js';
-import type { CommonRecord } from '@/validation/types.js';
+import { cellValuesSchema } from '@/validation/schemas';
+import type { CommonRecord } from '@/validation/types';
 
 /**
  * The record endpoints against a **real** Tencent Docs document: the page a caller pages through, the

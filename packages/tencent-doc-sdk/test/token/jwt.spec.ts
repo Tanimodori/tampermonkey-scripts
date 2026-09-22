@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseJwtToken, readAccessTokenClaims, readAccessTokenExpiresAt } from '@/token/jwt.js';
+import { parseJwtToken, readAccessTokenClaims, readAccessTokenExpiresAt } from '@/token/jwt';
 
 /**
  * Reading a lifetime and an identity off an access token.

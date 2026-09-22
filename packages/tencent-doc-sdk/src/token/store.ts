@@ -1,5 +1,5 @@
-import { TencentDocsError } from '@/validation/errors.js';
-import { parseJwtToken } from './jwt.js';
+import { TencentDocsError } from '@/validation/errors';
+import { parseJwtToken } from './jwt';
 
 /**
  * The credential one document is opened with, and the synchronous holder of it.

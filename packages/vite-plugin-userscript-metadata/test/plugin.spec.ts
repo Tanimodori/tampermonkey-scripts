@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import type { ResolvedConfig } from 'vite';
 import { build } from 'vite';
 import { describe, expect, it } from 'vitest';
-import { userscriptMetadata } from '../src/index.js';
-import type { UserscriptMetadataOptions } from '../src/types.js';
+import { userscriptMetadata } from '../src/index';
+import type { UserscriptMetadataOptions } from '../src/types';
 
 /** One output's options, as far as the tests read them back. */
 interface BannerOutput {

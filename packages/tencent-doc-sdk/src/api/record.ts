@@ -1,10 +1,10 @@
 import type { z } from 'zod';
-import type { ClientContext } from '@/client/context.js';
-import { assembleCall, sendEnvelope } from '@/client/request.js';
-import { addRecordsResponseSchema, deleteRecordsResponseSchema, getRecordsResponseSchema, updateRecordsResponseSchema } from '@/validation/schemas.js';
-import type { CommonRecords, WrittenRecords } from '@/validation/types.js';
-import type { EndpointTarget } from './address.js';
-import { sheetAddress } from './address.js';
+import type { ClientContext } from '@/client/context';
+import { assembleCall, sendEnvelope } from '@/client/request';
+import { addRecordsResponseSchema, deleteRecordsResponseSchema, getRecordsResponseSchema, updateRecordsResponseSchema } from '@/validation/schemas';
+import type { CommonRecords, WrittenRecords } from '@/validation/types';
+import type { EndpointTarget } from './address';
+import { sheetAddress } from './address';
 
 /**
  * The four record endpoints: 查询记录, 新增记录, 更新记录, 删除记录.

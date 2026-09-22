@@ -1,7 +1,7 @@
 import type { Dispatcher } from 'undici';
 import { describe, expect, it } from 'vitest';
-import { resolveContext } from '@/client/context.js';
-import { DEFAULT_TIMEOUT_MS } from '@/client/transport.js';
+import { resolveContext } from '@/client/context';
+import { DEFAULT_TIMEOUT_MS } from '@/client/transport';
 
 /**
  * What the ways of reaching the upstream resolve to, before any call is made.

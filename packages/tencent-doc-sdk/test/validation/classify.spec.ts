@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { classifyResponse, describeBody, transportFailure } from '@/validation/classify.js';
-import type { ResponseHeaders, UpstreamAnswer } from '@/validation/classify.js';
-import type { TencentDocsErrorCode } from '@/validation/errors.js';
-import { answerHeaderSchema } from '@/validation/schemas.js';
+import { classifyResponse, describeBody, transportFailure } from '@/validation/classify';
+import type { ResponseHeaders, UpstreamAnswer } from '@/validation/classify';
+import type { TencentDocsErrorCode } from '@/validation/errors';
+import { answerHeaderSchema } from '@/validation/schemas';
 
 /**
  * The classification table on its own: a response goes in, and either `undefined` (a usable answer) or

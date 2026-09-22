@@ -1,7 +1,7 @@
 import type { Plugin, ResolvedConfig } from 'vite';
-import { loadPackageJson, withPackageJson } from './packageJson.js';
-import { renderUserscriptMeta } from './render.js';
-import type { UserscriptMetadataOptions } from './types.js';
+import { loadPackageJson, withPackageJson } from './packageJson';
+import { renderUserscriptMeta } from './render';
+import type { UserscriptMetadataOptions } from './types';
 
 const pluginName = 'vite-plugin-userscript-metadata';
 
@@ -75,6 +75,6 @@ const composeBanner =
 
 export default userscriptMetadata;
 
-export { defaultLanguageOrder, defaultMetaOrder, knownMetaKeys } from './order.js';
-export type { RenderOptions } from './render.js';
-export type { MetaScalar, MetaValue, PackageJsonLike, UserscriptMeta, UserscriptMetadataOptions } from './types.js';
+export { defaultLanguageOrder, defaultMetaOrder, knownMetaKeys } from './order';
+export type { RenderOptions } from './render';
+export type { MetaScalar, MetaValue, PackageJsonLike, UserscriptMeta, UserscriptMetadataOptions } from './types';

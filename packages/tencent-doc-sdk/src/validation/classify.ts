@@ -1,5 +1,5 @@
-import type { TencentDocsErrorOptions, UpstreamResponse } from './errors.js';
-import { TencentDocsError } from './errors.js';
+import type { TencentDocsErrorOptions, UpstreamResponse } from './errors';
+import { TencentDocsError } from './errors';
 
 /**
  * The classification table: what one Tencent Docs answer amounts to.

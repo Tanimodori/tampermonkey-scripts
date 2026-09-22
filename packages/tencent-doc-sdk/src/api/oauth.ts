@@ -1,8 +1,8 @@
-import type { ClientContext } from '@/client/context.js';
-import { assembleCall, sendBare, sendEnvelope } from '@/client/request.js';
-import { tokenResponseSchema, userInfoResponseSchema } from '@/validation/schemas.js';
-import type { TokenResponse, UserInfo } from '@/validation/types.js';
-import { oauthAddress } from './address.js';
+import type { ClientContext } from '@/client/context';
+import { assembleCall, sendBare, sendEnvelope } from '@/client/request';
+import { tokenResponseSchema, userInfoResponseSchema } from '@/validation/schemas';
+import type { TokenResponse, UserInfo } from '@/validation/types';
+import { oauthAddress } from './address';
 
 /**
  * The three OAuth endpoints: who an access token belongs to, and the two ways one is obtained.

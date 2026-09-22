@@ -1,10 +1,10 @@
-import { apiOrigin, EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, setupTencentDocsMock } from '@test/testUtils/document.js';
+import { apiOrigin, EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, setupTencentDocsMock } from '@test/testUtils/document';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createDocClient } from '@/api/docClient.js';
-import { createTokenManager } from '@/token/manager.js';
-import type { TokenManager, TokenManagerOptions } from '@/token/manager.js';
-import { accessTokenOf, clientIdOf, createCredentialStore, openIdOf } from '@/token/store.js';
-import type { CredentialRecord, CredentialStore } from '@/token/store.js';
+import { createDocClient } from '@/api/docClient';
+import { createTokenManager } from '@/token/manager';
+import type { TokenManager, TokenManagerOptions } from '@/token/manager';
+import { accessTokenOf, clientIdOf, createCredentialStore, openIdOf } from '@/token/store';
+import type { CredentialRecord, CredentialStore } from '@/token/store';
 
 /**
  * What the three credential endpoints do to the credential held: which parts an answer writes, which it

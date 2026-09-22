@@ -1,4 +1,4 @@
-import { client, coordinates, live, store, tokens, useLiveDocument } from '@test/testUtils/liveDocument.js';
+import { client, coordinates, live, store, tokens, useLiveDocument } from '@test/testUtils/liveDocument';
 /**
  * @module-tag live
  */

@@ -2,8 +2,8 @@ import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { loadPackageJson, withPackageJson } from '../src/packageJson.js';
-import type { PackageJsonLike } from '../src/types.js';
+import { loadPackageJson, withPackageJson } from '../src/packageJson';
+import type { PackageJsonLike } from '../src/types';
 
 const fixture: PackageJsonLike = {
   name: 'fixture-package',

@@ -1,8 +1,8 @@
-import { apiOrigin, setupTencentDocsMock, tokenRefused } from '@test/testUtils/document.js';
+import { apiOrigin, setupTencentDocsMock, tokenRefused } from '@test/testUtils/document';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { fetchAccessToken, getUserInfo, refreshAccessToken } from '@/api/oauth.js';
-import type { AccessTokenInput, RefreshTokenInput } from '@/api/oauth.js';
-import { resolveContext } from '@/client/context.js';
+import { fetchAccessToken, getUserInfo, refreshAccessToken } from '@/api/oauth';
+import type { AccessTokenInput, RefreshTokenInput } from '@/api/oauth';
+import { resolveContext } from '@/client/context';
 
 /**
  * The three credential endpoints against the mocked upstream: what each carries on the wire, what it hands

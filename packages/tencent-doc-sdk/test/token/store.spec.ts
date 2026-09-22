@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { accessTokenOf, clientIdOf, createCredentialStore, openIdOf, refreshTokenOf } from '@/token/store.js';
-import { TencentDocsError } from '@/validation/errors.js';
+import { accessTokenOf, clientIdOf, createCredentialStore, openIdOf, refreshTokenOf } from '@/token/store';
+import { TencentDocsError } from '@/validation/errors';
 
 /**
  * The synchronous half of the credential: what `get()` reports, what a call refuses to go out without

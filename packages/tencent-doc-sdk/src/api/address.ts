@@ -9,7 +9,7 @@
  * this is where a secret gets into a URL, and where it is kept out of every report.
  */
 
-import type { CallRequest } from '@/client/request.js';
+import type { CallRequest } from '@/client/request';
 
 /** Which document, and which sub-sheet of it. */
 export interface DocCoordinates {

@@ -1,10 +1,10 @@
-import { tokenAnswer, userInfoAnswer } from '@test/testUtils/fixtures/oauth.js';
-import type { TokenAnswerInput } from '@test/testUtils/fixtures/oauth.js';
-import { deleteRecordsAnswer, getRecordsAnswer, readRows, writtenRecordsAnswer, writtenRecordsWithoutId } from '@test/testUtils/fixtures/record.js';
-import { getSheetAnswer } from '@test/testUtils/fixtures/sheet.js';
+import { tokenAnswer, userInfoAnswer } from '@test/testUtils/fixtures/oauth';
+import type { TokenAnswerInput } from '@test/testUtils/fixtures/oauth';
+import { deleteRecordsAnswer, getRecordsAnswer, readRows, writtenRecordsAnswer, writtenRecordsWithoutId } from '@test/testUtils/fixtures/record';
+import { getSheetAnswer } from '@test/testUtils/fixtures/sheet';
 import { MockAgent } from 'undici';
 import type { Dispatcher } from 'undici';
-import type { CommonRecord } from '@/validation/types.js';
+import type { CommonRecord } from '@/validation/types';
 
 /**
  * A programmable stand-in for the Tencent Docs Open API, on undici's `MockAgent`.

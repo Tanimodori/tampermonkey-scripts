@@ -1,5 +1,5 @@
-import { jwtHeaderSchema, jwtPayloadSchema } from '@/validation/schemas.js';
-import type { JwtHeader, JwtPayload } from '@/validation/types.js';
+import { jwtHeaderSchema, jwtPayloadSchema } from '@/validation/schemas';
+import type { JwtHeader, JwtPayload } from '@/validation/types';
 
 /**
  * Reading a lifetime and an identity out of an access token, for a caller that has to know when a

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { encodePathSegment, oauthAddress, sheetAddress, sheetsAddress } from '@/api/address.js';
+import { encodePathSegment, oauthAddress, sheetAddress, sheetsAddress } from '@/api/address';
 
 /**
  * The one place a Tencent Docs address is built.

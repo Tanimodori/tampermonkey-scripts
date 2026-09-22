@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultLanguageOrder, defaultMetaOrder, knownMetaKeys, normalizeLocale } from '../src/order.js';
+import { defaultLanguageOrder, defaultMetaOrder, knownMetaKeys, normalizeLocale } from '../src/order';
 
 describe('defaultMetaOrder', () => {
   it('starts with the keys that identify the script', () => {

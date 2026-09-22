@@ -1,4 +1,4 @@
-import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, apiOrigin, rawRecord, testUpstream } from '@test/testUtils/document.js';
+import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, apiOrigin, rawRecord, testUpstream } from '@test/testUtils/document';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 /**

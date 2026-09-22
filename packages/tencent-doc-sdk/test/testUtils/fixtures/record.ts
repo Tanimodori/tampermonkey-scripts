@@ -1,4 +1,4 @@
-import type { CommonRecord } from '@/validation/types.js';
+import type { CommonRecord } from '@/validation/types';
 
 /**
  * The record endpoints' side of the upstream: one page of rows, and the three write answers.

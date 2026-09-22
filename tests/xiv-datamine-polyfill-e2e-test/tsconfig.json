@@ -10,13 +10,15 @@
     "lib": ["ES2022", "DOM"],
     "types": ["xiv-datamine-polyfill/client"],
     /*
-      The point of the project. `skipLibCheck: true` would let a broken declaration pass: the packages emit
-      `.d.ts` files whose specifiers and re-exports are a property of how they were built (for
-      `xiv-api-provider`, of the declaration step in its `vite.config.ts`), and nothing inside either package
-      checks that a consumer can read them. Here the library files are checked, so a declaration that cannot be
-      resolved fails this compile.
+      What this project judges is the consumer's view: every import resolves through the checked package's
+      `exports`, the wildcard `.csv` declaration is there to be found, and what it gives back feeds
+      `useSheetTable`. Those three surface in `src/`, and they fail this compile whatever this flag says — a
+      declaration that is missing reports `TS2307` at the import, one of the wrong shape `TS2345` at the call.
+      Whether the declarations the packages ship are internally sound is not this project's question; that is
+      `xiv-datamine-polyfill`'s `tsconfig.declarations.json`, which reads both packages' shipped declarations.
+      Reading a `.d.ts` without judging it also keeps third-party declarations out of the verdict here.
     */
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",

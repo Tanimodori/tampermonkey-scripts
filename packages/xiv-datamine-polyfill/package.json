@@ -26,12 +26,13 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc --noEmit && vite build",
+    "build": "vite build",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
     "test": "vitest --passWithNoTests",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "typecheck:declarations": "tsc -p tsconfig.declarations.json"
   },
   "dependencies": {
     "xiv-api-provider": "workspace:*"

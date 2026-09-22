@@ -24,9 +24,10 @@ const live = process.env.XIV_LIVE === '1';
 /**
  * Two sheets small enough to read at a glance, shaped like the real ones and built to exercise one rule each:
  * a placeholder row with an empty `Name` for `dropEmptyIn`, and a markup row for `onlyRowKeys`. The values are
- * the real ones for the keys they name, so an offline failure names a rule rather than a fixture.
+ * the real ones for the keys they name, so an offline failure names a rule rather than a fixture. Each sheet
+ * carries one column the rules never name, which is the other half of what `columns` is for.
  */
-const ITEM_UI = ['key,0,1,2', '#,Name,Icon', 'int32,str,Image', '0,"",0,0', '1,"格斗武器",60101,7', '2,"单手剑",60102,6'].join('\n');
+const ITEM_UI = ['key,0,1,2', '#,Name,Icon,Order{Minor}', 'int32,str,Image,byte', '0,"",0,0', '1,"格斗武器",60101,6', '2,"单手剑",60102,0'].join('\n');
 const ADDON = ['key,0,1', '#,Text,Name', 'int32,str,str', '699,"即时",Common', '700,"> ",Common', '999,"<Switch(1,2,3,4)>",Generic'].join('\n');
 
 /** Answer by the sheet name in the requested path; anything else is a 404, which is a real answer about data. */

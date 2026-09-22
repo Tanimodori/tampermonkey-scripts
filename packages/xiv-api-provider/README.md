@@ -45,7 +45,7 @@ rushx test:drift        # OpenAPI 漂移报告,同样仅手动
 
 活体测试有两道闸:`{ tags: ['live'] }` 与 `describe.skipIf(!live)`。只有标签挡不住网络请求——不带 `--tags-filter` 时 vitest 认为所有测试都匹配。`test/providers/*/` 与 `src/providers/*/` 一一对应。
 
-交出去的声明能否被读懂,要到包外才看得见:[xiv-datamine-polyfill-e2e-test](../../tests/xiv-datamine-polyfill-e2e-test/README.md) 经 `package.json#exports` 导入这两个包,两份 tsconfig 都是 `skipLibCheck: false`,随 `rush build` 一起进 CI 门禁。
+交出去的声明是构建的产物,包自己不判它。是否读得通有两处可看:[xiv-datamine-polyfill 的 `typecheck:declarations`](../xiv-datamine-polyfill/docs/design.md#测试) 以 `skipLibCheck: false` 编译,读到的声明含本包这一份与它引用的 zod,那一遍手动跑,不在 `rush build` 里;[xiv-datamine-polyfill-e2e-test](../../tests/xiv-datamine-polyfill-e2e-test/README.md) 经 `package.json#exports` 导入,判消费方读不读得到、类型喂不喂得进调用,它随 `rush build` 进 CI 门禁。两个包的 `build` 都只有 `vite build`,源码层面的类型检查归各自的 `rushx typecheck`。
 
 ## 已知问题
 

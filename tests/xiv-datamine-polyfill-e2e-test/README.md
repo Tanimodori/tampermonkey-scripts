@@ -12,10 +12,10 @@
 
 ## 两份 tsconfig
 
-两份都 `skipLibCheck: false`,也就是都去检查读到的 `.d.ts` 的内容本身,而不只是解析它:
+两份都 `skipLibCheck: true`:这里判的是消费方读不读得到、读到的类型喂不喂得进调用,判的不是声明自身的内容。声明自身是否自洽由 [xiv-datamine-polyfill 的设计说明](../../packages/xiv-datamine-polyfill/docs/design.md#测试)里的 `typecheck:declarations` 判,那一份编译读到的声明含被检查的两个包,而它是手动跑的脚本,不在 `rush build` 的门禁里。`skipLibCheck` 这一项同时决定了第三方声明不参与这里的判定。
 
-- `tsconfig.json` 只管 `src/`。包里交出去的声明是构建的性质:`xiv-api-provider` 的 `.d.ts` 由 `unplugin-dts` 在打包那一步生成、说明符由它解析,那一步坏了在包内任何一次编译里都不留痕迹,只有站在包外读它的人才看得见。`types` 只有 `xiv-datamine-polyfill/client`,没有 `node` —— 目标代码是浏览器侧的,不装 Node 类型也能编译同样是被检查的事实。
-- `tsconfig.node.json` 管 `vite.config.ts` 与 `test/`,即 Node 侧的全部代码,`xiv-datamine-polyfill` 默认入口的声明在这里被读。它也要求声明干净,所以 `vite.config.ts` 的 `defineConfig` 取自 `vite` 而不是 `vitest/config`:后者会带进一批自身不通过这项检查的第三方声明,把真正要看的东西埋掉,而消费方的构建配置本来也不会带 `test` 段。
+- `tsconfig.json` 只管 `src/`。每一个导入都经过目标包的 `package.json#exports`,声明解析不到就用不起来。`types` 只有 `xiv-datamine-polyfill/client`,没有 `node` —— 目标代码是浏览器侧的,不装 Node 类型也能编译同样是被检查的事实。
+- `tsconfig.node.json` 管 `vite.config.ts` 与 `test/`,即 Node 侧的全部代码,`xiv-datamine-polyfill` 默认入口的声明在这里被读到。`vite.config.ts` 的 `defineConfig` 取自 `vite` 而不是 `vitest/config`:消费方的构建配置本来也不带 `test` 段,这里复刻的是那个形状。
 
 ## 缓存与模式
 
@@ -31,7 +31,7 @@
 { "compilerOptions": { "types": ["xiv-datamine-polyfill/client"] } }
 ```
 
-消费者项目里等价的写法是任一份 `.d.ts` 中的一行 `/// <reference types="xiv-datamine-polyfill/client" />`,两种写法指向同一个文件。把 `types` 里那一项摘掉,`import addon from 'xiv-datamine-polyfill/Addon.csv'` 会报 `TS2307: Cannot find module` —— 这份通配声明在本项目里就是被这条负向事实验证的。
+消费者项目里等价的写法是任一份 `.d.ts` 中的一行 `/// <reference types="xiv-datamine-polyfill/client" />`,两种写法指向同一个文件。把 `types` 里那一项摘掉,`import addon from 'xiv-datamine-polyfill/Addon.csv'` 会报 `TS2307: Cannot find module` —— 这份通配声明在本项目里就是被这条负向事实验证的。这条报错与 `skipLibCheck` 的取值无关:声明缺失在使用点报 `TS2307`,形状不对在使用点报 `TS2345`,两处报的都是 `src/` 里的 `.ts`。声明内部引用不到某个类型的那一类不在使用点留下痕迹:它让导入的类型退化成 error type,而 error type 与任何类型互相可赋值,消费方无从分辨它与一份正确的声明。那一格由 `xiv-datamine-polyfill` 里手动跑的 `rushx typecheck:declarations` 判。
 
 ## 运行
 
@@ -52,4 +52,4 @@ rushx format:check   # 另有 format / lint
 - 活体腿在 CI 门禁里:`rush rebuild` 会真去下载两张表,`raw.githubusercontent.com` 不可用即门禁红。缓解的改法是给活体腿固定 `ref`,那会让它不再覆盖 `HEAD` 这条路径。
 - 断言只覆盖对桩数据与真实数据同时成立的性质,离线腿的逐格相等除外:两张表在真与桩之间差两个数量级,钉住数字会让活体运行变成第二份数据快照。
 - `loadTable` 的声明随默认入口一起被读到,但本项目不调用它:示例消费方不需要在构建期之外取表。
-- 本项目在构建图里排在两包之后,它的失败既可能来自"包坏了"也可能来自"消费方视角坏了":前者在包自己的 `rushx build` 里就会复现,后者只有这里能发现。
+- 本项目在构建图里排在两包之后,它的失败既可能来自"包坏了"也可能来自"消费方视角坏了":这里能发现的是解析与调用那一侧。声明内部坏了不影响使用点,而两个包的 `build` 都不做类型检查,所以那一格只有手动跑 `xiv-datamine-polyfill` 的 `rushx typecheck:declarations` 才看得见。

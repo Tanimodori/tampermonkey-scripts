@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    /*
+      The one compile that reads what this package hands out — the declaration `unplugin-dts` generates in the
+      bundling pass, and the hand-written wildcard `client.d.ts` that `exports` names as `./client`. Neither
+      belongs to the program over `src/`: a generated file enters no compile at all, and `tsconfig.json` names
+      `client.d.ts` only so the ambient module is in scope for `test/`, which lib checking then skips like any
+      other `.d.ts`. The reference inside that declaration resolves through `xiv-api-provider`'s own `exports`,
+      so this is where a consumer-facing type going missing gets noticed — and that resolution pulls the
+      provider's emitted declaration into the same program, which is why it needs no compile of its own: lib
+      checking here reads both packages' shipped artifacts.
+    */
+    "skipLibCheck": false
+  },
+  /*
+    `include` is emptied on purpose: the inherited one names `test/` and this config file, and lib checking over
+    a vitest-shaped program reports against declarations this package neither owns nor ships. `files` is the
+    whole scope, and `dist/index.d.ts` is a build product, so this reads what `vite build` just wrote. Neither
+    package's `build` runs a type check — `rushx typecheck` and `rushx typecheck:declarations` are manual.
+  */
+  "include": [],
+  "files": ["dist/index.d.ts", "client.d.ts"]
+}

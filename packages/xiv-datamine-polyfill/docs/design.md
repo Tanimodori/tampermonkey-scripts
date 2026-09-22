@@ -48,7 +48,7 @@
 
 ## 测试
 
-包内三份 spec 管的是零件;把它接到 vite 上之后的样子、以及生成的模块能不能被消费方读,归 `tests/xiv-datamine-polyfill-e2e-test`(见 [那个项目的说明](../../../tests/xiv-datamine-polyfill-e2e-test/README.md))。
+包内三份 spec 管的是零件;把它接到 vite 上之后的样子、以及生成的模块能不能被消费方读,归 `tests/xiv-datamine-polyfill-e2e-test`(见 [那个项目的说明](../../../tests/xiv-datamine-polyfill-e2e-test/README.md))。交出去的声明自身是否读得通,在包内的 `typecheck:declarations`(`tsconfig.declarations.json`)里判:`vite build` 生成的 `dist/index.d.ts`、手写的 `client.d.ts`,以及本包类型所依据的 `xiv-api-provider` 那一份声明,一起进这一遍编译。两个包的 `build` 都只有 `vite build`,不做类型检查,所以 `rushx typecheck` 与 `rushx typecheck:declarations` 都是手动跑的。
 
 - `test/options.spec.ts` — specifier 的匹配边界、`node_modules/.cache` 的推导、缓存键对 ref/语种/内容/规则的敏感性,以及对"配置写法等价"的稳定。
 - `test/load.spec.ts` — 冷缓存只发一次请求、暖缓存零请求、改规则用缓存的 CSV 重建、`HEAD` 移动后换文件、`maxAge` 到点重拉、断网用过期缓存并告警、没有缓存就失败。

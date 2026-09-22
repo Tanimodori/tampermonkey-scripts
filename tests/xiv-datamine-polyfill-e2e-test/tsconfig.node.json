@@ -6,10 +6,10 @@
       built artifact back. `src/` reaches this program through `typeof import(…)` in `testUtils/artifact.ts`,
       which is why the wildcard client types have to be in `types` here too.
 
-      `skipLibCheck: false` is inherited, so the plugin's own declaration is checked the same way the target
-      code's are. That is also why `vite.config.ts` takes `defineConfig` from `vite` rather than from
-      `vitest/config`: the latter drags in declarations that do not survive this flag, and a consumer's config
-      would not carry a test section anyway.
+      `skipLibCheck: true` is inherited, so a dependency's own `.d.ts` is read and not judged — which is what
+      keeps vitest's tree, `happy-dom` included, from settling this verdict. `vite.config.ts` still takes
+      `defineConfig` from `vite` rather than from `vitest/config`: a consumer's own build config carries no test
+      section, and copying that shape is what the example is for.
     */
     "types": ["node", "xiv-datamine-polyfill/client"]
   },

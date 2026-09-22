@@ -1,6 +1,6 @@
 import { live, store, tokens } from '@test/testUtils/liveDocument.js';
 /**
- * @module-tag api
+ * @module-tag live
  */
 import { describe, expect, it } from 'vitest';
 
@@ -23,7 +23,7 @@ describe.skipIf(!live)('the real document: the credential', () => {
     expect(info.openID!.length).toBeGreaterThan(0);
 
     // The environment may name no Open-Id and leave it to the token's own claim, which this compares.
-    const held = store.getCredential().openId;
+    const held = store.get().openId;
     if (held !== undefined) expect(info.openID).toBe(held);
   });
 

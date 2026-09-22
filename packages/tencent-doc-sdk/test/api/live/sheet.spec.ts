@@ -1,6 +1,6 @@
 import { client, coordinates, live, store, tokens, useLiveDocument } from '@test/testUtils/liveDocument.js';
 /**
- * @module-tag api
+ * @module-tag live
  */
 import { describe, expect, it } from 'vitest';
 
@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
  * configured `sheetID` against. The same call against the mocked upstream, including every failure the
  * endpoint can answer with, is `../mock/sheet.spec.ts`.
  *
- * It runs only when the `api` tag is filtered in and the environment names a document other than the
+ * It runs only when the `live` tag is filtered in and the environment names a document other than the
  * example one; see `test/testUtils/liveDocument.ts`.
  */
 
@@ -22,7 +22,7 @@ describe.skipIf(!live)('the real document: sub-sheets', () => {
 
     // The library reports what the upstream said and sends what the store holds; whether the two agree
     // is the caller's judgement, and here it is the reason the read works at all.
-    const held = store.getCredential().openId;
+    const held = store.get().openId;
     if (held !== undefined) expect(reported).toBe(held);
   });
 

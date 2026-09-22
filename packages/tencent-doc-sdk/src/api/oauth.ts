@@ -1,6 +1,6 @@
 import type { ClientContext } from '@/client/context.js';
 import { assembleCall, sendBare, sendEnvelope } from '@/client/request.js';
-import { TokenResponseSchema, UserInfoResponseSchema } from '@/validation/schemas.js';
+import { tokenResponseSchema, userInfoResponseSchema } from '@/validation/schemas.js';
 import type { TokenResponse, UserInfo } from '@/validation/types.js';
 import { oauthAddress } from './address.js';
 
@@ -45,7 +45,7 @@ export function getUserInfo(apiBase: string, accessToken: string, context: Clien
     method: 'GET',
     headers: {},
   }));
-  return sendEnvelope(call, UserInfoResponseSchema, context).then((answer) => answer.data);
+  return sendEnvelope(call, userInfoResponseSchema, context).then((answer) => answer.data);
 }
 
 /** 获取 Token: exchanges an authorization code for the credential that answers with a bare body. */
@@ -87,5 +87,5 @@ function requestToken(
   context: ClientContext,
 ): Promise<TokenResponse> {
   const call = assembleCall(operation, () => ({ ...oauthAddress(apiBase, '/oauth/v2/token', query), method: 'GET', headers: {} }));
-  return sendBare(call, TokenResponseSchema, context);
+  return sendBare(call, tokenResponseSchema, context);
 }

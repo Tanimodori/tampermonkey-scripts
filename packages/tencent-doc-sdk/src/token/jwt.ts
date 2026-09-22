@@ -1,5 +1,5 @@
-import { accessTokenClaimsSchema } from '@/validation/schemas.js';
-import type { AccessTokenClaims } from '@/validation/types.js';
+import { jwtHeaderSchema, jwtPayloadSchema } from '@/validation/schemas.js';
+import type { JwtHeader, JwtPayload } from '@/validation/types.js';
 
 /**
  * Reading a lifetime and an identity out of an access token, for a caller that has to know when a
@@ -10,6 +10,14 @@ import type { AccessTokenClaims } from '@/validation/types.js';
  * only for the case where the upstream stated no lifetime of its own.
  */
 
+/** A token split into its three wire parts, each decoded as far as it decodes. */
+export interface JwtToken {
+  readonly header: JwtHeader;
+  readonly payload: JwtPayload;
+  /** The signature segment verbatim — never verified, only carried through so a reader sees the whole token. */
+  readonly signature: string;
+}
+
 /** Decodes one base64url segment, tolerating missing padding. */
 function decodeSegment(segment: string): unknown {
   const padded = segment.replace(/-/g, '+').replace(/_/g, '/');
@@ -19,24 +27,39 @@ function decodeSegment(segment: string): unknown {
 }
 
 /**
- * The claims of an access token, or `undefined` for anything that is not a decodable three-segment
- * token (opaque tokens, bad base64, non-object payloads).
+ * The token split into `Header.Payload.Signature`, or `undefined` for anything that is not a decodable
+ * three-segment token (opaque tokens, bad base64, non-object header or payload).
+ *
+ * The signature is returned exactly as the wire sent it; only the two JSON segments are decoded, and
+ * each is validated against its schema with every key optional, so a token that carries more than this
+ * library reads still parses.
  */
-export function readAccessTokenClaims(token: string): AccessTokenClaims | undefined {
+export function parseJwtToken(token: string): JwtToken | undefined {
   const parts = token.split('.');
   if (parts.length !== 3) return undefined;
   try {
-    // A payload that is not an object, or that carries an `exp` of the wrong type, is not a token
-    // anybody can read a lifetime out of — which is what `undefined` means to its callers.
-    return accessTokenClaimsSchema.parse(decodeSegment(parts[1]!));
+    return {
+      header: jwtHeaderSchema.parse(decodeSegment(parts[0])),
+      payload: jwtPayloadSchema.parse(decodeSegment(parts[1])),
+      signature: parts[2],
+    };
   } catch {
     return undefined;
   }
 }
 
+/**
+ * The payload claims of an access token, or `undefined` for anything that is not a decodable
+ * three-segment token — which is what `parseJwtToken` reports, so a caller reading one part cannot be
+ * handed a partially-read token it might mistake for a whole one.
+ */
+export function readAccessTokenClaims(token: string): JwtPayload | undefined {
+  return parseJwtToken(token)?.payload;
+}
+
 /** The claims' `exp` as epoch milliseconds, when the token carries a usable one. */
 export function readAccessTokenExpiresAt(token: string): number | undefined {
-  const claims = readAccessTokenClaims(token);
-  if (typeof claims?.exp !== 'number' || !Number.isFinite(claims.exp)) return undefined;
-  return Math.round(claims.exp * 1000);
+  const exp = parseJwtToken(token)?.payload.exp;
+  if (typeof exp !== 'number' || !Number.isFinite(exp)) return undefined;
+  return Math.round(exp * 1000);
 }

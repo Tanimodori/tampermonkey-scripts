@@ -1,6 +1,7 @@
 import type { ClientOptions } from '@/client/context.js';
 import { resolveContext } from '@/client/context.js';
 import type { CredentialStore } from '@/token/store.js';
+import { accessTokenOf, clientIdOf, openIdOf } from '@/token/store.js';
 import type { CommonRecords, Sheet, WrittenRecords } from '@/validation/types.js';
 import type { DocCoordinates, EndpointTarget } from './address.js';
 import type { GetRecordsParams, RecordUpdate, RecordValues } from './record.js';
@@ -36,16 +37,17 @@ export interface DocClient {
 
 /**
  * The headers every Open API call carries: the media types the upstream answers in, then the credential
- * three-piece the Open-Id flows require. Each part is read from the store, which throws when a call cannot
- * be made with what it holds.
+ * three-piece the Open-Id flows require. Each part is read from the store's snapshot and asserted here — a
+ * call missing any of them fails as `config` before the request is assembled.
  */
 function openApiHeaders(store: CredentialStore): Record<string, string> {
+  const credential = store.get();
   return {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    'Access-Token': store.getAccessToken(),
-    'Client-Id': store.getClientId(),
-    'Open-Id': store.getOpenId(),
+    'Access-Token': accessTokenOf(credential),
+    'Client-Id': clientIdOf(credential),
+    'Open-Id': openIdOf(credential),
   };
 }
 

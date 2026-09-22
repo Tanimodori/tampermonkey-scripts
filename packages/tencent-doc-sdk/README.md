@@ -40,15 +40,15 @@ const store = createCredentialStore(configured);
 const tokens = createTokenManager({ apiBase, store, dispatch, clientSecret });
 
 const refreshed = await tokens.refreshToken(); // the credential as it now stands
-await writeToWhereverItIsKept(store.getCredential());
+await writeToWhereverItIsKept(store.get());
 
 // …and back again on the next start, from wherever it was kept:
 createCredentialStore(await readFromWhereverItWasKept());
 ```
 
-`createCredentialStore({ accessToken, clientId, openId, refreshToken, expiresAt })` holds those parts, and two of them may be unstated: an Open-Id is read off the access token's `sub` claim and a lifetime off its `exp`, unless a value was said outright, which always wins. `update(record)` merges, so a part a record does not speak of keeps what was held; an access token that is replaced sheds a lifetime stated for the old one.
+`createCredentialStore({ accessToken, clientId, openId, refreshToken, expiresAt, issueAt })` holds those parts, and three of them may be unstated: an Open-Id is read off the access token's `sub` claim, a lifetime off its `exp` and an issue time off its `iat`, unless a value was said outright, which always wins. These are read off the token when it is written, not on every read; `set(record)` merges, so a part a record does not speak of keeps what was held. An access token that is replaced sheds a lifetime and issue time stated for the old one, but keeps a configured Open-Id — a refresh does not change who the credential belongs to.
 
-The four getters that name a part — `getAccessToken()`, `getClientId()`, `getOpenId()`, `getRefreshToken()` — answer "can this call go out", and fail with `config` when it cannot. `getCredential()` and `getExpiresAt()` answer "what is held", where a part being absent is itself the answer: a credential with no stated lifetime is not an expired one, and a store with no refresh token cannot be refreshed. A caller deciding whether to renew asks the second kind of question.
+The store only reads and writes state: `get()` answers with whatever is held — a part being absent is itself the answer, where a credential with no stated lifetime is not an expired one and one with no refresh token cannot be refreshed — and `set(record)` merges a partial over it. Which parts a given call cannot go out without is asserted at the call site, through `accessTokenOf`, `clientIdOf`, `openIdOf` and `refreshTokenOf`, each failing with `config` when that part is missing. A caller deciding whether to renew reads `get().expiresAt` directly.
 
 `createTokenManager({ apiBase, store, dispatch, clientSecret, now })` sends the requests and writes what answers into the store. `getUserInfo()` reports whose access token the store holds and changes nothing; `fetchToken({ code, redirectUri })` and `refreshToken()` are the two grants — the same upstream endpoint, told apart by `grant_type` — and each returns the credential as it stands afterwards. `dispatch` is required: a manager never opens a connection of its own. `now` is the clock an answer's `expires_in` is folded onto, and the client secret is kept by the manager rather than the store, so it is in neither returned record.
 
@@ -129,10 +129,10 @@ rushx format          # oxfmt
 rushx lint            # oxlint
 rushx typecheck       # tsc --noEmit
 rushx test:unit       # vitest, over the fake document
-rushx test:api        # vitest, over a real Tencent Docs document
+rushx test:live        # vitest, over a real Tencent Docs document
 ```
 
-`test:api` writes to a real document and spends its quota. It reads a credential from the file `OPS_ENV_PATH` names — `.env.test-api`, plus an ignored `.env.test-api.local` beside it — and skips every case unless that file names a document other than the example one. Without it, `rushx test` is offline.
+`test:live` writes to a real document and spends its quota. It reads a credential from the file `OPS_ENV_PATH` names — `.env.test-live`, plus an ignored `.env.test-live.local` beside it — and skips every case unless that file names a document other than the example one. Without it, `rushx test` is offline.
 
 ## Endpoints
 

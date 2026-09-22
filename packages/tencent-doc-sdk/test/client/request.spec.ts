@@ -9,7 +9,7 @@ import { assembleCall, sendBare, sendEnvelope } from '@/client/request.js';
 import type { CallRequest } from '@/client/request.js';
 import { newDispatcher } from '@/client/transport.js';
 import { TencentDocsError } from '@/validation/errors.js';
-import { GetRecordsResponseSchema, TokenResponseSchema, UserInfoResponseSchema } from '@/validation/schemas.js';
+import { getRecordsResponseSchema, tokenResponseSchema, userInfoResponseSchema } from '@/validation/schemas.js';
 
 /**
  * One logical call to the upstream, end to end over a mocked document: what it sends, how it fails, and
@@ -45,9 +45,9 @@ function call(overrides: Partial<CallRequest> = {}): CallRequest {
 }
 
 /** One call to the record endpoint, one to the token endpoint, one to `userinfo`, each on its type. */
-const sendRecord = (one: CallRequest, on: ClientContext = context()) => sendEnvelope(one, GetRecordsResponseSchema, on);
-const sendToken = (one: CallRequest) => sendBare(one, TokenResponseSchema, context());
-const sendUserInfo = (one: CallRequest) => sendEnvelope(one, UserInfoResponseSchema, context());
+const sendRecord = (one: CallRequest, on: ClientContext = context()) => sendEnvelope(one, getRecordsResponseSchema, on);
+const sendToken = (one: CallRequest) => sendBare(one, tokenResponseSchema, context());
+const sendUserInfo = (one: CallRequest) => sendEnvelope(one, userInfoResponseSchema, context());
 
 /** Every intercepted record read, in order: one per attempt. */
 const readCalls = (): number => docs.state.calls.filter((entry) => (entry.body as Record<string, unknown> | undefined)?.getRecords !== undefined).length;
@@ -127,7 +127,7 @@ describe('a failed call, as its caller sees it', () => {
 
     let pooled: Dispatcher | undefined;
     const short = context({ transport: () => (pooled ??= track(newDispatcher(250))) });
-    const error = await caught(sendEnvelope(call({ origin, path: '/slow', method: 'GET', body: undefined, headers: {} }), GetRecordsResponseSchema, short));
+    const error = await caught(sendEnvelope(call({ origin, path: '/slow', method: 'GET', body: undefined, headers: {} }), getRecordsResponseSchema, short));
     expect(error.code).toBe('transport');
   });
 

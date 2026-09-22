@@ -57,7 +57,7 @@ interface CallPlan<S extends z.ZodType> {
  * Sends one call whose answer is worded in the smartsheet envelope — where an HTTP 200 can still be a
  * failure, and only the business `ret` says so.
  *
- * `responseSchema` is the endpoint's own response type (`GetRecordsResponseSchema` and friends): this
+ * `responseSchema` is the endpoint's own response type (`getRecordsResponseSchema` and friends): this
  * parses the answer once, into it, and the caller reads sections off a typed value. A body that is not
  * JSON, or is JSON in a shape that type does not describe, is the upstream's failure to answer — named
  * for the field that broke, quoting the body it did send.

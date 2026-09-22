@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type { ClientContext } from '@/client/context.js';
 import { assembleCall, sendEnvelope } from '@/client/request.js';
-import { AddRecordsResponseSchema, DeleteRecordsResponseSchema, GetRecordsResponseSchema, UpdateRecordsResponseSchema } from '@/validation/schemas.js';
+import { addRecordsResponseSchema, deleteRecordsResponseSchema, getRecordsResponseSchema, updateRecordsResponseSchema } from '@/validation/schemas.js';
 import type { CommonRecords, WrittenRecords } from '@/validation/types.js';
 import type { EndpointTarget } from './address.js';
 import { sheetAddress } from './address.js';
@@ -40,13 +40,13 @@ export interface RecordTarget extends EndpointTarget {
 
 /** One page of raw rows, in the envelope's own terms (`records`, `hasMore`, `next`, `total`). */
 export async function getRecords(page: GetRecordsParams, target: RecordTarget, context: ClientContext): Promise<CommonRecords> {
-  const answer = await sheetCall('getRecords', { getRecords: { offset: page.offset, limit: page.limit } }, GetRecordsResponseSchema, target, context);
+  const answer = await sheetCall('getRecords', { getRecords: { offset: page.offset, limit: page.limit } }, getRecordsResponseSchema, target, context);
   return answer.data.getRecords;
 }
 
 /** Appends rows, in the order given, and hands back the response's own `records` section. */
 export async function addRecords(records: readonly RecordValues[], target: RecordTarget, context: ClientContext): Promise<WrittenRecords> {
-  const answer = await sheetCall('addRecords', { addRecords: { records } }, AddRecordsResponseSchema, target, context);
+  const answer = await sheetCall('addRecords', { addRecords: { records } }, addRecordsResponseSchema, target, context);
   return answer.data.addRecords;
 }
 
@@ -56,13 +56,13 @@ export async function addRecords(records: readonly RecordValues[], target: Recor
  * row's times.
  */
 export async function updateRecords(records: readonly RecordUpdate[], target: RecordTarget, context: ClientContext): Promise<WrittenRecords> {
-  const answer = await sheetCall('updateRecords', { updateRecords: { records } }, UpdateRecordsResponseSchema, target, context);
+  const answer = await sheetCall('updateRecords', { updateRecords: { records } }, updateRecordsResponseSchema, target, context);
   return answer.data.updateRecords;
 }
 
 /** Removes rows by record id; the answer is the envelope's header alone, so there is nothing to read. */
 export async function deleteRecords(recordIDs: readonly string[], target: RecordTarget, context: ClientContext): Promise<void> {
-  await sheetCall('deleteRecords', { deleteRecords: { recordIDs } }, DeleteRecordsResponseSchema, target, context);
+  await sheetCall('deleteRecords', { deleteRecords: { recordIDs } }, deleteRecordsResponseSchema, target, context);
 }
 
 /** One call to the addressed sub-sheet: the same address and verb, only the keyword changes. */

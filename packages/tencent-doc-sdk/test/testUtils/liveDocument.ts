@@ -19,7 +19,7 @@ import { EXAMPLE_FILE_ID } from './mockUpstream.js';
  * bookkeeping live here rather than in each: the run conditions are one rule, and the rows the suite
  * writes are cleaned by the file that wrote them.
  *
- * The rule has two halves, and both matter. The `api` tag selects these files, but a plain run passes
+ * The rule has two halves, and both matter. The `live` tag selects these files, but a plain run passes
  * no tag filter at all — every tagged test matches — so what keeps that run off the network is the
  * second half: the environment must name a document that is not the example id, and carry a token that
  * is not the template's placeholder. A file that got as far as importing this module and found `live`
@@ -38,7 +38,7 @@ const NAMED = {
 /** Why this run may or may not reach the network — said out loud, so a skip is never a mystery. */
 export const liveReason: string =
   NAMED.fileId === undefined
-    ? 'OPS_DOCS_FILE_ID is not set: name a document in .env.test-api.local and run test:api'
+    ? 'OPS_DOCS_FILE_ID is not set: name a document in .env.test-live.local and run test:live'
     : NAMED.fileId === EXAMPLE_FILE_ID
       ? `OPS_DOCS_FILE_ID is still the example value ${EXAMPLE_FILE_ID}`
       : NAMED.accessToken === undefined || NAMED.accessToken === 'replace-me'

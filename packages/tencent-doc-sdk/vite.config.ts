@@ -51,8 +51,8 @@ export default defineConfig({
     // silently ignored typo.
     tags: [
       {
-        name: 'api',
-        description: 'Talks to the real Tencent Docs document; runs under test:api.',
+        name: 'live',
+        description: 'Talks to the real Tencent Docs document; runs under test:live.',
         // A real round trip is about a second, and a case makes a handful of calls, so the 5 s
         // default is too tight.
         timeout: 60_000,

@@ -19,5 +19,5 @@ export * from './sheet.ts';
 export * from './config.ts';
 export * from './utils.ts';
 
-export { cellValuesSchema, CommonRecordSchema, CommonRecordsSchema, SheetSchema, WrittenRecordsSchema } from 'tencent-doc-sdk';
+export { cellValuesSchema, commonRecordSchema, commonRecordsSchema, sheetSchema, writtenRecordsSchema } from 'tencent-doc-sdk';
 export type { CellValues, CommonRecord, CommonRecords, Sheet, WrittenRecord, WrittenRecords } from 'tencent-doc-sdk';

@@ -207,7 +207,7 @@ interface FakeHeldCredential {
 }
 
 /** The shape of `CredentialStore`, which the fake keeps as a plain object rather than a JWT to read. */
-function fakeCredentialStore(initial: Partial<CredentialRecord> | undefined, TencentError: TencentDocsErrorClass): CredentialStore {
+function fakeCredentialStore(initial: Partial<CredentialRecord> | undefined): CredentialStore {
   const held: FakeHeldCredential = {
     accessToken: initial?.accessToken ?? '',
     clientId: initial?.clientId,
@@ -215,35 +215,23 @@ function fakeCredentialStore(initial: Partial<CredentialRecord> | undefined, Ten
     refreshToken: initial?.refreshToken,
   };
 
-  const said = (value: string | undefined, what: string): string => {
-    if (value === undefined || value.length === 0) throw new TencentError('config', `The fake credential has no ${what}`);
-    return value;
-  };
-
   return {
-    getCredential: () => ({
-      accessToken: said(held.accessToken, 'access token'),
+    get: () => ({
+      accessToken: held.accessToken,
       clientId: held.clientId,
       openId: held.openId,
       refreshToken: held.refreshToken,
+      // A fake token carries no `exp`/`iat` claim, so the lifetime is stated by the case and there is no issue time.
       expiresAt: credentialExpiresAt,
+      issueAt: undefined,
     }),
     // Only what a case or an answer actually says: an empty part means nothing was said about it.
-    update: (record) => {
+    set: (record) => {
       if (record.accessToken !== undefined && record.accessToken.length > 0) held.accessToken = record.accessToken;
       if (record.clientId !== undefined && record.clientId.length > 0) held.clientId = record.clientId;
       if (record.openId !== undefined && record.openId.length > 0) held.openId = record.openId;
       if (record.refreshToken !== undefined && record.refreshToken.length > 0) held.refreshToken = record.refreshToken;
     },
-    getAccessToken: () => said(held.accessToken, 'access token'),
-    getClientId: () => said(held.clientId, 'client id'),
-    getOpenId: () => said(held.openId, 'Open-Id'),
-    getRefreshToken: () => said(held.refreshToken, 'refresh token'),
-    /**
-     * A lifetime a case sets, and nothing else: a fake token carries no `exp` claim to read one off, so
-     * whether the credential is near its end is stated rather than derived.
-     */
-    getExpiresAt: () => credentialExpiresAt,
   };
 }
 
@@ -261,7 +249,7 @@ export function fakeTencentDocsSdk(TencentError: TencentDocsErrorClass): {
 } {
   const call = failures(TencentError);
   return {
-    createCredentialStore: (initial) => fakeCredentialStore(initial, TencentError),
+    createCredentialStore: (initial) => fakeCredentialStore(initial),
     createDocClient: () => fakeDocClient(call),
     createTokenManager: (options) => fakeTokenManager(options, call),
   };
@@ -277,8 +265,8 @@ function fakeTokenManager(options: FakeManagerOptions, call: FakeFailures): Toke
 
   /** What a grant leaves behind: the answer written into the store, and the store read back out. */
   const granted = (answer: { accessToken: string; userId?: string; refreshToken?: string }): CredentialRecord => {
-    store.update({ accessToken: answer.accessToken, openId: answer.userId, refreshToken: answer.refreshToken });
-    return store.getCredential();
+    store.set({ accessToken: answer.accessToken, openId: answer.userId, refreshToken: answer.refreshToken });
+    return store.get();
   };
 
   return {

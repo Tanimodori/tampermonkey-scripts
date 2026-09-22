@@ -1,5 +1,5 @@
 import { getLogger } from '@logtape/logtape';
-import { createCredentialStore, createDocClient, createTokenManager, describeBody, readAccessTokenExpiresAt } from 'tencent-doc-sdk';
+import { accessTokenOf, createCredentialStore, createDocClient, createTokenManager, describeBody, readAccessTokenExpiresAt } from 'tencent-doc-sdk';
 import type { CredentialRecord, CredentialStore, DocClient, TokenManager } from 'tencent-doc-sdk';
 import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
@@ -113,7 +113,7 @@ function fromStored(stored: Record<string, string>): CredentialRecord {
 export async function readCredential(): Promise<CredentialRecord | undefined> {
   const stored = fromStored(await traced('storedCredential', 'HGETALL', [CREDENTIAL_KEY], getRedis().hgetall(CREDENTIAL_KEY)));
   // An access token is what makes a stored record a credential at all.
-  return stored.accessToken.length === 0 ? undefined : stored;
+  return stored.accessToken === undefined || stored.accessToken.length === 0 ? undefined : stored;
 }
 
 /** Writes the fields a record carries, leaving the rest of the hash as it was. */
@@ -139,7 +139,7 @@ interface Wired {
  * lifetime nothing states is not a lapsed one — an opaque token may work for years.
  */
 function usable(record: CredentialRecord): boolean {
-  const expiresAt = record.expiresAt ?? readAccessTokenExpiresAt(record.accessToken);
+  const expiresAt = record.expiresAt ?? readAccessTokenExpiresAt(record.accessToken ?? '');
   return expiresAt === undefined || expiresAt > now();
 }
 
@@ -217,7 +217,7 @@ export function useUpstreamStore(): UpstreamStore {
     // passed is left where it is rather than loaded in: the configured one is the better of the two, and
     // it is what gets written back over the stale record just below.
     const stored = await readCredential();
-    if (stored !== undefined && usable(stored)) store.update(stored);
+    if (stored !== undefined && usable(stored)) store.set(stored);
 
     await checkSheet(fileId, sheetId);
     await validate();
@@ -263,9 +263,9 @@ export function useUpstreamStore(): UpstreamStore {
     // Keeping the credential is this service's own business, so what the check confirmed is written down
     // here: the Open-Id the upstream named, on the token it was confirmed on. Where nothing was configured
     // that is also the store learning its Open-Id; where something was, it is the same value said back.
-    store.update({ openId: reported });
+    store.set({ openId: reported });
     validatedAt = now();
-    await rememberCredential(store.getCredential());
+    await rememberCredential(store.get());
 
     return { openId: reported };
   }
@@ -279,7 +279,7 @@ export function useUpstreamStore(): UpstreamStore {
     const { tokenExpiryWarnMs } = getConfig().docs;
     const { store } = library();
     const at = now();
-    const expiresAt = store.getExpiresAt();
+    const expiresAt = store.get().expiresAt;
     const fileIdResolved = checkedIds !== undefined;
     const tokenExpired = expiresAt !== undefined && expiresAt <= at;
     const tokenExpiresInMs = expiresAt === undefined ? undefined : expiresAt - at;
@@ -321,13 +321,13 @@ export function useUpstreamStore(): UpstreamStore {
       return getConfig().docs.sheetId;
     },
     get accessToken(): string {
-      return library().store.getAccessToken();
+      return accessTokenOf(library().store.get());
     },
     get doc(): DocClient {
       return library().doc;
     },
     expiresAt(): number | undefined {
-      return library().store.getExpiresAt();
+      return library().store.get().expiresAt;
     },
     resolved(): boolean {
       library();
@@ -340,9 +340,9 @@ export function useUpstreamStore(): UpstreamStore {
     describe(): Record<string, unknown> {
       const { store } = library();
       const at = now();
-      const expiresAt = store.getExpiresAt();
+      const expiresAt = store.get().expiresAt;
       return {
-        tokenLength: store.getAccessToken().length,
+        tokenLength: accessTokenOf(store.get()).length,
         expiresAt: expiresAt === undefined ? null : formatInstant(expiresAt),
         // `null` means "unknown", which is deliberately distinct from `false` ("known to be valid").
         expired: expiresAt === undefined ? null : expiresAt <= at,
@@ -361,7 +361,7 @@ export function useUpstreamStore(): UpstreamStore {
       const { store, tokens } = library();
       // Asked of the snapshot rather than the getter, because a credential with nothing to refresh is a
       // state to report, not a call to fail.
-      if (clientSecret === undefined || store.getCredential().refreshToken === undefined) {
+      if (clientSecret === undefined || store.get().refreshToken === undefined) {
         throw new AppError('ERR_CONFIG_INVALID', 'Refreshing the access token needs OPS_DOCS_CLIENT_SECRET and OPS_DOCS_REFRESH_TOKEN');
       }
 

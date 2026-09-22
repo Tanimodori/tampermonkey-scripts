@@ -57,7 +57,7 @@ export const cellValuesSchema = z.record(z.string(), z.unknown()).catch({});
  * read. The two instants stay `unknown` because the sheet sends them as strings and both encodings of
  * a cell occur in the wild; a row also carries `creatorName` and friends, which are kept and unread.
  */
-export const CommonRecordSchema = z.looseObject({
+export const commonRecordSchema = z.looseObject({
   recordID: z.string(),
   createTime: z.unknown().optional(),
   updateTime: z.unknown().optional(),
@@ -71,8 +71,8 @@ export const CommonRecordSchema = z.looseObject({
  * `total` counts the sheet. All three are optional because the document decides when to say them, so
  * paging is the caller's loop and it may have to fall back to counting the rows it just read.
  */
-export const CommonRecordsSchema = z.looseObject({
-  records: z.array(CommonRecordSchema).optional(),
+export const commonRecordsSchema = z.looseObject({
+  records: z.array(commonRecordSchema).optional(),
   hasMore: z.boolean().optional(),
   next: z.number().optional(),
   total: z.number().optional(),
@@ -86,26 +86,26 @@ export const CommonRecordsSchema = z.looseObject({
  * reads them back. The id is optional because a caller has to cope with a document that answers
  * without one; what that means for its own state is the caller's decision.
  */
-export const WrittenRecordSchema = z.looseObject({ recordID: z.string().optional(), values: z.unknown().optional() });
+export const writtenRecordSchema = z.looseObject({ recordID: z.string().optional(), values: z.unknown().optional() });
 
 /** The `CommonRecords` a write answers with: the rows it touched, as far as it says. */
-export const WrittenRecordsSchema = z.looseObject({ records: z.array(WrittenRecordSchema).optional() });
+export const writtenRecordsSchema = z.looseObject({ records: z.array(writtenRecordSchema).optional() });
 
 // ---------------------------------------------------------------------------
 // One response type per endpoint, under the upstream's own name
 // ---------------------------------------------------------------------------
 
 /** `GetRecordsResponse`: 查询记录. */
-export const GetRecordsResponseSchema = z.looseObject({ ...envelopeHead, data: z.looseObject({ getRecords: CommonRecordsSchema }) });
+export const getRecordsResponseSchema = z.looseObject({ ...envelopeHead, data: z.looseObject({ getRecords: commonRecordsSchema }) });
 
 /** `AddRecordsResponse`: 新增记录. */
-export const AddRecordsResponseSchema = z.looseObject({ ...envelopeHead, data: z.looseObject({ addRecords: WrittenRecordsSchema }) });
+export const addRecordsResponseSchema = z.looseObject({ ...envelopeHead, data: z.looseObject({ addRecords: writtenRecordsSchema }) });
 
 /** `UpdateRecordsResponse`: 更新记录. */
-export const UpdateRecordsResponseSchema = z.looseObject({ ...envelopeHead, data: z.looseObject({ updateRecords: WrittenRecordsSchema }) });
+export const updateRecordsResponseSchema = z.looseObject({ ...envelopeHead, data: z.looseObject({ updateRecords: writtenRecordsSchema }) });
 
 /** `DeleteRecordsResponse`: 删除记录 — measured: the header alone, no `data` at all. */
-export const DeleteRecordsResponseSchema = z.looseObject(envelopeHead);
+export const deleteRecordsResponseSchema = z.looseObject(envelopeHead);
 
 /**
  * `Sheet`: one sub-sheet as 查询子表 reports it.
@@ -114,7 +114,7 @@ export const DeleteRecordsResponseSchema = z.looseObject(envelopeHead);
  * Both are declared, because this library addresses sub-sheets by `sheetID` and reads neither, and a
  * reader comparing an answer against the docs should not have to explain the difference away.
  */
-export const SheetSchema = z.looseObject({
+export const sheetSchema = z.looseObject({
   sheetID: z.string(),
   title: z.string().optional(),
   isVisible: z.boolean().optional(),
@@ -122,7 +122,7 @@ export const SheetSchema = z.looseObject({
 });
 
 /** `GetSheetResponse`: 查询子表. */
-export const GetSheetResponseSchema = z.looseObject({ ...envelopeHead, data: z.looseObject({ getSheet: z.array(SheetSchema) }) });
+export const getSheetResponseSchema = z.looseObject({ ...envelopeHead, data: z.looseObject({ getSheet: z.array(sheetSchema) }) });
 
 /**
  * `UserInfo`: who the access token belongs to.
@@ -130,10 +130,10 @@ export const GetSheetResponseSchema = z.looseObject({ ...envelopeHead, data: z.l
  * Only `openID` is declared, because only it is read; the answer also carries `nick`, `avatar`,
  * `source`, `fileAuthType` and `unionID` (measured), which stay on the loose side of the schema.
  */
-export const UserInfoSchema = z.looseObject({ openID: z.string().optional(), nick: z.string().optional() });
+export const userInfoSchema = z.looseObject({ openID: z.string().optional(), nick: z.string().optional() });
 
 /** `UserInfoResponse`: 获取用户信息 — measured: its `data` holds the identity directly, with no key. */
-export const UserInfoResponseSchema = z.looseObject({ ...envelopeHead, data: UserInfoSchema });
+export const userInfoResponseSchema = z.looseObject({ ...envelopeHead, data: userInfoSchema });
 
 /**
  * What either token endpoint answers: a new access token, and nothing else it has to say.
@@ -143,7 +143,7 @@ export const UserInfoResponseSchema = z.looseObject({ ...envelopeHead, data: Use
  * is optional: `expires_in` is documented but not promised (a caller then falls back to the token's
  * own `exp` claim), and `refresh_token` appears only on the flows that rotate it.
  */
-export const TokenResponseSchema = z.looseObject({
+export const tokenResponseSchema = z.looseObject({
   access_token: z.string().optional(),
   token_type: z.string().optional(),
   expires_in: z.number().optional(),
@@ -152,5 +152,29 @@ export const TokenResponseSchema = z.looseObject({
   user_id: z.string().optional(),
 });
 
-/** The claims readable out of an access token, when the answer carried no lifetime. */
-export const accessTokenClaimsSchema = z.looseObject({ exp: z.number().optional(), sub: z.string().optional() });
+// ---------------------------------------------------------------------------
+// The JWT an access token is, read for its claims and never verified
+// ---------------------------------------------------------------------------
+
+/**
+ * The header segment of an access token, decoded for reading only (`token/jwt.ts` says why the
+ * signature is not verified). Loose so an unexpected header parameter stays visible rather than
+ * failing a token whose payload is perfectly readable.
+ */
+export const jwtHeaderSchema = z.looseObject({ alg: z.string().optional(), typ: z.string().optional() });
+
+/**
+ * The payload segment of an access token: the identity and lifetimes this library reads (`clt`, `exp`,
+ * `iat`, `sub`), every key optional because a caller reads whichever the token happens to carry.
+ *
+ * `typ` is declared as `unknown` rather than typed: the payload's `typ` is a number (`1`) where the
+ * header's is the string `"JWT"`, and nothing reads it, so constraining it would only risk rejecting
+ * a whole token over a field nobody looks at.
+ */
+export const jwtPayloadSchema = z.looseObject({
+  clt: z.string().optional(),
+  typ: z.unknown().optional(),
+  exp: z.number().optional(),
+  iat: z.number().optional(),
+  sub: z.string().optional(),
+});

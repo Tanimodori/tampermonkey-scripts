@@ -5,6 +5,7 @@ import { describeBody } from '@/validation/classify.js';
 import { TencentDocsError } from '@/validation/errors.js';
 import type { TokenResponse, UserInfo } from '@/validation/types.js';
 import type { CredentialRecord, CredentialStore } from './store.js';
+import { accessTokenOf, clientIdOf, refreshTokenOf } from './store.js';
 
 /**
  * The three endpoints that speak about a credential: whose token this is, and the two ways a new one is
@@ -56,7 +57,7 @@ export function createTokenManager(options: TokenManagerOptions): TokenManager {
     if (secret === undefined || secret.length === 0) {
       throw new TencentDocsError('config', 'The token endpoints need a client secret, and none was configured');
     }
-    return { clientId: store.getClientId(), clientSecret: secret };
+    return { clientId: clientIdOf(store.get()), clientSecret: secret };
   }
 
   function hold(body: TokenResponse): CredentialRecord {
@@ -66,7 +67,7 @@ export function createTokenManager(options: TokenManagerOptions): TokenManager {
     }
 
     const expiresIn = body.expires_in;
-    store.update({
+    store.set({
       accessToken,
       openId: body.user_id,
       // Some flows hand back a rotated refresh token; keeping it is what makes the next refresh possible.
@@ -74,14 +75,14 @@ export function createTokenManager(options: TokenManagerOptions): TokenManager {
       // A lifetime the answer did not state is the token's own to know: the store reads it off the `exp`.
       expiresAt: expiresIn !== undefined && expiresIn > 0 ? now() + Math.round(expiresIn * 1000) : undefined,
     });
-    return store.getCredential();
+    return store.get();
   }
 
   // Every method is `async`, so a credential that cannot make the call is a rejection rather than a throw
   // landing on whoever happened to ask: reading the store and the secret is the first thing each one does.
   return {
-    getUserInfo: async () => fetchUserInfo(options.apiBase, store.getAccessToken(), context),
+    getUserInfo: async () => fetchUserInfo(options.apiBase, accessTokenOf(store.get()), context),
     fetchToken: async ({ code, redirectUri }) => hold(await fetchGrantedToken(options.apiBase, { ...grant(), code, redirectUri }, context)),
-    refreshToken: async () => hold(await fetchRefreshedToken(options.apiBase, { ...grant(), refreshToken: store.getRefreshToken() }, context)),
+    refreshToken: async () => hold(await fetchRefreshedToken(options.apiBase, { ...grant(), refreshToken: refreshTokenOf(store.get()) }, context)),
   };
 }

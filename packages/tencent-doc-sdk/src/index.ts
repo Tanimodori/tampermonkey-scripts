@@ -14,8 +14,9 @@ export type { DocClient, DocClientOptions } from './api/docClient.js';
 export { createDocClient } from './api/docClient.js';
 export type { GetRecordsParams, RecordUpdate, RecordValues } from './api/record.js';
 
-export { readAccessTokenClaims, readAccessTokenExpiresAt } from './token/jwt.js';
+export type { JwtToken } from './token/jwt.js';
+export { parseJwtToken, readAccessTokenClaims, readAccessTokenExpiresAt } from './token/jwt.js';
 export type { TokenManager, TokenManagerOptions } from './token/manager.js';
 export { createTokenManager } from './token/manager.js';
 export type { CredentialRecord, CredentialStore } from './token/store.js';
-export { createCredentialStore } from './token/store.js';
+export { accessTokenOf, clientIdOf, createCredentialStore, openIdOf, refreshTokenOf } from './token/store.js';

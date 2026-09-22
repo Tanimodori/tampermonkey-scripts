@@ -19,7 +19,7 @@ rushx dev     # 启动开发模式，使用本地 mock，不连外部依赖
 rushx test    # 依次运行单元测试、Redis 测试、真实腾讯文档测试
 ```
 
-未设置 `OPS_SERVER_REDIS_URL` 时使用进程内 Redis mock，开发模式的上游地址指向本地，因此没有外部依赖也能启动。连接真实依赖时，把文档坐标与凭据写入 `deploy/.env.production.local`（生产）或 `.env.test-api.local`（测试文档），本机 Redis 地址写入 `.env.test-redis.local`；这些文件都不入库。环境文件的完整顺序见下表。
+未设置 `OPS_SERVER_REDIS_URL` 时使用进程内 Redis mock，开发模式的上游地址指向本地，因此没有外部依赖也能启动。连接真实依赖时，把文档坐标与凭据写入 `deploy/.env.production.local`（生产）或 `.env.test-live.local`（测试文档），本机 Redis 地址写入 `.env.test-redis.local`；这些文件都不入库。环境文件的完整顺序见下表。
 
 ## 配置
 

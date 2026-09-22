@@ -6,7 +6,7 @@
 
 `fileID` 是 Open API 的编号，不是浏览器地址栏里的表格链接。两者都能从一条已授权的调用读到，由分享链接反推的方法见[官方转换工具](https://docs.qq.com/open/document/app/openapi/v2/file/util/converter.html)。
 
-坐标与凭据只放在环境变量里：生产是部署目录的 `.env.production.local`，测试文档是 `.env.test-api.local`，容器中由 compose 注入。启动时会核对子表属于该文档，不匹配则拒绝启动；上游当时连不上或被限流，则带着未就绪状态启动，由后续请求再核对一次。变量清单与默认值见 [配置：腾讯文档](../../config/docs.md)。
+坐标与凭据只放在环境变量里：生产是部署目录的 `.env.production.local`，测试文档是 `.env.test-live.local`，容器中由 compose 注入。启动时会核对子表属于该文档，不匹配则拒绝启动；上游当时连不上或被限流，则带着未就绪状态启动，由后续请求再核对一次。变量清单与默认值见 [配置：腾讯文档](../../config/docs.md)。
 
 ## 凭据
 

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
-  AddRecordsResponseSchema,
-  DeleteRecordsResponseSchema,
-  GetRecordsResponseSchema,
-  GetSheetResponseSchema,
-  SheetSchema,
-  TokenResponseSchema,
-  UserInfoResponseSchema,
+  addRecordsResponseSchema,
+  deleteRecordsResponseSchema,
+  getRecordsResponseSchema,
+  getSheetResponseSchema,
+  sheetSchema,
+  tokenResponseSchema,
+  userInfoResponseSchema,
 } from '@/validation/schemas.js';
 import {
   deleteRecordsAnswer,
@@ -36,11 +36,11 @@ describe('the sheet list', () => {
   it('parses as GetSheetResponse', () => {
     const answer = getSheetAnswer([sheet({ sheetID: 'tXXXXXX' }), sheet({ sheetID: 'tYYYYYY', title: '智能表2' })]);
 
-    expect(GetSheetResponseSchema.parse(answer).data.getSheet.map((entry) => entry.sheetID)).toEqual(['tXXXXXX', 'tYYYYYY']);
+    expect(getSheetResponseSchema.parse(answer).data.getSheet.map((entry) => entry.sheetID)).toEqual(['tXXXXXX', 'tYYYYYY']);
   });
 
   it('accepts the visibility spelling the documentation uses, not only the one the document sends', () => {
-    expect(SheetSchema.parse(sheetWithDocumentedSpelling).sheetID).toBe('tXXXXXX');
+    expect(sheetSchema.parse(sheetWithDocumentedSpelling).sheetID).toBe('tXXXXXX');
   });
 });
 
@@ -48,13 +48,13 @@ describe('a page of records', () => {
   it('parses as GetRecordsResponse', () => {
     const answer = getRecordsAnswer({ records: readRows([{ recordID: 'r00001', values: { 名称: '甲' } }]), total: 1, hasMore: false, next: 1 });
 
-    expect(GetRecordsResponseSchema.parse(answer).data.getRecords.records?.[0]?.recordID).toBe('r00001');
+    expect(getRecordsResponseSchema.parse(answer).data.getRecords.records?.[0]?.recordID).toBe('r00001');
   });
 
   it('sends each row with the columns the live document adds', () => {
     const row = readRow({ recordID: 'r00001' });
 
-    expect(GetRecordsResponseSchema.parse(getRecordsAnswer({ records: [row] })).data.getRecords.records?.[0]).toMatchObject({
+    expect(getRecordsResponseSchema.parse(getRecordsAnswer({ records: [row] })).data.getRecords.records?.[0]).toMatchObject({
       createdUserId: '',
       updaterName: '',
     });
@@ -65,34 +65,34 @@ describe('the write answers', () => {
   it('parse as AddRecordsResponse and carry no timestamps', () => {
     const answer = writtenRecordsAnswer('addRecords', [{ recordID: 'rNew1', values: { 名称: '甲' } }]);
 
-    expect(AddRecordsResponseSchema.parse(answer).data.addRecords.records).toEqual([{ recordID: 'rNew1', values: { 名称: '甲' } }]);
+    expect(addRecordsResponseSchema.parse(answer).data.addRecords.records).toEqual([{ recordID: 'rNew1', values: { 名称: '甲' } }]);
   });
 
   it('parse without a record id, the shape a caller reports rather than fails on', () => {
     const answer = writtenRecordsAnswer('addRecords', writtenRecordsWithoutId([{ recordID: 'rNew1', values: { 名称: '甲' } }]));
 
-    expect(AddRecordsResponseSchema.parse(answer).data.addRecords.records?.[0]?.recordID).toBeUndefined();
+    expect(addRecordsResponseSchema.parse(answer).data.addRecords.records?.[0]?.recordID).toBeUndefined();
   });
 
   it('leave the delete answer without a data section at all', () => {
-    expect(DeleteRecordsResponseSchema.parse(deleteRecordsAnswer())).toEqual({ ret: 0, msg: 'Succeed' });
+    expect(deleteRecordsResponseSchema.parse(deleteRecordsAnswer())).toEqual({ ret: 0, msg: 'Succeed' });
   });
 });
 
 describe('the credential endpoints', () => {
   it('report the identity directly under data', () => {
-    expect(UserInfoResponseSchema.parse(userInfoAnswer({ openID: 'OpenIDTest' })).data.openID).toBe('OpenIDTest');
+    expect(userInfoResponseSchema.parse(userInfoAnswer({ openID: 'OpenIDTest' })).data.openID).toBe('OpenIDTest');
   });
 
   it('answer a token grant with the token, with or without a lifetime and a rotated refresh token', () => {
-    expect(TokenResponseSchema.parse(tokenAnswer({ accessToken: 'fresh', expiresIn: 2_592_000, refreshToken: 'rotated' }))).toMatchObject({
+    expect(tokenResponseSchema.parse(tokenAnswer({ accessToken: 'fresh', expiresIn: 2_592_000, refreshToken: 'rotated' }))).toMatchObject({
       access_token: 'fresh',
       refresh_token: 'rotated',
     });
-    expect(TokenResponseSchema.parse(tokenAnswer({ accessToken: 'fresh' })).expires_in).toBeUndefined();
+    expect(tokenResponseSchema.parse(tokenAnswer({ accessToken: 'fresh' })).expires_in).toBeUndefined();
   });
 
   it('answer a refusal with a body the caller words, not an envelope', () => {
-    expect(TokenResponseSchema.parse(tokenRefused)).toMatchObject({ error: 'invalid_grant' });
+    expect(tokenResponseSchema.parse(tokenRefused)).toMatchObject({ error: 'invalid_grant' });
   });
 });

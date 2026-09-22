@@ -31,9 +31,9 @@
     "format:check": "oxfmt --check",
     "lint": "oxlint",
     "typecheck": "tsc --noEmit",
-    "test": "npm run test:unit && npm run test:api",
+    "test": "npm run test:unit && npm run test:live",
     "test:unit": "vitest --run --passWithNoTests",
-    "test:api": "cross-env OPS_ENV_PATH=.env.test-api vitest --run --no-file-parallelism --tags-filter=api",
+    "test:live": "cross-env OPS_ENV_PATH=.env.test-live vitest --run --no-file-parallelism --tags-filter=live",
     "test:watch": "vitest"
   },
   "dependencies": {

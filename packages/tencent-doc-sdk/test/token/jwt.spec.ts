@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readAccessTokenClaims, readAccessTokenExpiresAt } from '@/token/jwt.js';
+import { parseJwtToken, readAccessTokenClaims, readAccessTokenExpiresAt } from '@/token/jwt.js';
 
 /**
  * Reading a lifetime and an identity off an access token.
@@ -16,6 +16,32 @@ function segment(payload: unknown): string {
 function token(payload: unknown): string {
   return `${segment({ alg: 'HS256', typ: 'JWT' })}.${segment(payload)}.a-signature`;
 }
+
+describe('the three parts', () => {
+  it('decodes the header and payload and hands the signature back verbatim', () => {
+    const raw = `${segment({ alg: 'HS256', typ: 'JWT' })}.${segment({ clt: 'client-id', typ: 1, exp: 1_790_621_942.196758, iat: 1_788_029_942.196758, sub: 'open-id' })}.the-signature-as-sent`;
+    const parsed = parseJwtToken(raw);
+
+    expect(parsed?.header).toEqual({ alg: 'HS256', typ: 'JWT' });
+    expect(parsed?.payload).toMatchObject({ clt: 'client-id', typ: 1, exp: 1_790_621_942.196758, iat: 1_788_029_942.196758, sub: 'open-id' });
+    // The signature is never decoded or checked — only carried through untouched.
+    expect(parsed?.signature).toBe('the-signature-as-sent');
+  });
+
+  it('keeps payload keys it does not declare, because looseness is about extra claims', () => {
+    expect(parseJwtToken(token({ scope: 'all' }))?.payload).toMatchObject({ scope: 'all' });
+  });
+
+  it('is nothing for a token that is not three decodable segments', () => {
+    expect(parseJwtToken('an-opaque-token')).toBeUndefined();
+    expect(parseJwtToken(`${segment({ exp: 1 })}.${segment({ exp: 1 })}`)).toBeUndefined();
+    expect(parseJwtToken('a.b.c.d')).toBeUndefined();
+    expect(parseJwtToken('')).toBeUndefined();
+    // A header or payload that is not a JSON object fails the whole token, not just that part.
+    expect(parseJwtToken(`${segment({ alg: 'HS256' })}.${segment([1, 2, 3])}.s`)).toBeUndefined();
+    expect(parseJwtToken(`${Buffer.from('not json').toString('base64url')}.${segment({ exp: 1 })}.s`)).toBeUndefined();
+  });
+});
 
 describe('the claims', () => {
   it('reads the payload without checking the signature', () => {

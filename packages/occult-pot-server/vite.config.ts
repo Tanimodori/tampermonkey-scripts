@@ -44,8 +44,8 @@ export default defineConfig({
     tags: [
       { name: 'redis', description: 'Uses Redis: the in-process mock by default, the test server under test:redis.' },
       {
-        name: 'api',
-        description: 'Talks to the real Tencent Docs document; runs under test:api.',
+        name: 'live',
+        description: 'Talks to the real Tencent Docs document; runs under test:live.',
         // A real round trip is about a second, and the task is paced politely, so the 5 s default is
         // too tight for a case that makes a handful of calls.
         timeout: 60_000,

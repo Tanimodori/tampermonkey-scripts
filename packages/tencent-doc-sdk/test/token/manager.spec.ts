@@ -3,7 +3,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createDocClient } from '@/api/docClient.js';
 import { createTokenManager } from '@/token/manager.js';
 import type { TokenManager, TokenManagerOptions } from '@/token/manager.js';
-import { createCredentialStore } from '@/token/store.js';
+import { accessTokenOf, clientIdOf, createCredentialStore, openIdOf } from '@/token/store.js';
 import type { CredentialRecord, CredentialStore } from '@/token/store.js';
 
 /**
@@ -60,8 +60,8 @@ describe('获取用户信息', () => {
 
     await expect(tokens.getUserInfo()).resolves.toMatchObject({ openID: 'reported-open-id' });
 
-    expect(store.getOpenId()).toBe('configured-open-id');
-    expect(store.getCredential().openId).toBe('configured-open-id');
+    expect(openIdOf(store.get())).toBe('configured-open-id');
+    expect(store.get().openId).toBe('configured-open-id');
   });
 
   it('reports a rejected token as the upstream worded it', async () => {
@@ -99,7 +99,7 @@ describe('刷新 Token', () => {
       expiresAt: 1_789_500_000_000 + 2_592_000_000,
     });
     // The store is where it went, which is why a reader of that store needs nothing else.
-    expect(store.getCredential()).toEqual(held);
+    expect(store.get()).toEqual(held);
   });
 
   it('keeps what the answer says nothing about, because a refresh does not revoke the client it belongs to', async () => {
@@ -111,9 +111,9 @@ describe('刷新 Token', () => {
 
     await tokens.refreshToken();
 
-    expect(store.getClientId()).toBe('c-id');
+    expect(clientIdOf(store.get())).toBe('c-id');
     // An Open-Id the answer does name outranks one merely carried over, and both are said out loud.
-    expect(store.getOpenId()).toBe('answered-open-id');
+    expect(openIdOf(store.get())).toBe('answered-open-id');
   });
 
   it('falls back to the token’s own `exp` when the answer states no lifetime', async () => {
@@ -122,7 +122,7 @@ describe('刷新 Token', () => {
 
     await tokens.refreshToken();
 
-    expect(store.getExpiresAt()).toBe(1_800_000_000_000);
+    expect(store.get().expiresAt).toBe(1_800_000_000_000);
   });
 
   it('keeps no lifetime at all when the answer carries neither one nor a readable token', async () => {
@@ -131,7 +131,7 @@ describe('刷新 Token', () => {
 
     await tokens.refreshToken();
 
-    expect(store.getExpiresAt()).toBeUndefined();
+    expect(store.get().expiresAt).toBeUndefined();
   });
 
   it('needs a secret and a refresh token, and says so rather than calling', async () => {
@@ -181,7 +181,7 @@ describe('获取 Token', () => {
       refreshToken: 'issued-refresh',
       expiresAt: 1_789_500_000_000 + 60_000,
     });
-    expect(store.getCredential()).toEqual(held);
+    expect(store.get()).toEqual(held);
   });
 
   it('replaces the credential it was asked about, which is the point of a store rather than an argument', async () => {
@@ -194,8 +194,8 @@ describe('获取 Token', () => {
     await tokens.fetchToken(GRANT);
 
     // The code grant answers as a full credential, so the record a restart would reload is this one.
-    expect(store.getAccessToken()).toBe('fresh-token');
-    expect(store.getOpenId()).toBe('new-open-id');
+    expect(accessTokenOf(store.get())).toBe('fresh-token');
+    expect(openIdOf(store.get())).toBe('new-open-id');
   });
 
   it('needs a secret, and needs to know which client it belongs to, and says so rather than calling', async () => {

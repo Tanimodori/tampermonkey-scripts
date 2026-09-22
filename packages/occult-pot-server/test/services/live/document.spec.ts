@@ -1,7 +1,7 @@
 import { FILE_ID, loadTestConfig, resetRedis, testEnv } from '@test/testUtils/helpers.ts';
 import { testClient } from '@test/testUtils/helpers.ts';
 /**
- * @module-tag api
+ * @module-tag live
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '@/app.ts';

@@ -1,7 +1,7 @@
 import { allRecords, appendMarker, client, deleteRecords, live, markerRecordIds, page, useLiveDocument } from '@test/testUtils/liveDocument.js';
 import type { LiveMarker } from '@test/testUtils/liveDocument.js';
 /**
- * @module-tag api
+ * @module-tag live
  */
 import { describe, expect, it } from 'vitest';
 import { cellValuesSchema } from '@/validation/schemas.js';

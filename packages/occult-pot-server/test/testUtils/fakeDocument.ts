@@ -1,5 +1,4 @@
 import type {
-  CallRequest,
   CommonRecord,
   CommonRecords,
   CredentialRecord,
@@ -336,6 +335,6 @@ function fakeDocClient(call: FakeFailures): DocClient {
 }
 
 /** Every recorded call for one operation, which is how a case counts what the service actually sent. */
-export function callsOf(operation: CallRequest['operation'] | string): Array<{ operation: string; args: unknown }> {
+export function callsOf(operation: string): Array<{ operation: string; args: unknown }> {
   return sheet.calls.filter((call) => call.operation === operation);
 }

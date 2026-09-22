@@ -1,5 +1,7 @@
 import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, apiOrigin, rawRecord, testUpstream } from '@test/testUtils/document';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { createDocClient } from '@/api/docClient';
+import type { TencentDocsError } from '@/validation/errors';
 
 /**
  * The four record calls, against the mocked upstream: what each puts on the wire, what it hands back,
@@ -11,7 +13,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 const RECORDS_PATH = `/openapi/smartbook/v2/files/${EXAMPLE_FILE_ID}/sheets/${EXAMPLE_SHEET_ID}`;
 
 const upstream = testUpstream();
-const { client, mock, state } = upstream;
+const { client, fileId, mock, sheetId, state, store } = upstream;
 
 /** Keeps the calls a case asserts on to the ones that case made. */
 function freshCalls(): void {
@@ -193,5 +195,33 @@ describe('deleteRecords', () => {
 
     await expect(client.deleteRecords(['r00001'])).rejects.toMatchObject({ code: 'auth' });
     expect(state.deleted).toHaveLength(0);
+  });
+});
+
+describe('a call that never became a request', () => {
+  // The address and the payload are both built before the upstream is asked anything, so both are this
+  // layer's own risk: `test/client/request.spec.ts` cannot see either, because nothing reaches it.
+
+  it('words an address built from something that is not a URL as a `config` failure, keeping the reason', async () => {
+    const misconfigured = createDocClient({ apiBase: 'docs-not-a-url', coordinates: { fileId, sheetId }, store, transport: mock.fetcher });
+
+    const error = (await misconfigured.getRecords({ offset: 0, limit: 100 }).catch((caught: unknown) => caught)) as TencentDocsError;
+
+    expect(error.code).toBe('config');
+    expect(error.message).toContain('getRecords');
+    expect(error.cause).toBeInstanceOf(Error);
+    expect(state.calls).toHaveLength(0);
+  });
+
+  it('words a payload that will not become JSON the same way, without losing what broke it', async () => {
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+
+    const error = (await client.addRecords([{ values: circular }]).catch((caught: unknown) => caught)) as TencentDocsError;
+
+    expect(error.code).toBe('config');
+    expect(error.message).toContain('addRecords');
+    expect((error.cause as Error).message).toContain('circular');
+    expect(state.calls).toHaveLength(0);
   });
 });

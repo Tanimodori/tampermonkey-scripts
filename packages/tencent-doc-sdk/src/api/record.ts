@@ -1,10 +1,11 @@
-import type { z } from 'zod';
+import type { FetcherRequestInit } from '@apollo/utils.fetcher';
 import type { ClientContext } from '@/client/context';
-import { assembleCall, sendEnvelope } from '@/client/request';
+import { request } from '@/client/request';
+import { cannotAssemble } from '@/validation/classify';
 import { addRecordsResponseSchema, deleteRecordsResponseSchema, getRecordsResponseSchema, updateRecordsResponseSchema } from '@/validation/schemas';
 import type { CommonRecords, WrittenRecords } from '@/validation/types';
 import type { EndpointTarget } from './address';
-import { sheetAddress } from './address';
+import { sheetUrl } from './address';
 
 /**
  * The four record endpoints: 查询记录, 新增记录, 更新记录, 删除记录.
@@ -38,15 +39,34 @@ export interface RecordTarget extends EndpointTarget {
   readonly headers: Record<string, string>;
 }
 
+/**
+ * The address and the request of one record call, or the `config` failure explaining why neither exists.
+ *
+ * Both are buildable without asking the upstream anything, so both are settled before a call is sent: an
+ * `apiBase` that is not a URL and a payload that will not become JSON are the caller's own configuration
+ * talking, and a bare `TypeError` leaving this package would be the one error a caller could not classify.
+ */
+function prepare(operation: string, payload: Record<string, unknown>, target: RecordTarget): { readonly url: URL; readonly init: FetcherRequestInit } {
+  try {
+    return { url: sheetUrl(target), init: { method: 'POST', headers: target.headers, body: JSON.stringify(payload) } };
+  } catch (error) {
+    throw cannotAssemble(operation, error);
+  }
+}
+
 /** One page of raw rows, in the envelope's own terms (`records`, `hasMore`, `next`, `total`). */
 export async function getRecords(page: GetRecordsParams, target: RecordTarget, context: ClientContext): Promise<CommonRecords> {
-  const answer = await sheetCall('getRecords', { getRecords: { offset: page.offset, limit: page.limit } }, getRecordsResponseSchema, target, context);
+  const operation = 'getRecords';
+  const { init, url } = prepare(operation, { getRecords: { offset: page.offset, limit: page.limit } }, target);
+  const answer = await request(url, init, { ...context, operation, envelope: true, responseSchema: getRecordsResponseSchema });
   return answer.data.getRecords;
 }
 
 /** Appends rows, in the order given, and hands back the response's own `records` section. */
 export async function addRecords(records: readonly RecordValues[], target: RecordTarget, context: ClientContext): Promise<WrittenRecords> {
-  const answer = await sheetCall('addRecords', { addRecords: { records } }, addRecordsResponseSchema, target, context);
+  const operation = 'addRecords';
+  const { init, url } = prepare(operation, { addRecords: { records } }, target);
+  const answer = await request(url, init, { ...context, operation, envelope: true, responseSchema: addRecordsResponseSchema });
   return answer.data.addRecords;
 }
 
@@ -56,28 +76,15 @@ export async function addRecords(records: readonly RecordValues[], target: Recor
  * row's times.
  */
 export async function updateRecords(records: readonly RecordUpdate[], target: RecordTarget, context: ClientContext): Promise<WrittenRecords> {
-  const answer = await sheetCall('updateRecords', { updateRecords: { records } }, updateRecordsResponseSchema, target, context);
+  const operation = 'updateRecords';
+  const { init, url } = prepare(operation, { updateRecords: { records } }, target);
+  const answer = await request(url, init, { ...context, operation, envelope: true, responseSchema: updateRecordsResponseSchema });
   return answer.data.updateRecords;
 }
 
 /** Removes rows by record id; the answer is the envelope's header alone, so there is nothing to read. */
 export async function deleteRecords(recordIDs: readonly string[], target: RecordTarget, context: ClientContext): Promise<void> {
-  await sheetCall('deleteRecords', { deleteRecords: { recordIDs } }, deleteRecordsResponseSchema, target, context);
-}
-
-/** One call to the addressed sub-sheet: the same address and verb, only the keyword changes. */
-function sheetCall<R extends z.ZodType>(
-  operation: string,
-  payload: Record<string, unknown>,
-  responseSchema: R,
-  target: RecordTarget,
-  context: ClientContext,
-): Promise<z.infer<R>> {
-  const request = assembleCall(operation, () => ({
-    ...sheetAddress(target),
-    method: 'POST',
-    headers: target.headers,
-    body: JSON.stringify(payload),
-  }));
-  return sendEnvelope(request, responseSchema, context);
+  const operation = 'deleteRecords';
+  const { init, url } = prepare(operation, { deleteRecords: { recordIDs } }, target);
+  await request(url, init, { ...context, operation, envelope: true, responseSchema: deleteRecordsResponseSchema });
 }

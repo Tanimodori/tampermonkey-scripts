@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { encodePathSegment, oauthAddress, sheetAddress, sheetsAddress } from '@/api/address';
+import { encodePathSegment, oauthUrl, sheetUrl, sheetsUrl } from '@/api/address';
 
 /**
  * The one place a Tencent Docs address is built.
@@ -33,49 +33,43 @@ describe('one path segment', () => {
 
 describe('the document paths', () => {
   it('addresses the sub-sheet list of one document', () => {
-    expect(sheetsAddress(target('300000000$ExAmPlEfIlEiD'))).toEqual({
-      origin: API_BASE,
-      path: '/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets',
-    });
+    expect(sheetsUrl(target('300000000$ExAmPlEfIlEiD')).href).toBe(`${API_BASE}/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets`);
   });
 
   it('addresses one sub-sheet of it', () => {
-    expect(sheetAddress(target('300000000$ExAmPlEfIlEiD', 'tYYYYYY'))).toEqual({
-      origin: API_BASE,
-      path: '/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets/tYYYYYY',
-    });
+    expect(sheetUrl(target('300000000$ExAmPlEfIlEiD', 'tYYYYYY')).href).toBe(`${API_BASE}/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets/tYYYYYY`);
   });
 
   it('escapes both ids on the way', () => {
-    expect(sheetAddress(target('a b', 'c/d')).path).toBe('/openapi/smartbook/v2/files/a%20b/sheets/c%2Fd');
+    expect(sheetUrl(target('a b', 'c/d')).pathname).toBe('/openapi/smartbook/v2/files/a%20b/sheets/c%2Fd');
   });
 
   it('takes the origin from the configured base, not from the production host', () => {
-    expect(sheetsAddress({ apiBase: 'http://127.0.0.1:3100', coordinates: { fileId: 'f', sheetId: 's' } })).toEqual({
-      origin: 'http://127.0.0.1:3100',
-      path: '/openapi/smartbook/v2/files/f/sheets',
-    });
+    const addressed = sheetsUrl({ apiBase: 'http://127.0.0.1:3100', coordinates: { fileId: 'f', sheetId: 's' } });
+
+    expect(addressed.origin).toBe('http://127.0.0.1:3100');
+    expect(addressed.pathname).toBe('/openapi/smartbook/v2/files/f/sheets');
   });
 });
 
 describe('the OAuth paths', () => {
   it('carries the parameters a call was given, in the order it named them', () => {
-    const addressed = oauthAddress(API_BASE, '/oauth/v2/token', { client_id: 'cid', grant_type: 'refresh_token', refresh_token: 'rt' });
+    const url = oauthUrl(API_BASE, '/oauth/v2/token', { client_id: 'cid', grant_type: 'refresh_token', refresh_token: 'rt' });
 
-    expect(addressed).toEqual({ origin: API_BASE, path: '/oauth/v2/token?client_id=cid&grant_type=refresh_token&refresh_token=rt' });
+    expect(url.href).toBe(`${API_BASE}/oauth/v2/token?client_id=cid&grant_type=refresh_token&refresh_token=rt`);
   });
 
   it('encodes a value that is not URL-safe, which is what a real secret often is', () => {
-    expect(oauthAddress(API_BASE, '/oauth/v2/userinfo', { access_token: 'a+b/c=' }).path).toBe('/oauth/v2/userinfo?access_token=a%2Bb%2Fc%3D');
+    expect(oauthUrl(API_BASE, '/oauth/v2/userinfo', { access_token: 'a+b/c=' }).search).toBe('?access_token=a%2Bb%2Fc%3D');
   });
 
   it('is a bare path when there is nothing to carry', () => {
-    expect(oauthAddress(API_BASE, '/oauth/v2/userinfo', {}).path).toBe('/oauth/v2/userinfo');
+    expect(oauthUrl(API_BASE, '/oauth/v2/userinfo', {}).pathname).toBe('/oauth/v2/userinfo');
   });
 
   it('reads the same whether the configured base carries a trailing slash or not', () => {
     const query = { access_token: 't' };
 
-    expect(oauthAddress('https://docs.qq.com/', '/oauth/v2/userinfo', query)).toEqual(oauthAddress('https://docs.qq.com', '/oauth/v2/userinfo', query));
+    expect(oauthUrl('https://docs.qq.com/', '/oauth/v2/userinfo', query).href).toBe(oauthUrl('https://docs.qq.com', '/oauth/v2/userinfo', query).href);
   });
 });

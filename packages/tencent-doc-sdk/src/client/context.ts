@@ -23,12 +23,11 @@ export interface ClientOptions {
 
 /** The options resolved into what a call actually carries. */
 export interface ClientContext {
-  readonly apiBase: string;
   readonly transport: Fetcher;
 }
 
 export function resolveContext(options: ClientOptions): ClientContext {
-  return { apiBase: options.apiBase, transport: options.transport ?? defaultFetcher };
+  return { transport: options.transport ?? defaultFetcher };
 }
 
 /** The transport for a caller that brought none: the platform's own `fetch`, with nothing wrapped around it. */

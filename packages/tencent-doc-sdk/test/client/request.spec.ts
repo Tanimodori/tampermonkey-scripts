@@ -1,11 +1,11 @@
 /// <reference types="node" />
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import type { FetcherRequestInit } from '@apollo/utils.fetcher';
 import { apiOrigin, rawRecord, setupTencentDocsMock } from '@test/testUtils/document';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ClientContext } from '@/client/context';
-import { assembleCall, sendBare, sendEnvelope } from '@/client/request';
-import type { CallRequest } from '@/client/request';
+import { request } from '@/client/request';
 import { TencentDocsError } from '@/validation/errors';
 import { getRecordsResponseSchema, tokenResponseSchema, userInfoResponseSchema } from '@/validation/schemas';
 
@@ -15,7 +15,9 @@ import { getRecordsResponseSchema, tokenResponseSchema, userInfoResponseSchema }
  *
  * The verdicts themselves are `../validation/classify.spec.ts`'s; what is pinned here is that a call makes
  * exactly one attempt, that it is sent as its endpoint described it and to nobody else's order, and that
- * every way it can fail reaches its caller as one error carrying what was said about it.
+ * every way it can fail reaches its caller as one error carrying what was said about it. A call whose
+ * address or payload could not be built never gets as far as this file — `../api/mock/record.spec.ts`
+ * pins that one, because it is `api/` that builds them.
  */
 
 const SHEET_PATH = '/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets/tXXXXXX';
@@ -24,28 +26,35 @@ const TOKEN_PATH = '/oauth/v2/token';
 const docs = setupTencentDocsMock();
 const servers: Array<{ close(): Promise<void> }> = [];
 
-/** The context every call in here runs on: the mock's transport. */
+/** The transport every call in here runs on: the mock's. */
 function context(overrides: Partial<ClientContext> = {}): ClientContext {
-  return { apiBase: apiOrigin(), transport: docs.fetcher, ...overrides };
+  return { transport: docs.fetcher, ...overrides };
+}
+
+/** One call, as its endpoint hands it over: where it goes, what it carries, and what to call it. */
+interface Call {
+  readonly url: URL;
+  readonly init: FetcherRequestInit;
+  readonly operation: string;
 }
 
 /** One record-endpoint call, as a client of the record endpoint describes it. */
-function call(overrides: Partial<CallRequest> = {}): CallRequest {
+function call(overrides: Partial<Call> = {}): Call {
   return {
-    origin: apiOrigin(),
-    path: SHEET_PATH,
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ getRecords: { offset: 0, limit: 100 } }),
+    url: new URL(SHEET_PATH, apiOrigin()),
+    init: { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ getRecords: { offset: 0, limit: 100 } }) },
     operation: 'getRecords',
     ...overrides,
   };
 }
 
 /** One call to the record endpoint, one to the token endpoint, one to `userinfo`, each on its type. */
-const sendRecord = (one: CallRequest, on: ClientContext = context()) => sendEnvelope(one, getRecordsResponseSchema, on);
-const sendToken = (one: CallRequest) => sendBare(one, tokenResponseSchema, context());
-const sendUserInfo = (one: CallRequest) => sendEnvelope(one, userInfoResponseSchema, context());
+const sendRecord = (one: Call = call(), on: ClientContext = context()) =>
+  request(one.url, one.init, { ...on, operation: one.operation, envelope: true, responseSchema: getRecordsResponseSchema });
+const sendToken = (one: Call = call({ url: new URL(TOKEN_PATH, apiOrigin()), init: { method: 'GET' }, operation: 'refreshToken' })) =>
+  request(one.url, one.init, { ...context(), operation: one.operation, envelope: false, responseSchema: tokenResponseSchema });
+const sendUserInfo = (one: Call = call({ url: new URL('/oauth/v2/userinfo', apiOrigin()), init: { method: 'GET' }, operation: 'userinfo' })) =>
+  request(one.url, one.init, { ...context(), operation: one.operation, envelope: true, responseSchema: userInfoResponseSchema });
 
 /** Every intercepted record read, in order: one per attempt. */
 const readCalls = (): number => docs.state.calls.filter((entry) => (entry.body as Record<string, unknown> | undefined)?.getRecords !== undefined).length;
@@ -80,22 +89,20 @@ afterEach(() => {
 
 describe('an answered call', () => {
   it('hands its caller the parsed body, and nothing else decides the outcome', async () => {
-    await expect(sendRecord(call())).resolves.toMatchObject({ ret: 0, msg: 'Succeed', data: { getRecords: { records: [], total: 0 } } });
+    await expect(sendRecord()).resolves.toMatchObject({ ret: 0, msg: 'Succeed', data: { getRecords: { records: [], total: 0 } } });
   });
 
   it('answers a call whose endpoint speaks for itself with whatever came back', async () => {
     // A `400` from the token endpoint is a response, not a failure: whoever called it words that one.
     docs.state.refreshFailure = { status: 400, body: { error: 'invalid_grant' } };
 
-    await expect(sendToken(call({ path: TOKEN_PATH, method: 'GET', body: undefined, headers: {}, operation: 'refreshToken' }))).resolves.toEqual({
-      error: 'invalid_grant',
-    });
+    await expect(sendToken()).resolves.toEqual({ error: 'invalid_grant' });
   });
 
   it('answers a read that is not an error with the rows it was given', async () => {
     docs.state.records = [rawRecord({})];
 
-    await expect(sendRecord(call())).resolves.toMatchObject({ data: { getRecords: { records: [{ recordID: 'r00001' }] } } });
+    await expect(sendRecord()).resolves.toMatchObject({ data: { getRecords: { records: [{ recordID: 'r00001' }] } } });
   });
 });
 
@@ -103,7 +110,7 @@ describe('a failed call, as its caller sees it', () => {
   it('is a transport failure, keeping what the transport said', async () => {
     docs.state.networkFailures = 1;
 
-    const error = await caught(sendRecord(call()));
+    const error = await caught(sendRecord());
     // `fetch` words a request that never went out as its own `TypeError: fetch failed`, with whatever
     // actually broke it one level down. The cause kept here is the transport's report, in its shape.
     const reported = (error.cause as { cause?: Error } | undefined)?.cause;
@@ -122,24 +129,24 @@ describe('a failed call, as its caller sees it', () => {
     docs.reset();
 
     const impatient = context({ transport: (url, init) => fetch(url, { ...init, signal: AbortSignal.timeout(250) }) });
-    const error = await caught(sendEnvelope(call({ origin, path: '/slow', method: 'GET', body: undefined, headers: {} }), getRecordsResponseSchema, impatient));
+    const error = await caught(sendRecord(call({ url: new URL('/slow', origin), init: { method: 'GET' } }), impatient));
     expect(error.code).toBe('transport');
   });
 
   it('is an authentication failure, whether the status or the business code said so', async () => {
     docs.state.readFailure = { status: 401, ret: 10303, msg: 'token 无效' };
-    expect((await caught(sendRecord(call()))).code).toBe('auth');
+    expect((await caught(sendRecord())).code).toBe('auth');
 
     docs.reset();
     docs.state.readFailure = { status: 200, ret: 10007, msg: 'No corresponding permissions required' };
-    expect((await caught(sendRecord(call()))).code).toBe('auth');
+    expect((await caught(sendRecord())).code).toBe('auth');
     expect(readCalls()).toBe(1);
   });
 
   it('is a rate limit, carrying the wait the upstream stated', async () => {
     docs.state.readFailure = { status: 200, ret: 400007, msg: '请求数超过限制', headers: { 'retry-after': '30' } };
 
-    const error = await caught(sendRecord(call()));
+    const error = await caught(sendRecord());
 
     expect(error.code).toBe('rate_limited');
     expect(error.retryAfterSeconds).toBe(30);
@@ -150,20 +157,20 @@ describe('a failed call, as its caller sees it', () => {
   it('is a bad request', async () => {
     docs.state.readFailure = { status: 400, ret: 400001, msg: '请求参数错误' };
 
-    expect((await caught(sendRecord(call()))).code).toBe('bad_request');
+    expect((await caught(sendRecord())).code).toBe('bad_request');
     expect(readCalls()).toBe(1);
   });
 
   it('quotes the upstream in the message, which is all a caller reads', async () => {
     docs.state.readFailure = { status: 500, ret: 400010, msg: '服务内部错误' };
 
-    expect((await caught(sendRecord(call()))).message).toBe('Tencent Docs returned HTTP 500 for getRecords (ret=400010, msg=服务内部错误)');
+    expect((await caught(sendRecord())).message).toBe('Tencent Docs returned HTTP 500 for getRecords (ret=400010, msg=服务内部错误)');
   });
 
   it('quotes the body of an answer it cannot read, without the credential nested in it', async () => {
     docs.state.rawReply = { status: 200, body: { data: { access_token: 'live-token-value', records: [] } } };
 
-    const error = await caught(sendRecord(call()));
+    const error = await caught(sendRecord());
 
     // That message is what a caller may put on the wire, so the masking has to reach the depth a real
     // answer nests a token at.
@@ -176,7 +183,7 @@ describe('a failed call, as its caller sees it', () => {
     // classify. It is one attempt and one error: nothing here decides to try again.
     docs.state.rawReply = { status: 200, body: '- - - HTTP Status: 405 Service Error - - -' };
 
-    const error = await caught(sendRecord(call()));
+    const error = await caught(sendRecord());
 
     expect(error.code).toBe('transport');
     expect(error.message).toBe(`Request to ${apiOrigin()}${SHEET_PATH} failed`);
@@ -200,7 +207,7 @@ describe('one call, one attempt', () => {
     it(`sends ${label} once and answers the caller with the failure`, async () => {
       apply();
 
-      await caught(sendRecord(call()));
+      await caught(sendRecord());
 
       expect(readCalls()).toBe(1);
     });
@@ -216,7 +223,7 @@ describe('one call, one attempt', () => {
       docs.reset();
       docs.state.readFailure = failure;
 
-      await caught(sendRecord(call()));
+      await caught(sendRecord());
       expect(readCalls()).toBe(1);
     }
   });
@@ -226,7 +233,7 @@ describe('what a failed call carries', () => {
   it('names the call, quotes the upstream, and hands over the whole answer with it', async () => {
     docs.state.readFailure = { status: 429, ret: 400007, msg: '请求数超过限制', headers: { 'retry-after': '7' } };
 
-    const error = await caught(sendRecord(call()));
+    const error = await caught(sendRecord());
 
     expect(error.code).toBe('rate_limited');
     expect(error.path).toBe(SHEET_PATH);
@@ -245,7 +252,7 @@ describe('what a failed call carries', () => {
     // `ret: 0` and no `data` section: the transport was happy, the endpoint's type was not.
     docs.state.rawReply = { status: 200, body: { ret: 0, msg: 'Succeed' } };
 
-    const error = await caught(sendRecord(call()));
+    const error = await caught(sendRecord());
 
     expect(error.code).toBe('invalid_answer');
     expect(error.path).toBe(SHEET_PATH);
@@ -261,9 +268,7 @@ describe('what a failed call carries', () => {
     const secret = 'access-token-value';
     docs.state.userInfoFailure = { status: 401, ret: 10303, msg: 'token 无效' };
 
-    const error = await caught(
-      sendUserInfo(call({ operation: 'userinfo', method: 'GET', path: `/oauth/v2/userinfo?access_token=${secret}`, body: undefined, headers: {} })),
-    );
+    const error = await caught(sendUserInfo(call({ url: new URL(`/oauth/v2/userinfo?access_token=${secret}`, apiOrigin()), init: { method: 'GET' } })));
 
     expect(error.path).toBe('/oauth/v2/userinfo');
     expect(JSON.stringify({ path: error.path, message: error.message, response: error.response })).not.toContain(secret);
@@ -272,54 +277,12 @@ describe('what a failed call carries', () => {
   it('does not quote a credential-bearing URL when a call got no answer', async () => {
     // Nothing intercepts this path, so the request fails at the transport — and its URL is what the
     // transport's own message spells out in full.
-    const path = '/oauth/v2/refresh?client_secret=client-secret-value&refresh_token=refresh-secret-value';
+    const url = new URL('/oauth/v2/refresh?client_secret=client-secret-value&refresh_token=refresh-secret-value', apiOrigin());
 
-    const error = await caught(sendRecord(call({ operation: 'refreshToken', method: 'GET', path, body: undefined, headers: {} })));
+    const error = await caught(sendRecord(call({ url, init: { method: 'GET' }, operation: 'refreshToken' })));
 
     expect(error.message).toContain('/oauth/v2/refresh');
     expect(error.path).toBe('/oauth/v2/refresh');
     expect(JSON.stringify({ path: error.path, message: error.message, response: error.response })).not.toContain('refresh-secret-value');
-  });
-});
-
-describe('a call that never became a request', () => {
-  /** Every endpoint builds its request through this one door, so these two failures are its whole risk. */
-  function thrownBy(build: () => unknown): TencentDocsError {
-    let thrown: unknown;
-    let assembled = false;
-    try {
-      build();
-      assembled = true;
-    } catch (error) {
-      thrown = error;
-    }
-    expect(assembled, 'the call was assembled after all, and nothing was thrown').toBe(false);
-    return thrown as TencentDocsError;
-  }
-
-  it('words an address built from something that is not a URL as a `config` failure, keeping the reason', () => {
-    const error = thrownBy(() =>
-      assembleCall('getRecords', () => {
-        const url = new URL(SHEET_PATH, 'docs-not-a-url');
-        return { origin: url.origin, path: url.pathname, method: 'POST' };
-      }),
-    );
-
-    expect(error).toBeInstanceOf(TencentDocsError);
-    expect(error.code).toBe('config');
-    expect(error.message).toContain('getRecords');
-    expect(error.cause).toBeInstanceOf(Error);
-    expect(readCalls()).toBe(0);
-  });
-
-  it('words a payload that will not become JSON the same way, without losing what broke it', () => {
-    const circular: Record<string, unknown> = {};
-    circular.self = circular;
-
-    const error = thrownBy(() => assembleCall('addRecords', () => ({ origin: apiOrigin(), path: SHEET_PATH, method: 'POST', body: JSON.stringify(circular) })));
-
-    expect(error.code).toBe('config');
-    expect(error.message).toContain('addRecords');
-    expect((error.cause as Error).message).toContain('circular');
   });
 });

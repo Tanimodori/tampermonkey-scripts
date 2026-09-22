@@ -9,8 +9,6 @@
  * this is where a secret gets into a URL, and where it is kept out of every report.
  */
 
-import type { CallRequest } from '@/client/request';
-
 /** Which document, and which sub-sheet of it. */
 export interface DocCoordinates {
   readonly fileId: string;
@@ -28,35 +26,28 @@ export function encodePathSegment(value: string): string {
   return encodeURIComponent(value).replace(/%24/g, '$').replace(/%3A/gi, ':');
 }
 
-/** The origin and path a request is sent to — the two halves the transport takes. */
-type Address = Pick<CallRequest, 'origin' | 'path'>;
-
-function address(url: URL): Address {
-  return { origin: url.origin, path: `${url.pathname}${url.search}` };
-}
-
 /** `…/files/${fileID}/sheets`: the document's own sub-sheet list. */
-export function sheetsAddress(target: EndpointTarget): Address {
+export function sheetsUrl(target: EndpointTarget): URL {
   const fileId = encodePathSegment(target.coordinates.fileId);
-  return address(new URL(`/openapi/smartbook/v2/files/${fileId}/sheets`, target.apiBase));
+  return new URL(`/openapi/smartbook/v2/files/${fileId}/sheets`, target.apiBase);
 }
 
 /** `…/files/${fileID}/sheets/${sheetID}`: the one sub-sheet every record call addresses. */
-export function sheetAddress(target: EndpointTarget): Address {
+export function sheetUrl(target: EndpointTarget): URL {
   const { fileId, sheetId } = target.coordinates;
   const base = `/openapi/smartbook/v2/files/${encodePathSegment(fileId)}/sheets`;
-  return address(new URL(`${base}/${encodePathSegment(sheetId)}`, target.apiBase));
+  return new URL(`${base}/${encodePathSegment(sheetId)}`, target.apiBase);
 }
 
 /**
  * An OAuth endpoint with its credential in the query string.
  *
  * The caller names the parameters in the upstream's own vocabulary (`access_token`, `client_secret`,
- * `refresh_token`); their values are secrets, which is why nothing downstream reports a path with its
- * query string attached.
+ * `refresh_token`); their values are secrets, which is why nothing downstream reports a URL by anything
+ * but its path.
  */
-export function oauthAddress(apiBase: string, pathname: string, query: Record<string, string>): Address {
+export function oauthUrl(apiBase: string, pathname: string, query: Record<string, string>): URL {
   const url = new URL(pathname, apiBase);
   for (const [name, value] of Object.entries(query)) url.searchParams.set(name, value);
-  return address(url);
+  return url;
 }

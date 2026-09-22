@@ -1,8 +1,7 @@
 // Re-exported rather than made consumers depend on it themselves: this is the shape a `transport` has to
 // fit, and the package behind it carries types and nothing else.
 export type { Fetcher, FetcherRequestInit, FetcherResponse } from '@apollo/utils.fetcher';
-export type { ClientContext, ClientOptions } from './client/context';
-export type { CallRequest } from './client/request';
+export type { ClientOptions } from './client/context';
 
 export type { TencentDocsErrorCode, TencentDocsErrorOptions, UpstreamResponse } from './validation/errors';
 export { TencentDocsError } from './validation/errors';

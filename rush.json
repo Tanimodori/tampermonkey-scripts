@@ -321,7 +321,7 @@
    * separated by hyphens or slashes, where a word may contain lowercase ASCII letters, digits,
    * ".", and "@" characters.
    */
-  // "allowedProjectTags": [ "tools", "frontend-team", "1.0.0-release" ],
+  "allowedProjectTags": [ "userscript", "library", "service", "test" ],
 
   /**
    * (Required) This is the inventory of projects to be managed by Rush.
@@ -423,49 +423,64 @@
     //   // "tags": [ "1.0.0-release", "frontend-team" ]
     // },
     //
-    {
-      "packageName": "vite-plugin-userscript-metadata",
-      "projectFolder": "packages/vite-plugin-userscript-metadata"
-    },
+    // browser scripts
     {
       "packageName": "xivanalysis-zh",
-      "projectFolder": "packages/xivanalysis-zh"
+      "projectFolder": "scripts/xivanalysis-zh",
+      "tags": [ "userscript" ]
     },
     {
       "packageName": "universalis-zh-data",
-      "projectFolder": "packages/universalis-zh-data"
+      "projectFolder": "scripts/universalis-zh-data",
+      "tags": [ "userscript" ]
     },
     {
       "packageName": "tenhou-pairi-kokei-display",
-      "projectFolder": "packages/tenhou-pairi-kokei-display"
+      "projectFolder": "scripts/tenhou-pairi-kokei-display",
+      "tags": [ "userscript" ]
     },
     {
       "packageName": "fflogs-scripts",
-      "projectFolder": "packages/fflogs-scripts"
+      "projectFolder": "scripts/fflogs-scripts",
+      "tags": [ "userscript" ]
     },
     {
       "packageName": "feishu-download",
-      "projectFolder": "packages/feishu-download"
+      "projectFolder": "scripts/feishu-download",
+      "tags": [ "userscript" ]
+    },
+    // shared libraries
+    {
+      "packageName": "vite-plugin-userscript-metadata",
+      "projectFolder": "packages/vite-plugin-userscript-metadata",
+      "tags": [ "library" ]
     },
     {
       "packageName": "tencent-doc-sdk",
-      "projectFolder": "packages/tencent-doc-sdk"
-    },
-    {
-      "packageName": "occult-pot-server",
-      "projectFolder": "packages/occult-pot-server"
+      "projectFolder": "packages/tencent-doc-sdk",
+      "tags": [ "library" ]
     },
     {
       "packageName": "xiv-api-provider",
-      "projectFolder": "packages/xiv-api-provider"
+      "projectFolder": "packages/xiv-api-provider",
+      "tags": [ "library" ]
     },
     {
       "packageName": "xiv-datamine-polyfill",
-      "projectFolder": "packages/xiv-datamine-polyfill"
+      "projectFolder": "packages/xiv-datamine-polyfill",
+      "tags": [ "library" ]
     },
+    // backend services
+    {
+      "packageName": "occult-pot-server",
+      "projectFolder": "packages/occult-pot-server",
+      "tags": [ "service" ]
+    },
+    // test-only projects
     {
       "packageName": "xiv-datamine-polyfill-e2e-test",
-      "projectFolder": "tests/xiv-datamine-polyfill-e2e-test"
+      "projectFolder": "tests/xiv-datamine-polyfill-e2e-test",
+      "tags": [ "test" ]
     }
   ]
 }

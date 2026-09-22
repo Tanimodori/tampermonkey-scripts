@@ -1,9 +1,9 @@
+import type { Fetcher } from '@apollo/utils.fetcher';
 import { tokenAnswer, userInfoAnswer } from '@test/testUtils/fixtures/oauth';
 import type { TokenAnswerInput } from '@test/testUtils/fixtures/oauth';
 import { deleteRecordsAnswer, getRecordsAnswer, readRows, writtenRecordsAnswer, writtenRecordsWithoutId } from '@test/testUtils/fixtures/record';
 import { getSheetAnswer } from '@test/testUtils/fixtures/sheet';
-import { MockAgent } from 'undici';
-import type { Dispatcher } from 'undici';
+import { MockAgent, fetch as undiciFetch } from 'undici';
 import type { CommonRecord } from '@/validation/types';
 
 /**
@@ -14,8 +14,8 @@ import type { CommonRecord } from '@/validation/types';
  * network, a quota, or a document to clean up afterwards. Every endpoint is intercepted, real connections
  * are disabled, and every answer comes from one mutable `state`.
  *
- * Hand it over as the `transport` of a `createDocClient`/`createTokenManager`, or as whatever the code
- * under test uses to reach a dispatcher.
+ * What it hands over is the `transport` a `createDocClient`/`createTokenManager` takes: undici's `fetch`
+ * pointed at this mock pool, which is the same shape a caller's own transport has.
  */
 
 /** A business failure the mock can be told to answer with. */
@@ -85,10 +85,8 @@ export interface TencentDocsMockState {
 
 export interface TencentDocsMock {
   readonly state: TencentDocsMockState;
-  /** The bare mock pool, for a test that wants to compose a client of its own over it. */
-  readonly agent: MockAgent;
-  /** The same pool, as the dispatcher a client takes. */
-  readonly client: Dispatcher;
+  /** The transport to hand a client or a manager: undici's `fetch`, on this mock pool. */
+  readonly fetcher: Fetcher;
   reset(): void;
   close(): Promise<void>;
 }
@@ -337,8 +335,9 @@ export function setupTencentDocsMock(
 
   return {
     state,
-    agent,
-    client: agent,
+    // The transport the library under test calls, on this pool: nothing here reaches the network, since
+    // the agent refuses any connection it was not told to intercept.
+    fetcher: (url, init) => undiciFetch(url, { ...init, dispatcher: agent }),
     reset: () => {
       state.added.length = 0;
       state.addedRecords.length = 0;

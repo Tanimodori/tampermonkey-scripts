@@ -1,7 +1,6 @@
 import type { ClientOptions } from '@/client/context';
 import { resolveContext } from '@/client/context';
 import type { CredentialStore } from '@/token/store';
-import { accessTokenOf, clientIdOf, openIdOf } from '@/token/store';
 import type { CommonRecords, Sheet, WrittenRecords } from '@/validation/types';
 import type { DocCoordinates, EndpointTarget } from './address';
 import type { GetRecordsParams, RecordUpdate, RecordValues } from './record';
@@ -36,35 +35,22 @@ export interface DocClient {
 }
 
 /**
- * The headers every Open API call carries: the media types the upstream answers in, then the credential
- * three-piece the Open-Id flows require. Each part is read from the store's snapshot and asserted here — a
- * call missing any of them fails as `config` before the request is assembled.
- */
-function openApiHeaders(store: CredentialStore): Record<string, string> {
-  const credential = store.get();
-  return {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    'Access-Token': accessTokenOf(credential),
-    'Client-Id': clientIdOf(credential),
-    'Open-Id': openIdOf(credential),
-  };
-}
-
-/**
  * Builds a client over one sub-sheet and one credential store.
  *
  * Each method is one endpoint and one round trip: the address, the verb and the payload keyword are that
  * endpoint's own, and nothing is done around them — no paging, no retrying, nothing aggregated across two
  * calls. The credential is read from the store at the moment of the call, so a token that was refreshed
- * between two calls is the one the next call carries. Every Open API call is sent the same three headers,
- * and a store missing any of them throws before the request is assembled — an async method turns that into
- * a rejection, which is the only reason these bodies are `async`.
+ * between two calls is the one the next call carries. Every Open API call is sent the same three header
+ * fields, which is the store's `getAuthHeaders()` to say: a credential missing any of them fails as
+ * `config` before a request is assembled, and these bodies are `async` for no other reason than that a
+ * rejection is how a caller meets that.
  */
 export function createDocClient(options: DocClientOptions): DocClient {
   const context = resolveContext(options);
   const target: EndpointTarget = { apiBase: options.apiBase, coordinates: options.coordinates };
-  const headers = () => openApiHeaders(options.store);
+
+  // The media types are this client's own choice of what to send and expect; the credential is not.
+  const headers = () => ({ 'Content-Type': 'application/json', Accept: 'application/json', ...options.store.getAuthHeaders() });
 
   return {
     getSheetList: async () => getSheetList(target, headers(), context),

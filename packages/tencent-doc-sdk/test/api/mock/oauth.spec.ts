@@ -16,7 +16,7 @@ import { resolveContext } from '@/client/context';
 
 const docs = setupTencentDocsMock();
 const apiBase = apiOrigin();
-const context = resolveContext({ apiBase, transport: docs.agent });
+const context = resolveContext({ apiBase, transport: docs.fetcher });
 
 /** One call to each endpoint, on the credential the mocked document was built with. */
 const whoIs = (accessToken: string) => getUserInfo(apiBase, accessToken, context);

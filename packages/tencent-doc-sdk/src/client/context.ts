@@ -1,5 +1,4 @@
-import type { Dispatcher } from 'undici';
-import { DEFAULT_TIMEOUT_MS, newDispatcher } from './transport';
+import type { Fetcher } from '@apollo/utils.fetcher';
 
 /**
  * The things every way of reaching the upstream needs, resolved once per object built from them.
@@ -10,34 +9,27 @@ export interface ClientOptions {
   /** Where the calls go: `https://docs.qq.com`, or whatever stands in for it under a test. */
   readonly apiBase: string;
   /**
-   * The connection to send on — and so the one seam a caller has for its own pacing, metrics or
-   * refusal. A caller that owns its pool hands one in; given a function, it is asked per call, so a pool
-   * that gets rebuilt does not need the client rebuilt with it. Given nothing, this library opens a pool
-   * of its own on first use.
+   * The one seam a caller has: the function a call is sent through, so whoever owns the connection — a
+   * keep-alive pool, a proxy, a mock, a retry or a refusal — owns it there rather than here. Given
+   * nothing, calls go out on `globalThis.fetch`.
+   *
+   * Timeouts come along with it: this library never sets a `signal`, so how long a call may hang is
+   * whatever the fetcher was built to allow. A caller whose connection is rebuilt underneath can read the
+   * current one from inside its own fetcher, which is why there is no "a function asked per call" form
+   * here — a fetcher already is one.
    */
-  readonly transport?: Dispatcher | (() => Dispatcher) | undefined;
-  /** Connection, header and body budget of a call that hangs. Defaults to 10 seconds. */
-  readonly timeoutMs?: number;
+  readonly transport?: Fetcher | undefined;
 }
 
 /** The options resolved into what a call actually carries. */
 export interface ClientContext {
   readonly apiBase: string;
-  readonly transport: () => Dispatcher;
+  readonly transport: Fetcher;
 }
 
 export function resolveContext(options: ClientOptions): ClientContext {
-  return {
-    apiBase: options.apiBase,
-    transport: resolveTransport(options.transport, options.timeoutMs ?? DEFAULT_TIMEOUT_MS),
-  };
+  return { apiBase: options.apiBase, transport: options.transport ?? defaultFetcher };
 }
 
-/** The pool to hand a call, built on first use and kept after that. */
-function resolveTransport(transport: ClientOptions['transport'], timeoutMs: number): () => Dispatcher {
-  if (typeof transport === 'function') return transport;
-  if (transport !== undefined) return () => transport;
-
-  let built: Dispatcher | undefined;
-  return () => (built ??= newDispatcher(timeoutMs));
-}
+/** The transport for a caller that brought none: the platform's own `fetch`, with nothing wrapped around it. */
+const defaultFetcher: Fetcher = (url, init) => globalThis.fetch(url, init);

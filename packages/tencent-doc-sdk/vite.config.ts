@@ -32,10 +32,10 @@ export default defineConfig({
       fileName: () => 'index.js',
     },
     rolldownOptions: {
-      // Neither dependency is inlined, and the consumer resolves them itself: they are the package's two
-      // runtime dependencies, and bundling a second copy of an `undici` pool or a `zod` registry into every
-      // consumer would only make the two instances disagree.
-      external: ['undici', 'zod'],
+      // Not inlined: `zod` is the package's one runtime dependency, and bundling a second copy of its
+      // registry into every consumer would only make the two instances disagree. The transport type is a
+      // type and nothing else, so there is no second package for the bundle to carry.
+      external: ['zod'],
     },
   },
   resolve: {

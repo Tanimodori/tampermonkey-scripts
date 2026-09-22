@@ -14,7 +14,7 @@ const store = createCredentialStore({ accessToken: '…', clientId: '…', openI
 const tokens = createTokenManager({
   apiBase: 'https://docs.qq.com',
   store,
-  dispatch, // an undici Dispatcher, or a function asked for one
+  transport, // the fetch a call goes through; `globalThis.fetch` when omitted
   clientSecret: '…', // only ever needed by the two token endpoints, and never part of a credential
 });
 
@@ -37,7 +37,7 @@ A credential is held by a store and changed by a manager. The store is synchrono
 
 ```ts
 const store = createCredentialStore(configured);
-const tokens = createTokenManager({ apiBase, store, dispatch, clientSecret });
+const tokens = createTokenManager({ apiBase, store, transport, clientSecret });
 
 const refreshed = await tokens.refreshToken(); // the credential as it now stands
 await writeToWhereverItIsKept(store.get());
@@ -48,9 +48,9 @@ createCredentialStore(await readFromWhereverItWasKept());
 
 `createCredentialStore({ accessToken, clientId, openId, refreshToken, expiresAt, issueAt })` holds those parts, and three of them may be unstated: an Open-Id is read off the access token's `sub` claim, a lifetime off its `exp` and an issue time off its `iat`, unless a value was said outright, which always wins. These are read off the token when it is written, not on every read; `set(record)` merges, so a part a record does not speak of keeps what was held. An access token that is replaced sheds a lifetime and issue time stated for the old one, but keeps a configured Open-Id — a refresh does not change who the credential belongs to.
 
-The store only reads and writes state: `get()` answers with whatever is held — a part being absent is itself the answer, where a credential with no stated lifetime is not an expired one and one with no refresh token cannot be refreshed — and `set(record)` merges a partial over it. Which parts a given call cannot go out without is asserted at the call site, through `accessTokenOf`, `clientIdOf`, `openIdOf` and `refreshTokenOf`, each failing with `config` when that part is missing. A caller deciding whether to renew reads `get().expiresAt` directly.
+Two kinds of question are asked of a store, and they are asked apart. `get()` answers "what is held right now" and never throws — a part being absent is itself the answer, where a credential with no stated lifetime is not an expired one and one with no refresh token cannot be refreshed — and `set(record)` merges a partial over it. The four readers answer "can this call go out at all": `getAuthHeaders()` is the `Access-Token`/`Client-Id`/`Open-Id` three-piece every Open API call carries, `getAccessToken()` is the token `userinfo` is asked about, `getClientId()` is the application both grants name themselves by, and `getRefreshToken()` is what makes a refresh possible; each fails with `config` rather than handing back `undefined` to be noticed later. There is no `getOpenId()`: outside that header the Open-Id is sent nowhere, and a caller who only wants to look at it reads `get().openId`. Deciding whether to renew is therefore a `get()` question, and sending is a reader's.
 
-`createTokenManager({ apiBase, store, dispatch, clientSecret, now })` sends the requests and writes what answers into the store. `getUserInfo()` reports whose access token the store holds and changes nothing; `fetchToken({ code, redirectUri })` and `refreshToken()` are the two grants — the same upstream endpoint, told apart by `grant_type` — and each returns the credential as it stands afterwards. `dispatch` is required: a manager never opens a connection of its own. `now` is the clock an answer's `expires_in` is folded onto, and the client secret is kept by the manager rather than the store, so it is in neither returned record.
+`createTokenManager({ apiBase, store, transport, clientSecret, now })` sends the requests and writes what answers into the store. `getUserInfo()` reports whose access token the store holds and changes nothing; `fetchToken({ code, redirectUri })` and `refreshToken()` are the two grants — the same upstream endpoint, told apart by `grant_type` — and each returns the credential as it stands afterwards. `transport` is the fetch a call goes through, the platform's own when none is given. `now` is the clock an answer's `expires_in` is folded onto, and the client secret is kept by the manager rather than the store, so it is in neither returned record.
 
 Nothing here schedules a refresh, and nothing here decides that a reported Open-Id agrees with a configured one. An expired token is an `auth` failure on the next call.
 
@@ -98,9 +98,9 @@ async function getRecords(page) {
 }
 ```
 
-The connection is the other seam: `transport` takes an undici `Dispatcher` — a pool, or a function asked per call — so a caller that hands in its own sees every request there. What it cannot see there is the envelope: a smartsheet call that failed answers `200` with a business code naming the reason, and the verdict only exists once the body has been read. Two of the OAuth calls carry their credential in the query string and every Open API call in an `Access-Token` header, so a request seen at either seam is holding a secret; the `path` on an error has its query string dropped for exactly that reason.
+The connection is the other seam: `transport` takes a `Fetcher` — `(url, init) => Promise<Response>`, the shape [`@apollo/utils.fetcher`](https://github.com/apollographql/utils) describes and this package re-exports — so a caller that hands in its own sees every request there, and one whose pool is rebuilt underneath reads the current one from inside its own fetch. What it cannot see there is the envelope: a smartsheet call that failed answers `200` with a business code naming the reason, and the verdict only exists once the body has been read. Two of the OAuth calls carry their credential in the query string and every Open API call in an `Access-Token` header, so a request seen at either seam is holding a secret; the `path` on an error has its query string dropped for exactly that reason.
 
-Given no `transport`, this library opens one pool per client and gives it `timeoutMs` for connect, headers and body — ten seconds unless the caller says otherwise.
+Given no `transport`, calls go out on `globalThis.fetch`. The library registers no timeout of its own and never sets a `signal`: how long a call may hang is whatever the fetch was built to allow — a pool's timeouts, or an `AbortSignal` the caller passes — and a fetch that bounds nothing leaves its caller waiting on the upstream.
 
 ## Testing without the upstream
 

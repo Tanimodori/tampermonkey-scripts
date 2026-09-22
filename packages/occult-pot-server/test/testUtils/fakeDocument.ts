@@ -206,13 +206,24 @@ interface FakeHeldCredential {
   refreshToken: string | undefined;
 }
 
-/** The shape of `CredentialStore`, which the fake keeps as a plain object rather than a JWT to read. */
-function fakeCredentialStore(initial: Partial<CredentialRecord> | undefined): CredentialStore {
+/**
+ * The shape of `CredentialStore`, which the fake keeps as a plain object rather than a JWT to read.
+ *
+ * The four readers throw the library's own `config` failure, because the service's guards are exactly the
+ * thing those failures are for: a refresh with nothing to refresh has to arrive as the refusal the service
+ * then words.
+ */
+function fakeCredentialStore(initial: Partial<CredentialRecord> | undefined, TencentError: TencentDocsErrorClass): CredentialStore {
   const held: FakeHeldCredential = {
     accessToken: initial?.accessToken ?? '',
     clientId: initial?.clientId,
     openId: initial?.openId,
     refreshToken: initial?.refreshToken,
+  };
+
+  const said = (value: string | undefined, what: string): string => {
+    if (value === undefined || value.length === 0) throw new TencentError('config', `The fake credential has no ${what}`);
+    return value;
   };
 
   return {
@@ -232,6 +243,14 @@ function fakeCredentialStore(initial: Partial<CredentialRecord> | undefined): Cr
       if (record.openId !== undefined && record.openId.length > 0) held.openId = record.openId;
       if (record.refreshToken !== undefined && record.refreshToken.length > 0) held.refreshToken = record.refreshToken;
     },
+    getAuthHeaders: () => ({
+      'Access-Token': said(held.accessToken, 'access token'),
+      'Client-Id': said(held.clientId, 'client id'),
+      'Open-Id': said(held.openId, 'Open-Id'),
+    }),
+    getAccessToken: () => said(held.accessToken, 'access token'),
+    getClientId: () => said(held.clientId, 'client id'),
+    getRefreshToken: () => said(held.refreshToken, 'refresh token'),
   };
 }
 
@@ -249,7 +268,7 @@ export function fakeTencentDocsSdk(TencentError: TencentDocsErrorClass): {
 } {
   const call = failures(TencentError);
   return {
-    createCredentialStore: (initial) => fakeCredentialStore(initial),
+    createCredentialStore: (initial) => fakeCredentialStore(initial, TencentError),
     createDocClient: () => fakeDocClient(call),
     createTokenManager: (options) => fakeTokenManager(options, call),
   };

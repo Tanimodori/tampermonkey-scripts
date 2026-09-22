@@ -1,4 +1,3 @@
-import type { Dispatcher } from 'undici';
 import type { z } from 'zod';
 import { cannotAssemble, classifyResponse, invalidAnswer, transportFailure } from '@/validation/classify';
 import type { CallShape, ResponseHeaders, UpstreamAnswer } from '@/validation/classify';
@@ -10,9 +9,9 @@ import type { ClientContext } from './context';
  *
  * This is where a call's cost is paid, and it owns the whole of the paying: the address comes from
  * `api/`, the verdict from `validation/`, and there is nothing in between for a caller to attach itself
- * to. Whoever paces, measures, logs or refuses a call does so around these functions — with the
- * `Dispatcher` they hand in, or around the client's own methods — because a library that translates the
- * upstream's endpoints one for one has no opinion about what those calls are worth to anybody.
+ * to. Whoever owns the connection — pacing, metrics, a refusal, a timeout — does so in the `Fetcher` it
+ * hands in, or around the client's own methods — because a library that translates the upstream's
+ * endpoints one for one has no opinion about what those calls are worth to anybody.
  *
  * There is no retry here, and that is the whole design: one method is one round trip. A caller that wants
  * a second attempt makes it, knowing that a write which failed may already have landed and that the
@@ -26,7 +25,7 @@ export interface CallRequest {
   readonly origin: string;
   /** The path to send to, query string included: two of the OAuth calls carry a credential in it. */
   readonly path: string;
-  readonly method: Dispatcher.HttpMethod;
+  readonly method: 'GET' | 'POST';
   readonly headers?: Record<string, string>;
   readonly body?: string;
 }
@@ -94,16 +93,22 @@ async function sendCall<S extends z.ZodType>(request: CallRequest, plan: CallPla
 
 /** The round trip and nothing else: the transport's answer, read as far as this module has to read it. */
 async function deliver(request: CallRequest, shape: CallShape, client: ClientContext): Promise<UpstreamAnswer> {
+  const { transport: send } = client;
   let status: number;
   let headers: ResponseHeaders;
   let body: unknown;
   try {
-    const response = await client
-      .transport()
-      .request({ origin: request.origin, path: request.path, method: request.method, headers: request.headers, body: request.body });
-    status = response.statusCode;
-    headers = { ...response.headers };
-    body = await response.body.json();
+    const response = await send(`${request.origin}${request.path}`, {
+      method: request.method,
+      headers: request.headers,
+      body: request.body,
+    });
+    status = response.status;
+    // Pairs rather than the object-shaped bag of headers a connection library reported: `Retry-After`
+    // reads the same either way, and a header carrying several values now arrives merged instead of as an
+    // array — none of the answers this library looks at does.
+    headers = Object.fromEntries(response.headers);
+    body = await response.json();
   } catch (error) {
     // Three ways to get here and no answer: the upstream never replied, its body never finished
     // arriving, or what arrived was not JSON at all. None of them is classified — there is nothing to

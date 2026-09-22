@@ -48,8 +48,8 @@ export function testUpstream(
   const apiBase = apiOrigin();
   const coordinates = { fileId: options.fileId ?? EXAMPLE_FILE_ID, sheetId: options.sheetId ?? EXAMPLE_SHEET_ID };
   const store = createCredentialStore(TEST_CREDENTIAL);
-  const tokens = createTokenManager({ apiBase, store, clientSecret: 'test-client-secret', dispatch: mock.agent });
-  const client = createDocClient({ apiBase, coordinates, store, transport: mock.agent });
+  const tokens = createTokenManager({ apiBase, store, clientSecret: 'test-client-secret', transport: mock.fetcher });
+  const client = createDocClient({ apiBase, coordinates, store, transport: mock.fetcher });
 
   return { client, tokens, store, mock, state: mock.state, ...coordinates, close: () => mock.close() };
 }

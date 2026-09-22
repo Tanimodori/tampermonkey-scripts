@@ -3,7 +3,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createDocClient } from '@/api/docClient';
 import { createTokenManager } from '@/token/manager';
 import type { TokenManager, TokenManagerOptions } from '@/token/manager';
-import { accessTokenOf, clientIdOf, createCredentialStore, openIdOf } from '@/token/store';
+import { createCredentialStore } from '@/token/store';
 import type { CredentialRecord, CredentialStore } from '@/token/store';
 
 /**
@@ -24,7 +24,7 @@ function token(input: { sub?: string; exp?: number }): string {
   return `${encode({ alg: 'none' })}.${encode({ ...input })}.signature`;
 }
 
-const BASE: Pick<TokenManagerOptions, 'apiBase' | 'dispatch'> = { apiBase: apiOrigin(), dispatch: docs.agent };
+const BASE: Pick<TokenManagerOptions, 'apiBase' | 'transport'> = { apiBase: apiOrigin(), transport: docs.fetcher };
 
 /** One credential, the manager that may change it, and the number of calls made so far. */
 function credential(initial: Partial<CredentialRecord>, options: Partial<TokenManagerOptions> = {}): { store: CredentialStore; tokens: TokenManager } {
@@ -60,7 +60,7 @@ describe('获取用户信息', () => {
 
     await expect(tokens.getUserInfo()).resolves.toMatchObject({ openID: 'reported-open-id' });
 
-    expect(openIdOf(store.get())).toBe('configured-open-id');
+    expect(store.getAuthHeaders()['Open-Id']).toBe('configured-open-id');
     expect(store.get().openId).toBe('configured-open-id');
   });
 
@@ -111,9 +111,9 @@ describe('刷新 Token', () => {
 
     await tokens.refreshToken();
 
-    expect(clientIdOf(store.get())).toBe('c-id');
+    expect(store.getClientId()).toBe('c-id');
     // An Open-Id the answer does name outranks one merely carried over, and both are said out loud.
-    expect(openIdOf(store.get())).toBe('answered-open-id');
+    expect(store.get().openId).toBe('answered-open-id');
   });
 
   it('falls back to the token’s own `exp` when the answer states no lifetime', async () => {
@@ -194,8 +194,8 @@ describe('获取 Token', () => {
     await tokens.fetchToken(GRANT);
 
     // The code grant answers as a full credential, so the record a restart would reload is this one.
-    expect(accessTokenOf(store.get())).toBe('fresh-token');
-    expect(openIdOf(store.get())).toBe('new-open-id');
+    expect(store.getAccessToken()).toBe('fresh-token');
+    expect(store.get().openId).toBe('new-open-id');
   });
 
   it('needs a secret, and needs to know which client it belongs to, and says so rather than calling', async () => {
@@ -212,7 +212,12 @@ describe('获取 Token', () => {
 describe('the credential a manager changes', () => {
   it('is the credential the next document call is sent with, unprompted', async () => {
     const { store, tokens } = credential({ accessToken: 'old-token', clientId: 'c-id', openId: 'o-id', refreshToken: 'r' }, { clientSecret: 'the-secret' });
-    const client = createDocClient({ apiBase: apiOrigin(), coordinates: { fileId: EXAMPLE_FILE_ID, sheetId: EXAMPLE_SHEET_ID }, store, transport: docs.agent });
+    const client = createDocClient({
+      apiBase: apiOrigin(),
+      coordinates: { fileId: EXAMPLE_FILE_ID, sheetId: EXAMPLE_SHEET_ID },
+      store,
+      transport: docs.fetcher,
+    });
     docs.state.refresh = { accessToken: 'refreshed-token' };
 
     await tokens.refreshToken();

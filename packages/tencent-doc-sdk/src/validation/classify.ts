@@ -14,7 +14,7 @@ import { TencentDocsError } from './errors';
  * every caller treat "a usable answer" and "a failure" as the only two outcomes.
  */
 
-/** Response headers, as undici reports them and `Retry-After` is read from. */
+/** Response headers, as the transport reports them and `Retry-After` is read from. */
 export type ResponseHeaders = Record<string, string | string[] | undefined>;
 
 /**

@@ -2,7 +2,6 @@ import { afterAll } from 'vitest';
 import type { DocCoordinates } from '@/api/address';
 import { createDocClient } from '@/api/docClient';
 import type { DocClient } from '@/api/docClient';
-import { newDispatcher } from '@/client/transport';
 import { createTokenManager } from '@/token/manager';
 import type { TokenManager } from '@/token/manager';
 import { createCredentialStore } from '@/token/store';
@@ -62,12 +61,11 @@ export const store: CredentialStore = createCredentialStore({
   openId: NAMED.openId,
 });
 
-/** One pool for the file's calls, shared by the manager and the client; nothing connects before a call. */
-const dispatcher = newDispatcher();
+// No transport is handed over: a live run is the one place that means the platform's own `fetch`, on the
+// real address, with nothing in between.
+export const tokens: TokenManager = createTokenManager({ apiBase: NAMED.apiBase, store });
 
-export const tokens: TokenManager = createTokenManager({ apiBase: NAMED.apiBase, store, dispatch: dispatcher });
-
-export const client: DocClient = createDocClient({ apiBase: NAMED.apiBase, coordinates, store, transport: dispatcher });
+export const client: DocClient = createDocClient({ apiBase: NAMED.apiBase, coordinates, store });
 
 /** A row the suite appends and deletes again, named by a value only it writes. */
 export interface LiveMarker {

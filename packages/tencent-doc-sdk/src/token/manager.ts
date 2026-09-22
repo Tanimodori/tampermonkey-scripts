@@ -1,11 +1,10 @@
-import type { Dispatcher } from 'undici';
+import type { Fetcher } from '@apollo/utils.fetcher';
 import { fetchAccessToken as fetchGrantedToken, getUserInfo as fetchUserInfo, refreshAccessToken as fetchRefreshedToken } from '@/api/oauth';
 import { resolveContext } from '@/client/context';
 import { describeBody } from '@/validation/classify';
 import { TencentDocsError } from '@/validation/errors';
 import type { TokenResponse, UserInfo } from '@/validation/types';
 import type { CredentialRecord, CredentialStore } from './store';
-import { accessTokenOf, clientIdOf, refreshTokenOf } from './store';
 
 /**
  * The three endpoints that speak about a credential: whose token this is, and the two ways a new one is
@@ -28,8 +27,8 @@ export interface TokenManagerOptions {
   readonly apiBase: string;
   /** The credential every call is made with, and the one each answer is written back into. */
   readonly store: CredentialStore;
-  /** The connection to dispatch on — a pool, or a function asked per call. Its timeouts are its own. */
-  readonly dispatch: Dispatcher | (() => Dispatcher);
+  /** The function a call is sent through, and so the owner of its connection and its timeouts. Defaults to `globalThis.fetch`. */
+  readonly transport?: Fetcher | undefined;
   /** Needed by both token grants, and never part of the credential it is used to renew. */
   readonly clientSecret?: string | undefined;
   /** The clock an `expires_in` is folded onto. Defaults to wall time. */
@@ -47,7 +46,7 @@ export interface TokenManager {
 
 /** Builds a manager over one shared credential store. */
 export function createTokenManager(options: TokenManagerOptions): TokenManager {
-  const context = resolveContext({ apiBase: options.apiBase, transport: options.dispatch });
+  const context = resolveContext({ apiBase: options.apiBase, transport: options.transport });
   const store = options.store;
   const now = options.now ?? Date.now;
 
@@ -57,7 +56,7 @@ export function createTokenManager(options: TokenManagerOptions): TokenManager {
     if (secret === undefined || secret.length === 0) {
       throw new TencentDocsError('config', 'The token endpoints need a client secret, and none was configured');
     }
-    return { clientId: clientIdOf(store.get()), clientSecret: secret };
+    return { clientId: store.getClientId(), clientSecret: secret };
   }
 
   function hold(body: TokenResponse): CredentialRecord {
@@ -81,8 +80,8 @@ export function createTokenManager(options: TokenManagerOptions): TokenManager {
   // Every method is `async`, so a credential that cannot make the call is a rejection rather than a throw
   // landing on whoever happened to ask: reading the store and the secret is the first thing each one does.
   return {
-    getUserInfo: async () => fetchUserInfo(options.apiBase, accessTokenOf(store.get()), context),
+    getUserInfo: async () => fetchUserInfo(options.apiBase, store.getAccessToken(), context),
     fetchToken: async ({ code, redirectUri }) => hold(await fetchGrantedToken(options.apiBase, { ...grant(), code, redirectUri }, context)),
-    refreshToken: async () => hold(await fetchRefreshedToken(options.apiBase, { ...grant(), refreshToken: refreshTokenOf(store.get()) }, context)),
+    refreshToken: async () => hold(await fetchRefreshedToken(options.apiBase, { ...grant(), refreshToken: store.getRefreshToken() }, context)),
   };
 }

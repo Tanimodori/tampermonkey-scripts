@@ -15,9 +15,12 @@ import { parseJwtToken } from './jwt';
  * not a field of either: it is the half that never leaves the environment it was configured from, and a
  * record that could carry it would be a record somebody writes it somewhere.
  *
- * The store only *holds* state. Which parts a given call cannot go out without — and the `config` failure
- * when one is missing — is decided at the call site (`token/manager.ts`, `api/docClient.ts`), which reads
- * `get()` and asserts what it needs through the `…Of` helpers below.
+ * Two kinds of question are asked of a credential, and they are asked differently. `get()` answers "what
+ * is held right now", where a part being absent is itself the answer and nothing throws. The four readers
+ * — `getAccessToken()`, `getClientId()`, `getRefreshToken()`, `getAuthHeaders()` — answer "can this call
+ * go out at all": a call that cannot be made because a part is missing is a configuration failure, and it
+ * is reported as one rather than handed back as `undefined` for the caller to notice on its own. Deciding
+ * whether to renew, or what to write out for the next start, asks the first kind; sending, asks the second.
  */
 
 /**
@@ -25,8 +28,8 @@ import { parseJwtToken } from './jwt';
  *
  * Every field is optional because `get()` answers with whatever is held right now, and a part may simply
  * not have been said yet — an empty store has no token, a refresh answer may state no lifetime, user info
- * may state no Open-Id. A part being absent is information, not an error; a call that cannot go out
- * without one reports it as a `config` failure through the `…Of` helpers.
+ * may state no Open-Id. A part being absent is information, not an error; the readers above are where it
+ * becomes one.
  *
  * The three parts a token can speak for (`openId` off `sub`, `expiresAt` off `exp`, `issueAt` off `iat`)
  * are resolved the moment the token is written and then held, so `get()` never re-parses it.
@@ -43,16 +46,27 @@ export interface CredentialRecord {
 }
 
 /**
- * The store: a snapshot out, a merge in, and nothing else.
+ * The credential, and what a call needs from it.
  *
- * `get()` reads the whole credential — a plain projection of what is held that never throws, where a part
- * being absent is itself the answer. `set()` merges a partial record over what is held, where a field the
- * record does not speak of keeps its current value; it also resolves the token-derived parts whenever the
- * access token is replaced.
+ * `get()` is a plain projection of what is held; `set(record)` merges a partial over it, where a field the
+ * record does not speak of keeps its current value, and resolves the token-derived parts whenever the
+ * access token is replaced. The four readers then state which parts a given call cannot go out without:
+ * the three-piece header the Open API demands, the access token the OAuth `userinfo` endpoint is asked
+ * about, the `client_id` both grants name their application by, and the refresh token that makes a refresh
+ * possible at all. There is no `getOpenId()`: outside that header the Open-Id is never sent anywhere, so a
+ * caller who only wants to look at it reads `get().openId`.
  */
 export interface CredentialStore {
   get(): CredentialRecord;
   set(record: Partial<CredentialRecord>): void;
+  /** The authentication three-piece every Open API call carries. `config` when any one of them is missing. */
+  getAuthHeaders(): { 'Access-Token': string; 'Client-Id': string; 'Open-Id': string };
+  /** The access token to call with. `config` when the credential holds none. */
+  getAccessToken(): string;
+  /** The `client_id` the token was issued to. `config` when nobody ever said one. */
+  getClientId(): string;
+  /** The refresh token that can replace the access token. `config` when there is none to replace it with. */
+  getRefreshToken(): string;
 }
 
 /**
@@ -111,6 +125,10 @@ export function createCredentialStore(initial?: Partial<CredentialRecord>): Cred
 
   set(initial ?? {});
 
+  function held(value: string | undefined, what: string, hint: string): string {
+    return value === undefined || value.length === 0 ? missing(what, hint) : value;
+  }
+
   return {
     get: () => ({
       accessToken: state.accessToken,
@@ -121,43 +139,19 @@ export function createCredentialStore(initial?: Partial<CredentialRecord>): Cred
       issueAt: state.issueAt ?? state.tokenIssueAt,
     }),
     set,
+    getAuthHeaders: () => ({
+      'Access-Token': held(state.accessToken, 'access token', 'nothing has been loaded into the store yet'),
+      'Client-Id': held(state.clientId, 'client id', 'neither the configuration nor an answer carried one'),
+      'Open-Id': held(state.openId ?? state.tokenOpenId, 'Open-Id', 'none was configured, and the access token carries no `sub` claim to read one from'),
+    }),
+    getAccessToken: () => held(state.accessToken, 'access token', 'nothing has been loaded into the store yet'),
+    getClientId: () => held(state.clientId, 'client id', 'neither the configuration nor an answer carried one'),
+    getRefreshToken: () => held(state.refreshToken, 'refresh token', 'the upstream never handed one out, and none was configured'),
   };
 }
 
-// ---------------------------------------------------------------------------------------------
-// Reading a part a call cannot go out without
-// ---------------------------------------------------------------------------------------------
-
 function missing(what: string, hint: string): never {
   throw new TencentDocsError('config', `The credential has no ${what} to call with: ${hint}`);
-}
-
-/** The access token to call with. `config` when the credential holds none. */
-export function accessTokenOf(credential: CredentialRecord): string {
-  const accessToken = credential.accessToken;
-  return accessToken === undefined || accessToken.length === 0 ? missing('access token', 'nothing has been loaded into the store yet') : accessToken;
-}
-
-/** The `client_id` the token was issued to. `config` when nobody ever said one. */
-export function clientIdOf(credential: CredentialRecord): string {
-  const clientId = credential.clientId;
-  return clientId === undefined || clientId.length === 0 ? missing('client id', 'neither the configuration nor an answer carried one') : clientId;
-}
-
-/** The Open-Id to call as: the stated one, or the token's `sub` claim. `config` when neither exists. */
-export function openIdOf(credential: CredentialRecord): string {
-  const openId = credential.openId;
-  return openId === undefined || openId.length === 0
-    ? missing('Open-Id', 'none was configured, and the access token carries no `sub` claim to read one from')
-    : openId;
-}
-
-/** The refresh token that can replace the access token. `config` when there is none to replace it with. */
-export function refreshTokenOf(credential: CredentialRecord): string {
-  const refreshToken = credential.refreshToken;
-  return refreshToken === undefined || refreshToken.length === 0
-    ? missing('refresh token', 'the upstream never handed one out, and none was configured')
-    : refreshToken;
 }
 
 const text = (value: string | undefined): string | undefined => (value === undefined || value.length === 0 ? undefined : value);

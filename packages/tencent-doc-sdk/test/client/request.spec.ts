@@ -2,12 +2,10 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { apiOrigin, rawRecord, setupTencentDocsMock } from '@test/testUtils/document';
-import type { Dispatcher } from 'undici';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ClientContext } from '@/client/context';
 import { assembleCall, sendBare, sendEnvelope } from '@/client/request';
 import type { CallRequest } from '@/client/request';
-import { newDispatcher } from '@/client/transport';
 import { TencentDocsError } from '@/validation/errors';
 import { getRecordsResponseSchema, tokenResponseSchema, userInfoResponseSchema } from '@/validation/schemas';
 
@@ -26,9 +24,9 @@ const TOKEN_PATH = '/oauth/v2/token';
 const docs = setupTencentDocsMock();
 const servers: Array<{ close(): Promise<void> }> = [];
 
-/** The context every call in here runs on: the mock pool. */
+/** The context every call in here runs on: the mock's transport. */
 function context(overrides: Partial<ClientContext> = {}): ClientContext {
-  return { apiBase: apiOrigin(), transport: () => docs.agent, ...overrides };
+  return { apiBase: apiOrigin(), transport: docs.fetcher, ...overrides };
 }
 
 /** One record-endpoint call, as a client of the record endpoint describes it. */
@@ -68,15 +66,8 @@ async function listen(handler: Parameters<typeof createServer>[1]): Promise<stri
 
 const caught = async (promise: Promise<unknown>): Promise<TencentDocsError> => (await promise.catch((error: unknown) => error)) as TencentDocsError;
 
-/** A pool this file opened, so the run does not leave it hanging. */
-const pools: Dispatcher[] = [];
-function track<T extends Dispatcher>(pool: T): T {
-  pools.push(pool);
-  return pool;
-}
-
 afterAll(async () => {
-  await Promise.all([docs.close(), ...pools.splice(0).map((pool) => pool.close()), ...servers.splice(0).map((server) => server.close())]);
+  await Promise.all([docs.close(), ...servers.splice(0).map((server) => server.close())]);
 });
 
 beforeEach(() => {
@@ -113,21 +104,25 @@ describe('a failed call, as its caller sees it', () => {
     docs.state.networkFailures = 1;
 
     const error = await caught(sendRecord(call()));
+    // `fetch` words a request that never went out as its own `TypeError: fetch failed`, with whatever
+    // actually broke it one level down. The cause kept here is the transport's report, in its shape.
+    const reported = (error.cause as { cause?: Error } | undefined)?.cause;
 
     expect(error.code).toBe('transport');
-    expect((error.cause as { message?: string } | undefined)?.message).toContain('simulated transport failure');
+    expect(error.cause).toBeInstanceOf(Error);
+    expect(reported?.message).toContain('simulated transport failure');
     expect(readCalls()).toBe(1);
   });
 
-  it('is a transport failure for anything the upstream itself dropped', async () => {
+  it('is a transport failure for a call its own transport gave up on', async () => {
     const origin = await listen(() => {
-      // Deliberately never responds: the pool's own timers are what end this.
+      // Deliberately never responds: what ends this is the timeout the transport was built with, which is
+      // the caller's business and not this library's — it never sets a `signal` of its own.
     });
     docs.reset();
 
-    let pooled: Dispatcher | undefined;
-    const short = context({ transport: () => (pooled ??= track(newDispatcher(250))) });
-    const error = await caught(sendEnvelope(call({ origin, path: '/slow', method: 'GET', body: undefined, headers: {} }), getRecordsResponseSchema, short));
+    const impatient = context({ transport: (url, init) => fetch(url, { ...init, signal: AbortSignal.timeout(250) }) });
+    const error = await caught(sendEnvelope(call({ origin, path: '/slow', method: 'GET', body: undefined, headers: {} }), getRecordsResponseSchema, impatient));
     expect(error.code).toBe('transport');
   });
 

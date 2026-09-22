@@ -1,6 +1,8 @@
+// Re-exported rather than made consumers depend on it themselves: this is the shape a `transport` has to
+// fit, and the package behind it carries types and nothing else.
+export type { Fetcher, FetcherRequestInit, FetcherResponse } from '@apollo/utils.fetcher';
 export type { ClientContext, ClientOptions } from './client/context';
 export type { CallRequest } from './client/request';
-export { DEFAULT_TIMEOUT_MS, newDispatcher } from './client/transport';
 
 export type { TencentDocsErrorCode, TencentDocsErrorOptions, UpstreamResponse } from './validation/errors';
 export { TencentDocsError } from './validation/errors';
@@ -19,4 +21,4 @@ export { parseJwtToken, readAccessTokenClaims, readAccessTokenExpiresAt } from '
 export type { TokenManager, TokenManagerOptions } from './token/manager';
 export { createTokenManager } from './token/manager';
 export type { CredentialRecord, CredentialStore } from './token/store';
-export { accessTokenOf, clientIdOf, createCredentialStore, openIdOf, refreshTokenOf } from './token/store';
+export { createCredentialStore } from './token/store';

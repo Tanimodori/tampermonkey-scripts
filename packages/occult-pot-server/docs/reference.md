@@ -17,7 +17,7 @@
 - [@logtape/redaction](https://logtape.org/manual/redaction)：按字段名脱敏凭据
 - [zod](https://zod.dev)：配置与请求校验
 - [undici](https://undici.nodejs.org)：出站请求与[拦截器](https://undici.nodejs.org/api/Interceptors)
-- [tencent-doc-sdk](../../tencent-doc-sdk/README.md)：腾讯文档智能表的读写与凭据生命周期，本仓库内的包
+- [tencent-doc-sdk](../../tencent-doc-sdk/README.md)：腾讯文档智能表的读写与凭据生命周期，本仓库内的包；它只接受一个 [fetcher](https://github.com/apollographql/utils) 作为传输，出站连接由上面的 undici 池承担
 - [throttled-queue](https://github.com/shaunpersad/throttled-queue)：出站调用的节流
 - [express-rate-limit](https://express-rate-limit.mintlify.app)：按 IP 的入站限流
 - [rate-limit-redis](https://github.com/express-rate-limit/rate-limit-redis)：限流计数存放到 Redis

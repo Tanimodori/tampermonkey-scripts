@@ -37,16 +37,17 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "undici": "^7.16.0",
     "zod": "^4.6.2"
   },
   "devDependencies": {
+    "@apollo/utils.fetcher": "^3.1.0",
     "@microsoft/api-extractor": "^7.59.1",
     "@types/node": "^22.10.5",
     "cross-env": "^10.1.0",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",
     "typescript": "~5.9.3",
+    "undici": "^7.16.0",
     "unplugin-dts": "^1.1.1",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"

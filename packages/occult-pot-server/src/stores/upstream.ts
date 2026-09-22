@@ -1,11 +1,11 @@
 import { getLogger } from '@logtape/logtape';
-import { accessTokenOf, createCredentialStore, createDocClient, createTokenManager, describeBody, readAccessTokenExpiresAt } from 'tencent-doc-sdk';
+import { createCredentialStore, createDocClient, createTokenManager, describeBody, readAccessTokenExpiresAt } from 'tencent-doc-sdk';
 import type { CredentialRecord, CredentialStore, DocClient, TokenManager } from 'tencent-doc-sdk';
 import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
 import { formatInstant, LOG_CATEGORIES } from '@/logger.ts';
 import { now } from '@/services/time.ts';
-import { getClient } from '@/services/upstream/client.ts';
+import { getFetcher } from '@/services/upstream/client.ts';
 import { toAppError, upstreamCall } from '@/services/upstream/observe.ts';
 import { getRedis, traced } from '@/stores/redis.ts';
 import type { AppConfig } from '@/validation/index.ts';
@@ -143,6 +143,21 @@ function usable(record: CredentialRecord): boolean {
   return expiresAt === undefined || expiresAt > now();
 }
 
+/**
+ * Whether the credential can be refreshed at all.
+ *
+ * Asked of the store, which is the one that knows — but its answer to a missing refresh token is a failure,
+ * and what is wanted here is a yes or a no to put into this service's own words.
+ */
+function holdsRefreshToken(store: CredentialStore): boolean {
+  try {
+    store.getRefreshToken();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function useUpstreamStore(): UpstreamStore {
   /** The configuration the library below was built from; a different one builds a new one. */
   let bound: AppConfig | undefined;
@@ -173,15 +188,15 @@ export function useUpstreamStore(): UpstreamStore {
   }
 
   function build(config: AppConfig): Wired {
-    // Nothing is wired in here for pacing or counting: the library reaches the upstream through the pool
-    // below and is watched from outside it, at `upstreamCall`.
+    // Nothing is wired in here for pacing or counting: the library sends through the fetcher below — that
+    // pool as one function — and is watched from outside it, at `upstreamCall`.
     const { apiBase, accessToken, clientId, clientSecret, fileId, openId, refreshToken, sheetId } = config.docs;
     const store = createCredentialStore({ accessToken, clientId, openId, refreshToken });
-    const transport = () => getClient();
+    const transport = getFetcher();
 
     return {
       store,
-      tokens: createTokenManager({ apiBase, store, dispatch: transport, clientSecret }),
+      tokens: createTokenManager({ apiBase, store, transport, clientSecret }),
       doc: createDocClient({ apiBase, coordinates: { fileId, sheetId }, store, transport }),
     };
   }
@@ -321,7 +336,7 @@ export function useUpstreamStore(): UpstreamStore {
       return getConfig().docs.sheetId;
     },
     get accessToken(): string {
-      return accessTokenOf(library().store.get());
+      return library().store.getAccessToken();
     },
     get doc(): DocClient {
       return library().doc;
@@ -342,7 +357,7 @@ export function useUpstreamStore(): UpstreamStore {
       const at = now();
       const expiresAt = store.get().expiresAt;
       return {
-        tokenLength: accessTokenOf(store.get()).length,
+        tokenLength: store.getAccessToken().length,
         expiresAt: expiresAt === undefined ? null : formatInstant(expiresAt),
         // `null` means "unknown", which is deliberately distinct from `false` ("known to be valid").
         expired: expiresAt === undefined ? null : expiresAt <= at,
@@ -359,9 +374,9 @@ export function useUpstreamStore(): UpstreamStore {
     async refresh(): Promise<void> {
       const { clientSecret } = getConfig().docs;
       const { store, tokens } = library();
-      // Asked of the snapshot rather than the getter, because a credential with nothing to refresh is a
-      // state to report, not a call to fail.
-      if (clientSecret === undefined || store.get().refreshToken === undefined) {
+      // The store is what knows whether a refresh token is held, and it answers by throwing rather than by
+      // reporting nothing; the failure is still this service's to word, naming both settings.
+      if (clientSecret === undefined || !holdsRefreshToken(store)) {
         throw new AppError('ERR_CONFIG_INVALID', 'Refreshing the access token needs OPS_DOCS_CLIENT_SECRET and OPS_DOCS_REFRESH_TOKEN');
       }
 

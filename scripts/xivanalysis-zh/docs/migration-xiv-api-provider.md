@@ -27,8 +27,8 @@
 
 `@grant none` 下脚本用页面 origin(`xivanalysis.com`)发 fetch,跨源取 garland / 国服 xivapi 受目标站 CORS 约束——实测 garland `search.php` 不回 `Access-Control-Allow-Origin`,浏览器直接阻断。修复:
 
-- `src/gm.d.ts`:依官方文档手写**异步** `GM_xmlhttpRequest`(回调式,返回带 `abort()` 的句柄)的 ambient 类型;注释标明旧版**同步** `GM_xmlHttpRequest`(大写 H、按位置传参)是另一套废弃签名,不使用。
-- `src/gm-fetch.ts`:`gmFetch: FetchLike` 适配器——把 provider 的 `fetch(url,{headers,credentials:'omit',signal})` 映射到 `GM_xmlhttpRequest`(`anonymous:true` 对齐 omit;`init.signal` 触发 `handle.abort()`;`responseText` 造 `Response`)。
+- `src/gm.d.ts`:依官方文档声明**异步** `GM.xmlHttpRequest`(命名空间版、大写 H)——`details => Promise`,该 Promise 额外带 `abort()`,网络错误/超时/中止均 reject。旧版回调式全局 `GM_xmlhttpRequest` 不再使用。
+- `src/gm-fetch.ts`:`gmFetch: FetchLike`(async)适配器——`await GM.xmlHttpRequest(details)`(`anonymous:true` 对齐 `credentials:'omit'`;`responseType:'text'`;`init.signal` 触发返回 Promise 的 `abort()`;`responseText` 造 `Response`);reject 原样冒出,符合 fetch 语义。
 - 数据侧全部改走 `gmFetch`:`translate/{action,item,status,search}.ts` 与 `probe.ts`(此前用 `origFetch`)。
 - 声明 grant 后脚本进沙箱,`window` 不再是页面那个:`hooks.ts` 改捕获/覆写 `unsafeWindow.fetch`(仍用页面原生 fetch 转发真实请求;非 JSON 响应原样放行)。
 - `vite.config.ts`:`@grant GM_xmlhttpRequest, unsafeWindow` + `@connect www.garlandtools.cn / xivapi-v2.xivcdn.com / v2.xivapi.com / beta.xivapi.com`。
@@ -120,12 +120,12 @@
 
 ## Stage B 实现(已落地)
 
-最终产物 `dist/index.js`:34950 bytes,`42e0ab3d7e7ebee2`。tsc / oxlint / oxfmt / `rushx build` 全绿;产物 `Buffer`=0、`csv-parse`=0、含 `xivapi-v2.xivcdn.com` 与 `GM_xmlhttpRequest`。用户浏览器实测“一切正常”。批量预热为逐行版验证通过之后追加:每包先一次 `readRows` 填 `useCache`,批量失败/缺 id 自动回退逐行读(即已验证那条),只减请求不改行为。
+最终产物 `dist/index.js`:34474 bytes,`4774c0b5ee1062c3`。tsc / oxlint / oxfmt / `rushx build` 全绿;产物 `Buffer`=0、`csv-parse`=0、含 `xivapi-v2.xivcdn.com` 与 `GM.xmlHttpRequest`。用户浏览器实测“一切正常”。批量预热为逐行版验证通过之后追加:每包先一次 `readRows` 填 `useCache`,批量失败/缺 id 自动回退逐行读(即已验证那条),只减请求不改行为。
 
 无浏览器下的两项自检:
 
 - **数据提取**:用 `xiv-api-provider` 打好的 client 直连国服,按 shipped 的 `readRow` 单行取数验证 Action/Addon/Item/Status 的简中字段与嵌套路径(含 Item `Description` 的 `\n`→`<br>`、`transient` 缺省)全部命中。
-- **传输适配**:注入假 `GM_xmlhttpRequest` 跑 `gmFetch`——成功/404 透传/`onerror`/预 abort signal 均通过;并据此把 `Request` 输入的头也转发(补齐),body 不转发(provider 只 GET,已在代码注明)。
+- **传输适配**:注入假的 `GM.xmlHttpRequest`(返回 Promise,并带 `abort()`)跑 `gmFetch`——成功 / 404 透传 / reject 传播 / 预 abort signal 调 `abort()` 均通过;`Request` 输入的头也转发(补齐),body 不转发(provider 只 GET,已在代码注明)。
 
 改动:
 

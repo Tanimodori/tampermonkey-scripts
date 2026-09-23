@@ -1,58 +1,75 @@
-// `GM_xmlhttpRequest` 的类型,依 Tampermonkey / Greasemonkey 官方文档手写(本环境无 @types)。
-//
-// 同步 vs 异步签名不同,这里只声明**异步**那一个(本脚本用它):
-//  - `GM_xmlhttpRequest(details)`(小写 h):回调式异步,返回带 `abort()` 的句柄。details 见 GMXHROptions。
-//  - 旧 Greasemonkey 的 `GM_xmlHttpRequest`(大写 H)是**同步**、按位置传参的遗留 API(method, url, ...),已废弃,
-//    不声明、不使用。Tampermonkey 另有 `synchronous: true` 选项可让异步 API 同步阻塞,默认 false。
-//
-// 响应对象见 GMXHRResponse;`responseText` 是文本正文,`responseHeaders` 是原始头字符串("Key: value" 每行一条)。
-interface GMXHRResponse {
-  readonly readyState: number;
-  readonly status: number;
-  readonly statusText: string;
-  readonly responseHeaders: string;
-  readonly response: unknown;
-  readonly responseText: string;
-  readonly responseXML: Document | null;
-  readonly context: unknown;
-}
+// Tampermonkey 官方对 `GM_xmlhttpRequest` 提供了两种签名,这里都声明,并注明运行时用哪一套:
+//  - **异步(Promise 版)`GM.xmlHttpRequest`**(命名空间、大写 H)——本项目 `gmFetch` 用的是这个:
+//    `details => Promise`,该 Promise 另带 `abort()`;网络错误 / 超时 / 中止都走 reject。
+//  - 回调式(旧版)`GM_xmlhttpRequest`(全局函数)——同步发起、靠 onload/onerror 等回调收结果,返回带 `abort()` 的句柄。
+//    保留其声明只为覆盖另一套签名(两者入参不同),代码里并不使用。
+// `@grant` 仍写 `GM_xmlhttpRequest`,`@connect` 的域名限制对两者都适用。
 
-interface GMXHRProgress extends GMXHRResponse {
-  readonly lengthComputable: boolean;
-  readonly loaded: number;
-  readonly total: number;
-}
-
-interface GMXHROptions {
+interface GMXMLHttpRequestDetails {
   method?: string;
   url: string;
   headers?: Record<string, string>;
   data?: string | ArrayBuffer | Blob | FormData | Uint8Array | Record<string, unknown> | null;
   binary?: boolean;
   timeout?: number;
-  context?: unknown;
   responseType?: 'arraybuffer' | 'blob' | 'document' | 'stream' | 'text';
   overrideMimeType?: string;
   anonymous?: boolean;
-  synchronous?: boolean;
-  username?: string;
+  user?: string;
   password?: string;
-  onabort?: () => void;
-  onerror?: (response: GMXHRResponse) => void;
-  onload: (response: GMXHRResponse) => void;
-  onloadstart?: (response: GMXHRResponse) => void;
-  onloadend?: (response: GMXHRResponse) => void;
-  onprogress?: (response: GMXHRProgress) => void;
-  onreadystatechange?: (response: GMXHRResponse) => void;
-  ontimeout?: (response: GMXHRResponse) => void;
+  context?: unknown;
 }
 
+interface GMXMLHttpResponse {
+  readonly status: number;
+  readonly statusText: string;
+  readonly readyState: number;
+  readonly responseHeaders: string;
+  readonly response: unknown;
+  readonly responseText: string;
+  readonly responseXML: Document | null;
+  readonly finalUrl: string;
+  readonly context: unknown;
+}
+
+/** 异步版返回体:可 await,同时暴露 abort()。 */
+interface GMXMLHttpRequestPromise extends Promise<GMXMLHttpResponse> {
+  abort(): void;
+}
+
+/** 回调式旧 API 的入参:在异步 details 之上再加一组回调(同步签名与异步不同,故单列)。 */
+interface GMXHROptions extends GMXMLHttpRequestDetails {
+  synchronous?: boolean;
+  onabort?: () => void;
+  onerror?: (response: GMXMLHttpResponse) => void;
+  onload?: (response: GMXMLHttpResponse) => void;
+  onloadstart?: (response: GMXMLHttpResponse) => void;
+  onloadend?: (response: GMXMLHttpResponse) => void;
+  onprogress?: (response: GMXHRProgress) => void;
+  onreadystatechange?: (response: GMXMLHttpResponse) => void;
+  ontimeout?: (response: GMXMLHttpResponse) => void;
+}
+
+interface GMXHRProgress extends GMXMLHttpResponse {
+  readonly lengthComputable: boolean;
+  readonly loaded: number;
+  readonly total: number;
+}
+
+/** 回调式旧 API 的返回值:带 abort() 的句柄。 */
 interface GMXHRHandle {
   abort(): void;
 }
 
-/** 异步、回调式;`@grant GM_xmlhttpRequest` 后可用。 */
+/** 旧版:回调式、同步发起。 */
 declare function GM_xmlhttpRequest(details: GMXHROptions): GMXHRHandle;
+
+interface GM {
+  /** 新版:Promise 化、异步。gmFetch 实际调用它。 */
+  xmlHttpRequest(details: GMXMLHttpRequestDetails): GMXMLHttpRequestPromise;
+}
+
+declare const GM: GM;
 
 /** 宿主页真实 window;`@grant unsafeWindow` 后可用。覆写页面 fetch 必须经它,沙箱的 window 不是页面那个。 */
 declare const unsafeWindow: Window & typeof globalThis;

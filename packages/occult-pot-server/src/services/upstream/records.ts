@@ -1,3 +1,4 @@
+import { endpoints } from 'tencent-doc-sdk';
 import { toAppError, upstreamCall } from '@/services/upstream/observe.ts';
 import { upstreamStore } from '@/stores/upstream.ts';
 import type { CommonRecords, WrittenRecords } from '@/validation/index.ts';
@@ -12,21 +13,23 @@ import type { CommonRecords, WrittenRecords } from '@/validation/index.ts';
  * turn in the outbound queue and writes down what came of it. A failure is the library's own until
  * `toAppError` gives it a code this service answers with.
  *
- * All four record calls are one endpoint and one verb: only the payload keyword differs
- * (`getRecords`, `addRecords`, `updateRecords`, `deleteRecords`), and each names its own response type,
- * which is also the key its answer is filed under (`data.getRecords` …).
+ * All four record calls are one address and one verb: only the body keyword differs (`getRecords`,
+ * `addRecords`, `updateRecords`, `deleteRecords`), and each names its own response type, which is also the
+ * key its answer is filed under (`data.getRecords` …). The keyword is written out here rather than added
+ * for this module by the library: what a call hands over is what goes on the wire, which is also what the
+ * library checks before it sends, so nothing this service assembled can differ from what left.
  *
  * See https://docs.qq.com/open/document/app/openapi/v2/smartsheet/record/params.html
  */
 
 /** One page of raw rows, in the envelope's own terms (`records`, `hasMore`, `next`, `total`). */
 export function getRecords(page: { offset: number; limit: number }): Promise<CommonRecords> {
-  return answered(upstreamCall('getRecords', () => upstreamStore.doc.getRecords(page)));
+  return answered(upstreamCall('getRecords', () => upstreamStore.api.call(endpoints.getRecords, { body: { getRecords: page } })));
 }
 
 /** Appends rows, in the order given, and hands back the response's own `records` section. */
 export function addRecords(records: readonly { values: Record<string, unknown> }[]): Promise<WrittenRecords> {
-  return answered(upstreamCall('addRecords', () => upstreamStore.doc.addRecords(records)));
+  return answered(upstreamCall('addRecords', () => upstreamStore.api.call(endpoints.addRecords, { body: { addRecords: { records: [...records] } } })));
 }
 
 /**
@@ -37,7 +40,7 @@ export function addRecords(records: readonly { values: Record<string, unknown> }
  * neither reports the row's times.
  */
 export function updateRecords(records: readonly { recordID: string; values: Record<string, unknown> }[]): Promise<WrittenRecords> {
-  return answered(upstreamCall('updateRecords', () => upstreamStore.doc.updateRecords(records)));
+  return answered(upstreamCall('updateRecords', () => upstreamStore.api.call(endpoints.updateRecords, { body: { updateRecords: { records: [...records] } } })));
 }
 
 /**
@@ -49,7 +52,9 @@ export function updateRecords(records: readonly { recordID: string; values: Reco
  * beyond whether the call succeeded.
  */
 export function deleteRecords(recordIDs: readonly string[]): Promise<void> {
-  return answered(upstreamCall('deleteRecords', () => upstreamStore.doc.deleteRecords(recordIDs)));
+  return answered(
+    upstreamCall('deleteRecords', () => upstreamStore.api.call(endpoints.deleteRecords, { body: { deleteRecords: { recordIDs: [...recordIDs] } } })),
+  );
 }
 
 /** A failure the library judged, in the vocabulary this service answers with. */

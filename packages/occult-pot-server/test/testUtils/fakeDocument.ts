@@ -1,9 +1,12 @@
 import type {
+  Api,
+  AnyEndpoint,
+  CallArgs,
   CommonRecord,
   CommonRecords,
   CredentialRecord,
   CredentialStore,
-  DocClient,
+  OutputOf,
   Sheet,
   TencentDocsError,
   TencentDocsErrorCode,
@@ -13,7 +16,7 @@ import type {
 } from 'tencent-doc-sdk';
 
 /**
- * The fake this service's tests run on: an in-memory sub-sheet behind a `DocClient`, and a credential
+ * The fake this service's tests run on: an in-memory sub-sheet behind an `Api`, and a credential
  * behind a `CredentialStore` that a `TokenManager` writes.
  *
  * It stands in for `tencent-doc-sdk`'s three factories — see `fakeTencentDocsModule()` — and nothing else:
@@ -21,6 +24,11 @@ import type {
  * library's own business and are tested over there, against a fake HTTP upstream. What is tested here
  * is what this service does with a page it was handed, so the answers this file produces are plain
  * typed values rather than JSON to be parsed.
+ *
+ * The endpoints themselves are the real ones: the install spreads the actual module and replaces only the
+ * factories, so a call arrives here with the same `operation` the library would have sent, and this file
+ * dispatches on it. That is also why the fake unwraps the keyword a `body` carries — `{ getRecords: … }` is
+ * the wire's arrangement, and what a case wants to see is the page that was asked for.
  *
  * `vi.mock` is hoisted into the file that calls it, so every spec installs this itself — and the
  * install reaches this file with a dynamic import, because `vi.mock` runs above its own imports:
@@ -262,13 +270,13 @@ export interface FakeManagerOptions {
 /** The fake factories, as a `vi.mock` of `tencent-doc-sdk` wants them. */
 export function fakeTencentDocsSdk(TencentError: TencentDocsErrorClass): {
   createCredentialStore: (initial?: Partial<CredentialRecord>) => CredentialStore;
-  createDocClient: (options: unknown) => DocClient;
+  createApi: (options: unknown) => Api;
   createTokenManager: (options: FakeManagerOptions) => TokenManager;
 } {
   const call = failures(TencentError);
   return {
     createCredentialStore: (initial) => fakeCredentialStore(initial, TencentError),
-    createDocClient: () => fakeDocClient(call),
+    createApi: () => fakeApi(call),
     createTokenManager: (options) => fakeTokenManager(options, call),
   };
 }
@@ -303,34 +311,72 @@ export function credentialExpires(value: number | undefined): void {
   credentialExpiresAt = value;
 }
 
-function fakeDocClient(call: FakeFailures): DocClient {
+/**
+ * The fake's one `call`: it dispatches on the endpoint's own `operation` and answers the value the
+ * service expects, with no transport, no envelope and no JSON between.
+ *
+ * The `operation` is the real one — `endpoints` is the actual module, untouched by the install — so the
+ * labels a case counts calls by (`getSheet`, `getRecords`, …) are the same words the library puts in an
+ * error. What the fake drops is the wire: a `body` arrives wrapped in its keyword, and the payload inside
+ * that wrapper is what a case wants to see, so that is what gets recorded.
+ */
+function fakeApi(call: FakeFailures): Api {
+  function dispatch(operation: string, payload: unknown): unknown {
+    switch (operation) {
+      case 'getSheet':
+        return call.begin('getSheet', undefined, sheet.sheetListFailure, () => sheet.sheets);
+
+      case 'getRecords': {
+        const { offset, limit } = payload as { offset: number; limit: number };
+        return call.begin('getRecords', { offset, limit }, sheet.readFailure, () => page(offset, limit));
+      }
+
+      case 'addRecords': {
+        const { records } = payload as { records: Array<{ values: Record<string, unknown> }> };
+        return call.begin('addRecords', records, sheet.writeFailure, () => {
+          const stamps = { createTime: sheet.sheetTime, updateTime: sheet.sheetTime };
+          const stored = records.map((row) => {
+            sheet.added.push(row.values);
+            return { recordID: `rNew${nextRecordId++}`, ...stamps, values: row.values };
+          });
+          sheet.records.push(...stored);
+          return written(stored);
+        });
+      }
+
+      case 'updateRecords': {
+        const { records } = payload as { records: Array<{ recordID: string; values: Record<string, unknown> }> };
+        return call.begin('updateRecords', records, sheet.updateFailure, () => {
+          const touched = records.map((row) => {
+            sheet.updated.push(row);
+            sheet.records = sheet.records.map((existing) => (existing.recordID === row.recordID ? { ...existing, values: row.values } : existing));
+            return sheet.records.find((existing) => existing.recordID === row.recordID) ?? { recordID: row.recordID, values: row.values };
+          });
+          return written(touched);
+        });
+      }
+
+      case 'deleteRecords': {
+        const { recordIDs } = payload as { recordIDs: string[] };
+        return call.begin('deleteRecords', recordIDs, sheet.deleteFailure, () => {
+          sheet.deleted.push(...recordIDs);
+          sheet.records = sheet.records.filter((row) => !recordIDs.includes(row.recordID));
+        });
+      }
+
+      default:
+        throw new Error(`the fake document has no answer for ${operation}`);
+    }
+  }
+
   return {
-    getSheetList: () => call.begin('getSheet', undefined, sheet.sheetListFailure, () => sheet.sheets),
-    getRecords: (one) => call.begin('getRecords', one, sheet.readFailure, () => page(one.offset, one.limit)),
-    addRecords: (rows) =>
-      call.begin('addRecords', rows, sheet.writeFailure, () => {
-        const stamps = { createTime: sheet.sheetTime, updateTime: sheet.sheetTime };
-        const stored = rows.map((row) => {
-          sheet.added.push(row.values);
-          return { recordID: `rNew${nextRecordId++}`, ...stamps, values: row.values };
-        });
-        sheet.records.push(...stored);
-        return written(stored);
-      }),
-    updateRecords: (rows) =>
-      call.begin('updateRecords', rows, sheet.updateFailure, () => {
-        const touched = rows.map((row) => {
-          sheet.updated.push(row);
-          sheet.records = sheet.records.map((existing) => (existing.recordID === row.recordID ? { ...existing, values: row.values } : existing));
-          return sheet.records.find((existing) => existing.recordID === row.recordID) ?? { recordID: row.recordID, values: row.values };
-        });
-        return written(touched);
-      }),
-    deleteRecords: (recordIDs) =>
-      call.begin('deleteRecords', recordIDs, sheet.deleteFailure, () => {
-        sheet.deleted.push(...recordIDs);
-        sheet.records = sheet.records.filter((row) => !recordIDs.includes(row.recordID));
-      }),
+    // The generic form is the one `Api` declares, and the fake answers each operation with its own type, so
+    // the pairing is what this function cannot show: the cast is the fake saying "the answer below matches
+    // the endpoint above", which is exactly what a case relies on when it reads `records` off a read.
+    call: <E extends AnyEndpoint>(endpoint: E, ...input: CallArgs<E>): Promise<OutputOf<E>> => {
+      const body = (input[0] as { body?: Record<string, unknown> } | undefined)?.body;
+      return dispatch(endpoint.operation, body === undefined ? undefined : Object.values(body)[0]) as Promise<OutputOf<E>>;
+    },
   };
 }
 

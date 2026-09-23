@@ -1,8 +1,9 @@
-import { client, coordinates, live, store, tokens, useLiveDocument } from '@test/testUtils/liveDocument';
+import { api, live, params, store, tokens, useLiveDocument } from '@test/testUtils/liveDocument';
 /**
  * @module-tag live
  */
 import { describe, expect, it } from 'vitest';
+import { endpoints } from '@/endpoints';
 
 /**
  * The sub-sheet list against a **real** Tencent Docs document: the answer a caller checks its
@@ -27,13 +28,13 @@ describe.skipIf(!live)('the real document: sub-sheets', () => {
   });
 
   it('lists the sub-sheets, and the addressed one is among them', async () => {
-    const sheets = await client.getSheetList();
+    const sheets = await api.call(endpoints.getSheetList);
 
     expect(sheets.length).toBeGreaterThan(0);
     for (const sheet of sheets) {
       expect(typeof sheet.sheetID).toBe('string');
       expect(typeof sheet.title).toBe('string');
     }
-    expect(sheets.map((sheet) => sheet.sheetID)).toContain(coordinates.sheetId);
+    expect(sheets.map((sheet) => sheet.sheetID)).toContain(params.sheetId);
   });
 });

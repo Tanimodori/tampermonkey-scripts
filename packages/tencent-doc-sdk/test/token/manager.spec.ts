@@ -1,6 +1,7 @@
 import { apiOrigin, EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, setupTencentDocsMock } from '@test/testUtils/document';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createDocClient } from '@/api/docClient';
+import { createApi } from '@/client';
+import { endpoints } from '@/endpoints';
 import { createTokenManager } from '@/token/manager';
 import type { TokenManager, TokenManagerOptions } from '@/token/manager';
 import { createCredentialStore } from '@/token/store';
@@ -212,9 +213,9 @@ describe('获取 Token', () => {
 describe('the credential a manager changes', () => {
   it('is the credential the next document call is sent with, unprompted', async () => {
     const { store, tokens } = credential({ accessToken: 'old-token', clientId: 'c-id', openId: 'o-id', refreshToken: 'r' }, { clientSecret: 'the-secret' });
-    const client = createDocClient({
+    const client = createApi({
       apiBase: apiOrigin(),
-      coordinates: { fileId: EXAMPLE_FILE_ID, sheetId: EXAMPLE_SHEET_ID },
+      params: { fileId: EXAMPLE_FILE_ID, sheetId: EXAMPLE_SHEET_ID },
       store,
       transport: docs.fetcher,
     });
@@ -222,7 +223,7 @@ describe('the credential a manager changes', () => {
 
     await tokens.refreshToken();
     calls().length = 0;
-    await client.getSheetList();
+    await client.call(endpoints.getSheetList);
 
     expect(calls()[0]!.headers['access-token']).toBe('refreshed-token');
   });

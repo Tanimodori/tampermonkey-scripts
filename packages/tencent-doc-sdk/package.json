@@ -50,7 +50,8 @@
     "undici": "^7.16.0",
     "unplugin-dts": "^1.1.1",
     "vite": "^8.3.0",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.1",
+    "pupa": "~3.3.0"
   },
   "optionalDependencies": {
     "@oxfmt/binding-win32-x64-msvc": "^0.67.0",

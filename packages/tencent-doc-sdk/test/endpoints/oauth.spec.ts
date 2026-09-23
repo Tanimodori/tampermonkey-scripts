@@ -1,8 +1,8 @@
 import { apiOrigin, setupTencentDocsMock, tokenRefused } from '@test/testUtils/document';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { fetchAccessToken, getUserInfo, refreshAccessToken } from '@/api/oauth';
-import type { AccessTokenInput, RefreshTokenInput } from '@/api/oauth';
-import { resolveContext } from '@/client/context';
+import { createApi } from '@/client';
+import { endpoints } from '@/endpoints';
+import { createCredentialStore } from '@/token/store';
 
 /**
  * The three credential endpoints against the mocked upstream: what each carries on the wire, what it hands
@@ -16,12 +16,28 @@ import { resolveContext } from '@/client/context';
 
 const docs = setupTencentDocsMock();
 const apiBase = apiOrigin();
-const context = resolveContext({ apiBase, transport: docs.fetcher });
+
+// The two grants answer in their own vocabulary and carry their `client_id`/`client_secret` in the query,
+// so neither reads the store's credential — this api's store is deliberately empty. `whoIs` is the odd one
+// out: `userinfo` asks about whichever token it is handed, so it builds its own store around that token.
+const api = createApi({ apiBase, store: createCredentialStore({}), transport: docs.fetcher });
 
 /** One call to each endpoint, on the credential the mocked document was built with. */
-const whoIs = (accessToken: string) => getUserInfo(apiBase, accessToken, context);
-const exchange = (input: RefreshTokenInput) => refreshAccessToken(apiBase, input, context);
-const exchangeCode = (input: AccessTokenInput) => fetchAccessToken(apiBase, input, context);
+const whoIs = (accessToken: string) => createApi({ apiBase, store: createCredentialStore({ accessToken }), transport: docs.fetcher }).call(endpoints.userinfo);
+const exchange = (input: { clientId: string; clientSecret: string; refreshToken: string }) =>
+  api.call(endpoints.refreshToken, {
+    query: { client_id: input.clientId, client_secret: input.clientSecret, grant_type: 'refresh_token', refresh_token: input.refreshToken },
+  });
+const exchangeCode = (input: { clientId: string; clientSecret: string; code: string; redirectUri: string }) =>
+  api.call(endpoints.accessToken, {
+    query: {
+      client_id: input.clientId,
+      client_secret: input.clientSecret,
+      grant_type: 'authorization_code',
+      code: input.code,
+      redirect_uri: input.redirectUri,
+    },
+  });
 
 /** Keeps the calls a case asserts on to the ones that case made. */
 function freshCalls(): void {

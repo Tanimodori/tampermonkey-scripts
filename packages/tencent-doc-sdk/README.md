@@ -2,12 +2,14 @@
 
 A client for the Tencent Docs Open API's smartsheet endpoints: which sub-sheets a document holds, the rows of one of them, and the credential both are read with.
 
-It speaks the upstream's own vocabulary — the `{ ret, msg, data }` envelope, the payload keywords, the official response type names — and stops there. Each method is one endpoint and one round trip: no paging, no retries, no aggregating one answer across two calls. Pacing, metrics, logging and the meaning of a failure for anything downstream are left to whoever calls it.
+It speaks the upstream's own vocabulary — the `{ ret, msg, data }` envelope, the payload keywords, the official response type names — and stops there. Each call is one endpoint and one round trip: no paging, no retries, no aggregating one answer across two calls. Pacing, metrics, logging and the meaning of a failure for anything downstream are left to whoever calls it.
 
 ## Use
 
+An endpoint is a declaration — the method, the address, the schema of each part, and the schema of the answer — and one function makes the call it describes.
+
 ```ts
-import { createCredentialStore, createDocClient, createTokenManager } from 'tencent-doc-sdk';
+import { createApi, createCredentialStore, createTokenManager, endpoints } from 'tencent-doc-sdk';
 
 const store = createCredentialStore({ accessToken: '…', clientId: '…', openId: '…', refreshToken: '…' });
 
@@ -18,16 +20,19 @@ const tokens = createTokenManager({
   clientSecret: '…', // only ever needed by the two token endpoints, and never part of a credential
 });
 
-const sheet = createDocClient({
+const api = createApi({
   apiBase: 'https://docs.qq.com',
-  coordinates: { fileId: '300000000$ExAmPlEfIlEiD', sheetId: 'tXXXXXX' },
+  params: { fileId: '300000000$ExAmPlEfIlEiD', sheetId: 'tXXXXXX' }, // the document every record call addresses
   store,
 });
 
-const page = await sheet.getRecords({ offset: 0, limit: 100 });
-const written = await sheet.addRecords([{ values: { 名称: [{ text: '甲', type: 'text' }] } }]);
-await sheet.deleteRecords(written.records?.map((row) => row.recordID) ?? []);
+const page = await api.call(endpoints.getRecords, { body: { getRecords: { offset: 0, limit: 100 } } });
+const written = await api.call(endpoints.addRecords, { body: { addRecords: { records: [{ values: { 名称: [{ text: '甲', type: 'text' }] } }] } } });
+await api.call(endpoints.deleteRecords, { body: { deleteRecords: { recordIDs: written.records?.map((row) => row.recordID) ?? [] } } });
+const sheets = await api.call(endpoints.getSheetList); // no body, no params of its own
 ```
+
+The `body` is what goes on the wire, keyword wrapper and all: the same object the endpoint's schema checks before a byte is sent, so nothing this library assembles can differ from what it validated. An endpoint that declares no `params` for itself still addresses a document, because `createApi` holds the coordinates and passes them to every call that needs them — a call's own `params` override them, which is what lets one client read a sibling sheet.
 
 Every call is one round trip. A call that failed is reported as failed and is not sent again, so a caller that wants a second attempt makes it knowing the quota was spent once already.
 
@@ -58,15 +63,17 @@ Nothing here schedules a refresh, and nothing here decides that a reported Open-
 
 A failure is a `TencentDocsError` naming which of seven things went wrong, with everything the upstream said alongside it:
 
-| `code`           | what it means                                                                                       |
-| ---------------- | --------------------------------------------------------------------------------------------------- |
-| `auth`           | the credential was refused, by HTTP 401/403 or by a business code that says so                      |
-| `rate_limited`   | the upstream is throttling; `retryAfterSeconds` is what it stated, if anything                      |
-| `bad_request`    | the request was refused, usually a business code in the `4xxxxx` range                              |
-| `server`         | the upstream answered `5xx`                                                                         |
-| `transport`      | there was no answer to read: refused, timed out, or a body that was not JSON                        |
-| `invalid_answer` | the upstream said it succeeded with a body this library's response type has no words for            |
-| `config`         | the call never became a request: no Open-Id to send, no refresh token, an address that is not a URL |
+| `code`           | what it means                                                                                                                       |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `auth`           | the credential was refused, by HTTP 401/403 or by a business code that says so                                                      |
+| `rate_limited`   | the upstream is throttling; `retryAfterSeconds` is what it stated, if anything                                                      |
+| `bad_request`    | the request was refused, usually a business code in the `4xxxxx` range                                                              |
+| `server`         | the upstream answered `5xx`                                                                                                         |
+| `transport`      | there was no answer to read: refused, timed out, or a body that was not JSON                                                        |
+| `invalid_answer` | the upstream said it succeeded with a body this library's response type has no words for                                            |
+| `config`         | the call never became a request: arguments its endpoint rejects, no Open-Id to send, no refresh token, an address that is not a URL |
+
+`config` is the one code settled without asking the upstream anything. A call whose arguments its endpoint does not accept — a negative `offset`, a `limit` over the page maximum, a write of no rows — is refused before a request is assembled, so it costs no quota and carries no `status`, `ret` or `response`; the message names the field, which points at the caller's own code rather than at the request. TypeScript rejects most of these at the call site already; the schema is there for the callers it cannot reach.
 
 Alongside the code: `status`, `ret` and `msg` are what the upstream said, `path` is the address the call went to with its query string dropped, `cause` is whatever the failure was worded from, and `response` is the whole answer — status, headers, body — for whoever has to look at it again. `message` quotes the status and business code, and where a body is quoted it is `describeBody`'s masked, bounded form. `message` is what belongs on a log line or in an HTTP response; `response` is the undigested version, and a read's body is its whole sheet.
 
@@ -88,7 +95,7 @@ async function getRecords(page) {
   await queue(async () => {}); // one turn per start: the queue decides when this one may go out
   const startedAt = Date.now();
   try {
-    return await sheet.getRecords(page);
+    return await api.call(endpoints.getRecords, { body: { getRecords: page } });
   } catch (error) {
     // A TencentDocsError names which of seven things went wrong, and carries the answer it judged.
     throw error;
@@ -107,8 +114,8 @@ Given no `transport`, calls go out on `globalThis.fetch`. The library registers 
 Nothing is published for it: this package's own fake document lives in `test/testUtils`, alongside the tests that use it, and speaks the protocol only — no caller's columns, no caller's rules.
 
 ```ts
-const upstream = testUpstream(); // a `DocClient` and a `TokenManager` sharing one store over the fake document
-const { client, state } = upstream;
+const upstream = testUpstream(); // an `Api` and a `TokenManager` sharing one store over the fake document
+const { api, state } = upstream;
 
 state.records = [rawRecord({ recordId: 'r00001' })];
 state.readFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
@@ -116,7 +123,7 @@ state.networkFailures = 1; // the next call fails before any response exists
 state.calls; // every intercepted request: method, url, body, headers
 ```
 
-Its answers are the shapes measured against a real document, including the columns nobody reads, and they are pinned against the response types by `test/testUtils/fixtures.spec.ts`.
+Its answers are the shapes measured against a real document, including the columns nobody reads, and they are pinned against the response types by `test/testUtils/fixtures.spec.ts`. Because the fake stands in for the upstream rather than for this library, a refactor that only moves code around inside `src/` leaves both it and those fixtures untouched — which is what makes them worth reading as the evidence that the wire format did not move either.
 
 A caller of this package tests itself the same way it tests any dependency: at its own boundary, with whatever stand-in that boundary wants. Nothing here asks to be observed from the outside.
 

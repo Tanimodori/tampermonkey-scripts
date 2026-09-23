@@ -153,6 +153,75 @@ export const tokenResponseSchema = z.looseObject({
 });
 
 // ---------------------------------------------------------------------------
+// What a caller hands one endpoint, checked before a request is assembled
+// ---------------------------------------------------------------------------
+
+/**
+ * The parts of a call that are this library's own risk, described as strictly as the upstream describes
+ * them.
+ *
+ * These are the only schemas here that are not loose, and that is deliberate: every schema above judges an
+ * answer the upstream already sent, where an extra key costs nothing and a missing one is the finding. A
+ * request schema exists to refuse a call before it spends quota and comes back as `bad_request`, so it
+ * rejects what it cannot name — and `z.object` stripping the rest is what keeps `params` down to exactly
+ * the placeholders a `path` may interpolate.
+ */
+
+/** The most rows 查询记录 answers with in one page. See docs/api/upstream/record.md: `limit` 上限 100. */
+export const MAX_PAGE_SIZE = 100;
+
+/** A document id as the upstream spells it: `[0-9A-Za-z$_-]`, and never empty. */
+const fileIdSchema = z.string().min(1);
+
+/** The one coordinate 查询子表 addresses by. */
+export const fileIdParamsSchema = z.object({ fileId: fileIdSchema });
+
+/** The two coordinates every record call addresses by. */
+export const sheetParamsSchema = z.object({ fileId: fileIdSchema, sheetId: z.string().min(1) });
+
+/** One row's cells as a write takes them: column titles to whatever the cells hold. */
+const cellValuesInputSchema = z.record(z.string(), z.unknown());
+
+/** 查询记录: which page, from a zero-based row number. */
+export const getRecordsParamsSchema = z.object({ offset: z.number().int().min(0), limit: z.number().int().min(1).max(MAX_PAGE_SIZE) });
+
+/** One row as 新增记录 takes it: the cell values keyed by column title. */
+export const recordValuesSchema = z.object({ values: cellValuesInputSchema });
+
+/** One row as 更新记录 takes it: which row, and the cells to replace it with. */
+export const recordUpdateSchema = z.object({ recordID: z.string().min(1), values: cellValuesInputSchema });
+
+/** 查询记录, as it goes on the wire. */
+export const getRecordsBodySchema = z.object({ getRecords: getRecordsParamsSchema });
+
+/** 新增记录: the rows to append, in the order they should be written. */
+export const addRecordsBodySchema = z.object({ addRecords: z.object({ records: z.array(recordValuesSchema).min(1) }) });
+
+/** 更新记录: which rows, and the cells to replace each with. */
+export const updateRecordsBodySchema = z.object({ updateRecords: z.object({ records: z.array(recordUpdateSchema).min(1) }) });
+
+/** 删除记录: the rows to remove. An empty list is refused because it is always a caller's mistake, never a sweep. */
+export const deleteRecordsBodySchema = z.object({ deleteRecords: z.object({ recordIDs: z.array(z.string().min(1)).min(1) }) });
+
+/** The application a grant is made for, named the way the token endpoint names it. */
+const grantQueryHead = { client_id: z.string().min(1), client_secret: z.string().min(1) } as const;
+
+/** 获取 Token: the code just issued to a user, exchanged at the address it was issued for. */
+export const accessTokenQuerySchema = z.object({
+  ...grantQueryHead,
+  grant_type: z.literal('authorization_code'),
+  code: z.string().min(1),
+  redirect_uri: z.string().min(1),
+});
+
+/** 刷新 Token: the refresh token held so far, which the answer may replace. */
+export const refreshTokenQuerySchema = z.object({
+  ...grantQueryHead,
+  grant_type: z.literal('refresh_token'),
+  refresh_token: z.string().min(1),
+});
+
+// ---------------------------------------------------------------------------
 // The JWT an access token is, read for its claims and never verified
 // ---------------------------------------------------------------------------
 

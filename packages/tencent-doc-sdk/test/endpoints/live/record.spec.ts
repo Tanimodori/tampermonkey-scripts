@@ -1,9 +1,10 @@
-import { allRecords, appendMarker, client, deleteRecords, live, markerRecordIds, page, useLiveDocument } from '@test/testUtils/liveDocument';
+import { allRecords, appendMarker, api, deleteRecords, live, markerRecordIds, page, useLiveDocument } from '@test/testUtils/liveDocument';
 import type { LiveMarker } from '@test/testUtils/liveDocument';
 /**
  * @module-tag live
  */
 import { describe, expect, it } from 'vitest';
+import { endpoints } from '@/endpoints';
 import { cellValuesSchema } from '@/validation/schemas';
 import type { CommonRecord } from '@/validation/types';
 
@@ -85,7 +86,9 @@ describe.skipIf(!live)('the real document: records', () => {
     const appended = await appendMarker(MARKER);
     expect(await markerRecordIds()).toHaveLength(1);
 
-    const answer = await client.updateRecords([{ recordID: appended!, values: { ...MARKER.values, 北罐刷新时间: '1789201860000' } }]);
+    const answer = await api.call(endpoints.updateRecords, {
+      body: { updateRecords: { records: [{ recordID: appended!, values: { ...MARKER.values, 北罐刷新时间: '1789201860000' } }] } },
+    });
 
     // Measured: the update answer names the row it touched and says nothing about its times.
     expect(answer.records).toHaveLength(1);

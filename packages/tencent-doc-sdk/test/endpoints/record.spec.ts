@@ -1,6 +1,7 @@
 import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, apiOrigin, rawRecord, testUpstream } from '@test/testUtils/document';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createDocClient } from '@/api/docClient';
+import { createApi } from '@/client';
+import { endpoints } from '@/endpoints';
 import type { TencentDocsError } from '@/validation/errors';
 
 /**
@@ -13,7 +14,7 @@ import type { TencentDocsError } from '@/validation/errors';
 const RECORDS_PATH = `/openapi/smartbook/v2/files/${EXAMPLE_FILE_ID}/sheets/${EXAMPLE_SHEET_ID}`;
 
 const upstream = testUpstream();
-const { client, fileId, mock, sheetId, state, store } = upstream;
+const { api, fileId, mock, sheetId, state, store } = upstream;
 
 /** Keeps the calls a case asserts on to the ones that case made. */
 function freshCalls(): void {
@@ -51,7 +52,7 @@ afterEach(() => {
 
 describe('getRecords', () => {
   it('asks for one page under its own keyword', async () => {
-    await client.getRecords({ offset: 0, limit: 100 });
+    await api.call(endpoints.getRecords, { body: { getRecords: { offset: 0, limit: 100 } } });
 
     expectRecordRequest(0, { getRecords: { offset: 0, limit: 100 } });
   });
@@ -60,7 +61,7 @@ describe('getRecords', () => {
     state.records = [rawRecord({ recordId: 'r1' }), rawRecord({ recordId: 'r2' })];
     state.pageSize = 1;
 
-    const page = await client.getRecords({ offset: 0, limit: 100 });
+    const page = await api.call(endpoints.getRecords, { body: { getRecords: { offset: 0, limit: 100 } } });
 
     expect(page).toMatchObject({ total: 2, hasMore: true, next: 1 });
     expect(page.records).toHaveLength(1);
@@ -71,7 +72,7 @@ describe('getRecords', () => {
     state.pageSize = 1;
     freshCalls();
 
-    const page = await client.getRecords({ offset: 1, limit: 100 });
+    const page = await api.call(endpoints.getRecords, { body: { getRecords: { offset: 1, limit: 100 } } });
 
     expectRecordRequest(0, { getRecords: { offset: 1, limit: 100 } });
     expect(page.records?.[0]?.recordID).toBe('r2');
@@ -81,7 +82,7 @@ describe('getRecords', () => {
   it('keeps the columns the answer carries beyond the ones it is read for', async () => {
     state.records = [rawRecord({})];
 
-    const page = await client.getRecords({ offset: 0, limit: 100 });
+    const page = await api.call(endpoints.getRecords, { body: { getRecords: { offset: 0, limit: 100 } } });
 
     // The mock answers with them because the live document does; nothing here reads them, and nothing
     // strips them on the way through.
@@ -91,13 +92,13 @@ describe('getRecords', () => {
   it('is an empty page when the answer names no rows', async () => {
     state.rawReply = { status: 200, body: { ret: 0, msg: 'Succeed', data: { getRecords: {} } } };
 
-    await expect(client.getRecords({ offset: 0, limit: 100 })).resolves.toEqual({});
+    await expect(api.call(endpoints.getRecords, { body: { getRecords: { offset: 0, limit: 100 } } })).resolves.toEqual({});
   });
 
   it('gives up on an answer with no section to read, and says which shape it wanted', async () => {
     state.rawReply = { status: 200, body: { ret: 0, msg: 'Succeed' } };
 
-    const error = (await client.getRecords({ offset: 0, limit: 100 }).catch((caught: unknown) => caught)) as Error;
+    const error = (await api.call(endpoints.getRecords, { body: { getRecords: { offset: 0, limit: 100 } } }).catch((caught: unknown) => caught)) as Error;
 
     expect(error).toMatchObject({ code: 'invalid_answer' });
     expect(error.message).toContain('getRecords');
@@ -106,26 +107,29 @@ describe('getRecords', () => {
   it('names a business failure by the code the endpoint used', async () => {
     state.readFailure = { status: 400, ret: 400001, msg: '请求参数错误' };
 
-    await expect(client.getRecords({ offset: 0, limit: 100 })).rejects.toMatchObject({ code: 'bad_request', status: 400 });
+    await expect(api.call(endpoints.getRecords, { body: { getRecords: { offset: 0, limit: 100 } } })).rejects.toMatchObject({
+      code: 'bad_request',
+      status: 400,
+    });
   });
 
   it('gives up on a body that is not JSON', async () => {
     state.rawReply = { status: 200, body: '<html>Bad Gateway</html>' };
 
-    await expect(client.getRecords({ offset: 0, limit: 100 })).rejects.toMatchObject({ code: 'transport' });
+    await expect(api.call(endpoints.getRecords, { body: { getRecords: { offset: 0, limit: 100 } } })).rejects.toMatchObject({ code: 'transport' });
   });
 });
 
 describe('addRecords', () => {
   it('sends the rows it was given, spelled as the sheet spells them', async () => {
-    await client.addRecords([{ values: { 名称: '甲', 分组: '一', ID: 'K-0002' } }]);
+    await api.call(endpoints.addRecords, { body: { addRecords: { records: [{ values: { 名称: '甲', 分组: '一', ID: 'K-0002' } }] } } });
 
     expectRecordRequest(0, { addRecords: { records: [{ values: { 名称: '甲', 分组: '一', ID: 'K-0002' } }] } });
     expect(state.added).toHaveLength(1);
   });
 
   it('reports the id the document gave the row it wrote', async () => {
-    const answer = await client.addRecords([{ values: { ID: 'K-0002' } }]);
+    const answer = await api.call(endpoints.addRecords, { body: { addRecords: { records: [{ values: { ID: 'K-0002' } }] } } });
 
     // Measured: the write answer carries the id and nothing about the row’s times.
     expect(answer.records).toEqual([{ recordID: 'rNew1', values: { ID: 'K-0002' } }]);
@@ -134,7 +138,7 @@ describe('addRecords', () => {
   it('reports nothing when the document answers without an id', async () => {
     state.addRecordsWithoutId = true;
 
-    const answer = await client.addRecords([{ values: { ID: 'K-0002' } }]);
+    const answer = await api.call(endpoints.addRecords, { body: { addRecords: { records: [{ values: { ID: 'K-0002' } }] } } });
 
     expect(answer.records?.[0]?.recordID).toBeUndefined();
   });
@@ -142,7 +146,9 @@ describe('addRecords', () => {
   it('names a refused write as the endpoint said', async () => {
     state.writeFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
 
-    await expect(client.addRecords([{ values: { ID: 'K-0002' } }])).rejects.toMatchObject({ code: 'rate_limited' });
+    await expect(api.call(endpoints.addRecords, { body: { addRecords: { records: [{ values: { ID: 'K-0002' } }] } } })).rejects.toMatchObject({
+      code: 'rate_limited',
+    });
     expect(state.added).toHaveLength(0);
   });
 });
@@ -151,7 +157,7 @@ describe('updateRecords', () => {
   it('sends the row it means to replace and the cells to replace it with', async () => {
     state.records = [rawRecord({ recordId: 'r00001' })];
 
-    await client.updateRecords([{ recordID: 'r00001', values: { 名称: '乙' } }]);
+    await api.call(endpoints.updateRecords, { body: { updateRecords: { records: [{ recordID: 'r00001', values: { 名称: '乙' } }] } } });
 
     expectRecordRequest(0, { updateRecords: { records: [{ recordID: 'r00001', values: { 名称: '乙' } }] } });
     expect(state.updated).toEqual([{ recordID: 'r00001', values: { 名称: '乙' } }]);
@@ -160,7 +166,7 @@ describe('updateRecords', () => {
   it('hands back the rows it touched, without timestamps', async () => {
     state.records = [rawRecord({ recordId: 'r00001' })];
 
-    const answer = await client.updateRecords([{ recordID: 'r00001', values: { 名称: '乙' } }]);
+    const answer = await api.call(endpoints.updateRecords, { body: { updateRecords: { records: [{ recordID: 'r00001', values: { 名称: '乙' } }] } } });
 
     expect(answer.records).toEqual([{ recordID: 'r00001', values: { 名称: '乙' } }]);
   });
@@ -169,14 +175,16 @@ describe('updateRecords', () => {
     state.records = [rawRecord({ recordId: 'r00001', values: { 名称: '甲' } })];
     state.updateFailure = { status: 200, ret: 400001, msg: '请求参数错误' };
 
-    await expect(client.updateRecords([{ recordID: 'r00001', values: { 名称: '乙' } }])).rejects.toMatchObject({ code: 'bad_request' });
+    await expect(
+      api.call(endpoints.updateRecords, { body: { updateRecords: { records: [{ recordID: 'r00001', values: { 名称: '乙' } }] } } }),
+    ).rejects.toMatchObject({ code: 'bad_request' });
     expect(state.updated).toHaveLength(0);
   });
 });
 
 describe('deleteRecords', () => {
   it('sends the record ids under the documented keyword', async () => {
-    await client.deleteRecords(['rMW8vK', 'rABC12']);
+    await api.call(endpoints.deleteRecords, { body: { deleteRecords: { recordIDs: ['rMW8vK', 'rABC12'] } } });
 
     expectRecordRequest(0, { deleteRecords: { recordIDs: ['rMW8vK', 'rABC12'] } });
     expect(state.deleted).toEqual(['rMW8vK', 'rABC12']);
@@ -186,26 +194,31 @@ describe('deleteRecords', () => {
     // Measured against the live document: a deletion is answered with the header alone.
     state.rawReply = { status: 200, body: { ret: 0, msg: 'Succeed' } };
 
-    await expect(client.deleteRecords(['rMW8vK'])).resolves.toBeUndefined();
+    await expect(api.call(endpoints.deleteRecords, { body: { deleteRecords: { recordIDs: ['rMW8vK'] } } })).resolves.toBeUndefined();
   });
 
   it('names a refusal, and reports nothing deleted', async () => {
     state.records = [rawRecord({ recordId: 'r00001' })];
     state.deleteFailure = { status: 200, ret: 10007, msg: 'No corresponding permissions required' };
 
-    await expect(client.deleteRecords(['r00001'])).rejects.toMatchObject({ code: 'auth' });
+    await expect(api.call(endpoints.deleteRecords, { body: { deleteRecords: { recordIDs: ['r00001'] } } })).rejects.toMatchObject({ code: 'auth' });
     expect(state.deleted).toHaveLength(0);
   });
 });
 
 describe('a call that never became a request', () => {
-  // The address and the payload are both built before the upstream is asked anything, so both are this
-  // layer's own risk: `test/client/request.spec.ts` cannot see either, because nothing reaches it.
+  // The arguments, the address and the payload are all settled before the upstream is asked anything, so
+  // none of them reaches the mock: `state.calls` staying empty is the assertion that says so. What these
+  // cases add over `test/client.spec.ts`, which proves the same mechanism with a recording transport, is
+  // that they prove it of the real endpoint — a `getRecords` whose address cannot be built, not an example
+  // declaration that cannot be assembled.
 
   it('words an address built from something that is not a URL as a `config` failure, keeping the reason', async () => {
-    const misconfigured = createDocClient({ apiBase: 'docs-not-a-url', coordinates: { fileId, sheetId }, store, transport: mock.fetcher });
+    const misconfigured = createApi({ apiBase: 'docs-not-a-url', params: { fileId, sheetId }, store, transport: mock.fetcher });
 
-    const error = (await misconfigured.getRecords({ offset: 0, limit: 100 }).catch((caught: unknown) => caught)) as TencentDocsError;
+    const error = (await misconfigured
+      .call(endpoints.getRecords, { body: { getRecords: { offset: 0, limit: 100 } } })
+      .catch((caught: unknown) => caught)) as TencentDocsError;
 
     expect(error.code).toBe('config');
     expect(error.message).toContain('getRecords');
@@ -217,7 +230,9 @@ describe('a call that never became a request', () => {
     const circular: Record<string, unknown> = {};
     circular.self = circular;
 
-    const error = (await client.addRecords([{ values: circular }]).catch((caught: unknown) => caught)) as TencentDocsError;
+    const error = (await api
+      .call(endpoints.addRecords, { body: { addRecords: { records: [{ values: circular }] } } })
+      .catch((caught: unknown) => caught)) as TencentDocsError;
 
     expect(error.code).toBe('config');
     expect(error.message).toContain('addRecords');

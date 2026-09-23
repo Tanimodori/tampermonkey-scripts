@@ -1,5 +1,6 @@
 import { FILE_ID, loadTestConfig, resetRedis, testEnv } from '@test/testUtils/helpers.ts';
 import { testClient } from '@test/testUtils/helpers.ts';
+import { endpoints } from 'tencent-doc-sdk';
 /**
  * @module-tag live
  */
@@ -48,7 +49,7 @@ async function markerRecordIds(): Promise<string[]> {
   const records: string[] = [];
   let offset = 0;
   for (;;) {
-    const data = await upstreamStore.doc.getRecords({ offset, limit: 100 });
+    const data = await upstreamStore.api.call(endpoints.getRecords, { body: { getRecords: { offset, limit: 100 } } });
     const batch = data.records ?? [];
     records.push(...batch.filter((record) => JSON.stringify(record.values ?? '').includes(MARKER.potId)).map((record) => record.recordID));
     if (data.hasMore !== true) return records;
@@ -69,7 +70,11 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!live) return;
   await server?.close();
-  await upstreamStore.doc.deleteRecords(await markerRecordIds());
+  const doomed = await markerRecordIds();
+  // Nothing to delete is a real outcome — a case that failed before it wrote a row leaves the document
+  // untouched — and `deleteRecords` now refuses an empty list rather than spending a call on it.
+  if (doomed.length === 0) return;
+  await upstreamStore.api.call(endpoints.deleteRecords, { body: { deleteRecords: { recordIDs: doomed } } });
 });
 
 describe.skipIf(!live)('the real document, through the service', () => {

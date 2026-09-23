@@ -1,7 +1,7 @@
 import { afterAll } from 'vitest';
-import type { DocCoordinates } from '@/api/address';
-import { createDocClient } from '@/api/docClient';
-import type { DocClient } from '@/api/docClient';
+import { createApi } from '@/client';
+import type { Api } from '@/client';
+import { endpoints } from '@/endpoints';
 import { createTokenManager } from '@/token/manager';
 import type { TokenManager } from '@/token/manager';
 import { createCredentialStore } from '@/token/store';
@@ -14,7 +14,7 @@ import { EXAMPLE_FILE_ID } from './mockUpstream';
  * The shared front of the live suite: what it takes to point a spec file at a real Tencent Docs
  * document, and what it takes to leave that document as it was found.
  *
- * Three files use this (`api/live/{sheet,record,oauth}.spec.ts`), which is why the guard and the
+ * Three files use this (`endpoints/live/{sheet,record,oauth}.spec.ts`), which is why the guard and the
  * bookkeeping live here rather than in each: the run conditions are one rule, and the rows the suite
  * writes are cleaned by the file that wrote them.
  *
@@ -52,7 +52,7 @@ export const live = liveReason === '';
 /** Where the live document is: the same origin the client below sends to, for a spec that calls an endpoint directly. */
 export const apiBase: string = NAMED.apiBase;
 
-export const coordinates: DocCoordinates = { fileId: NAMED.fileId ?? '', sheetId: NAMED.sheetId ?? '' };
+export const params = { fileId: NAMED.fileId ?? '', sheetId: NAMED.sheetId ?? '' };
 
 /** The credential the live document is read with: the token the environment names, and nothing else. */
 export const store: CredentialStore = createCredentialStore({
@@ -65,7 +65,7 @@ export const store: CredentialStore = createCredentialStore({
 // real address, with nothing in between.
 export const tokens: TokenManager = createTokenManager({ apiBase: NAMED.apiBase, store });
 
-export const client: DocClient = createDocClient({ apiBase: NAMED.apiBase, coordinates, store });
+export const api: Api = createApi({ apiBase: NAMED.apiBase, store, params });
 
 /** A row the suite appends and deletes again, named by a value only it writes. */
 export interface LiveMarker {
@@ -87,7 +87,7 @@ export function useLiveDocument(writes?: LiveMarker): void {
 
 /** One page, in the API's own terms. */
 export function page(offset = 0, limit = 100): Promise<CommonRecords> {
-  return client.getRecords({ offset, limit });
+  return api.call(endpoints.getRecords, { body: { getRecords: { offset, limit } } });
 }
 
 /** Every row the document holds, read page by page. */
@@ -117,15 +117,18 @@ export async function markerRecordIds(): Promise<string[]> {
 
 /** Appends a marker row and hands back its id, which is what a test then reads or updates. */
 export async function appendMarker(one: LiveMarker): Promise<string | undefined> {
-  const answer = await client.addRecords([{ values: one.values }]);
+  const answer = await api.call(endpoints.addRecords, { body: { addRecords: { records: [{ values: one.values }] } } });
   return answer.records?.[0]?.recordID;
 }
 
 /**
  * Removes rows by id. A cleanup has to be able to say so even when the file that wrote the rows never
  * called `deleteRecords` itself, which is also the point: it goes through the production call path.
+ *
+ * The empty check is the caller's, and `deleteRecords` now enforces it: a sweep with nothing to delete is
+ * a caller that lost track of its own rows, not a request to spend quota on.
  */
 export async function deleteRecords(recordIDs: readonly string[]): Promise<void> {
   if (recordIDs.length === 0) return;
-  await client.deleteRecords([...recordIDs]);
+  await api.call(endpoints.deleteRecords, { body: { deleteRecords: { recordIDs: [...recordIDs] } } });
 }

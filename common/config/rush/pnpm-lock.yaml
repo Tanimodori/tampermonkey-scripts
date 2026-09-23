@@ -144,6 +144,9 @@ importers:
       oxlint:
         specifier: ^1.82.0
         version: 1.82.0
+      pupa:
+        specifier: ~3.3.0
+        version: 3.3.0
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
@@ -1511,6 +1514,10 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  escape-goat@4.0.0:
+    resolution: {integrity: sha512-2Sd4ShcWxbx6OY1IHyla/CVNwvg7XwZVoXZHcSu9w9SReNP1EzzD5T8NWKIR38fIqEns9kDWKUQTXXAmlDrdPg==}
+    engines: {node: '>=12'}
+
   escape-html@1.0.3:
     resolution: {integrity: sha512-NiSupZ4OeuGwr68lGIeym/ksIZMJodUGOSCZ/FSnTxcrekbvqrgdUxlJOMpijaKZVjAJrWrGs/6Jy8OMuyj9ow==}
 
@@ -2037,6 +2044,10 @@ packages:
 
   prr@1.0.1:
     resolution: {integrity: sha512-yPw4Sng1gWghHQWj0B3ZggWUm4qVbPwPFcRG8KyxiU7J2OHFSoEHKS+EZ3fv5l1t9CyCiop6l/ZYeWbrgoQejw==}
+
+  pupa@3.3.0:
+    resolution: {integrity: sha512-LjgDO2zPtoXP2wJpDjZrGdojii1uqO0cnwKoIoUzkfS98HDmbeiGmYiXo3lXeFlq2xvne1QFQhwYXSUCLKtEuA==}
+    engines: {node: '>=12.20'}
 
   qs@6.14.1:
     resolution: {integrity: sha512-4EK3+xJl8Ts67nLYNwqw/dsFVnCf+qR7RgXSK9jEEm9unao3njwMDdmsdvoKBKHzxd7tCYz5e5M+SnMjdtXGQQ==}
@@ -3199,6 +3210,8 @@ snapshots:
       '@esbuild/win32-ia32': 0.28.2
       '@esbuild/win32-x64': 0.28.2
 
+  escape-goat@4.0.0: {}
+
   escape-html@1.0.3: {}
 
   estree-walker@2.0.2: {}
@@ -3745,6 +3758,10 @@ snapshots:
 
   prr@1.0.1:
     optional: true
+
+  pupa@3.3.0:
+    dependencies:
+      escape-goat: 4.0.0
 
   qs@6.14.1:
     dependencies:

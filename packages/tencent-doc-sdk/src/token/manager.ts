@@ -1,6 +1,6 @@
 import type { Fetcher } from '@apollo/utils.fetcher';
-import { fetchAccessToken as fetchGrantedToken, getUserInfo as fetchUserInfo, refreshAccessToken as fetchRefreshedToken } from '@/api/oauth';
-import { resolveContext } from '@/client/context';
+import { createApi } from '@/client';
+import { endpoints } from '@/endpoints';
 import { describeBody } from '@/validation/classify';
 import { TencentDocsError } from '@/validation/errors';
 import type { TokenResponse, UserInfo } from '@/validation/types';
@@ -16,6 +16,12 @@ import type { CredentialRecord, CredentialStore } from './store';
  * built here precisely so that the client making document calls and this one exchanging tokens hold the
  * same one, and a token refreshed here is the token the next read carries without anybody being wired to
  * the exchange that produced it.
+ *
+ * The three calls are made through an ordinary `Api`, like every other endpoint. What the manager adds is
+ * the two halves that are not a call: naming the application a grant is made for, and deciding what an
+ * answer means for the credential. Which is also where the wire vocabulary and this library's meet — the
+ * grants are spelled `client_id` and `redirect_uri` upstream and `clientId` and `redirectUri` here, and
+ * that translation belongs to whoever owns the credential rather than to an endpoint declaration.
  *
  * Nothing here decides what a bad credential means. No refresh is scheduled, nothing is retried, and the
  * identity `getUserInfo()` reports is handed over rather than weighed: whether an Open-Id agrees with the
@@ -46,17 +52,17 @@ export interface TokenManager {
 
 /** Builds a manager over one shared credential store. */
 export function createTokenManager(options: TokenManagerOptions): TokenManager {
-  const context = resolveContext({ apiBase: options.apiBase, transport: options.transport });
+  const api = createApi({ apiBase: options.apiBase, store: options.store, transport: options.transport });
   const store = options.store;
   const now = options.now ?? Date.now;
 
   /** The client secret is kept here rather than in the store: it renews a credential, it is not one. */
-  function grant(): { clientId: string; clientSecret: string } {
+  function grant(): { client_id: string; client_secret: string } {
     const secret = options.clientSecret;
     if (secret === undefined || secret.length === 0) {
       throw new TencentDocsError('config', 'The token endpoints need a client secret, and none was configured');
     }
-    return { clientId: store.getClientId(), clientSecret: secret };
+    return { client_id: store.getClientId(), client_secret: secret };
   }
 
   function hold(body: TokenResponse): CredentialRecord {
@@ -80,8 +86,10 @@ export function createTokenManager(options: TokenManagerOptions): TokenManager {
   // Every method is `async`, so a credential that cannot make the call is a rejection rather than a throw
   // landing on whoever happened to ask: reading the store and the secret is the first thing each one does.
   return {
-    getUserInfo: async () => fetchUserInfo(options.apiBase, store.getAccessToken(), context),
-    fetchToken: async ({ code, redirectUri }) => hold(await fetchGrantedToken(options.apiBase, { ...grant(), code, redirectUri }, context)),
-    refreshToken: async () => hold(await fetchRefreshedToken(options.apiBase, { ...grant(), refreshToken: store.getRefreshToken() }, context)),
+    getUserInfo: async () => api.call(endpoints.userinfo),
+    fetchToken: async ({ code, redirectUri }) =>
+      hold(await api.call(endpoints.accessToken, { query: { ...grant(), grant_type: 'authorization_code', code, redirect_uri: redirectUri } })),
+    refreshToken: async () =>
+      hold(await api.call(endpoints.refreshToken, { query: { ...grant(), grant_type: 'refresh_token', refresh_token: store.getRefreshToken() } })),
   };
 }

@@ -1,6 +1,6 @@
 import { getLogger } from '@logtape/logtape';
-import { createCredentialStore, createDocClient, createTokenManager, describeBody, readAccessTokenExpiresAt } from 'tencent-doc-sdk';
-import type { CredentialRecord, CredentialStore, DocClient, TokenManager } from 'tencent-doc-sdk';
+import { createApi, createCredentialStore, createTokenManager, describeBody, endpoints, readAccessTokenExpiresAt } from 'tencent-doc-sdk';
+import type { Api, CredentialRecord, CredentialStore, TokenManager } from 'tencent-doc-sdk';
 import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
 import { formatInstant, LOG_CATEGORIES } from '@/logger.ts';
@@ -57,8 +57,8 @@ export interface UpstreamStore {
   readonly fileId: string;
   readonly sheetId: string;
   readonly accessToken: string;
-  /** The record endpoints, as this service calls them. */
-  readonly doc: DocClient;
+  /** Makes the record and sub-sheet calls, over the credential and coordinates wired up below. */
+  readonly api: Api;
   /** Epoch ms at which the current credential expires, when known. */
   expiresAt(): number | undefined;
   /** True once `resolve()` has run for the current configuration. */
@@ -128,7 +128,7 @@ export async function rememberCredential(record: CredentialRecord): Promise<void
 interface Wired {
   readonly store: CredentialStore;
   readonly tokens: TokenManager;
-  readonly doc: DocClient;
+  readonly api: Api;
 }
 
 /**
@@ -197,7 +197,7 @@ export function useUpstreamStore(): UpstreamStore {
     return {
       store,
       tokens: createTokenManager({ apiBase, store, transport, clientSecret }),
-      doc: createDocClient({ apiBase, coordinates: { fileId, sheetId }, store, transport }),
+      api: createApi({ apiBase, params: { fileId, sheetId }, store, transport }),
     };
   }
 
@@ -214,7 +214,7 @@ export function useUpstreamStore(): UpstreamStore {
    * there is nothing to look up.
    */
   async function checkSheet(fileId: string, sheetId: string): Promise<void> {
-    const sheets = await mapped(upstreamCall('getSheet', () => library().doc.getSheetList()));
+    const sheets = await mapped(upstreamCall('getSheet', () => library().api.call(endpoints.getSheetList)));
     const available = sheets.map((entry) => entry.sheetID);
 
     if (!available.includes(sheetId)) {
@@ -338,8 +338,8 @@ export function useUpstreamStore(): UpstreamStore {
     get accessToken(): string {
       return library().store.getAccessToken();
     },
-    get doc(): DocClient {
-      return library().doc;
+    get api(): Api {
+      return library().api;
     },
     expiresAt(): number | undefined {
       return library().store.get().expiresAt;

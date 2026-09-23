@@ -1,5 +1,7 @@
 import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, apiOrigin, sheet, sheetWithDocumentedSpelling, testUpstream } from '@test/testUtils/document';
+import type { Sheet } from '@test/testUtils/document';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { endpoints } from '@/endpoints';
 
 /**
  * The sub-sheet list, against the mocked upstream: what the call puts on the wire, what comes back, and
@@ -10,7 +12,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
  */
 
 const upstream = testUpstream();
-const { client, mock, state } = upstream;
+const { api, mock, state } = upstream;
 
 /** Keeps the calls a case asserts on to the ones that case made. */
 function freshCalls(): void {
@@ -35,7 +37,7 @@ afterEach(() => {
 describe('the request', () => {
   it('is one GET with the credential header triple and no body', async () => {
     freshCalls();
-    await client.getSheetList();
+    await api.call(endpoints.getSheetList);
 
     expect(state.calls[0]?.url).toBe(`${apiOrigin()}/openapi/smartbook/v2/files/${EXAMPLE_FILE_ID}/sheets`);
     expect(state.calls[0]?.method).toBe('GET');
@@ -51,7 +53,7 @@ describe('the request', () => {
     const odd = testUpstream({ fileId: '300000000$Ex AmPlE/FiLeI#D' });
     freshCalls();
 
-    await odd.client.getSheetList();
+    await odd.api.call(endpoints.getSheetList);
 
     expect(odd.state.calls[0]?.url).toBe(`${apiOrigin()}/openapi/smartbook/v2/files/300000000$Ex%20AmPlE%2FFiLeI%23D/sheets`);
     await odd.mock.close();
@@ -62,7 +64,7 @@ describe('the answer', () => {
   it('lists the sub-sheets with the fields the document sends', async () => {
     state.sheets = [sheet({ sheetID: EXAMPLE_SHEET_ID }), sheet({ sheetID: 'tYYYYYY', title: '智能表2' })];
 
-    const sheets = await client.getSheetList();
+    const sheets: Sheet[] = await api.call(endpoints.getSheetList);
 
     expect(sheets.map((entry) => entry.sheetID)).toEqual([EXAMPLE_SHEET_ID, 'tYYYYYY']);
     expect(sheets[1]).toMatchObject({ title: '智能表2' });
@@ -71,7 +73,7 @@ describe('the answer', () => {
   it('is an empty list when the document has no sub-sheet to report', async () => {
     state.sheets = [];
 
-    await expect(client.getSheetList()).resolves.toEqual([]);
+    await expect(api.call(endpoints.getSheetList)).resolves.toEqual([]);
   });
 
   it('reads the same whichever spelling of the visibility field the answer uses', async () => {
@@ -79,7 +81,7 @@ describe('the answer', () => {
     // is read — sub-sheets are addressed by id — so both have to keep parsing.
     state.sheets = [sheetWithDocumentedSpelling];
 
-    await expect(client.getSheetList()).resolves.toMatchObject([{ sheetID: EXAMPLE_SHEET_ID }]);
+    await expect(api.call(endpoints.getSheetList)).resolves.toMatchObject([{ sheetID: EXAMPLE_SHEET_ID }]);
   });
 });
 
@@ -87,19 +89,19 @@ describe('the failures', () => {
   it('names a rejected credential as the endpoint said, not as a bad request', async () => {
     state.sheetListFailure = { status: 200, ret: 10007, msg: 'No corresponding permissions required' };
 
-    await expect(client.getSheetList()).rejects.toMatchObject({ code: 'auth' });
+    await expect(api.call(endpoints.getSheetList)).rejects.toMatchObject({ code: 'auth' });
   });
 
   it('names a rate limit, with the wait the upstream asked for', async () => {
     state.sheetListFailure = { status: 429, ret: 400007, msg: '请求数超过限制', headers: { 'retry-after': '1' } };
 
-    await expect(client.getSheetList()).rejects.toMatchObject({ code: 'rate_limited', retryAfterSeconds: 1 });
+    await expect(api.call(endpoints.getSheetList)).rejects.toMatchObject({ code: 'rate_limited', retryAfterSeconds: 1 });
   });
 
   it('gives up on an answer with no section to read, and says which shape it wanted', async () => {
     state.rawReply = { status: 200, body: { ret: 0, msg: 'Succeed' } };
 
-    const error = (await client.getSheetList().catch((caught: unknown) => caught)) as Error;
+    const error = (await api.call(endpoints.getSheetList).catch((caught: unknown) => caught)) as Error;
 
     expect(error).toMatchObject({ code: 'invalid_answer' });
     expect(error.message).toContain('getSheet');
@@ -109,7 +111,7 @@ describe('the failures', () => {
     state.rawReply = { status: 200, body: '- - - HTTP Status: 405 Service Error - - -' };
 
     freshCalls();
-    await expect(client.getSheetList()).rejects.toMatchObject({ code: 'transport' });
+    await expect(api.call(endpoints.getSheetList)).rejects.toMatchObject({ code: 'transport' });
     expect(state.calls).toHaveLength(1);
   });
 
@@ -117,7 +119,7 @@ describe('the failures', () => {
     state.networkFailures = 1;
 
     freshCalls();
-    await expect(client.getSheetList()).rejects.toMatchObject({ code: 'transport' });
+    await expect(api.call(endpoints.getSheetList)).rejects.toMatchObject({ code: 'transport' });
     expect(state.calls).toHaveLength(1);
   });
 });

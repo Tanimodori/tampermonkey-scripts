@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import type { TencentDocsErrorOptions, UpstreamResponse } from './errors';
 import { TencentDocsError } from './errors';
 
@@ -113,7 +114,8 @@ export function transportFailure(cause: unknown, target: string, path: string): 
  * it is the reading of it that failed. The whole answer is still on `response` for whoever wants to see
  * what arrived.
  */
-export function invalidAnswer(call: CallShape, said: string, response: UpstreamResponse): TencentDocsError {
+export function invalidAnswer(call: CallShape, issues: z.ZodError, response: UpstreamResponse): TencentDocsError {
+  const said = broken(issues);
   const masked = describeBody(response.body);
   return new TencentDocsError('invalid_answer', `Tencent Docs answered ${call.operation} with a shape that cannot be read (${said}; body: ${masked})`, {
     maskedBody: masked,
@@ -134,6 +136,27 @@ export function cannotAssemble(operation: string, cause: unknown): TencentDocsEr
   return new TencentDocsError('config', `The ${operation} call could not be assembled (${said})`, { cause });
 }
 
+/**
+ * The error for a call whose own arguments are not what its endpoint declares.
+ *
+ * Reported as `config` rather than as a code of its own, because that is what it is: the call cannot be
+ * made as it was asked for. It is also the one failure here that is settled without reading the upstream
+ * at all, so nothing carries a `status`, a `ret` or a `response` — there was no answer, and no request was
+ * sent to spend quota on. The field names come from the schema, which is what makes this worth failing
+ * loudly over: `offset must be >= 0` points at the caller's own code, where the upstream's `请求参数错误`
+ * would only point at the request.
+ */
+export function inputRejected(operation: string, issues: z.ZodError): TencentDocsError {
+  return new TencentDocsError('config', `The ${operation} call was given an input it cannot send (${broken(issues)})`, { cause: issues });
+}
+
+/**
+ * Which field of an answer the endpoint's own type had no words for, or which part of a request its
+ * declared input rejected. One question, and the same answer wanted: name the field and stop.
+ */
+function broken(issues: z.ZodError): string {
+  return issues.issues.map((issue) => `${issue.path.length === 0 ? '(body)' : issue.path.join('.')}: ${issue.message}`).join('; ');
+}
 /**
  * A bounded, printable form of a response body, for an error message.
  *

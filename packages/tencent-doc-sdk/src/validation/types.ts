@@ -6,10 +6,13 @@ import type {
   commonRecordSchema,
   commonRecordsSchema,
   deleteRecordsResponseSchema,
+  getRecordsParamsSchema,
   getRecordsResponseSchema,
   getSheetResponseSchema,
   jwtHeaderSchema,
   jwtPayloadSchema,
+  recordUpdateSchema,
+  recordValuesSchema,
   sheetSchema,
   tokenResponseSchema,
   updateRecordsResponseSchema,
@@ -38,3 +41,9 @@ export type UserInfoResponse = z.infer<typeof userInfoResponseSchema>;
 export type TokenResponse = z.infer<typeof tokenResponseSchema>;
 export type JwtHeader = z.infer<typeof jwtHeaderSchema>;
 export type JwtPayload = z.infer<typeof jwtPayloadSchema>;
+
+// The three a caller hands an endpoint, which are the request side of the same contract named above.
+
+export type GetRecordsParams = z.infer<typeof getRecordsParamsSchema>;
+export type RecordValues = z.infer<typeof recordValuesSchema>;
+export type RecordUpdate = z.infer<typeof recordUpdateSchema>;

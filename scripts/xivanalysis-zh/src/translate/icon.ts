@@ -20,22 +20,22 @@ export const fetchIcon = async (url: string, name: string) => {
   const searchItems = await fetchSearch(name);
 
   for (const searchItem of searchItems) {
-    // icon exact match
-    if (searchItem.obj.c !== iconId) {
+    // icon exact match(obj.c 是 unknown,图标号取数字)
+    if (Number(searchItem.obj.c) !== iconId) {
       continue;
     }
 
     if (searchItem.type === 'action') {
-      const action = await fetchAction(searchItem.id);
+      const action = await fetchAction(searchItem.obj.i);
       iconCache.set(iconId, action.name);
       return action.name;
     } else if (searchItem.type === 'status') {
-      const status = await fetchStatus(searchItem.id);
+      const status = await fetchStatus(searchItem.obj.i);
       iconCache.set(iconId, status.name);
       return status.name;
     } else {
       // item
-      const item = await fetchItem(searchItem.id);
+      const item = await fetchItem(searchItem.obj.i);
       iconCache.set(iconId, item.name);
       return item.name;
     }

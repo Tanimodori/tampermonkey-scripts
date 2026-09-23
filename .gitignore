@@ -120,3 +120,6 @@ dist-storybook/
 # Heft temporary files
 .cache/
 .heft/
+
+# migration build-artifact snapshots (local comparison only)
+.migration-backup/

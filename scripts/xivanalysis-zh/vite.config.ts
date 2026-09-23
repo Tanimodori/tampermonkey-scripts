@@ -16,7 +16,11 @@ export default defineConfig({
     minify: false,
   },
   resolve: {
-    alias: { '@': resolve(import.meta.dirname, 'src') },
+    alias: {
+      // Keep Node-only `csv-parse` out of the browser (IIFE) bundle; see src/shims/csv-parse-sync.ts.
+      'csv-parse/sync': resolve(import.meta.dirname, 'src/shims/csv-parse-sync.ts'),
+      '@': resolve(import.meta.dirname, 'src'),
+    },
   },
   plugins: [
     userscriptMetadata({
@@ -29,7 +33,9 @@ export default defineConfig({
         namespace: 'http://tanimodori.com/',
         match: 'https://xivanalysis.com/*',
         include: 'https://xivanalysis.com/*',
-        grant: 'none',
+        // 跨源取数必须走 GM_xmlhttpRequest(页面 fetch 受目标站 CORS 拦截);unsafeWindow 用于截获宿主页 fetch。
+        grant: ['GM_xmlhttpRequest', 'unsafeWindow'],
+        connect: ['www.garlandtools.cn', 'xivapi-v2.xivcdn.com', 'v2.xivapi.com', 'beta.xivapi.com'],
         'run-at': 'document-start',
       },
       injectPackageJson: true,

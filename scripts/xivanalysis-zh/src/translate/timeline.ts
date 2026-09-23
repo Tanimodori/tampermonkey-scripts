@@ -29,15 +29,15 @@ const _fetchTimeline = async (text: string): Promise<TimelineTranslation> => {
       let translatedText;
       if (item.type === 'action') {
         // action
-        const result = await fetchAction(item.id);
+        const result = await fetchAction(item.obj.i);
         translatedText = result.name;
       } else if (item.type === 'status') {
         // status
-        const result = await fetchStatus(item.id);
+        const result = await fetchStatus(item.obj.i);
         translatedText = result.name;
       } else {
         // item
-        const result = await fetchItem(item.id);
+        const result = await fetchItem(item.obj.i);
         translatedText = result.name;
       }
       const count = translations.get(translatedText) || 0;

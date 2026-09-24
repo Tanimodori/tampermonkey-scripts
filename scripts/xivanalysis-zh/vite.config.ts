@@ -17,8 +17,6 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      // Keep Node-only `csv-parse` out of the browser (IIFE) bundle; see src/shims/csv-parse-sync.ts.
-      'csv-parse/sync': resolve(import.meta.dirname, 'src/shims/csv-parse-sync.ts'),
       '@': resolve(import.meta.dirname, 'src'),
     },
   },

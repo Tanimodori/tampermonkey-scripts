@@ -34,15 +34,15 @@ export default defineConfig({
       formats: ['es'],
     },
     rolldownOptions: {
-      // `csv-parse` is imported by the shipped code and is not inlined: the consumer resolves it, which is also
-      // how it ends up in a browser bundle at all. The regex form matters — the import is the `csv-parse/sync`
-      // subpath, and a bare string in `external` would match that one specifier only.
+      // `papaparse` is imported by the shipped code and is not inlined: the consumer resolves it, which is also
+      // how it ends up in a browser bundle at all. The regex form matters — a bare string in `external` would
+      // match the specifier written here only.
       //
       // Nothing in `src/index.ts` imports `zod` — it is reachable through `import type` only, and the runtime
       // checks are `guards.ts`. It is listed anyway because the alternative failure is silent: drop this line,
       // and the day a value import appears, 47 KB of schema engine is inlined into the entry and the consumer
       // finds out from a bundle that will not load.
-      external: ['zod', /^csv-parse(\/|$)/],
+      external: ['zod', /^papaparse(\/|$)/],
       // Declaration generation is most of this build and always will be; the timing check reads that as a
       // warning, and a warning nobody intends to fix is a warning people learn to ignore.
       checks: { pluginTimings: false },

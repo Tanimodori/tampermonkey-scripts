@@ -4,7 +4,7 @@
  * Grouped by provider below, and grouped that way on purpose — the providers share no data model and do not
  * fall back to one another, so the only thing they have in common is the transport and `ProviderError`. Which
  * of these a caller ends up shipping is its bundler's to decide: `sideEffects: false` says an unused export
- * is deletable, and `readSheet` is the only route to `csv-parse`, so a caller that never names it does not pay
+ * is deletable, and `readSheet` is the only route to `papaparse`, so a caller that never names it does not pay
  * for the parser.
  *
  * zod is absent from the emitted JavaScript. The schemas live next to the shapes they describe

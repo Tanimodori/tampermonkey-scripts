@@ -77,9 +77,9 @@
 首版探测构建在页面加载时抛 `Uncaught ReferenceError: Buffer is not defined`(定位 `Buffer.from([239,187,191]), Buffer.from([255,254])`)。
 
 - 根因:`xiv-api-provider/dist/index.js` 顶层 `import { parse } from "csv-parse/sync"`(datamine/`readSheet` 那条路),而 `csv-parse` 在模块顶层用 Node 的 `Buffer` 造 BOM 常量。本 userscript 从不命名 `readSheet`,但 rolldown 仍把整份已打平的 provider dist(含该 `import` 与 `Buffer` 常量)并进了 IIFE 产物并在加载时求值。
-- 修复:`vite.config.ts` 把 `csv-parse/sync` 别名到 `src/shims/csv-parse-sync.ts`(调用即抛的浏览器安全空壳)。本包不运行期解析 CSV,别名后 Node 全局彻底不进产物。
-- 验证:重建后产物 `grep csv-parse` = 0;仅剩一处标准浏览器 `response.arrayBuffer()`(非 Node `Buffer`)。
-- 说明:此坑对最终 Stage B 同样适用,别名需长期保留(除非改用只暴露浏览器子路径的 provider 打包)。
+- 修复(已更新):provider 的 `csv-parse` 已整体换成浏览器安全的 `papaparse`(`csv.ts` 的 `tokenise` 就是 `Papa.parse(...).data` 的薄封装)。`papaparse` 顶层不碰 Node `Buffer`,上述泄漏根因消失。此前为规避该问题在 `scripts/xivanalysis-zh/vite.config.ts` 加的 `csv-parse/sync` → `src/shims/csv-parse-sync.ts` 别名与那个调用即抛的空壳已随之删除。
+- 验证:重建后产物 `grep Buffer` = 0(不再引入 Node 全局);provider 单测 `csv.spec.ts` 全绿。
+- 说明:provider 仍把 `papaparse` 列为 `external`,由消费者 bundler 决定打包或内联;本 userscript 从不命名 `readSheet`,解析路径应被 tree-shake 掉,即便被内联也是浏览器安全,无需再做别名规避。
 
 ## Stage A 探测结论(直连实测,非浏览器)
 

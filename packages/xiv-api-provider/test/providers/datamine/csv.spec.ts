@@ -4,8 +4,9 @@ import { parseSheetCsv } from '@/providers/datamine/csv.ts';
 /**
  * The SaintCoinach CSV format: what the tokenizer guarantees and what the three header lines mean.
  *
- * These are the reading rules the whole datamine path rests on, so the tests are the specification — in
- * particular the ones where a naive reader would silently produce a plausible-looking table instead.
+ * These are the reading rules the whole datamine path rests on, so the tests are the specification. Where the
+ * tokenizer is deliberately lenient — a bad quote is reported in `errors` but not rejected — the test locks
+ * papaparse's native output rather than asking the code to harden it.
  */
 
 const SAMPLE = ['key,0,1,2', '#,Name,Icon,Order{Minor}', 'int32,str,Image,byte', '0,"",0,0', '1,"格斗武器",60101,7'].join('\n');
@@ -30,8 +31,16 @@ describe('tokenizing', () => {
     expect(parseSheetCsv(SAMPLE).data.length).toBe(5);
   });
 
-  it('throws rather than swallowing the rest of a file with an unterminated quote', () => {
-    expect(() => parseSheetCsv('key,0\n#,Text\nint32,str\n1,"unbalanced\n2,"nope\n', 'Addon.csv')).toThrow(/Addon.csv: not readable as CSV/);
+  it('keeps papaparse native behavior on an unterminated quote — it does not throw', () => {
+    // papaparse reports the bad quoting in `errors` but hands back a grid anyway, folding the remnant of the
+    // file into one field. `tokenise` deliberately passes that through rather than turning it into a rejection.
+    const raw = parseSheetCsv('key,0\n#,Text\nint32,str\n1,"unbalanced\n2,"nope\n', 'Addon.csv');
+    expect(raw.data).toEqual([
+      ['key', '0'],
+      ['#', 'Text'],
+      ['int32', 'str'],
+      ['1', 'unbalanced\n2,"nope\n'],
+    ]);
   });
 });
 

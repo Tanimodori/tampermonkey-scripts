@@ -222,9 +222,9 @@ importers:
 
   ../../packages/xiv-api-provider:
     dependencies:
-      csv-parse:
-        specifier: ^7.0.2
-        version: 7.0.2
+      papaparse:
+        specifier: ~5.7.0
+        version: 5.7.0
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -235,6 +235,9 @@ importers:
       '@types/node':
         specifier: ^22.10.5
         version: 22.19.3
+      '@types/papaparse':
+        specifier: ~5.5.2
+        version: 5.5.2
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -1258,6 +1261,9 @@ packages:
   '@types/node@8.10.66':
     resolution: {integrity: sha512-tktOkFUA4kXx2hhhrB8bIFb5TbwzS4uOhKEmwiD+NoiL0qtP2OQ9mFldbgD4dV1djrlBYP6eBuQZiWjuHUpqFw==}
 
+  '@types/papaparse@5.5.2':
+    resolution: {integrity: sha512-gFnFp/JMzLHCwRf7tQHrNnfhN4eYBVYYI897CGX4MY1tzY9l2aLkVyx2IlKZ/SAqDbB3I1AOZW5gTMGGsqWliA==}
+
   '@types/qs@6.14.0':
     resolution: {integrity: sha512-eOunJqu0K1923aExK6y8p6fsihYEn/BYuQ4g0CxAAgFc4b/ZLN4CrsRZ55srTdqoiLzU2B2evC+apEIxprEzkQ==}
 
@@ -1439,9 +1445,6 @@ packages:
 
   css.escape@1.5.1:
     resolution: {integrity: sha512-YUifsXXuknHlUsmlgyY0PKzgPOr7/FjCePfHNt0jxm83wHZi44VDMQ7/fGNkjY3/jV1MC+1CmZbaHzugyeRtpg==}
-
-  csv-parse@7.0.2:
-    resolution: {integrity: sha512-uKZghv9UmPkMVLYy//KZ9HFAIJsl7wkhoEdIL0+rhuSY9pZQlhaeGEDPIe+/w7eh81MOql8Q/9+inAGWG6ZHYA==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -1982,6 +1985,9 @@ packages:
         optional: true
       vite-plus:
         optional: true
+
+  papaparse@5.7.0:
+    resolution: {integrity: sha512-qBGxg/7Q3Kl9Wfhrz2Z74UnvnHTXLNG6jmKJFeBvP2+y4lV7So+7SR62+Zd47JvdrCkX+nDcnr0ObPzek/+6RA==}
 
   parse-cache-control@1.0.1:
     resolution: {integrity: sha512-60zvsJReQPX5/QP0Kzfd/VrpjScIQ7SHBW6bFCYfEP+fp0Eppr1SHhIO5nd1PjZtvclzSzES9D/p5nFJurwfWg==}
@@ -2945,6 +2951,10 @@ snapshots:
 
   '@types/node@8.10.66': {}
 
+  '@types/papaparse@5.5.2':
+    dependencies:
+      '@types/node': 25.0.3
+
   '@types/qs@6.14.0': {}
 
   '@types/range-parser@1.2.7': {}
@@ -3129,8 +3139,6 @@ snapshots:
       which: 2.0.2
 
   css.escape@1.5.1: {}
-
-  csv-parse@7.0.2: {}
 
   debug@2.6.9:
     dependencies:
@@ -3704,6 +3712,8 @@ snapshots:
       '@oxlint/binding-win32-arm64-msvc': 1.82.0
       '@oxlint/binding-win32-ia32-msvc': 1.82.0
       '@oxlint/binding-win32-x64-msvc': 1.82.0
+
+  papaparse@5.7.0: {}
 
   parse-cache-control@1.0.1: {}
 

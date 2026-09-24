@@ -11,7 +11,7 @@
  * 1,"格斗武器",60101,7
  * ```
  *
- * Tokenizing that is `csv-parse`'s job — quoted newlines, doubled quotes, CRLF and the BOM are all its
+ * Tokenizing that is `papaparse`'s job — quoted newlines, doubled quotes, CRLF and the BOM are all its
  * problem rather than ours. What is left here is the part no generic CSV reader can know about: the three
  * header lines exist, they are all the same width, and they are part of the file. So the parse answer is the
  * whole grid, header lines included, with nothing interpreted out of it — `./table.ts` turns that into
@@ -21,7 +21,7 @@
  * has empty entries where the sub-columns of an array live, and a brace suffix such as `Order{Minor}` is how
  * the same column is written as `OrderMinor` in the API. Both spellings are kept exactly as the file has them.
  */
-import { parse } from 'csv-parse/sync';
+import Papa from 'papaparse';
 
 /** One sheet exactly as its file holds it: every line of the grid, every cell a string. */
 export interface SheetRawData {
@@ -37,17 +37,17 @@ export const HEADER_LINES = 3;
 /**
  * Read one document into records.
  *
- * `bom: true` drops the byte-order mark, and `skip_empty_lines` keeps a trailing newline from becoming a
- * phantom row. An unterminated quoted field throws rather than swallowing the rest of the file, which is the
- * failure mode worth guarding: a silently truncated table looks exactly like a successful build.
+ * `skipEmptyLines` keeps a trailing newline from becoming a phantom row and the BOM is dropped; a byte-order
+ * mark, CRLF and quoted newlines are papaparse's problem rather than ours. Rows whose widths differ come back
+ * as they are — nothing here constrains column count, because the header check in `parseSheetCsv` is what
+ * cares about width, and a data row is not required to match it.
+ *
+ * This is papaparse's own behavior and it is deliberately left alone: a malformed file — an unterminated
+ * quote, say — is not rejected here. papaparse reports it in `errors` and returns a grid anyway, folding the
+ * remnant into one field. The only structural thing this package still insists on is the three header lines
+ * below; anything past that is passed through as the tokenizer saw it.
  */
-const tokenise = (text: string, origin: string): string[][] => {
-  try {
-    return parse(text, { bom: true, skip_empty_lines: true, relax_column_count: true, cast: false }) as string[][];
-  } catch (error) {
-    throw new Error(`${origin}: not readable as CSV — ${String(error)}`);
-  }
-};
+const tokenise = (text: string): string[][] => Papa.parse(text, { header: false, skipEmptyLines: true, dynamicTyping: false }).data as string[][];
 
 /**
  * Parse one sheet's text into the grid it holds.
@@ -60,7 +60,7 @@ const tokenise = (text: string, origin: string): string[][] => {
  * monotonic nor contiguous, and converting it would be this package deciding what a column means.
  */
 export const parseSheetCsv = (csv: string, origin = '<memory>'): SheetRawData => {
-  const records = tokenise(csv, origin);
+  const records = tokenise(csv);
 
   if (records.length < HEADER_LINES) {
     throw new Error(`${origin}: expected at least ${HEADER_LINES} header records, found ${records.length}`);

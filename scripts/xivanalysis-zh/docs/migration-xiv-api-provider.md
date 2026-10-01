@@ -1,6 +1,6 @@
 # xivanalysis-zh → xiv-api-provider 迁移记录
 
-状态:**迁移完成并经用户浏览器验证“一切正常”**。数据源全部改走 `xiv-api-provider` 的国服 xivapi 客户端(检索留 garlands),四张手写表已删,`xiv-datamine-polyfill` 未引入。传输走 `GM_xmlhttpRequest`(解 CORS),并追加了每包 `readRows` 批量预热(逐行为底、失败自动回退)。构建全绿。
+状态:**迁移完成并经用户浏览器验证“一切正常”;其后 Stage C 已把最后的检索也迁出国服 xivapi,garlands 依赖彻底移除(见文末《Stage C:去 garlands 检索》)。** 数据源全部改走 `xiv-api-provider` 的国服 xivapi 客户端,四张手写表已删,`xiv-datamine-polyfill` 未引入。传输走 `GM_xmlhttpRequest`(解 CORS),并追加了每包 `readRows` 批量预热(逐行为底、失败自动回退)。构建全绿。
 
 数据源可用性已用**直连探测**确认(见文末《Stage A 探测结论》):国服 xivapi 可用且返回简中,故 garlands 降级为“仅检索”、`constants.ts` 四表可删、`xiv-datamine-polyfill` 不再需要。构建期发现并修复了 `csv-parse` 的 Node `Buffer` 泄漏(否则浏览器加载即崩,见《构建期修复》)。**仍待用户在浏览器确认的唯一一项**:xivanalysis 现网真实请求主机/路径(判断现有 `*.xivapi.com` 判别是否已失效)。
 
@@ -107,7 +107,7 @@
 - **保留 garlands 仅一处**:`search.ts`(timeline/icon 的按名/图标反查,国服 search 对中文与图标号不便)。故 `xiv-datamine-polyfill` 无需接入。
 - **`xivapi.ts` 判别**:浏览器实测现网主机是 `v2.xivapi.com`(国际站),它**仍满足**现有 `*.xivapi.com` + `/api/` + `/sheet/{X}` 判别,无需放宽主机。检索 `search.php` 经 `gmFetch` 走 GM,绕开 CORS。
 
-### 浏览器实测结论(用户回填 `docs/probe-1.txt`,已确认)
+### 浏览器实测结论(用户回填控制台,已确认)
 
 在**修复 Buffer 前**的探测版上跑出的控制台证据:
 
@@ -142,3 +142,68 @@
 1. ActionRich 描述 HTML:xivapi 用行内 `style="color:…"`、garland 用 `class="highlight-green"`,渲染应一致但需目视确认。
 2. 逐行 `readRow`(一屏最多 ~38 Action 会发等量 GM 请求),`useCache` 跨包去重;与原 garland 逐 id 同量级,如偏慢可后续改批量 `readRows`。
 3. Item/Status 的 `Description@as(html)` 是否真被页面读取(现网拦截样本里 Item 未请求描述)——不影响名/Tooltip 主路径。
+
+## Stage C:去 garlands 检索(garlands 依赖彻底移除)
+
+Stage B 后 garlands 只剩 `translate/search.ts` 的按名检索(timeline/icon)。本轮把它也迁到国服 xivapi,脚本不再直连 garlandtools。
+
+**检索为何可用国服 xivapi**:输入本就是英文(icon 用 `<img>.alt`、timeline 用英文轴文本),而 `/search` 的命中只取决于 `language` 而非 edition——`language=en` 下拉丁名在两服都命中。请求:`xivCn.search({ query:'Name~"<英文>"', sheets:['Action','Status','Item'], language:'en', fields:['Name','Icon'] })`;归一形状刻意沿用旧 `{ type, obj:{ i, n, c } }`,故 `icon.ts`/`timeline.ts` 零改动。
+
+**验证(离线端到端 + 浏览器实测)**:
+
+- 图标号确证**同一数域**:`fields.Icon.id == garland obj.c == 页面 ui/icon/{folder}/{id}` 第二数字。浏览器 29 条真实标签,同 (type,id) 行 **196/196 图标一致、名字全一致**。
+- 浏览器实测国服 `/search` 经 `gmFetch` 可达(各英文标签 `xivapiCount>0`)→ `xivanalysis.com`→xivcdn 的 CORS/GM 通路成立。
+- 无 `… 抛错`:撇号/括号/斜杠/方括号/内嵌引号均 200(可能空列表),构造子句不抛。
+- 唯一分歧:`Searing Light` 的 `Action 25842` garland 有、xivapi 无——查得该行为 xivapi **空占位**(`Name=""`、`Icon.id=0`),本就不是翻译目标,无真实损失。CJK 标签与 garland 同样 0 命中的多词标签(Horoscope Activation 等)两侧皆 0,非回归。
+
+**改动**:
+
+- `translate/search.ts`:改走 `xivCn.search`(经 `iconOf`/`stringField` 取值),删 garland 依赖。
+- `clients.ts`:移除 `garland` 客户端与 `createGarlandClient` import。
+- `vite.config.ts` `@connect`:去掉 `www.garlandtools.cn`(保留 xivapi 各主机)。
+- 删除探测脚手架 `probe.ts`(旁路版曾用于对照)。
+- `xiv-api-provider` 的 garland provider **不动**(`universalis-zh-data` 仍用)。
+
+**构建期修复:`papaparse` 泄漏(与旧 `csv-parse` 同源)**:provider 的 `dist/index.js` 顶层 `import Papa from "papaparse"`(datamine/`parseSheetCsv` 那条路),本包不命名这些导出,但 rolldown 仍把整份打平的 provider dist 并进 IIFE,把约 45 kB 的 Papa 塞进产物。修复:`vite.config.ts` 把 `papaparse` 别名到 `src/shims/papaparse.ts`(调用即抛的浏览器安全空壳);别名后 rolldown 连带把整条 datamine 路径摇掉,产物 56.6 kB → **31.5 kB**,`grep papaparse`/`Papa`/`delimiter` 全 0。(旧的 `csv-parse/sync` 别名与 `shims/csv-parse-sync.ts` 已随 provider 换用 papaparse 而废弃移除。)
+
+**保真度缺口(已知,低风险)**:`Name~"X"` 要求英文串是 `Name` 的字面子串;garland 对装饰性/畸形标签更宽容(如剥掉尾部 `)`)。若现网某轴文本因此检索不到,下游会安全回落(timeline 保留英文原文、icon 回落 `translateTimeline`),不崩。
+
+## Stage D:换范式——改请求 URL 到国服,再叠一层 DOM 反查(当前架构)
+
+Stage B/C 是「截获页面 fetch → 反查 → 逐字段替换响应」。但国服 xivapi 早已支持 v2(`/sheet`、`/search`、参数、信封与国际站一致),于是在 **fetch 层把页面的 `*.xivapi.com/api/sheet/*&language=en` 改写成 `xivapi-v2.xivcdn.com/…&language=chs`**,让页面自己吃到简中。这条**取代了逐字段响应翻译**,不是取代全部:
+
+**D-1 URL 改写(取代响应翻译)**
+
+- **国际站 `v2.xivapi.com` 退出脚本路径**:现网 520/522/525(Cloudflare↔源站抖动,错误页无 ACAO 故表现为 CORS 阻断、页面 `provider.js` 未 catch → `Uncaught Failed to fetch`)从根上消除。tooltip/详情面板等**走 xivapi 的实时数据**因此直接中文。
+- 删除**响应翻译**那套:`xivapi.ts` 判别、`index.ts` 的 `processPackage`+`prefetch`、`translate/{action,item,status,addon,useCache}.ts`、`clients.ts`、`types.ts`、以及 garland 全链。
+
+**D-2 时间轴/图标仍要 DOM 反查(不能只靠改写)**
+
+- 关键认知:**时间轴表格里的事件名不是来自 xivapi 实时 fetch,而是来自 xivanalysis 战报解析 + 其打包资源 `xivanalysis.com/assets/index.*.js`(内嵌一份英文技能/状态名表)**。URL 改写拦不到应用包,也改不动内嵌英文。故这些节点文本必须**在 DOM 层反查**:英文名 → 国服 `/search?Name~"X"&language=en` 命中 → 按 `row_id` 国服 `/sheet/{Sheet}/{id}?language=chs` 取简中行名 → 写回节点。
+- 因此**恢复**一条精简 DOM 反查链,但**去 garlands、去 provider 依赖、去 GM**:新增 `src/xiv.ts`(只用 `hooks.ts` 暴露的原始 `pageFetch` 直连国服,`/search`+单行读两能力,`language=en` 取英文命中、`language=chs` 取中文行名,双缓存);`timeline.ts`(静态字典 `STATIC_I18N` + `translate()` 反查 + `injectTimeline`)、`icon.ts`(按图标号消歧的 `fetchIcon` + 回落 `translate`)。
+- 输出带**类型前缀**(按用户要求):`Searing Light → 技能：灼热之光`、`Divination → 技能：占卜`、`The Ewer → 技能：河流神之瓶`、`Medicated → 状态：强化药`;CJK 原样、`GCD` 术语保留。
+
+**验证链**:离线用 `xiv.ts` 的等价逻辑打真实国服,10 条标签结果如上全部合理;URL 改写侧浏览器两轮实测:枚举轮(页面 fetch 全落 `*.xivapi.com/api/sheet/*`)、rewrite-on 轮(12 条全 200、零 520)。图标/时间轴 DOM 反查待浏览器 #3。
+
+**改动汇总**:`hooks.ts`(导出 `pageFetch`;URL 改写经 `pageFetch`,无 GM)、`xiv.ts`(新)、`timeline.ts`、`icon.ts`、`index.ts`。`vite.config.ts`:`@grant` 仅 `unsafeWindow`,**无 `@connect`**、**无 papaparse 别名**(脚本已不 import `xiv-api-provider`,泄漏源消失)。产物 **10,568 bytes**(vs 起点 31.5 kB / 原 v0.0.5 更大),`grep garlandtools|papaparse|xiv-api-provider|GM|@connect|processPackage` 全 0。tsc/oxlint/oxfmt/`rushx build` 全绿。
+
+**待**:浏览器 #3——tooltip/详情中文、时间轴/图标经反查变中、Network 只剩 xivcdn、无 520、无 `v2.xivapi.com`——再定 bump/提交。回退:各阶段产物在 `.migration-backup/`。
+
+## Stage E:合并整行 + 在线职业字典 + garlands search 兜底(当前架构,取代 D-2 的 xiv.ts/前缀)
+
+D-2 之后浏览器多轮实测暴露两个问题并促成此版:
+
+- **tooltip 深层字段没本地化**:`enrich` 起初只挑 `Name`/`Description` 覆写,漏了嵌套的 `ActionCategory.Name`("Spell")、`ClassJobCategory.Name` 等。**改为按 `row_id` 把整行 CN `fields`/`transient` 换上**(同 query 同列集,只文本变中文)——`Spell→魔法`、`ClassJobCategory→占星术士` 一并解决。CN 失败 → 用结构一致、含中文的国服响应顶回国际站 520/525;CN 未回而 EN 正常 → 原样返回。
+- **`习得条件：AST Lv.82` 的 `AST` 不翻**:两服 `ClassJob.Abbreviation` 都是拉丁。**在线取国服 `ClassJob`(`limit=120`,46 行)建 `AST→占星术士` 字典**(`job-dict.ts`),合并 Action 行时把 `ClassJob.Abbreviation` 换成中文全名。无需 polyfill、无需 search。
+
+**关键认知修正(推翻 D-2 的 xiv.ts 国服反查,并定下兜底源)**:
+
+- 时间轴/图标文本经 `xivapi cn` 反查仍大面积不覆盖——因为**这些标签由站点自带数据渲染,国服 `/sheet` 那几条拦截只填了很小的 map**(实测 `counts` 一度只 ~51)。用户先要求「不用 search」→ 改走纯静态手工覆盖表(`data/override.ts`,按 `[xiv-warn]` 逐个补)。
+- 但团辅/buff 名(站点打包资源里、不经 `/sheet`)数量多且随版本变,纯手工不可持续 → **回退到 `search` 兜底**,且**源用 garlands `search.php?lang=en`**(不是国服 `/search`:它是当初能查这些英文名、带图标号消歧的成熟路径;国服 `/search` 对纯中文/个别串不稳,且这次要的是「英文→id→简中」,garlands 命中后仍交国服单行读简中名)。
+- 最终 **DOM 解析优先级**:手工覆盖表(`data/override.ts`) > 合并映射(`byEn`/`byIconId`,拦截 `/sheet` 时顺带填) > **garlands `search.php`(GM)反查 id → 国服 `/sheet/{Sheet}/{id}?language=chs` 读简中名**,结果写回映射并 `notifyMapGrowth` 触发重扫。**不加类型前缀**(用户否掉了 `技能：`)。
+
+**文件**:`hooks/request.ts`(整行合并 + 导出 `pageFetch` + 520 救火 + 在线职业字典合并)、`hooks/fetch.ts`(仅给 garlands 兜底用的 `GM.xmlHttpRequest` 封装,类型复用 `types/gm.d.ts`)、`hooks/timeline.ts`/`hooks/icon.ts`(同步查表 + 异步兜底 + 增长重扫)、`data/store.ts`(`addEntry`/`recordPair` + `notifyMapGrowth` 增长通知,含同名保留首个)、`data/jobAbbr.ts`(在线职业缩写字典)、`data/search.ts`(garlands 兜底,按串去重缓存)、`data/override.ts`(手工覆盖数组源 + 派生查表)、`data/unknown.ts`(兜底也失败才报)、`types/gm.d.ts`(`GM`/`GM_xmlhttpRequest`/`unsafeWindow` 全局声明)。
+
+**依赖/元数据**:`@grant` = `GM_xmlhttpRequest` + `unsafeWindow`;`@connect` = `www.garlandtools.cn`(仅 garlands 兜底要;CN 读全走原生 fetch,靠其 `ACAO:*`)。不 import `xiv-api-provider`(无 papaparse/桶泄漏)。产物 **18.06 kB**(grep:garlands search.php=1、xivapi `/api/search`=0、papaparse=0、`技能：`=0)。tsc/oxlint/oxfmt/`rushx build` 全绿。
+
+**用户实测(末轮)**:buff/团辅经 garlands 兜底转中、`counts` 升到 90+、`[xiv-warn]` 清空、无报错。**待**:确认多职业稳定后 bump 版本 + 提交(工作树含 Stage A–E 全部改动;浏览器控制台 dump 已 `.gitignore`,结论均并入本文)。回退:各阶段产物在 `.migration-backup/`。

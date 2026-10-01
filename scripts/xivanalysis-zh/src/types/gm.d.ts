@@ -1,9 +1,8 @@
-// Tampermonkey 官方对 `GM_xmlhttpRequest` 提供了两种签名,这里都声明,并注明运行时用哪一套:
-//  - **异步(Promise 版)`GM.xmlHttpRequest`**(命名空间、大写 H)——本项目 `gmFetch` 用的是这个:
-//    `details => Promise`,该 Promise 另带 `abort()`;网络错误 / 超时 / 中止都走 reject。
-//  - 回调式(旧版)`GM_xmlhttpRequest`(全局函数)——同步发起、靠 onload/onerror 等回调收结果,返回带 `abort()` 的句柄。
-//    保留其声明只为覆盖另一套签名(两者入参不同),代码里并不使用。
-// `@grant` 仍写 `GM_xmlhttpRequest`,`@connect` 的域名限制对两者都适用。
+// Tampermonkey 官方对 `GM_xmlhttpRequest` 提供了两种签名,这里都声明,并注明运行时用哪一套(供本项目及别的项目复用):
+//  - **异步(Promise 版)`GM.xmlHttpRequest`**(命名空间、大写 H):`details => Promise`,该 Promise 另带 `abort()`;
+//    网络错误 / 超时 / 中止都走 reject。
+//  - 回调式(旧版)`GM_xmlhttpRequest`(全局函数):同步发起、靠 onload/onerror 等回调收结果,返回带 `abort()` 的句柄。
+// `@grant` 写 `GM_xmlhttpRequest`,`@connect` 的域名限制对两者都适用。纯声明,不进产物、不增体积。
 
 interface GMXMLHttpRequestDetails {
   method?: string;
@@ -40,7 +39,7 @@ interface GMXMLHttpRequestPromise extends Promise<GMXMLHttpResponse> {
 /** 回调式旧 API 的入参:在异步 details 之上再加一组回调(同步签名与异步不同,故单列)。 */
 interface GMXHROptions extends GMXMLHttpRequestDetails {
   synchronous?: boolean;
-  onabort?: () => void;
+  onabort?: (response: GMXMLHttpResponse) => void;
   onerror?: (response: GMXMLHttpResponse) => void;
   onload?: (response: GMXMLHttpResponse) => void;
   onloadstart?: (response: GMXMLHttpResponse) => void;
@@ -65,11 +64,11 @@ interface GMXHRHandle {
 declare function GM_xmlhttpRequest(details: GMXHROptions): GMXHRHandle;
 
 interface GM {
-  /** 新版:Promise 化、异步。gmFetch 实际调用它。 */
+  /** 新版:Promise 化、异步。 */
   xmlHttpRequest(details: GMXMLHttpRequestDetails): GMXMLHttpRequestPromise;
 }
 
 declare const GM: GM;
 
-/** 宿主页真实 window;`@grant unsafeWindow` 后可用。覆写页面 fetch 必须经它,沙箱的 window 不是页面那个。 */
+/** 宿主页真实 window;`@grant unsafeWindow` 后可用。覆写页面 fetch 必须经它,沙箱里的 window 不是页面那个。 */
 declare const unsafeWindow: Window & typeof globalThis;

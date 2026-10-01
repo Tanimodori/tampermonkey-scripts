@@ -31,9 +31,10 @@ export default defineConfig({
         namespace: 'http://tanimodori.com/',
         match: 'https://xivanalysis.com/*',
         include: 'https://xivanalysis.com/*',
-        // 跨源取数必须走 GM_xmlhttpRequest(页面 fetch 受目标站 CORS 拦截);unsafeWindow 用于截获宿主页 fetch。
+        // 截获并改写宿主页 fetch(unsafeWindow)。CN 读走原生 fetch(国服回 ACAO:*);
+        // 仅 garlands search.php 兜底无 CORS 头,须经 GM → 保留 GM_xmlhttpRequest + @connect。
         grant: ['GM_xmlhttpRequest', 'unsafeWindow'],
-        connect: ['www.garlandtools.cn', 'xivapi-v2.xivcdn.com', 'v2.xivapi.com', 'beta.xivapi.com'],
+        connect: ['www.garlandtools.cn'],
         'run-at': 'document-start',
       },
       injectPackageJson: true,

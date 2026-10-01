@@ -1,15 +1,10 @@
 // 时间轴 detector:扫 .Timeline-module_content 单元格,把英文标签交给 resolve,命中则调 handler 替换;未命中由 resolve 末尾 warn search 上报。
-import { reportUntranslated } from '../data/ignore';
-import { makeResolve } from '../data/resolve';
+import { resolve } from '../data/resolve';
 import { onMapGrowth } from '../data/store';
 import type { XivDetector, XivQuery } from '../types/workflow';
 import { isTarget } from '../utils';
 
 const SELECTOR = '[class^="Timeline-module_content"], [class*=" Timeline-module_content"]';
-const resolve = makeResolve(async (query) => {
-  reportUntranslated(query.en ?? '');
-  return [];
-});
 
 export const detectTimeline: XivDetector = (handler) => {
   const apply = (node: HTMLElement): void => {

@@ -19,9 +19,5 @@ export type XivEntryProvider = () => Promise<XivEntry[]>;
 // 查询:Partial<XivEntry> 决定按哪些字段匹配(id > iconId > en > zh)。
 export type XivQuery = Partial<XivEntry>;
 
-// 未命中上报:由 detector 提供,置于 resolve 链末。必须始终成功返回 `Promise<XivEntry[]>`(约定返回 []),
-// 只上报、不产条目 —— 保证未命中时 resolve 得到空数组,handler 不会被伪条目调用。
-export type XivWarnHandler = (query: XivQuery) => Promise<XivEntry[]>;
-
 // resolver 的统一来源:按查询反查,返回命中数组(空数组=未命中)。匹配优先级 id > iconId > en > zh,kind 仅用于消歧。
 export type XivSearch = (query: XivQuery) => Promise<XivEntry[]>;

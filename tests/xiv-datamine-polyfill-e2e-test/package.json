@@ -31,7 +31,6 @@
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",
     "typescript": "~5.9.3",
-    "universal-fetch-type": "workspace:*",
     "vite": "^8.3.0",
     "vitest": "^5.0.1",
     "xiv-api-provider": "workspace:*",

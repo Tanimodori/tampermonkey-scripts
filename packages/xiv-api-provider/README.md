@@ -35,7 +35,7 @@ provider 不内置任何一张表的类型:列名与值都照文件原样,含义
 
 ## 校验与测试
 
-zod 只在测试里跑:业务代码对各 provider 的 schema 只 `import type`,运行时的判定是 `guards.ts` 里的手写谓词。生成的声明仍以 zod 的类型书写,所以 zod 记在 `dependencies`——消费方读声明时要能解析它,运行时不会 import 它。同一条理由把 `universal-fetch-type`(`fetch` 那条缝隙的类型)也记在 `dependencies`:本包的声明里留着对它的活引用,而它自己再引 `@apollo/utils.fetcher`,所以读得到 `xiv-api-provider` 声明的人不需要知道 apollo 存在。取舍见 [zod 只在测试里](docs/providers/README.md#zod-只在测试里)。
+zod 只在测试里跑:业务代码对各 provider 的 schema 只 `import type`,运行时的判定是 `guards.ts` 里的手写谓词。生成的声明仍以 zod 的类型书写,所以 zod 记在 `dependencies`——消费方读声明时要能解析它,运行时不会 import 它。`universal-fetch-type`(`fetch` 那条缝隙的类型)同样只被声明引用、不被运行时 import,但它记在 `devDependencies`:这些包都是私有的、只经 `workspace:*` 被消费,而 pnpm 会把 `devDependencies` 一样链进本包的 `node_modules`,所以从 `xiv-api-provider` 的声明出发,整条声明链(`→ universal-fetch-type → @apollo/utils.fetcher`)照旧解析得到,消费方不需要在任何一处声明 apollo。真要对外发布某个包时,这一条要改记 `dependencies`,否则外部读者解析不到那个名字。取舍见 [zod 只在测试里](docs/providers/README.md#zod-只在测试里)。
 
 ```bash
 rushx test              # 离线,CI 门禁

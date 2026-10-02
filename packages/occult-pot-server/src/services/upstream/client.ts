@@ -63,7 +63,7 @@ export function getClient(options: ClientOptions = {}): Dispatcher {
  * moment `loadConfig()` invalidates it, since the pool is read when the call goes out rather than captured
  * when the client was built.
  */
-export function getFetcher(): Fetcher {
+export function getFetcher(): Fetcher<Buffer<ArrayBuffer>> {
   return (url, init) => undiciFetch(url, { ...init, dispatcher: getClient() });
 }
 

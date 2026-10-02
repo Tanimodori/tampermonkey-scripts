@@ -28,4 +28,17 @@ export type Fetcher<B = Buffer> = (url: string, init?: FetcherRequestInit<B>) =>
  */
 export type FetcherRequestInit<B = Buffer> = Omit<ApolloRequestInit, 'body'> & { readonly body?: string | B };
 
+/**
+ * `Fetcher<Buffer<ArrayBuffer>>` under one name, for the caller that wants that flavour and should not have
+ * to pick it out of the generic every time it writes a signature.
+ *
+ * The pin still lives here: which backing memory counts as web-compatible is this package's decision, and an
+ * alias keeps it one line instead of one line per use site. It buys the spelling, not the declarations — the
+ * type behind the name is still `Buffer<ArrayBuffer>`, so a program that resolves it still needs Node's.
+ */
+export type WebFetcher = Fetcher<Buffer<ArrayBuffer>>;
+
+/** {@link WebFetcher}'s request init, pinned the same way. */
+export type WebFetcherRequestInit = FetcherRequestInit<Buffer<ArrayBuffer>>;
+
 export type { FetcherHeaders, FetcherResponse };

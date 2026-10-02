@@ -8,10 +8,9 @@
       `@types/node` (undici-types), which is also the flavour `tencent-doc-sdk` compiles against. Adding DOM
       would bind a second, browser-shaped declaration over each of those names, and would additionally need
       `DOM.Iterable` before `FetcherHeaders`' iterator members exist at all.
-      This is no longer about the transport seam. The seam is `Fetcher<Buffer<ArrayBuffer>>` from
-      `universal-fetch-type`, whose request body is DOM-compatible, so a DOM program can hand in its own
-      `fetch` unwrapped — that direction is judged by
-      `tests/xiv-datamine-polyfill-e2e-test/test/fetcher-variance.ts`, not by this file.
+      This is no longer about the transport seam. The seam is `WebFetcher` from `universal-fetch-type`, whose
+      request body is DOM-compatible, so a DOM program can hand in its own `fetch` unwrapped — that direction
+      is judged by `tests/xiv-datamine-polyfill-e2e-test/test/fetcher-variance.ts`, not by this file.
     */
     "lib": ["ES2020"],
     "types": ["node"],

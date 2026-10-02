@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import type { Fetcher } from 'xiv-api-provider';
+import type { WebFetcher } from 'xiv-api-provider';
 import { dataminePolyfill } from 'xiv-datamine-polyfill';
 
 /**
@@ -31,7 +31,7 @@ const ITEM_UI = ['key,0,1,2', '#,Name,Icon,Order{Minor}', 'int32,str,Image,byte'
 const ADDON = ['key,0,1', '#,Text,Name', 'int32,str,str', '699,"即时",Common', '700,"> ",Common', '999,"<Switch(1,2,3,4)>",Generic'].join('\n');
 
 /** Answer by the sheet name in the requested path; anything else is a 404, which is a real answer about data. */
-const stubFetch: Fetcher<Buffer<ArrayBuffer>> = async (url) => {
+const stubFetch: WebFetcher = async (url) => {
   const requested = new URL(url);
   console.log(`[e2e] sheet request: ${requested.pathname}`);
   const sheet = decodeURIComponent((requested.pathname.split('/').pop() ?? '').replace(/\.csv$/, ''));

@@ -9,10 +9,14 @@ export type Fetcher<B = Buffer> = (url: string, init?: FetcherRequestInit<B>) =>
 
 export type FetcherRequestInit<B = Buffer> = Omit<import('@apollo/utils.fetcher').FetcherRequestInit, 'body'> & { readonly body?: string | B };
 
+export type WebFetcher = Fetcher<Buffer<ArrayBuffer>>;
+
+export type WebFetcherRequestInit = FetcherRequestInit<Buffer<ArrayBuffer>>;
+
 export type { FetcherHeaders, FetcherResponse };
 ```
 
-`B` 取默认的 `Buffer` 时与上游同形。仓内各包使用 `Fetcher<Buffer<ArrayBuffer>>`。
+`B` 取默认的 `Buffer` 时与上游同形。仓内各包用的是 `Fetcher<Buffer<ArrayBuffer>>` 这一档,本包把它命名为 `WebFetcher`,其请求体同名 `WebFetcherRequestInit`。
 
 ## 该用哪一档
 
@@ -30,14 +34,14 @@ export type { FetcherHeaders, FetcherResponse };
 ## 用法
 
 ```ts
-import type { Fetcher } from 'universal-fetch-type';
+import type { WebFetcher } from 'universal-fetch-type';
 
 interface Options {
-  readonly fetch?: Fetcher<Buffer<ArrayBuffer>>;
+  readonly fetch?: WebFetcher;
 }
 ```
 
-`xiv-api-provider` 与 `tencent-doc-sdk` 把这四个名字原样再导出,它们的消费方从各自入口取即可,不需要直接依赖本包。写这一档要用到 `Buffer` 这个类型名,因此使用方的编译程序需要 Node 的类型定义。
+`xiv-api-provider` 与 `tencent-doc-sdk` 把这六个名字原样再导出,它们的消费方从各自入口取即可,不需要直接依赖本包。别名写下的是这一档的拼法,`Buffer` 这个类型名仍在被读出的声明里,所以使用方的编译程序依旧需要 Node 的类型定义。
 
 ## 当前限制
 

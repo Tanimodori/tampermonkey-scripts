@@ -1,4 +1,4 @@
-import type { Fetcher } from 'universal-fetch-type';
+import type { WebFetcher } from 'universal-fetch-type';
 import { getChecked, ProviderError, sendRequest, type SendOptions } from '@/internal/http.ts';
 import { EDITIONS, type Edition, type LanguageToken } from './editions.ts';
 import {
@@ -32,7 +32,7 @@ import type { ApiErrorResponse, Fields, RowResult, SheetName, SheetRow, VersionI
 
 export interface XivApiClientOptions {
   /** Defaults to the ambient `fetch`. Pass the captured native fetch from a userscript. */
-  readonly fetch?: Fetcher<Buffer<ArrayBuffer>>;
+  readonly fetch?: WebFetcher;
   /** Applied to every read that takes a language, so a caller does not repeat it. */
   readonly language?: LanguageToken;
   readonly timeoutMs?: number;

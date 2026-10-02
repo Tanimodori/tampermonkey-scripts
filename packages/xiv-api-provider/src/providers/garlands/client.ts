@@ -1,4 +1,4 @@
-import type { Fetcher } from 'universal-fetch-type';
+import type { WebFetcher } from 'universal-fetch-type';
 import { getChecked } from '@/internal/http.ts';
 import { garlandDocUrl, garlandSearchUrl, type GarlandDocKindUrl, type GarlandSearchQuery } from './endpoints.ts';
 import { isGarlandDocument, isGarlandSearchResults } from './guards.ts';
@@ -13,7 +13,7 @@ import type { GarlandActionResponse, GarlandItemResponse, GarlandSearchItem, Gar
 
 export interface GarlandClientOptions {
   /** Defaults to the ambient `fetch`. Pass the captured native fetch from a userscript. */
-  readonly fetch?: Fetcher<Buffer<ArrayBuffer>>;
+  readonly fetch?: WebFetcher;
   readonly timeoutMs?: number;
 }
 

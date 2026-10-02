@@ -1,4 +1,4 @@
-import type { Fetcher, FetcherRequestInit } from 'universal-fetch-type';
+import type { WebFetcher, WebFetcherRequestInit } from 'universal-fetch-type';
 import type { z } from 'zod';
 import type { AnyEndpoint, CallArgs, OutputOf } from '@/endpoint';
 import type { DocCoordinates, PathParams } from '@/path';
@@ -26,7 +26,7 @@ import { answerHeaderSchema } from '@/validation/schemas';
  *
  * There is no retry here, and no timeout, and that is the whole design: one endpoint is one round trip. A
  * caller that wants a second attempt makes it, knowing that a write which failed may already have landed
- * and that the upstream's quota is spent either way. Whoever owns the connection does so in the `Fetcher`
+ * and that the upstream's quota is spent either way. Whoever owns the connection does so in the `WebFetcher`
  * handed to `createApi`, or around the call — a library that translates the upstream's endpoints one for
  * one has no opinion about what those calls are worth to anybody.
  */
@@ -52,7 +52,7 @@ export interface ApiOptions {
    * current one from inside its own fetcher, which is why there is no "a function asked per call" form
    * here — a fetcher already is one.
    */
-  readonly transport?: Fetcher<Buffer<ArrayBuffer>> | undefined;
+  readonly transport?: WebFetcher | undefined;
 }
 
 /** The document, as a caller works with it: every endpoint, called the same way. */
@@ -102,7 +102,7 @@ export function createApi(options: ApiOptions): Api {
     const { pathname: path } = url;
     const shape: CallShape = { operation, path, envelope: response.envelope };
     const requestHeaders = headersFor(endpoint);
-    const init: FetcherRequestInit<Buffer<ArrayBuffer>> = {
+    const init: WebFetcherRequestInit = {
       method: endpoint.method,
       ...(requestHeaders === undefined ? {} : { headers: requestHeaders }),
       ...(body === undefined ? {} : { body }),
@@ -172,7 +172,7 @@ export function createApi(options: ApiOptions): Api {
    * and carry their credential in the query — sends neither the header nor a `Content-Type`, exactly as it
    * does today. A credential missing any piece fails as the store's own `config` error, naming which one.
    */
-  function headersFor(endpoint: AnyEndpoint): FetcherRequestInit<Buffer<ArrayBuffer>>['headers'] {
+  function headersFor(endpoint: AnyEndpoint): WebFetcherRequestInit['headers'] {
     return endpoint.auth === 'headers' ? { 'Content-Type': 'application/json', Accept: 'application/json', ...store.getAuthHeaders() } : undefined;
   }
 }
@@ -205,4 +205,4 @@ function sentBody(endpoint: AnyEndpoint, body: unknown): string | undefined {
 const identity = <T>(value: T): T => value;
 
 /** The transport for a caller that brought none: the platform's own `fetch`, with nothing wrapped around it. */
-const defaultFetcher: Fetcher<Buffer<ArrayBuffer>> = (url, init) => globalThis.fetch(url, init);
+const defaultFetcher: WebFetcher = (url, init) => globalThis.fetch(url, init);

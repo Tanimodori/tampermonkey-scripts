@@ -1,4 +1,4 @@
-import type { Fetcher, FetcherRequestInit } from 'universal-fetch-type';
+import type { WebFetcher, WebFetcherRequestInit } from 'universal-fetch-type';
 import { describe, expect, it } from 'vitest';
 import { createApi } from '@/client';
 import { endpoints } from '@/endpoints';
@@ -28,8 +28,8 @@ const store = createCredentialStore(CREDENTIAL);
 
 /** The client under test, with a transport that records every call it was asked to make. */
 function wired(options: { apiBase?: string; store?: CredentialStore; reply?: { status?: number; body: unknown; headers?: Record<string, string> } } = {}) {
-  const seen: Array<{ url: string; init: FetcherRequestInit<Buffer<ArrayBuffer>> }> = [];
-  const transport: Fetcher<Buffer<ArrayBuffer>> = async (url, init) => {
+  const seen: Array<{ url: string; init: WebFetcherRequestInit }> = [];
+  const transport: WebFetcher = async (url, init) => {
     seen.push({ url: String(url), init: init ?? {} });
     const status = options.reply?.status ?? 200;
     const body = options.reply?.body;
@@ -43,7 +43,7 @@ function wired(options: { apiBase?: string; store?: CredentialStore; reply?: { s
 }
 
 /** The first call the client was asked to make, said plainly. */
-function sent(seen: Array<{ url: string; init: FetcherRequestInit<Buffer<ArrayBuffer>> }>): {
+function sent(seen: Array<{ url: string; init: WebFetcherRequestInit }>): {
   url: URL;
   method: string;
   headers: Record<string, string>;
@@ -274,7 +274,7 @@ describe('a call that never became a request', () => {
 
 describe('an answer that never arrived', () => {
   it('is a transport failure, worded from the address with its query gone', async () => {
-    const transport: Fetcher<Buffer<ArrayBuffer>> = async () => {
+    const transport: WebFetcher = async () => {
       throw new TypeError('fetch failed: https://docs.qq.com/oauth/v2/userinfo?access_token=a-token-value');
     };
     const api = createApi({ apiBase: API_BASE, store, params: COORDINATES, transport });
@@ -310,7 +310,7 @@ describe('an answer that never arrived', () => {
 describe('the transport', () => {
   it('sends through the fetcher it was given, unchanged', async () => {
     const seen: Array<{ url: unknown; init: unknown }> = [];
-    const transport: Fetcher<Buffer<ArrayBuffer>> = async (url, init) => {
+    const transport: WebFetcher = async (url, init) => {
       seen.push({ url, init });
       return new Response(JSON.stringify(ENVELOPE));
     };

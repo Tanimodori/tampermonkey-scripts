@@ -1,4 +1,4 @@
-import type { Fetcher } from 'tencent-doc-sdk';
+import type { WebFetcher } from 'tencent-doc-sdk';
 import { Agent, fetch as undiciFetch } from 'undici';
 import type { Dispatcher } from 'undici';
 import { getConfig, onConfigReload } from '@/config.ts';
@@ -8,7 +8,7 @@ import { getConfig, onConfigReload } from '@/config.ts';
  *
  * It does not know what a pot is, which document it lives in, or what a caller does with an answer.
  * All it owns is the connection: a pool whose timeouts come from `OPS_UPSTREAM_TIMEOUT_MS`, and the
- * `Fetcher` `tencent-doc-sdk` sends its calls through — which is that pool seen as one function. What an
+ * `WebFetcher` `tencent-doc-sdk` sends its calls through — which is that pool seen as one function. What an
  * answer means is the library's business, and what this service keeps of it — the counters, the
  * histograms, the log lines — is `observe.ts`'s.
  *
@@ -56,14 +56,14 @@ export function getClient(options: ClientOptions = {}): Dispatcher {
 }
 
 /**
- * The `Fetcher` to hand `tencent-doc-sdk`: undici's fetch, on the pool above.
+ * The `WebFetcher` to hand `tencent-doc-sdk`: undici's fetch, on the pool above.
  *
  * The library calls a function per request rather than holding a connection, which is what keeps this
  * service's two arrangements intact — one pool with the configured timeouts, and a replacement noticed the
  * moment `loadConfig()` invalidates it, since the pool is read when the call goes out rather than captured
  * when the client was built.
  */
-export function getFetcher(): Fetcher<Buffer<ArrayBuffer>> {
+export function getFetcher(): WebFetcher {
   return (url, init) => undiciFetch(url, { ...init, dispatcher: getClient() });
 }
 

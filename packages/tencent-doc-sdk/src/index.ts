@@ -1,6 +1,6 @@
 // Re-exported rather than made consumers depend on it themselves: this is the shape a `transport` has to
 // fit, and the package behind it — `universal-fetch-type` — carries types and nothing else.
-export type { Fetcher, FetcherHeaders, FetcherRequestInit, FetcherResponse } from 'universal-fetch-type';
+export type { Fetcher, FetcherHeaders, FetcherRequestInit, FetcherResponse, WebFetcher, WebFetcherRequestInit } from 'universal-fetch-type';
 
 export type { TencentDocsErrorCode, TencentDocsErrorOptions, UpstreamResponse } from './validation/errors';
 export { TencentDocsError } from './validation/errors';

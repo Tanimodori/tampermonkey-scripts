@@ -29,7 +29,7 @@ ui.cell(1, 'Name'); // 格斗武器
 
 `readSheet` 交回的是一份纯数据(整张网格,含三行表头),`useSheetTable` 才是有寻址能力的那个对象。不带 `ref` 时取分支头 `HEAD` 的那份文件;要复现同一次构建就写死一个 ref(tag、分支名或 commit sha 都可)。行按位置寻址,`#` 既不递增也不连续,所以按 `#` 查要自己 `new Map([...ui.rows].map((r) => [r[0], r]))`。
 
-`fetch` 的类型是本仓 `universal-fetch-type` 的 `Fetcher<Buffer<ArrayBuffer>>`——与 `tencent-doc-sdk` 的 transport 同一档,一个 fetcher 可以同时喂两边。默认取全局 `fetch`,所以 Node 侧不传也能跑。必须显式注入的情况:userscript 自己拦截了 `window.fetch`,出站请求要走拦截前的原生 `fetch`,否则会自顶穿过自己的 hook。`origFetch` 直接传即可,不必包一层——`Buffer<ArrayBuffer>` 这一档要买的就是这件事,理由见 [universal-fetch-type](../universal-fetch-type/README.md)。
+`fetch` 的类型是本仓 `universal-fetch-type` 的 `WebFetcher`——与 `tencent-doc-sdk` 的 transport 同一档,一个 fetcher 可以同时喂两边。默认取全局 `fetch`,所以 Node 侧不传也能跑。必须显式注入的情况:userscript 自己拦截了 `window.fetch`,出站请求要走拦截前的原生 `fetch`,否则会自顶穿过自己的 hook。`origFetch` 直接传即可,不必包一层——这一档要买的就是这件事,理由见 [universal-fetch-type](../universal-fetch-type/README.md)。
 
 provider 不内置任何一张表的类型:列名与值都照文件原样,含义由读的一侧判。要把一张表在构建期钉进产物,交给 `xiv-datamine-polyfill`。
 

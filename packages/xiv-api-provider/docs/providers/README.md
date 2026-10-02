@@ -6,7 +6,7 @@
 - [garlands](garlands.md) —— Garland Tools 国服镜像,简中名称与描述目前真正的来源。
 - [datamine](datamine.md) —— 解包 CSV 的在线读取:一张表一个文件,取来解析成交给调用方。
 
-分成三个而不是做成一个带来源参数的客户端,是因为三者的差异正是要写下来的东西:xivapi 有 edition、有 `version` 协商、信封是 `{schema, version, rows}`;garlands 按种类返回形状各不相同的文档、没有版本概念;datamine 在 GitHub 的 raw 主机上、按 ref 与语别取一个文件、返回的是表而不是记录。共有的只有传输与错误类型(`ProviderError`,以及注入 `fetch` 这一条缝隙——类型是本仓 `universal-fetch-type` 的 `Fetcher<Buffer<ArrayBuffer>>`,与 `tencent-doc-sdk` 的 transport 同一档,一个 fetcher 能同时喂两边)。
+分成三个而不是做成一个带来源参数的客户端,是因为三者的差异正是要写下来的东西:xivapi 有 edition、有 `version` 协商、信封是 `{schema, version, rows}`;garlands 按种类返回形状各不相同的文档、没有版本概念;datamine 在 GitHub 的 raw 主机上、按 ref 与语别取一个文件、返回的是表而不是记录。共有的只有传输与错误类型(`ProviderError`,以及注入 `fetch` 这一条缝隙——类型是本仓 `universal-fetch-type` 的 `WebFetcher`,与 `tencent-doc-sdk` 的 transport 同一档,一个 fetcher 能同时喂两边)。
 
 ## 入口
 

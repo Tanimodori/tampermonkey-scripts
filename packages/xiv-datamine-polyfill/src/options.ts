@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import type { Fetcher } from 'universal-fetch-type';
+import type { WebFetcher } from 'universal-fetch-type';
 import type { SheetRawData, TrimRules } from 'xiv-api-provider';
 import { contentHash } from './cache.ts';
 
@@ -52,7 +52,7 @@ export interface DataminePolyfillOptions {
    * A proxy is the caller's business from here: `fetch` ignores `HTTPS_PROXY`, so a build behind one passes a
    * fetch that is configured with an agent. This package does not grow a proxy layer to cover that.
    */
-  readonly fetch?: Fetcher<Buffer<ArrayBuffer>>;
+  readonly fetch?: WebFetcher;
   /** Called when a stale cache is used in place of a fetch that failed. Defaults to silent. */
   readonly onWarn?: (message: string) => void;
 }
@@ -108,4 +108,4 @@ export const cacheKey = (identity: TableIdentity): string => {
   return contentHash(material);
 };
 
-export type { Fetcher, SheetRawData };
+export type { SheetRawData, WebFetcher };

@@ -8,7 +8,6 @@ import {
   isApiErrorResponse,
   isProviderError,
   isSheetResponse,
-  NotFoundError,
   readSheet,
   useSheetTable,
 } from '@/index.ts';
@@ -230,7 +229,7 @@ describe.skipIf(!live)('datamining dumps', { tags: ['live'] }, () => {
   it('answers a sheet the tree does not carry as a 404 rather than an empty grid', async () => {
     // `DataCenter` is not in the tree at all: the sheet was renamed in modern EXD, and some locales never
     // got the old file. A caller has to be able to tell that apart from a request that failed.
-    await expect(fetchSheetCsv('DataCenter')).rejects.toBeInstanceOf(NotFoundError);
+    await expect(fetchSheetCsv('DataCenter')).rejects.toMatchObject({ kind: 'not_found', status: 404 });
   });
 
   it('serves Chinese text for the chs locale', async () => {

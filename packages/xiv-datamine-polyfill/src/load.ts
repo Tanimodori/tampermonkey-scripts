@@ -1,4 +1,4 @@
-import { DEFAULT_REF, fetchSheetCsv, isProviderError, NotFoundError, parseSheetCsv, useSheetTable, type FetchLike, type SheetRawData } from 'xiv-api-provider';
+import { DEFAULT_REF, fetchSheetCsv, isProviderError, parseSheetCsv, useSheetTable, type FetchLike, type SheetRawData } from 'xiv-api-provider';
 import { ageOf, contentHash, csvPath, hoursSince, modulePath, readText, writeText } from './cache.ts';
 import { cacheKey, DEFAULT_LOCALE, DEFAULT_MAX_AGE_MS, rulesFor, type DataminePolyfillOptions, type SheetRules, type TableIdentity } from './options.ts';
 
@@ -53,9 +53,9 @@ const csvOf = async (sheet: string, ref: string, options: LoadOptions, warn: (me
     writeText(file, csv);
     return { csv, fetched: true };
   } catch (cause) {
-    // "This locale has no such sheet" is an answer about the data, so it is passed through as itself; a
-    // caller can tell the two apart with `instanceof NotFoundError` instead of reading a message.
-    if (cause instanceof NotFoundError) throw cause;
+    // "This locale has no such sheet" is an answer about the data, not a fetch that could not be done, so it
+    // is passed through as itself instead of being softened into a stale cache.
+    if (isProviderError(cause) && cause.kind === 'not_found') throw cause;
     if (cached === null || age === null)
       throw new Error(`xiv-datamine-polyfill: could not read ${sheet}.csv at ${ref} and nothing is cached — ${asMessage(cause)}`, { cause });
     warn(`${sheet}.csv at ${ref} could not be refreshed (${asMessage(cause)}); using the cached copy from ${hoursSince(age)}`);

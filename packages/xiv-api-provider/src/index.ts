@@ -27,7 +27,7 @@ export {
   texturePathWithoutExtension,
 } from '@/icon.ts';
 
-export { isProviderError, NotFoundError, ProviderError } from '@/internal/http.ts';
+export { isProviderError, ProviderError } from '@/internal/http.ts';
 export type { FetchLike, Provider, ProviderErrorKind, SendOptions } from '@/internal/http.ts';
 
 // xivapi: the structured game-data API, both editions.

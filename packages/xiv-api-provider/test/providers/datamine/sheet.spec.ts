@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isProviderError, NotFoundError, type FetchLike } from '@/internal/http.ts';
+import { isProviderError, type FetchLike } from '@/internal/http.ts';
 import { fetchSheetCsv, readSheet, sheetCsvUrl } from '@/providers/datamine/sheet.ts';
 
 /**
@@ -64,9 +64,9 @@ describe('fetching', () => {
     await expect(readSheet('ItemUICategory', { fetch })).rejects.toThrow(/ItemUICategory\.csv@HEAD: expected at least 3 header records/);
   });
 
-  it('reports an absent sheet as NotFoundError, which is an answer rather than a failure', async () => {
+  it('reports an absent sheet as `not_found`, which is an answer rather than a failure', async () => {
     const { fetch } = transport({});
-    await expect(fetchSheetCsv('DataCenter', { fetch })).rejects.toBeInstanceOf(NotFoundError);
+    await expect(fetchSheetCsv('DataCenter', { fetch })).rejects.toMatchObject({ name: 'ProviderError', kind: 'not_found', status: 404 });
   });
 
   it('keeps a real failure distinguishable from that answer', async () => {

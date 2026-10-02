@@ -12,7 +12,7 @@ https://raw.githubusercontent.com/InfSein/ffxiv-datamining-mixed/<ref>/<locale>/
 
 之所以逐文件走 raw 而不是下载 release:release 按 patch 打 tag,但 assets 为空,只有整仓 tarball。
 
-404 在这条路线上是正常答案:`chs` 目录里没有 `DataCenter.csv`(`ItemGroupSpace`、`HouseBirdBanner` 同样缺),某些表只存在于别的语种。因此 `fetchSheetCsv` 把 404 抛成 `NotFoundError` 而不是 `ProviderError` —— "这个语种没这张表"和"请求失败"是两种处理路径。响应正文为空则按 `shape` 失败抛出:空表与"没有这张表"不能长一样。
+404 在这条路线上是正常答案:`chs` 目录里没有 `DataCenter.csv`(`ItemGroupSpace`、`HouseBirdBanner` 同样缺),某些表只存在于别的语种。因此 `fetchSheetCsv` 把 404 抛成 `kind: 'not_found'` 而不是 `kind: 'http'` 的 `ProviderError` —— "这个语种没这张表"和"请求失败"是两种处理路径,`error.status` 仍是 404。响应正文为空则按 `shape` 失败抛出:空表与"没有这张表"不能长一样。
 
 ## CSV 形状
 

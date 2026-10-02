@@ -1,4 +1,4 @@
-import { NotFoundError, ProviderError, sendRequest, type FetchLike } from '@/internal/http.ts';
+import { ProviderError, sendRequest, type FetchLike } from '@/internal/http.ts';
 import { parseSheetCsv, type SheetRawData } from './csv.ts';
 
 /**
@@ -53,13 +53,20 @@ const transport = (options: DatamineOptions, accept: string) => ({
 /**
  * One sheet's CSV text.
  *
- * A 404 throws `NotFoundError` rather than a `ProviderError`, because "this locale has no such sheet" is an
- * answer a caller acts on differently from "the request failed".
+ * A 404 comes back as `kind: 'not_found'` rather than `kind: 'http'`, because "this locale has no such sheet"
+ * is an answer a caller acts on differently from "the request failed".
  */
 export const fetchSheetCsv = async (sheet: string, options: DatamineOptions = {}): Promise<string> => {
   const url = sheetCsvUrl(sheet, options);
   const response = await sendRequest(url, transport(options, 'text/csv,text/plain,*/*'));
-  if (response.status === 404) throw new NotFoundError(`${sheet}: no ${options.locale ?? DEFAULT_LOCALE} sheet at ${options.ref ?? DEFAULT_REF} — ${url}`);
+  if (response.status === 404)
+    throw new ProviderError({
+      kind: 'not_found',
+      provider: 'datamine',
+      url: url.toString(),
+      status: 404,
+      message: `${sheet}: no ${options.locale ?? DEFAULT_LOCALE} sheet at ${options.ref ?? DEFAULT_REF}`,
+    });
   if (!response.ok)
     throw new ProviderError({
       kind: 'http',

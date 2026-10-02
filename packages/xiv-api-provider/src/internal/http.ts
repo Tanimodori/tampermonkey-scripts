@@ -15,7 +15,8 @@ export type Provider = 'xivapi' | 'garlands' | 'datamine';
 /** The subset of `fetch` a client needs, so a caller can hand in the pre-patch native one. */
 export type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 
-export type ProviderErrorKind = 'http' | 'network' | 'timeout' | 'shape' | 'unsupported';
+/** `not_found` is the one kind that is an answer rather than a failure: a `404` saying the data is not there. */
+export type ProviderErrorKind = 'http' | 'not_found' | 'network' | 'timeout' | 'shape' | 'unsupported';
 
 export class ProviderError extends Error {
   readonly kind: ProviderErrorKind;
@@ -52,9 +53,6 @@ export class ProviderError extends Error {
 }
 
 export const isProviderError = (error: unknown): error is ProviderError => error instanceof ProviderError;
-
-/** A `404` that means "this locale has no such sheet" rather than "the request failed". */
-export class NotFoundError extends Error {}
 
 export interface SendOptions {
   readonly provider: Provider;

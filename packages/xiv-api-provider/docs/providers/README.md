@@ -12,7 +12,7 @@
 
 一个默认入口 `xiv-api-provider`,即 `src/index.ts`:文件只做挑选与命名再导出,不写逻辑,按 provider 分组。三个 provider 都从这里出,用不到的那几个由调用方的打包器删掉——包声明 `sideEffects: false`,一个没被命名的导出不进产物,`csv-parse` 也只跟着 `readSheet` 那一条路走。
 
-- 共用 —— `createMemo`、图标 id 与路径换算、`ProviderError` / `isProviderError` / `NotFoundError` 与传输层类型。catch 处一定要用它们,实现只有一份。
+- 共用 —— `createMemo`、图标 id 与路径换算、`ProviderError` / `isProviderError` 与传输层类型。catch 处一定要用它们,实现只有一份。
 - xivapi —— edition 描述符、端点构造、信封判定、客户端。
 - garlands —— 端点构造、判定、客户端、文档与检索类型、语言选择。
 - datamine —— 取一张解包 CSV 并解析成 `SheetRawData`,附 `useSheetTable` 把网格读成可寻址的表与 `trim`。

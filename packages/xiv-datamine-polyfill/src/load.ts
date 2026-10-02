@@ -1,4 +1,4 @@
-import type { Fetcher } from '@apollo/utils.fetcher';
+import type { Fetcher } from 'universal-fetch-type';
 import { DEFAULT_REF, fetchSheetCsv, isProviderError, parseSheetCsv, useSheetTable, type SheetRawData } from 'xiv-api-provider';
 import { ageOf, contentHash, csvPath, hoursSince, modulePath, readText, writeText } from './cache.ts';
 import { cacheKey, DEFAULT_LOCALE, DEFAULT_MAX_AGE_MS, rulesFor, type DataminePolyfillOptions, type SheetRules, type TableIdentity } from './options.ts';
@@ -35,7 +35,7 @@ export interface LoadedSheet {
   readonly warnings: readonly string[];
 }
 
-const transport = (options: LoadOptions): { fetch: Fetcher; locale: string; timeoutMs?: number } => ({
+const transport = (options: LoadOptions): { fetch: Fetcher<Buffer<ArrayBuffer>>; locale: string; timeoutMs?: number } => ({
   fetch: options.fetch ?? globalThis.fetch,
   locale: options.locale ?? DEFAULT_LOCALE,
   timeoutMs: options.timeoutMs,

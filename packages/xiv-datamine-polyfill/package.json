@@ -35,6 +35,7 @@
     "typecheck:declarations": "tsc -p tsconfig.declarations.json"
   },
   "dependencies": {
+    "universal-fetch-type": "workspace:*",
     "xiv-api-provider": "workspace:*"
   },
   "peerDependencies": {
@@ -48,8 +49,7 @@
     "typescript": "~5.9.3",
     "unplugin-dts": "^1.1.1",
     "vite": "^8.3.0",
-    "vitest": "^5.0.1",
-    "@apollo/utils.fetcher": "^3.1.0"
+    "vitest": "^5.0.1"
   },
   "optionalDependencies": {
     "@oxfmt/binding-win32-x64-msvc": "^0.67.0",

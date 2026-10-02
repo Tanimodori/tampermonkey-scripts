@@ -31,12 +31,12 @@
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",
     "typescript": "~5.9.3",
+    "universal-fetch-type": "workspace:*",
     "vite": "^8.3.0",
     "vitest": "^5.0.1",
     "xiv-api-provider": "workspace:*",
     "xiv-datamine-polyfill": "workspace:*",
-    "zod": "^4.6.5",
-    "@apollo/utils.fetcher": "^3.1.0"
+    "zod": "^4.6.5"
   },
   "optionalDependencies": {
     "@oxfmt/binding-win32-x64-msvc": "^0.67.0",

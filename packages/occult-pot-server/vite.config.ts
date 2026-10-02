@@ -36,6 +36,11 @@ export default defineConfig({
   ssr: {
     // Bundle runtime dependencies instead of leaving them as bare imports, so `dist/` really is
     // self-contained and the runtime image needs no node_modules.
+    //
+    // A dependency a workspace package keeps external — `zod`, through `tencent-doc-sdk` — is then resolved
+    // from *that* package's `node_modules`, so a range drifting apart from this one's pins two copies of its
+    // registry into the bundle. Keep the two `zod` ranges equal; the check is that this prints one line:
+    // `grep -oE '^//#region .*zod@[0-9.]+' dist/index.js | grep -oE 'zod@[0-9.]+' | sort -u`
     noExternal: true,
   },
   test: {

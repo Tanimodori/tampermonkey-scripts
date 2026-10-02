@@ -37,10 +37,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "universal-fetch-type": "workspace:*",
     "zod": "^4.6.2"
   },
   "devDependencies": {
-    "@apollo/utils.fetcher": "^3.1.0",
     "@microsoft/api-extractor": "^7.59.1",
     "@types/node": "^22.10.5",
     "cross-env": "^10.1.0",

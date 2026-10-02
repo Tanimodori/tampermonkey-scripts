@@ -1,4 +1,4 @@
-import type { Fetcher, FetcherRequestInit } from '@apollo/utils.fetcher';
+import type { Fetcher, FetcherRequestInit } from 'universal-fetch-type';
 import type { z } from 'zod';
 import type { AnyEndpoint, CallArgs, OutputOf } from '@/endpoint';
 import type { DocCoordinates, PathParams } from '@/path';
@@ -52,7 +52,7 @@ export interface ApiOptions {
    * current one from inside its own fetcher, which is why there is no "a function asked per call" form
    * here — a fetcher already is one.
    */
-  readonly transport?: Fetcher | undefined;
+  readonly transport?: Fetcher<Buffer<ArrayBuffer>> | undefined;
 }
 
 /** The document, as a caller works with it: every endpoint, called the same way. */
@@ -102,7 +102,7 @@ export function createApi(options: ApiOptions): Api {
     const { pathname: path } = url;
     const shape: CallShape = { operation, path, envelope: response.envelope };
     const requestHeaders = headersFor(endpoint);
-    const init: FetcherRequestInit = {
+    const init: FetcherRequestInit<Buffer<ArrayBuffer>> = {
       method: endpoint.method,
       ...(requestHeaders === undefined ? {} : { headers: requestHeaders }),
       ...(body === undefined ? {} : { body }),
@@ -172,7 +172,7 @@ export function createApi(options: ApiOptions): Api {
    * and carry their credential in the query — sends neither the header nor a `Content-Type`, exactly as it
    * does today. A credential missing any piece fails as the store's own `config` error, naming which one.
    */
-  function headersFor(endpoint: AnyEndpoint): FetcherRequestInit['headers'] {
+  function headersFor(endpoint: AnyEndpoint): FetcherRequestInit<Buffer<ArrayBuffer>>['headers'] {
     return endpoint.auth === 'headers' ? { 'Content-Type': 'application/json', Accept: 'application/json', ...store.getAuthHeaders() } : undefined;
   }
 }
@@ -205,4 +205,4 @@ function sentBody(endpoint: AnyEndpoint, body: unknown): string | undefined {
 const identity = <T>(value: T): T => value;
 
 /** The transport for a caller that brought none: the platform's own `fetch`, with nothing wrapped around it. */
-const defaultFetcher: Fetcher = (url, init) => globalThis.fetch(url, init);
+const defaultFetcher: Fetcher<Buffer<ArrayBuffer>> = (url, init) => globalThis.fetch(url, init);

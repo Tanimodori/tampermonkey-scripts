@@ -1,4 +1,4 @@
-import type { Fetcher } from '@apollo/utils.fetcher';
+import type { Fetcher } from 'universal-fetch-type';
 import { createApi } from '@/client';
 import { endpoints } from '@/endpoints';
 import { describeBody } from '@/validation/classify';
@@ -34,7 +34,7 @@ export interface TokenManagerOptions {
   /** The credential every call is made with, and the one each answer is written back into. */
   readonly store: CredentialStore;
   /** The function a call is sent through, and so the owner of its connection and its timeouts. Defaults to `globalThis.fetch`. */
-  readonly transport?: Fetcher | undefined;
+  readonly transport?: Fetcher<Buffer<ArrayBuffer>> | undefined;
   /** Needed by both token grants, and never part of the credential it is used to renew. */
   readonly clientSecret?: string | undefined;
   /** The clock an `expires_in` is folded onto. Defaults to wall time. */

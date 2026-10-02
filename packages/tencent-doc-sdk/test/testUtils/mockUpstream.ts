@@ -1,9 +1,9 @@
-import type { Fetcher } from '@apollo/utils.fetcher';
 import { tokenAnswer, userInfoAnswer } from '@test/testUtils/fixtures/oauth';
 import type { TokenAnswerInput } from '@test/testUtils/fixtures/oauth';
 import { deleteRecordsAnswer, getRecordsAnswer, readRows, writtenRecordsAnswer, writtenRecordsWithoutId } from '@test/testUtils/fixtures/record';
 import { getSheetAnswer } from '@test/testUtils/fixtures/sheet';
 import { MockAgent, fetch as undiciFetch } from 'undici';
+import type { Fetcher } from 'universal-fetch-type';
 import type { CommonRecord } from '@/validation/types';
 
 /**
@@ -86,7 +86,7 @@ export interface TencentDocsMockState {
 export interface TencentDocsMock {
   readonly state: TencentDocsMockState;
   /** The transport to hand a client or a manager: undici's `fetch`, on this mock pool. */
-  readonly fetcher: Fetcher;
+  readonly fetcher: Fetcher<Buffer<ArrayBuffer>>;
   reset(): void;
   close(): Promise<void>;
 }

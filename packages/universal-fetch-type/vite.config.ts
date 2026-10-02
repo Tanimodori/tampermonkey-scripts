@@ -32,7 +32,9 @@ export default defineConfig({
     },
     rolldownOptions: {
       // Nothing is external because nothing is imported at runtime: `@apollo/utils.fetcher` is reached by
-      // `import type` only, and the declarations keep naming it, which is why it is a `dependency` here.
+      // `import type` only. The emitted declarations keep naming it, and since this package is private and
+      // consumed through the workspace, apollo sits in `devDependencies` — pnpm still links it into this
+      // package's own `node_modules`, which is where a consumer walking the declaration chain lands on it.
       external: [],
       // Declaration generation is the whole build for this package.
       checks: { pluginTimings: false },

@@ -177,11 +177,10 @@ importers:
         version: 1.33.0
 
   ../../packages/universal-fetch-type:
-    dependencies:
+    devDependencies:
       '@apollo/utils.fetcher':
         specifier: ^3.1.0
         version: 3.1.0
-    devDependencies:
       '@microsoft/api-extractor':
         specifier: ^7.59.1
         version: 7.59.1(@types/node@22.19.3)

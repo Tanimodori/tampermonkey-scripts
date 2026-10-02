@@ -29,7 +29,7 @@ export {
 
 export { isProviderError, ProviderError } from '@/internal/http.ts';
 export type { Provider, ProviderErrorKind, SendOptions } from '@/internal/http.ts';
-export type { Fetcher, FetcherRequestInit, FetcherResponse } from '@apollo/utils.fetcher';
+export type { Fetcher, FetcherHeaders, FetcherRequestInit, FetcherResponse } from 'universal-fetch-type';
 
 // xivapi: the structured game-data API, both editions.
 export {

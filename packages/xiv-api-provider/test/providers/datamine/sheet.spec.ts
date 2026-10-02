@@ -1,4 +1,4 @@
-import type { Fetcher } from '@apollo/utils.fetcher';
+import type { Fetcher } from 'universal-fetch-type';
 import { describe, expect, it } from 'vitest';
 import { isProviderError } from '@/internal/http.ts';
 import { fetchSheetCsv, readSheet, sheetCsvUrl } from '@/providers/datamine/sheet.ts';
@@ -11,9 +11,9 @@ import { fetchSheetCsv, readSheet, sheetCsvUrl } from '@/providers/datamine/shee
 const CSV = ['key,0', '#,Name', 'int32,str', '1,"格斗武器"'].join('\n');
 const HEAD_URL = sheetCsvUrl('ItemUICategory').toString();
 
-const transport = (routes: Record<string, { status?: number; body?: string }>): { fetch: Fetcher; asked: string[] } => {
+const transport = (routes: Record<string, { status?: number; body?: string }>): { fetch: Fetcher<Buffer<ArrayBuffer>>; asked: string[] } => {
   const asked: string[] = [];
-  const fetch: Fetcher = async (url) => {
+  const fetch: Fetcher<Buffer<ArrayBuffer>> = async (url) => {
     asked.push(url);
     const route = routes[url] ?? { status: 404, body: '' };
     return new Response(route.body ?? '', { status: route.status ?? 200 });

@@ -10,7 +10,7 @@
  * runtime stops there, and zod validates returns from tests only.
  */
 
-import type { Fetcher, FetcherRequestInit, FetcherResponse } from '@apollo/utils.fetcher';
+import type { Fetcher, FetcherRequestInit, FetcherResponse } from 'universal-fetch-type';
 
 export type Provider = 'xivapi' | 'garlands' | 'datamine';
 
@@ -55,7 +55,7 @@ export const isProviderError = (error: unknown): error is ProviderError => error
 
 export interface SendOptions {
   readonly provider: Provider;
-  readonly fetch: Fetcher;
+  readonly fetch: Fetcher<Buffer<ArrayBuffer>>;
   readonly timeoutMs: number;
   readonly accept: string;
   /** Pulls `{code, message}` out of an error body, when the service sends that shape. */
@@ -69,7 +69,7 @@ export interface SendOptions {
  * implied: a browser's default is `same-origin`, which sends no cookie on a cross-origin GET either way.
  */
 export const sendRequest = async (url: URL, options: SendOptions): Promise<FetcherResponse> => {
-  const init: FetcherRequestInit = { headers: { accept: options.accept }, signal: AbortSignal.timeout(options.timeoutMs) };
+  const init: FetcherRequestInit<Buffer<ArrayBuffer>> = { headers: { accept: options.accept }, signal: AbortSignal.timeout(options.timeoutMs) };
   try {
     return await options.fetch(url.href, init);
   } catch (cause) {

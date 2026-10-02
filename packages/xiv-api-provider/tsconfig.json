@@ -4,11 +4,14 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     /*
-      No DOM on purpose. The transport seam is `@apollo/utils.fetcher`'s `Fetcher`, whose init allows
-      `body?: Buffer`; a DOM `BodyInit` will not take a `Buffer<ArrayBufferLike>`, so with DOM in `lib` the
-      ambient `fetch` stops being assignable and the providers lose their default. Node's declarations
-      (undici-types) supply `fetch`, `Response`, `URL` and `AbortSignal` instead — the same flavour
-      `tencent-doc-sdk` compiles against. A caller whose own project has DOM wraps its native fetch once.
+      No DOM: every web global this package names — `fetch`, `Response`, `AbortSignal`, `URL` — is read from
+      `@types/node` (undici-types), which is also the flavour `tencent-doc-sdk` compiles against. Adding DOM
+      would bind a second, browser-shaped declaration over each of those names, and would additionally need
+      `DOM.Iterable` before `FetcherHeaders`' iterator members exist at all.
+      This is no longer about the transport seam. The seam is `Fetcher<Buffer<ArrayBuffer>>` from
+      `universal-fetch-type`, whose request body is DOM-compatible, so a DOM program can hand in its own
+      `fetch` unwrapped — that direction is judged by
+      `tests/xiv-datamine-polyfill-e2e-test/test/fetcher-variance.ts`, not by this file.
     */
     "lib": ["ES2020"],
     "types": ["node"],

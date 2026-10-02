@@ -15,17 +15,13 @@ FFXIV 数据源的在线访问层,供本仓库的中文本地化 userscript(`uni
 一个默认入口,导出面按 provider 分组:
 
 ```ts
-import { createXivApiClient, readSheet, useSheetTable, type Fetcher } from 'xiv-api-provider';
+import { createXivApiClient, readSheet, useSheetTable } from 'xiv-api-provider';
 import { origFetch } from './hooks';
 
-// The seam is `Fetcher`: the url is a `string`, and `body` is allowed to be a `Buffer` — neither of which a
-// browser's `fetch` is typed to accept. This package only ever GETs, so the one field is dropped, not bridged.
-const fetch: Fetcher = (url, init) => origFetch(url, { ...init, body: undefined });
-
-const client = createXivApiClient('chinese-server', { language: 'chs', fetch });
+const client = createXivApiClient('chinese-server', { language: 'chs', fetch: origFetch });
 const row = await client.readRow('Action', 16554, { fields: ['Name'] });
 
-const ui = useSheetTable(await readSheet('ItemUICategory', { fetch }));
+const ui = useSheetTable(await readSheet('ItemUICategory', { fetch: origFetch }));
 ui.cell(1, 'Name'); // 格斗武器
 ```
 
@@ -33,13 +29,13 @@ ui.cell(1, 'Name'); // 格斗武器
 
 `readSheet` 交回的是一份纯数据(整张网格,含三行表头),`useSheetTable` 才是有寻址能力的那个对象。不带 `ref` 时取分支头 `HEAD` 的那份文件;要复现同一次构建就写死一个 ref(tag、分支名或 commit sha 都可)。行按位置寻址,`#` 既不递增也不连续,所以按 `#` 查要自己 `new Map([...ui.rows].map((r) => [r[0], r]))`。
 
-`fetch` 的类型是 `@apollo/utils.fetcher` 的 `Fetcher`——与 `tencent-doc-sdk` 的 transport 同一个类型,一个 fetcher 可以同时喂两边。默认取全局 `fetch`,所以 Node 侧不传也能跑。必须显式注入的情况:userscript 自己拦截了 `window.fetch`,出站请求要走拦截前的原生 `fetch`,否则会自顶穿过自己的 hook——浏览器的 `fetch` 按上面那样包一层即可(`Fetcher` 的 url 是 `string`、`body` 允许 `Buffer`,两者都不是 DOM 版签名愿意接受的)。
+`fetch` 的类型是本仓 `universal-fetch-type` 的 `Fetcher<Buffer<ArrayBuffer>>`——与 `tencent-doc-sdk` 的 transport 同一档,一个 fetcher 可以同时喂两边。默认取全局 `fetch`,所以 Node 侧不传也能跑。必须显式注入的情况:userscript 自己拦截了 `window.fetch`,出站请求要走拦截前的原生 `fetch`,否则会自顶穿过自己的 hook。`origFetch` 直接传即可,不必包一层——`Buffer<ArrayBuffer>` 这一档要买的就是这件事,理由见 [universal-fetch-type](../universal-fetch-type/README.md)。
 
 provider 不内置任何一张表的类型:列名与值都照文件原样,含义由读的一侧判。要把一张表在构建期钉进产物,交给 `xiv-datamine-polyfill`。
 
 ## 校验与测试
 
-zod 只在测试里跑:业务代码对各 provider 的 schema 只 `import type`,运行时的判定是 `guards.ts` 里的手写谓词。生成的声明仍以 zod 的类型书写,所以 zod 记在 `dependencies`——消费方读声明时要能解析它,运行时不会 import 它。`@apollo/utils.fetcher` 同样是只被声明引用的类型依赖(`fetch` 那条缝隙),但它记在 `devDependencies`,与 `tencent-doc-sdk` 一致:这些包都 `private`、只经 `workspace:*` 被消费,而仓库内每个要读这份声明的项目(test 与 e2e)都各自声明了它。取舍见 [zod 只在测试里](docs/providers/README.md#zod-只在测试里)。
+zod 只在测试里跑:业务代码对各 provider 的 schema 只 `import type`,运行时的判定是 `guards.ts` 里的手写谓词。生成的声明仍以 zod 的类型书写,所以 zod 记在 `dependencies`——消费方读声明时要能解析它,运行时不会 import 它。同一条理由把 `universal-fetch-type`(`fetch` 那条缝隙的类型)也记在 `dependencies`:本包的声明里留着对它的活引用,而它自己再引 `@apollo/utils.fetcher`,所以读得到 `xiv-api-provider` 声明的人不需要知道 apollo 存在。取舍见 [zod 只在测试里](docs/providers/README.md#zod-只在测试里)。
 
 ```bash
 rushx test              # 离线,CI 门禁

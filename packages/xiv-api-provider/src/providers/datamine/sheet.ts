@@ -1,4 +1,4 @@
-import type { Fetcher } from '@apollo/utils.fetcher';
+import type { Fetcher } from 'universal-fetch-type';
 import { ProviderError, sendRequest } from '@/internal/http.ts';
 import { parseSheetCsv, type SheetRawData } from './csv.ts';
 
@@ -32,7 +32,7 @@ export interface DatamineOptions {
    * Where to send the request. Defaults to the ambient `fetch`; a userscript passes the pre-patch native
    * one, and a Node build may pass something that honours `HTTPS_PROXY`, which `fetch` itself does not.
    */
-  readonly fetch?: Fetcher;
+  readonly fetch?: Fetcher<Buffer<ArrayBuffer>>;
   /** Branch, tag or commit. Defaults to `HEAD`; pass a tag to make a build reproducible. */
   readonly ref?: string;
   readonly locale?: string;

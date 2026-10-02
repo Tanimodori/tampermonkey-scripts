@@ -29,9 +29,7 @@ const itemDocument = {
 
 const clientFor = (payload: unknown) =>
   createGarlandClient({
-    fetch: vi.fn(
-      async () => new Response(JSON.stringify(payload), { status: 200, headers: { 'content-type': 'application/json' } }),
-    ) as unknown as typeof fetch,
+    fetch: vi.fn(async () => new Response(JSON.stringify(payload), { status: 200, headers: { 'content-type': 'application/json' } })),
   });
 
 describe('documents', () => {

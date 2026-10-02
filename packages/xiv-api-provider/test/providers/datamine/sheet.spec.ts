@@ -1,5 +1,6 @@
+import type { Fetcher } from '@apollo/utils.fetcher';
 import { describe, expect, it } from 'vitest';
-import { isProviderError, type FetchLike } from '@/internal/http.ts';
+import { isProviderError } from '@/internal/http.ts';
 import { fetchSheetCsv, readSheet, sheetCsvUrl } from '@/providers/datamine/sheet.ts';
 
 /**
@@ -10,10 +11,9 @@ import { fetchSheetCsv, readSheet, sheetCsvUrl } from '@/providers/datamine/shee
 const CSV = ['key,0', '#,Name', 'int32,str', '1,"格斗武器"'].join('\n');
 const HEAD_URL = sheetCsvUrl('ItemUICategory').toString();
 
-const transport = (routes: Record<string, { status?: number; body?: string }>): { fetch: FetchLike; asked: string[] } => {
+const transport = (routes: Record<string, { status?: number; body?: string }>): { fetch: Fetcher; asked: string[] } => {
   const asked: string[] = [];
-  const fetch: FetchLike = async (input) => {
-    const url = String(input);
+  const fetch: Fetcher = async (url) => {
     asked.push(url);
     const route = routes[url] ?? { status: 404, body: '' };
     return new Response(route.body ?? '', { status: route.status ?? 200 });

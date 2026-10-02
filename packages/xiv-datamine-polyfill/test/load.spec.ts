@@ -1,8 +1,9 @@
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { Fetcher } from '@apollo/utils.fetcher';
 import { afterAll, describe, expect, it } from 'vitest';
-import { sheetCsvUrl, useSheetTable, type FetchLike, type SheetRawData } from 'xiv-api-provider';
+import { sheetCsvUrl, useSheetTable, type SheetRawData } from 'xiv-api-provider';
 import { loadTable, type LoadOptions } from '@/load';
 
 /**
@@ -20,14 +21,13 @@ const MOVED = CSV.replace('2,"单手剑",60102,6', '2,"单手剑",60102,6\n3,"�
 const csvUrl = (ref: string, sheet = 'ItemUICategory', locale = 'chs'): string => sheetCsvUrl(sheet, { ref, locale }).toString();
 
 interface Fake {
-  readonly fetch: FetchLike;
+  readonly fetch: Fetcher;
   readonly asked: string[];
 }
 
 const server = (routes: Record<string, string | number>): Fake => {
   const asked: string[] = [];
-  const fetch: FetchLike = async (input) => {
-    const url = String(input);
+  const fetch: Fetcher = async (url) => {
     asked.push(url);
     const route = routes[url];
     if (typeof route === 'number') return new Response('', { status: route });

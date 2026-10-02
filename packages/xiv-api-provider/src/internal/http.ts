@@ -10,10 +10,9 @@
  * runtime stops there, and zod validates returns from tests only.
  */
 
-export type Provider = 'xivapi' | 'garlands' | 'datamine';
+import type { Fetcher, FetcherRequestInit, FetcherResponse } from '@apollo/utils.fetcher';
 
-/** The subset of `fetch` a client needs, so a caller can hand in the pre-patch native one. */
-export type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
+export type Provider = 'xivapi' | 'garlands' | 'datamine';
 
 /** `not_found` is the one kind that is an answer rather than a failure: a `404` saying the data is not there. */
 export type ProviderErrorKind = 'http' | 'not_found' | 'network' | 'timeout' | 'shape' | 'unsupported';
@@ -56,22 +55,23 @@ export const isProviderError = (error: unknown): error is ProviderError => error
 
 export interface SendOptions {
   readonly provider: Provider;
-  readonly fetch: FetchLike;
+  readonly fetch: Fetcher;
   readonly timeoutMs: number;
   readonly accept: string;
   /** Pulls `{code, message}` out of an error body, when the service sends that shape. */
   readonly readError?: (body: unknown) => { code: number; message: string } | undefined;
 }
 
-/** Issue one GET. A non-OK status is not an exception here: only a transport failure is. */
-export const sendRequest = async (url: URL, options: SendOptions): Promise<Response> => {
+/**
+ * Issue one GET. A non-OK status is not an exception here: only a transport failure is.
+ *
+ * `FetcherRequestInit` has no `credentials` field, so the old `credentials: 'omit'` is gone rather than
+ * implied: a browser's default is `same-origin`, which sends no cookie on a cross-origin GET either way.
+ */
+export const sendRequest = async (url: URL, options: SendOptions): Promise<FetcherResponse> => {
+  const init: FetcherRequestInit = { headers: { accept: options.accept }, signal: AbortSignal.timeout(options.timeoutMs) };
   try {
-    return await options.fetch(url, {
-      headers: { accept: options.accept },
-      // Credentials never go to a third-party data host, and nothing here mutates.
-      credentials: 'omit',
-      signal: AbortSignal.timeout(options.timeoutMs),
-    });
+    return await options.fetch(url.href, init);
   } catch (cause) {
     const timedOut = cause instanceof Error && (cause.name === 'TimeoutError' || cause.name === 'AbortError');
     throw new ProviderError({

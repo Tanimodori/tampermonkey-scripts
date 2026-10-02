@@ -6,8 +6,13 @@
     /*
       DOM and nothing else: `src/` is userscript-side code, so the absence of `node` in `types` is itself a
       fact being checked — a consumer can compile this example without ever installing Node types.
+
+      `DOM.Iterable` is not decoration: a DOM `Headers` only declares `entries`/`keys`/`values` and
+      `[Symbol.iterator]` when it is present, and `FetcherHeaders` is an `Iterable<[string, string]>`. Leave
+      this out and a stub that returns a real `Response` stops being a `Fetcher` — every other userscript
+      project here pairs DOM with DOM.Iterable for the same reason.
     */
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["xiv-datamine-polyfill/client"],
     /*
       What this project judges is the consumer's view: every import resolves through the checked package's

@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import type { FetchLike } from 'xiv-api-provider';
+import type { Fetcher } from 'xiv-api-provider';
 import { dataminePolyfill } from 'xiv-datamine-polyfill';
 
 /**
@@ -31,13 +31,13 @@ const ITEM_UI = ['key,0,1,2', '#,Name,Icon,Order{Minor}', 'int32,str,Image,byte'
 const ADDON = ['key,0,1', '#,Text,Name', 'int32,str,str', '699,"即时",Common', '700,"> ",Common', '999,"<Switch(1,2,3,4)>",Generic'].join('\n');
 
 /** Answer by the sheet name in the requested path; anything else is a 404, which is a real answer about data. */
-const stubFetch = (async (input: string | URL | Request) => {
-  const url = new URL(String(input));
-  console.log(`[e2e] sheet request: ${url.pathname}`);
-  const sheet = decodeURIComponent((url.pathname.split('/').pop() ?? '').replace(/\.csv$/, ''));
+const stubFetch: Fetcher = async (url) => {
+  const requested = new URL(url);
+  console.log(`[e2e] sheet request: ${requested.pathname}`);
+  const sheet = decodeURIComponent((requested.pathname.split('/').pop() ?? '').replace(/\.csv$/, ''));
   const body = sheet === 'ItemUICategory' ? ITEM_UI : sheet === 'Addon' ? ADDON : undefined;
   return new Response(body ?? '', { status: body === undefined ? 404 : 200 });
-}) as FetchLike;
+};
 
 export default defineConfig({
   plugins: [

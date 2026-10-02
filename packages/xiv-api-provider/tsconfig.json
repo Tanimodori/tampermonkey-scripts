@@ -3,7 +3,14 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    /*
+      No DOM on purpose. The transport seam is `@apollo/utils.fetcher`'s `Fetcher`, whose init allows
+      `body?: Buffer`; a DOM `BodyInit` will not take a `Buffer<ArrayBufferLike>`, so with DOM in `lib` the
+      ambient `fetch` stops being assignable and the providers lose their default. Node's declarations
+      (undici-types) supply `fetch`, `Response`, `URL` and `AbortSignal` instead — the same flavour
+      `tencent-doc-sdk` compiles against. A caller whose own project has DOM wraps its native fetch once.
+    */
+    "lib": ["ES2020"],
     "types": ["node"],
     "skipLibCheck": true,
     "moduleResolution": "bundler",

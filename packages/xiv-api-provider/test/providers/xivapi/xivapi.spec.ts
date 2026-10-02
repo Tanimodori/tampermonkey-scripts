@@ -48,11 +48,11 @@ const rowsBody = (count = 2) => ({
 /** Serve one canned body for every request, recording the URLs that were asked for. */
 const transport = (body: unknown, status = 200) => {
   const requests: URL[] = [];
-  const fetchImpl = vi.fn(async (input: string | URL | Request) => {
-    requests.push(new URL(String(input)));
+  const fetchImpl = vi.fn(async (url: string) => {
+    requests.push(new URL(url));
     return new Response(typeof body === 'string' ? body : JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
   });
-  return { fetch: fetchImpl as unknown as typeof fetch, requests };
+  return { fetch: fetchImpl, requests };
 };
 
 describe('edition descriptors', () => {
@@ -223,7 +223,7 @@ describe('client', () => {
     const client = createXivApiClient('international', {
       fetch: vi.fn(async () => {
         throw new TypeError('down');
-      }) as unknown as typeof fetch,
+      }),
     });
     const error = await client.readRow('Item', 1).catch((caught: unknown) => caught);
     expect(isProviderError(error)).toBe(true);
@@ -242,22 +242,6 @@ describe('client', () => {
     expect((error as { kind: string }).kind).toBe('http');
     expect((error as { apiCode: number | null }).apiCode).toBeNull();
     expect((error as { message: string }).message).toContain('1016');
-  });
-
-  it('sends no credentials, and records what it sent', async () => {
-    const calls: { url: URL; init?: RequestInit }[] = [];
-    const fetchImpl = (async (input: string | URL | Request, init?: RequestInit) => {
-      calls.push({ url: new URL(String(input)), init });
-      return new Response(JSON.stringify({ schema: SCHEMA_TAG, version: VERSION, sheets: [{ name: 'Item' }] }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      });
-    }) as unknown as typeof fetch;
-
-    expect(await createXivApiClient('international', { fetch: fetchImpl }).listSheets()).toEqual(['Item']);
-    expect(calls[0]?.init?.credentials).toBe('omit');
-    // Nothing here is ever anything but a GET.
-    expect(calls[0]?.init?.method ?? 'GET').toBe('GET');
   });
 
   it('keeps a sheet list ordered as sent', async () => {

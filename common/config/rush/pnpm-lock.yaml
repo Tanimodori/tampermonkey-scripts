@@ -229,6 +229,9 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@apollo/utils.fetcher':
+        specifier: ^3.1.0
+        version: 3.1.0
       '@microsoft/api-extractor':
         specifier: ^7.59.1
         version: 7.59.1(@types/node@22.19.3)
@@ -282,6 +285,9 @@ importers:
         specifier: workspace:*
         version: link:../xiv-api-provider
     devDependencies:
+      '@apollo/utils.fetcher':
+        specifier: ^3.1.0
+        version: 3.1.0
       '@microsoft/api-extractor':
         specifier: ^7.59.1
         version: 7.59.1(@types/node@22.19.3)
@@ -526,6 +532,9 @@ importers:
 
   ../../tests/xiv-datamine-polyfill-e2e-test:
     devDependencies:
+      '@apollo/utils.fetcher':
+        specifier: ^3.1.0
+        version: 3.1.0
       '@types/node':
         specifier: ^22.10.5
         version: 22.19.3

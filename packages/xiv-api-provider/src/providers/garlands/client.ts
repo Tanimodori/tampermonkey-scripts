@@ -1,4 +1,5 @@
-import { getChecked, type FetchLike } from '@/internal/http.ts';
+import type { Fetcher } from '@apollo/utils.fetcher';
+import { getChecked } from '@/internal/http.ts';
 import { garlandDocUrl, garlandSearchUrl, type GarlandDocKindUrl, type GarlandSearchQuery } from './endpoints.ts';
 import { isGarlandDocument, isGarlandSearchResults } from './guards.ts';
 import type { GarlandActionResponse, GarlandItemResponse, GarlandSearchItem, GarlandStatusResponse } from './types/schema.ts';
@@ -12,7 +13,7 @@ import type { GarlandActionResponse, GarlandItemResponse, GarlandSearchItem, Gar
 
 export interface GarlandClientOptions {
   /** Defaults to the ambient `fetch`. Pass the captured native fetch from a userscript. */
-  readonly fetch?: FetchLike;
+  readonly fetch?: Fetcher;
   readonly timeoutMs?: number;
 }
 

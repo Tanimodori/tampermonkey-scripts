@@ -28,7 +28,7 @@
 `@grant none` 下脚本用页面 origin(`xivanalysis.com`)发 fetch,跨源取 garland / 国服 xivapi 受目标站 CORS 约束——实测 garland `search.php` 不回 `Access-Control-Allow-Origin`,浏览器直接阻断。修复:
 
 - `src/gm.d.ts`:依官方文档声明**异步** `GM.xmlHttpRequest`(命名空间版、大写 H)——`details => Promise`,该 Promise 额外带 `abort()`,网络错误/超时/中止均 reject。旧版回调式全局 `GM_xmlhttpRequest` 不再使用。
-- `src/gm-fetch.ts`:`gmFetch: FetchLike`(async)适配器——`await GM.xmlHttpRequest(details)`(`anonymous:true` 对齐 `credentials:'omit'`;`responseType:'text'`;`init.signal` 触发返回 Promise 的 `abort()`;`responseText` 造 `Response`);reject 原样冒出,符合 fetch 语义。
+- `src/gm-fetch.ts`:`gmFetch: Fetcher`(async)适配器——`await GM.xmlHttpRequest(details)`(`anonymous:true` 不发 cookie;`responseType:'text'`;`init.signal` 触发返回 Promise 的 `abort()`;`responseText` 造 `Response`);reject 原样冒出,符合 fetch 语义。
 - 数据侧全部改走 `gmFetch`:`translate/{action,item,status,search}.ts` 与 `probe.ts`(此前用 `origFetch`)。
 - 声明 grant 后脚本进沙箱,`window` 不再是页面那个:`hooks.ts` 改捕获/覆写 `unsafeWindow.fetch`(仍用页面原生 fetch 转发真实请求;非 JSON 响应原样放行)。
 - `vite.config.ts`:`@grant GM_xmlhttpRequest, unsafeWindow` + `@connect www.garlandtools.cn / xivapi-v2.xivcdn.com / v2.xivapi.com / beta.xivapi.com`。

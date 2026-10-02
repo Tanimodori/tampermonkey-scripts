@@ -1,4 +1,5 @@
-import { getChecked, ProviderError, sendRequest, type FetchLike, type SendOptions } from '@/internal/http.ts';
+import type { Fetcher } from '@apollo/utils.fetcher';
+import { getChecked, ProviderError, sendRequest, type SendOptions } from '@/internal/http.ts';
 import { EDITIONS, type Edition, type LanguageToken } from './editions.ts';
 import {
   assetUrl,
@@ -31,7 +32,7 @@ import type { ApiErrorResponse, Fields, RowResult, SheetName, SheetRow, VersionI
 
 export interface XivApiClientOptions {
   /** Defaults to the ambient `fetch`. Pass the captured native fetch from a userscript. */
-  readonly fetch?: FetchLike;
+  readonly fetch?: Fetcher;
   /** Applied to every read that takes a language, so a caller does not repeat it. */
   readonly language?: LanguageToken;
   readonly timeoutMs?: number;

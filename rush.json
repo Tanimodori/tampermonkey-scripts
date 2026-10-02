@@ -470,6 +470,11 @@
       "projectFolder": "packages/xiv-datamine-polyfill",
       "tags": [ "library" ]
     },
+    {
+      "packageName": "universal-fetch-type",
+      "projectFolder": "packages/universal-fetch-type",
+      "tags": [ "library" ]
+    },
     // backend services
     {
       "packageName": "occult-pot-server",

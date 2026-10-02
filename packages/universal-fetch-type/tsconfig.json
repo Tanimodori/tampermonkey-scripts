@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    /*
+      No DOM: this package speaks about a request body, and the only body type it names is Node's `Buffer`.
+      Nothing in it needs a browser's declarations, and pulling them in would also demand `DOM.Iterable` for
+      `FetcherHeaders`' iterator members.
+    */
+    "lib": ["ES2022"],
+    "types": ["node"],
+    /*
+      Read third-party declarations instead of waving at them — the opposite of the other four packages here,
+      and deliberate: this package ships nothing but types, so the one thing it can get wrong is a `.d.ts` a
+      consumer cannot read. Apollo's `FetcherRequestInit` is the type being re-shaped, so its shape is part of
+      what gets checked.
+    */
+    "skipLibCheck": false,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src/**/*.ts", "vite.config.ts"]
+}

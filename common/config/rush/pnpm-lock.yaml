@@ -122,13 +122,13 @@ importers:
 
   ../../packages/tencent-doc-sdk:
     dependencies:
+      universal-fetch-type:
+        specifier: workspace:*
+        version: link:../universal-fetch-type
       zod:
         specifier: ^4.6.2
         version: 4.6.5
     devDependencies:
-      '@apollo/utils.fetcher':
-        specifier: ^3.1.0
-        version: 3.1.0
       '@microsoft/api-extractor':
         specifier: ^7.59.1
         version: 7.59.1(@types/node@22.19.3)
@@ -162,6 +162,47 @@ importers:
       vitest:
         specifier: ^5.0.1
         version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.19.3)(happy-dom@6.0.4)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
+    optionalDependencies:
+      '@oxfmt/binding-win32-x64-msvc':
+        specifier: ^0.67.0
+        version: 0.67.0
+      '@oxlint/binding-win32-x64-msvc':
+        specifier: ^1.82.0
+        version: 1.82.0
+      '@rolldown/binding-win32-x64-msvc':
+        specifier: ~1.2.6
+        version: 1.2.8
+      lightningcss-win32-x64-msvc:
+        specifier: ^1.33.0
+        version: 1.33.0
+
+  ../../packages/universal-fetch-type:
+    dependencies:
+      '@apollo/utils.fetcher':
+        specifier: ^3.1.0
+        version: 3.1.0
+    devDependencies:
+      '@microsoft/api-extractor':
+        specifier: ^7.59.1
+        version: 7.59.1(@types/node@22.19.3)
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.19.3
+      oxfmt:
+        specifier: ^0.67.0
+        version: 0.67.0
+      oxlint:
+        specifier: ^1.82.0
+        version: 1.82.0
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+      unplugin-dts:
+        specifier: ^1.1.1
+        version: 1.1.1(@microsoft/api-extractor@7.59.1(@types/node@22.19.3))(esbuild@0.28.2)(rolldown@1.2.8)(typescript@5.9.3)(vite@8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13))
+      vite:
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)
     optionalDependencies:
       '@oxfmt/binding-win32-x64-msvc':
         specifier: ^0.67.0
@@ -225,13 +266,13 @@ importers:
       papaparse:
         specifier: ~5.7.0
         version: 5.7.0
+      universal-fetch-type:
+        specifier: workspace:*
+        version: link:../universal-fetch-type
       zod:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
-      '@apollo/utils.fetcher':
-        specifier: ^3.1.0
-        version: 3.1.0
       '@microsoft/api-extractor':
         specifier: ^7.59.1
         version: 7.59.1(@types/node@22.19.3)
@@ -281,13 +322,13 @@ importers:
 
   ../../packages/xiv-datamine-polyfill:
     dependencies:
+      universal-fetch-type:
+        specifier: workspace:*
+        version: link:../universal-fetch-type
       xiv-api-provider:
         specifier: workspace:*
         version: link:../xiv-api-provider
     devDependencies:
-      '@apollo/utils.fetcher':
-        specifier: ^3.1.0
-        version: 3.1.0
       '@microsoft/api-extractor':
         specifier: ^7.59.1
         version: 7.59.1(@types/node@22.19.3)
@@ -532,9 +573,6 @@ importers:
 
   ../../tests/xiv-datamine-polyfill-e2e-test:
     devDependencies:
-      '@apollo/utils.fetcher':
-        specifier: ^3.1.0
-        version: 3.1.0
       '@types/node':
         specifier: ^22.10.5
         version: 22.19.3
@@ -550,6 +588,9 @@ importers:
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
+      universal-fetch-type:
+        specifier: workspace:*
+        version: link:../../packages/universal-fetch-type
       vite:
         specifier: ^8.3.0
         version: 8.3.0(@types/node@22.19.3)(esbuild@0.28.2)(less@4.5.1)(tsx@4.23.13)

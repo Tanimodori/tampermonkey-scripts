@@ -20,6 +20,7 @@ Javascript userscripts for various websites, plus the occasional backend service
 | [xiv-datamine-polyfill](packages/xiv-datamine-polyfill/README.md) | Vite plugin turning a datamining sheet import into a build-time generated module |
 | [vite-plugin-userscript-metadata](packages/vite-plugin-userscript-metadata/README.md) | Vite plugin generating the userscript metadata block in front of each entry bundle |
 | [tencent-doc-sdk](packages/tencent-doc-sdk/README.md) | Client for the Tencent Docs Open API smartsheet endpoints |
+| [universal-fetch-type](packages/universal-fetch-type/README.md) | The repo's injectable-transport seam as types only, with the request body's type handed to a generic |
 
 ## Services
 

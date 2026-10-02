@@ -1,0 +1,52 @@
+{
+  "name": "universal-fetch-type",
+  "version": "0.0.1",
+  "private": true,
+  "description": "The repo's fetch-compatibility seam: @apollo/utils.fetcher's types with the request body's type handed to a generic, so a caller can pin it to non-shared memory.",
+  "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
+  "bugs": {
+    "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tanimodori/tampermonkey-scripts.git"
+  },
+  "license": "MIT",
+  "author": "Tanimodori",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/index.d.ts"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@apollo/utils.fetcher": "^3.1.0"
+  },
+  "devDependencies": {
+    "@microsoft/api-extractor": "^7.59.1",
+    "@types/node": "^22.10.5",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
+    "typescript": "~5.9.3",
+    "unplugin-dts": "^1.1.1",
+    "vite": "^8.3.0"
+  },
+  "optionalDependencies": {
+    "@oxfmt/binding-win32-x64-msvc": "^0.67.0",
+    "@oxlint/binding-win32-x64-msvc": "^1.82.0",
+    "@rolldown/binding-win32-x64-msvc": "~1.2.6",
+    "lightningcss-win32-x64-msvc": "^1.33.0"
+  }
+}

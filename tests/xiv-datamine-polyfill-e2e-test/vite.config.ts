@@ -43,9 +43,9 @@ export default defineConfig({
   plugins: [
     dataminePolyfill({
       sheets: {
-        // The columns the real consumers of `ItemUICategory` keep — the same three its acceptance spec trims
-        // to — and two keys out of an `Addon` sheet too big to ship, which is the other half of what a
-        // userscript wants from a build-time table.
+        // The columns the real consumers of `ItemUICategory` keep — the same three `universalis-zh-data` typed
+        // out by hand in its category table — and two keys out of an `Addon` sheet too big to ship, which is
+        // the other half of what a userscript wants from a build-time table.
         ItemUICategory: { columns: ['#', 'Name', 'Icon'], dropEmptyIn: 'Name' },
         Addon: { columns: ['#', 'Text'], onlyRowKeys: ['699', '700'] },
       },

@@ -39,6 +39,12 @@ export interface NameDescObject {
   description: string;
 }
 
+/**
+ * garland 的 item 文档。`category` 是 ItemUICategory 的 id（与 xivapi 逐条核对过），而 ItemSearchCategory 的 id
+ * 文档里根本没有。文档另带一个未在此声明的 `patchCategory`：实测它是 garland 自己的索引分组（值域 0…17，同一个
+ * `category=63` 会给出 5 或 17），不是搜索分类的 id，所以有意不写进这个类型。整条取数路径见 `index.ts` 的
+ * `getItemCategory`。
+ */
 export interface GarlandItem {
   name: string;
   description: string;

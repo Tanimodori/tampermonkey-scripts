@@ -59,7 +59,7 @@ client 到这里为止没有读过回答体的内容——它只读一次并交�
 
 超时随 `transport` 一起来：库从不设置 `signal`，一次调用可以挂多久是那个 fetcher 被造出来时允许多久。需要按调用给超时的，把 `signal` 声明成 `In` 的一个键——它是入参、在类型里可见、由该 endpoint 的 `requestAdaptor` 放进 `init` 的 `signal`，而不是 client 的通用字段。
 
-扩展机制是包裹调用，不是配置库。节流、计数、日志、拒绝、重试都写在调用外面，因为那是一次调用的结果被知道的地方；测量点也不能放在 transport 之下——真实上游就把业务码藏在 HTTP `200` 后面（`packages/tencent-doc-sdk` 的 `400007` 是限流，本包的 `test/userscript.spec.ts` 用 `code: 401` 演同一个位置），只有库的错误知道它发生过。
+扩展机制是包裹调用，不是配置库。节流、计数、日志、拒绝、重试都写在调用外面，因为那是一次调用的结果被知道的地方；测量点也不能放在 transport 之下——真实上游就把业务码藏在 HTTP `200` 后面（`packages/tencent-doc-sdk` 的 `400007` 是限流，本包的 `test/tiers.spec.ts` 用 `code: 401` 演同一个位置），只有库的错误知道它发生过。
 
 # client 不认识校验库
 

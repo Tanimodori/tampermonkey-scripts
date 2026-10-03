@@ -122,7 +122,7 @@ endpoint 是纯值而不是方法或类，这带来两件可做的事：整套 e
 投影排在响应校验之前，带来一条写法约束：**从 `unknown` 走到那一段的每一步，要么自己判形状，要么会抛**——紧随其后的 `responseSchema` 看不见中间的任何一层。`getEnvelope<T>(response)` 就是把 `response.body` 变成 `Envelope<T>` 的那一步：形状是手写的 `in` 判定，读不出来就抛，而那个 `T` 只说取出的那一段该是什么，不保证它成立。
 
 - 写了 `responseSchema` 时，那一段形状不符会在这里稳定成为 `BAD_OUTPUT`。
-- 没写时没有判定：一条走通却取错了段的投影安静交出 `undefined`，没有任何东西会说它错——本包的 raw 一侧就是这样，`test/userscript.spec.ts` 把这一条断言在那里。
+- 没写时没有判定：一条走通却取错了段的投影安静交出 `undefined`，没有任何东西会说它错——本包的 raw 一侧就是这样，`test/tiers.spec.ts` 的「只带 zod 才有的一半」把这一条断言在那里。
 
 反过来说，让适配器自己 `body.data.messages` 直取会更短，但两种装配就不再共用同一份代码，而且校验永远看不到投影读到了什么。
 

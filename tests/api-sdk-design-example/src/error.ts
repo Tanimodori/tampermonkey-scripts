@@ -85,9 +85,10 @@ export function getEnvelope<T = unknown>(response: ApiResponse): Envelope<T> {
   return body as Envelope<T>;
 }
 
-/** 业务码非零就是上游没答对：这一枚码说的是这件事，那一个数是消息里的那一句。 */
+/** 业务码非零就是上游没答对：这一枚码说的是这件事。消息优先用上游自带的 `msg`，它没话可说才退回这一枚码。 */
 export function verifyEnvelope<T = unknown>(envelope: Envelope<T>): void {
   if (envelope.code === 0) return;
   // 这里不带 `response`：手里只有信封，整份回答（`status`、`headers`）由 client 在出栈处补上。
-  throw new ApiError({ errorCode: 'BAD_REQUEST', message: `Invalid envelope code: ${envelope.code}` });
+  const message = typeof envelope.msg === 'string' && envelope.msg.length > 0 ? envelope.msg : `Invalid envelope code: ${envelope.code}`;
+  throw new ApiError({ errorCode: 'BAD_REQUEST', message });
 }

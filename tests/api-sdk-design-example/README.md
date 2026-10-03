@@ -1,6 +1,6 @@
 # api-sdk-design-example
 
-一份 API SDK 设计架构的可执行实例。README 与 `docs/` 是这套写法本身，`src/` 是它落地成的一个包，`test/` 是两个调用点在 vitest 里的运行结果——文档里任何一个形状被改掉，`rushx typecheck && rushx test` 就会说它是否还成立。
+一份 API SDK 设计架构的可执行实例。README 与 `docs/` 是这套写法本身，`src/` 是它落地成的一个包，`test/` 是同一个 endpoint 的两种装配（带 / 不带 zod）在 vitest 里的运行结果——文档里任何一个形状被改掉，`rushx typecheck && rushx test` 就会说它是否还成立。
 
 一个 API SDK 由两部分组成：client 持有跨调用的通用信息（地址、凭据、发送函数），endpoint 是描述单次调用的纯值。endpoint 把一个入参类型 `In` 映到一个出参类型 `Out`，中间是四个槽：两个校验（只要求一个 `parse` 方法，可以整个不写）、两个搬运（先收 client 本身，再把入参造成请求、把响应判定并造成回答）。`In` 是平铺的参数本身，不按位置分组：某个值进地址、进查询串还是进请求体，由 `requestAdaptor` 决定。两侧类型由这四个槽的声明推出，`api.call(endpoint, input)` 是唯一入口。
 
@@ -13,7 +13,7 @@
 在 `tests/api-sdk-design-example` 目录下：
 
 - `rushx typecheck` —— `tsc --noEmit`，一份 program 同时收下 `src/`、`test/` 与 `vite.config.ts`。
-- `rushx test` —— vitest 跑 29 个用例：两份调用点各自的行为、七个码各自的来源，加上注册表审计。
+- `rushx test` —— vitest 跑 14 个用例：一份 endpoint × 两种装配（带 / 不带 zod）的场景矩阵、七个码各自的来源，加上注册表审计。
 - `rushx lint` / `rushx format` —— oxlint 与 oxfmt，配置在仓库根的 `.oxfmtrc.json`。
 
 `zod` 与 `universal-fetch-type` 都记在 `devDependencies`：前者只有 verified 一侧用到，后者只有类型。本包不构建也不发布，所以没有 `build` 脚本、没有 `exports` 与 `files`，`dist/` 不是它的产物。`vite.config.ts` 是这一份包的全部构建配置——只有 `@` → `src` 一条别名——vitest 没有单独的配置文件，读的就是它。
@@ -27,9 +27,8 @@
 - `src/endpoint/raw.ts` —— 无校验装配：`operation` 与两个适配器，两个校验槽整个不写。这一份的导出一律带 `Raw` 后缀。
 - `src/endpoint/verified.ts` —— 带判定装配：展开 `raw` 那一份，只补两个校验槽。
 - `src/index.ts` —— 入口，两侧装配是两个可以分别不被命名的顶层绑定。
-- `test/fakeUpstream.ts` 与 `test/fixtures.ts` —— 只记录的假上游，与两份调用点共用的那几个值。
-- `test/userscript.spec.ts` —— 油猴调用点：raw 发出的字节、失去的那一半判定、保留的那一半读法。
-- `test/server.spec.ts` —— 服务调用点：`BAD_INPUT` 与 `BAD_OUTPUT` 各自的来源、四个上游码原样返回、错误带着什么。
+- `test/mockFetch.ts` 与 `test/fixtures.ts` —— 只扮演 auth/429/500/不可达的 mock fetch，与两份装配共用的那几个值、那个 `testEndpoint`。
+- `test/tiers.spec.ts` —— 场景矩阵：同一个下场在带 zod 与不带 zod 两份装配上各跑一遍，结局逐字相等；另留「只带 zod 才有的一半」两例，说清校验到底加了什么。
 - `test/registry.spec.ts` —— 注册表审计：JWT 带没带、交出的地址是不是绝对的、查询串编没编码、两份装配是不是同一个函数对象。
 
 # 文档

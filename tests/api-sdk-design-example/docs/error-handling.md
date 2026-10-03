@@ -29,7 +29,7 @@ export class ApiError extends Error {
 - `NETWORK_ERROR`——发出环。无法收到服务器回应：连接失败、body 未到、到的不是 JSON，或者交出去的串根本不是一个地址、被接缝拒收。发出与读取在同一段里，所以这些都算这一码而不是各立一个；链上不替适配器预演地址判定。
 - `BAD_OUTPUT`——回答环的两种读法。`getEnvelope` 读不出那层信封时抛出它，投影取不出那一段、`responseSchema.parse` 判不过时也归它：上游答对了，答的是这份契约没有描述的东西，读错的是这边。
 - `UNAUTHORIZED`、`RATE_LIMIT`、`SERVER_ERROR`——`getEnvelope` 对上状态的那一张表：401/403、429、5xx。状态先说，信封里写着什么都不相干。
-- `BAD_REQUEST`——`verifyEnvelope` 对上业务码的那一句：`code` 非零就是上游没答对。这张表不再细分，一个非零值一枚码，具体是哪一个写在消息里（`Invalid envelope code: 401`），要细分的人读 `response.body`。
+- `BAD_REQUEST`——`verifyEnvelope` 对上业务码的那一句：`code` 非零就是上游没答对。这张表不再细分，一个非零值一枚码，消息优先取信封自带的 `msg`、它没话可说才回落 `Invalid envelope code: 401`，要细分的人读 `response.body`。
 
 # 包装还是放行
 
@@ -39,7 +39,7 @@ export class ApiError extends Error {
 
 # 两面：message 与 req/res
 
-库里不打日志，可调试性全在错误携带的字段上。`message` 是给日志行与 HTTP 响应的那一面，而它说什么由构造失败的那一处决定：`getEnvelope` 写下 `HTTP 403` 或者 `Invalid envelope`，`verifyEnvelope` 写下 `Invalid envelope code: 401`，包装底层错误的那几处一个字都不写，那句话就是底层错误自己的 `message`。`errorCode` 与 `operation` 不重复进文本，它们已经是字段——一行日志里要它们，是使用方自己把这两个值拼上那一行。地址不进消息：完整地址只在 `request.url` 上，那一个带着查询串，有凭据走查询串的调用不能把它写进日志，要地址的人自己取不带查询串的那一段。回答体也不进消息：那张表留在 `response.body` 上，把它抄进消息是使用方的决定。
+库里不打日志，可调试性全在错误携带的字段上。`message` 是给日志行与 HTTP 响应的那一面，而它说什么由构造失败的那一处决定：`getEnvelope` 写下 `HTTP 403` 或者 `Invalid envelope`，`verifyEnvelope` 写下信封自带的 `msg`（没有才回落 `Invalid envelope code: 401`），包装底层错误的那几处一个字都不写，那句话就是底层错误自己的 `message`。`errorCode` 与 `operation` 不重复进文本，它们已经是字段——一行日志里要它们，是使用方自己把这两个值拼上那一行。地址不进消息：完整地址只在 `request.url` 上，那一个带着查询串，有凭据走查询串的调用不能把它写进日志，要地址的人自己取不带查询串的那一段。回答体也不进消息：那张表留在 `response.body` 上，把它抄进消息是使用方的决定。
 
 `request` 与 `response` 是未消化的那一面，给的是要再看一遍的人。它们不参与 `message` 的构造，所以放上输出行是调用方自己的选择，而 `request.init.headers` 里就带着这一次调用的凭据。
 
@@ -57,4 +57,4 @@ export class ApiError extends Error {
 
 # 实例
 
-类、`wrapApiError`、`Envelope` 与那两个读法函数同在 `src/error.ts`，`src/client.ts` 的三段 catch 只是各递一份 init 给它。三枚码各自的来源、覆盖与补全、上游语义留在消息与回答里的那一面，各有用例断言在 `test/server.spec.ts` 与 `test/userscript.spec.ts`。
+类、`wrapApiError`、`Envelope` 与那两个读法函数同在 `src/error.ts`，`src/client.ts` 的三段 catch 只是各递一份 init 给它。三枚码各自的来源、覆盖与补全、上游语义留在消息与回答里的那一面，各有用例断言在 `test/tiers.spec.ts` 的场景矩阵里。

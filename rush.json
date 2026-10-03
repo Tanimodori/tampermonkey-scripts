@@ -486,6 +486,11 @@
       "packageName": "xiv-datamine-polyfill-e2e-test",
       "projectFolder": "tests/xiv-datamine-polyfill-e2e-test",
       "tags": [ "test" ]
+    },
+    {
+      "packageName": "api-sdk-design-example",
+      "projectFolder": "tests/api-sdk-design-example",
+      "tags": [ "test" ]
     }
   ]
 }

@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    /*
+      Node 类型是这一份编译能认出 `Response` 与 `globalThis.fetch` 的唯一来源。这一份 program 同时收下 `src/` 与
+      `test/`：本包不产出 `dist/`，它的全部用途就是把这份声明跑起来，所以不需要为两侧各配一份 program。
+    */
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "skipLibCheck": true,
+
+    /* `@/…` 就是 `src/` 下的一个模块：别名在 vite.config.ts 里为 vite 声明，这里的 `paths` 只是让 tsc 读得到同一件事。 */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "vite.config.ts"]
+}

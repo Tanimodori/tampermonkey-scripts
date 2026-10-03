@@ -60,6 +60,13 @@ export interface ApiResponse {
   readonly body: unknown;
 }
 
+/** 上游信封的形状。读法（`getEnvelope`、`verifyEnvelope`）住在 `error.ts`，这里只描述那几个字节。 */
+export interface Envelope<T = unknown> {
+  code: number;
+  msg: string;
+  data: T;
+}
+
 /** 一个 endpoint = `operation` + 四个装配槽。两个校验槽可以整个不写，两个搬运槽是必填的。 */
 export interface Endpoint<In, Out> {
   readonly operation: string;

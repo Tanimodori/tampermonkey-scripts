@@ -1,4 +1,4 @@
-import type { ApiErrorCode, ApiRequest, ApiResponse } from '@/types';
+import type { ApiErrorCode, ApiRequest, ApiResponse, Envelope } from '@/types';
 
 /**
  * 一次调用失败成什么样，用这套代码自己的话说。规则的完整描述在 docs/error-handling.md。
@@ -53,12 +53,6 @@ export function wrapApiError(cause: unknown, init: ApiErrorInit): ApiError {
     return cause;
   }
   return new ApiError({ ...init, cause });
-}
-
-export interface Envelope<T = unknown> {
-  code: number;
-  msg: string;
-  data: T;
 }
 
 function getErrorCode(code: number): ApiErrorCode | undefined {

@@ -2,8 +2,10 @@ import type { WebFetcherRequestInit } from 'universal-fetch-type';
 import { vi } from 'vitest';
 
 /**
- * 上游只由这一份 mock fetch 扮演：四种下场（正常会校验凭据、429、服务器错误、不可达）与它们各自的默认回答体都写在这里，
- * 被要求发出的调用直接读 mock 自己的记录（`mock.calls`），不另造 `seen` / `sent` 之类的结构。
+ * 上游只由这一份自定义 fetch 扮演：四种下场（正常会校验凭据、429、服务器错误、不可达）与它们各自的默认回答体都写在这里。
+ * 它作为一个 `transport` 递给 `createApi`，不顶替全局 `fetch`，并行用例因此互不干扰。
+ *
+ * 被要求发出的调用留在 mock 自己的记录（`mock.calls`）里，不另造 `seen` / `sent` 之类的结构。
  *
  * 正常与凭据被拒走同一条 `upstreamOk`：它认一枚凭据，认不出就以自己的 401 体拒。
  */
@@ -23,14 +25,12 @@ function toResponse(reply: Reply): Response {
   });
 }
 
-/** 装一台假服务器：按请求给出回答，并把 `fetch` 本尊顶替掉。坏地址先像真 `fetch` 那样拒收一次。 */
+/** 装一台假服务器：一个可以直接当 `transport` 用的 fetch。坏地址先像真 `fetch` 那样拒收一次。 */
 function serve(answer: (headers: Record<string, string>) => Reply) {
-  const mock = vi.fn(async (url: string, init?: WebFetcherRequestInit) => {
+  return vi.fn(async (url: string, init?: WebFetcherRequestInit): Promise<Response> => {
     new URL(url);
     return toResponse(answer({ ...init?.headers }));
   });
-  vi.stubGlobal('fetch', mock);
-  return mock;
 }
 
 /** 正常：认这枚凭据就答出可用信封，认不出就以自己的 401 体拒。承载「正常（会校验凭据）」与「凭据被拒」。 */
@@ -54,11 +54,9 @@ export function upstreamServerError() {
 
 /** 不可达：连接被拒、超时、body 未到，都从这一条抛出去。 */
 export function upstreamUnreachable(cause: unknown) {
-  const mock = vi.fn(async () => {
+  return vi.fn(async (): Promise<never> => {
     throw cause;
   });
-  vi.stubGlobal('fetch', mock);
-  return mock;
 }
 
 /** 200 配一份任意信封体：业务码非零、或信封读得出却取不到那一段，都从这一条走。 */

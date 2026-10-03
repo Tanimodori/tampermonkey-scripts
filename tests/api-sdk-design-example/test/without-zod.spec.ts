@@ -1,5 +1,5 @@
 import { describe, it } from 'vitest';
-import { testEndpoint } from './fixtures';
+import { listMessagesRaw } from '@/index';
 import { SCENARIOS } from './scenarios';
 
 /**
@@ -9,5 +9,5 @@ import { SCENARIOS } from './scenarios';
  */
 
 describe('不带 zod 装配', () => {
-  it.each(SCENARIOS)('$label', ({ run }) => run(testEndpoint.withoutZod));
+  it.each(SCENARIOS)('$label', ({ run }) => run(listMessagesRaw));
 });

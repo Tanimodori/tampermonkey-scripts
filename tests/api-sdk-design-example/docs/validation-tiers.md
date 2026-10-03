@@ -30,7 +30,7 @@
 
 **边界判定。** `limit: 100000` 与 `limit: 0` 都是 `number`：`.int().min(1).max(100)` 对类型系统不可见。范围、字符串格式、`.regex()`、数组的 `.min(1)` 全部不存在。这不是分层能补的缺口，是类型的性质。
 
-**不剥键。** `z.object` 会剥掉未声明的键，而缺席的那一环不会。这条差别在哪一处显形，取决于适配器怎么用这一份入参：把整袋转出去的适配器（`body: JSON.stringify(input)`）在 raw 下真会把一个陈旧键发出去，上游的 `BAD_REQUEST` 取代本地的 `BAD_INPUT`；逐个取键的适配器两侧发出同样的字节——本包的 `src/endpoint/raw.ts` 就是这一种，`test/registry.spec.ts` 把「两份装配对同一份入参发出完全相同的字节」断言在那里。加一个 endpoint 时这一条要重新问一次。
+**不剥键。** `z.object` 会剥掉未声明的键，而缺席的那一环不会。这条差别在哪一处显形，取决于适配器怎么用这一份入参：把整袋转出去的适配器（`body: JSON.stringify(input)`）在 raw 下真会把一个陈旧键发出去，上游的 `BAD_REQUEST` 取代本地的 `BAD_INPUT`；逐个取键的适配器两侧发出同样的字节——本包的 `src/endpoint/raw.ts` 就是这一种。加一个 endpoint 时这一条要重新问一次。
 
 **每一码少一半。** 七个码一个都不消失，但两个码少掉来源：`BAD_INPUT` 失去入参判定那一半（剩下的来源是 `requestAdaptor` 自己抛出来的那一种），`BAD_OUTPUT` 失去投影之后的形状判定那一半。链的顺序是投影在校验之前，而读信封那两步是两份装配共享的：`getEnvelope` 读不出那层信封在两侧都抛 `BAD_OUTPUT`，`verifyEnvelope` 在两侧都抛 `BAD_REQUEST`；剩下的一种下场只属于 raw——一条走通却取错段的投影安静交出 `undefined`，没有任何东西会说它错。所以 `unknown` 到那一段之间的每一层都要么自己判形状、要么会抛，这个约束不因分层而松开。
 
@@ -90,7 +90,7 @@ export { listMessagesRaw } from './endpoint/raw'; // 不带判定：只命名它
 
 默认名字给带判定的那一侧，无判定要显式写 `Raw` 后缀：浏览器脚本作者是决定不校验的那一个，这个决定应当在调用点上看得见。带判定那一份的实现就是展开同一份声明再补两个槽（`{ ...listMessagesRaw, requestSchema, responseSchema }`），两个适配器因此是同一个函数对象。
 
-不能改成 `export * as raw` 或一份 `endpoints` 注册表对象来分两侧：namespace 对象与对象字面量都要在被求值时把整个集合建出来，未被命名的那一侧仍然留在产物里，`sideEffects: false` 对这种写法不起作用——删除的依据是「这个导出的值有没有被用到」，而注册表把两侧都算作被用到。注册表本身仍然该有，它是测试遍历整批 endpoint 的数据面，不是发布给使用方的入口。
+不能改成 `export * as raw` 或一份 `endpoints` 注册表对象来分两侧：namespace 对象与对象字面量都要在被求值时把整个集合建出来，未被命名的那一侧仍然留在产物里，`sideEffects: false` 对这种写法不起作用——删除的依据是「这个导出的值有没有被用到」，而注册表把两侧都算作被用到。需要遍历整批 endpoint 时，那样一张表是使用方自己的数据面，不是发布给使用方的入口。
 
 # 浏览器脚本一侧
 

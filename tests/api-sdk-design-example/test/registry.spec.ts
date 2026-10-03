@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { ListMessagesInput, ListMessagesOutput } from '@/endpoint/schema';
-import { listMessages, listMessagesRaw } from '@/index';
+import { createApi, listMessages, listMessagesRaw } from '@/index';
 import type { Endpoint } from '@/types';
-import { GOOD_OUTPUT, INPUT, wired } from './fixtures';
+import { API_BASE, GOOD_OUTPUT, INPUT, TOKEN } from './fixtures';
 
 /**
  * 注册表审计：把动词与凭据的放法从声明字段移进适配器之后，这类错误唯一的去处。
@@ -14,7 +14,7 @@ import { GOOD_OUTPUT, INPUT, wired } from './fixtures';
 type Tier = Endpoint<ListMessagesInput, ListMessagesOutput>;
 
 const registry: Tier[] = [listMessages, listMessagesRaw];
-const { api: client } = wired();
+const client = createApi({ apiBase: API_BASE, token: TOKEN });
 
 describe('一整套 endpoint', () => {
   it('两份装配说的是同一次调用，而注册表里不出现第二个 operation', () => {

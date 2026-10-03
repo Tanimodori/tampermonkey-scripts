@@ -121,8 +121,6 @@ dist-storybook/
 .cache/
 .heft/
 
-# migration build-artifact snapshots (local comparison only)
-.migration-backup/
-
-# xivanalysis-zh 浏览器验证的原始控制台 dump(结论已并入 migration 文档)
-scripts/xivanalysis-zh/docs/probe-*.txt
+# Command Code
+.commandcode
+.commandcode/*

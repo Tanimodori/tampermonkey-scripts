@@ -57,4 +57,4 @@ export class ApiError extends Error {
 
 # 实例
 
-类、`wrapApiError`、`Envelope` 与那两个读法函数同在 `src/error.ts`，`src/client.ts` 的三段 catch 只是各递一份 init 给它。三枚码各自的来源、覆盖与补全、上游语义留在消息与回答里的那一面，各有用例断言在 `test/tiers.spec.ts` 的场景矩阵里。
+类、`wrapApiError`、`Envelope` 与那两个读法函数同在 `src/error.ts`，`src/client.ts` 的三段 catch 只是各递一份 init 给它。三枚码各自的来源、覆盖与补全、上游语义留在消息与回答里的那一面，各有用例断言在 `test/with-zod.spec.ts` 与 `test/without-zod.spec.ts` 的场景矩阵里。

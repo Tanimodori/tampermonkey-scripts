@@ -10,4 +10,8 @@ export default defineConfig({
       '@': resolve(import.meta.dirname, 'src'),
     },
   },
+  // 假服务器用 `vi.stubGlobal('fetch', …)` 顶替 `fetch`：每例收尾撤掉，免得下一例继承上一例的那一份。
+  test: {
+    unstubGlobals: true,
+  },
 });

@@ -13,7 +13,7 @@
 在 `tests/api-sdk-design-example` 目录下：
 
 - `rushx typecheck` —— `tsc --noEmit`，一份 program 同时收下 `src/`、`test/` 与 `vite.config.ts`。
-- `rushx test` —— vitest 跑 14 个用例：一份 endpoint × 两种装配（带 / 不带 zod）的场景矩阵、七个码各自的来源，加上注册表审计。
+- `rushx test` —— vitest 跑 20 个用例：带 zod 装配 8 例、不带 zod 装配 6 例、注册表审计 6 例。
 - `rushx lint` / `rushx format` —— oxlint 与 oxfmt，配置在仓库根的 `.oxfmtrc.json`。
 
 `zod` 与 `universal-fetch-type` 都记在 `devDependencies`：前者只有 verified 一侧用到，后者只有类型。本包不构建也不发布，所以没有 `build` 脚本、没有 `exports` 与 `files`，`dist/` 不是它的产物。`vite.config.ts` 是这一份包的全部构建配置——只有 `@` → `src` 一条别名——vitest 没有单独的配置文件，读的就是它。
@@ -27,8 +27,11 @@
 - `src/endpoint/raw.ts` —— 无校验装配：`operation` 与两个适配器，两个校验槽整个不写。这一份的导出一律带 `Raw` 后缀。
 - `src/endpoint/verified.ts` —— 带判定装配：展开 `raw` 那一份，只补两个校验槽。
 - `src/index.ts` —— 入口，两侧装配是两个可以分别不被命名的顶层绑定。
-- `test/mockFetch.ts` 与 `test/fixtures.ts` —— 只扮演 auth/429/500/不可达的 mock fetch，与两份装配共用的那几个值、那个 `testEndpoint`。
-- `test/tiers.spec.ts` —— 场景矩阵：同一个下场在带 zod 与不带 zod 两份装配上各跑一遍，结局逐字相等；另留「只带 zod 才有的一半」两例，说清校验到底加了什么。
+- `test/upstream.ts` —— 那台假服务器：用 vitest 的 mock 顶替 `fetch`，扮演正常（会校验凭据）/429/500/不可达四种下场，默认回答体也写在这里。
+- `test/fixtures.ts` —— 两份装配共用的值：地址、凭据、入参、可用回答，以及那个 `testEndpoint`。
+- `test/scenarios.ts` —— 六种重心的可运行检查表：同一个下场要在两份装配上各自成立一次的断言，只写一遍。
+- `test/with-zod.spec.ts` —— 带 zod 装配：六种下场各一例，另留「只带 zod 才有的一半」两例，说清校验到底加了什么。
+- `test/without-zod.spec.ts` —— 不带 zod 装配：同一张表各一例。
 - `test/registry.spec.ts` —— 注册表审计：JWT 带没带、交出的地址是不是绝对的、查询串编没编码、两份装配是不是同一个函数对象。
 
 # 文档

@@ -1,32 +1,41 @@
 import { describe, expect, it } from 'vitest';
 import {
   ALL_EDITIONS,
+  createDatamineClient,
   createGarlandClient,
   createXivApiClient,
   EDITIONS,
   fetchSheetCsv,
+  garlandSearch,
   isApiErrorResponse,
   isProviderError,
   isSheetResponse,
+  listSheets,
+  listVersions,
+  readAction,
+  readAsset,
+  readItem,
+  readRow,
   readSheet,
+  readStatus,
+  search,
   useSheetTable,
 } from '@/index.ts';
 import * as garlandSchemas from '@/providers/garlands/types/schema.ts';
 import * as schemas from '@/providers/xivapi/types/schema.ts';
 
 /**
- * Against the real services, run by hand: `rushx test:live`.
+ * 对真实服务运行，手动跑：`rushx test:live`。
  *
- * Two gates, not one. The `live` tag keeps these out of a filtered run, and `skipIf` keeps them out of an
- * unfiltered one — vitest treats "no filter" as "include everything", so the tag alone would still reach the
- * network during an ordinary `rushx test`. Both must agree before a request leaves the machine.
+ * 两道闸，不是一道。`live` 标签把这些挡在带过滤的运行之外，`skipIf` 把它们挡在不带过滤的运行之外——vitest
+ * 把"没有过滤"读成"全都跑"，只有标签挡不住一次普通的 `rushx test` 去碰网络。两道都同意，请求才离开机器。
  *
- * This is where the zod schemas earn their keep: they validate *returned* bodies, which is the migration
- * detector. A committed fixture can only ever prove the code agrees with the past.
+ * zod schema 在这里挣它的工资：它们校验*返回*的 body，那是迁移探测器。一份提交过的夹具只能证明代码与过去
+ * 一致。
  */
 const live = process.env.XIV_LIVE === '1';
 
-/** A source texture both editions render. A `.png` path is not convertible, so it is the wrong probe. */
+/** 两个 edition 都会渲染的一张源纹理。`.png` 路径不可转换，所以它是不对的探针。 */
 const ICON = 'ui/icon/003000/003554.tex';
 
 describe.skipIf(!live)('xivapi, both editions', { tags: ['live'] }, () => {
@@ -35,27 +44,28 @@ describe.skipIf(!live)('xivapi, both editions', { tags: ['live'] }, () => {
       const client = () => createXivApiClient(edition);
 
       it('answers a sheet read with the documented envelope', async () => {
-        const row = await client().readRow('Action', 16554, { fields: ['Name', 'Icon'] });
+        const row = await client().call(readRow, { sheet: 'Action', row: 16554, query: { fields: ['Name', 'Icon'] } });
         expect(row.row_id).toBe(16554);
         expect(typeof row.fields.Name).toBe('string');
       });
 
       it('lists sheets', async () => {
-        expect(await client().listSheets()).toContain('Item');
+        const listed = await client().call(listSheets, {});
+        expect(listed.sheets.map((sheet) => sheet.name)).toContain('Item');
       });
 
       it('serves the language the edition is configured with', async () => {
-        const row = await client().readRow('Action', 16554, { fields: ['Name'] });
-        // Content is not asserted — only that a name came back and that the shape parses.
+        const row = await client().call(readRow, { sheet: 'Action', row: 16554, query: { fields: ['Name'] } });
+        // 不断言内容——只要回来了一个名字、且形状 parse 得过。
         expect(schemas.rowResponseSchema.safeParse({ schema: 'exdschema@2:rev:0000000000000000000000000000000000000000', version: '0', ...row }).success).toBe(
           true,
         );
       });
 
       it('answers a clause search', async () => {
-        // A bare term is not valid query syntax on either edition. An empty list here is a correct answer, so
-        // only the shape is checked; whether the Chinese server's index can fill it is its own case below.
-        const result = await client().search({ query: 'Name="Potion"', sheets: ['Item'], limit: 1, fields: ['Name'] });
+        // 裸词在两个 edition 上都不是合法的查询语法。这里的空列表是一个正确回答，所以只查形状；国服索引
+        // 能不能把它填满，是下面它自己的一条。
+        const result = await client().call(search, { query: 'Name="Potion"', sheets: ['Item'], limit: 1, fields: ['Name'] });
         expect(result.results.length).toBeLessThanOrEqual(1);
         expect(schemas.searchResponseSchema.safeParse(result).success).toBe(true);
       });
@@ -63,9 +73,9 @@ describe.skipIf(!live)('xivapi, both editions', { tags: ['live'] }, () => {
   }
 
   it('has a version list internationally', async () => {
-    const versions = await createXivApiClient('international').listVersions();
-    expect(versions.length).toBeGreaterThan(3);
-    expect(versions.at(-1)?.names.length).toBeGreaterThan(0);
+    const versions = await createXivApiClient('international').call(listVersions, {});
+    expect(versions.versions.length).toBeGreaterThan(3);
+    expect(versions.versions.at(-1)?.names.length).toBeGreaterThan(0);
   });
 
   it('allows any origin, which is what `@grant none` depends on', async () => {
@@ -77,63 +87,60 @@ describe.skipIf(!live)('xivapi, both editions', { tags: ['live'] }, () => {
 });
 
 /**
- * What each edition actually serves, measured one request at a time.
+ * 每个 edition 实际服务什么，一次一条请求地量。
  *
- * The Chinese server is the one the userscripts need and the one that differs, so this is the part a caller
- * cannot infer from the shared client type: the same method either answers, answers differently, or has no
- * route at all. `createXivApiClient` deliberately does not branch on any of this — a caller that wants to
- * avoid a doomed request reads this table and decides.
+ * 国服是 userscript 需要的那台、也是不一样的那台，所以这是调用方无法从共享的 client 类型推断的部分：同一个
+ * 端点要么回答、要么换种方式回答、要么根本没有路由。`createXivApiClient` 有意不对这些分支——想避开一次注
+ * 定失败的请求的调用方，自己读这张表、自己决定。
  */
 describe.skipIf(!live)('edition capabilities', { tags: ['live'] }, () => {
   const international = () => createXivApiClient('international');
   const chinese = () => createXivApiClient('chinese-server');
 
   it('serves far fewer sheets on the Chinese mirror', async () => {
-    const [intl, cn] = await Promise.all([international().listSheets(), chinese().listSheets()]);
-    expect(cn.length).toBeGreaterThan(1_000);
-    expect(cn.length).toBeLessThan(intl.length / 2);
-    console.info(`sheets: international ${intl.length}, chinese-server ${cn.length}`);
+    const [intl, cn] = await Promise.all([international().call(listSheets, {}), chinese().call(listSheets, {})]);
+    expect(cn.sheets.length).toBeGreaterThan(1_000);
+    expect(cn.sheets.length).toBeLessThan(intl.sheets.length / 2);
+    console.info(`sheets: international ${intl.sheets.length}, chinese-server ${cn.sheets.length}`);
   });
 
   it('answers a Chinese-language query on the mirror and refuses that token internationally', async () => {
-    // `chs` is a real token only on the Chinese server, which is also why the mirror answers an
-    // international-shaped request by accident: omitting `language` there already yields Chinese.
-    const chineseName = await chinese().readRow('Item', 1, { language: 'chs', fields: ['Name'] });
-    const englishName = await chinese().readRow('Item', 1, { language: 'en', fields: ['Name'] });
+    // `chs` 是只有国服认的真 token，这也是国服顺带答对国际站形状请求的原因：在那边省掉 `language` 本来
+    // 就出中文。
+    const chineseName = await chinese().call(readRow, { sheet: 'Item', row: 1, query: { language: 'chs', fields: ['Name'] } });
+    const englishName = await chinese().call(readRow, { sheet: 'Item', row: 1, query: { language: 'en', fields: ['Name'] } });
     expect(typeof chineseName.fields.Name).toBe('string');
     expect(chineseName.fields.Name).not.toBe(englishName.fields.Name);
 
     const error = await international()
-      .readRow('Item', 1, { language: 'chs' })
+      .call(readRow, { sheet: 'Item', row: 1, query: { language: 'chs' } })
       .catch((caught: unknown) => caught);
     expect(isProviderError(error) && error.kind).toBe('http');
     expect(isProviderError(error) && error.status).toBe(400);
   });
 
   it('has no version list on the mirror, and says so before sending', async () => {
-    // The 404 there carries an empty body, which is exactly why this is a capability check rather than a
-    // request whose failure is parsed.
-    await expect(chinese().listVersions()).rejects.toMatchObject({ kind: 'unsupported' });
+    // 那里的 404 带着空 body，这正是这条是能力检查、而不是解析失败请求的原因。
+    await expect(chinese().call(listVersions, {})).rejects.toMatchObject({ kind: 'unsupported' });
     const response = await fetch(`${EDITIONS['chinese-server'].apiBase}/version`);
     expect(response.status).toBe(404);
     expect(await response.text()).toBe('');
   });
 
   it('renders an asset on both, and ignores `format` only on the mirror', async () => {
-    const png = await international().readAsset({ path: ICON, format: 'png' });
-    const askedPng = await chinese().readAsset({ path: ICON, format: 'png' });
-    const askedJpg = await chinese().readAsset({ path: ICON, format: 'jpg' });
+    const png = await international().call(readAsset, { path: ICON, format: 'png' });
+    const askedPng = await chinese().call(readAsset, { path: ICON, format: 'png' });
+    const askedJpg = await chinese().call(readAsset, { path: ICON, format: 'jpg' });
     expect(png.contentType).toBe('image/png');
-    // Asked for png and jpg alike, served webp both times: the content type has to be read, never assumed
-    // from the request, on this edition.
+    // 要 png 与要 jpg 得到同一份 webp：这个 edition 上，内容类型必须从响应读，永远不能从请求想当然。
     expect(askedPng.contentType).toBe('image/webp');
     expect(askedJpg.contentType).toBe(askedPng.contentType);
     expect(askedPng.bytes.byteLength).toBeGreaterThan(0);
   });
 
   it('has no composed-map asset on the mirror', async () => {
-    // International answers this route with its own JSON 404 when the source texture is missing; the mirror
-    // answers with a plain-text 404, which is the route being absent rather than the file.
+    // 源纹理缺失时，国际站给这条路由回它自己的 JSON 404；国服回纯文本 404，那是路由不存在，而不是文件
+    // 不存在。
     const internationalResponse = await fetch(`${EDITIONS.international.apiBase}/asset/map/81/1?format=png`);
     const chineseResponse = await fetch(`${EDITIONS['chinese-server'].apiBase}/asset/map/81/1?format=png`);
     expect([internationalResponse.status, chineseResponse.status]).toEqual([404, 404]);
@@ -142,13 +149,12 @@ describe.skipIf(!live)('edition capabilities', { tags: ['live'] }, () => {
   });
 
   it('matches a Latin clause on both editions, and on neither under chs', async () => {
-    // The clause is compared against the name in the language asked for. The mirror's default language is
-    // `chs`, so an English clause sent without `language` answers an empty list there — a correct answer to a
-    // question nobody meant, and the reason a search box has to send the language its text is written in.
+    // 子句比拼的是"所请求语言的那个字段"里的名字。国服的默认语言是 `chs`，所以不带 `language` 发去的英文
+    // 子句在那边回空列表——那是没人想问的问题的正确答案，也是搜索框必须把它文本的语言一起发出去的原因。
     const clause = { query: 'Name="Potion"', sheets: ['Item'] as const, limit: 2, fields: ['Name'] };
-    const international = await createXivApiClient('international').search(clause);
-    const mirrorInEnglish = await createXivApiClient('chinese-server').search({ ...clause, language: 'en' });
-    const mirrorInChinese = await createXivApiClient('chinese-server').search({ ...clause, language: 'chs' });
+    const international = await createXivApiClient('international').call(search, clause);
+    const mirrorInEnglish = await createXivApiClient('chinese-server').call(search, { ...clause, language: 'en' });
+    const mirrorInChinese = await createXivApiClient('chinese-server').call(search, { ...clause, language: 'chs' });
 
     expect(international.results.map((hit) => hit.row_id)).toEqual(mirrorInEnglish.results.map((hit) => hit.row_id));
     expect(international.results.length).toBeGreaterThan(0);
@@ -159,8 +165,8 @@ describe.skipIf(!live)('edition capabilities', { tags: ['live'] }, () => {
 
 describe.skipIf(!live)('dead and legacy hosts', { tags: ['live'] }, () => {
   it('records that the v1 cafemaker host is unreachable', async () => {
-    // Not a failure to fix, but a fact to notice: that `{Pagination, Results, SpeedMs}` envelope is not
-    // modeled here at all, so a host coming back to life is its readers' migration, not a change owed by this package.
+    // 不是要修的失败，而是一个要留意的既成事实：那个 `{Pagination, Results, SpeedMs}` 信封这个包根本
+    // 没有建模，所以一台主机活回来是它的读者的迁移，不是本包欠下的改动。
     const status = await fetch('https://cafemaker.wakingsands.com/search?string=x&indexes=item')
       .then((response) => response.status)
       .catch(() => 0);
@@ -172,8 +178,8 @@ describe.skipIf(!live)('dead and legacy hosts', { tags: ['live'] }, () => {
     const response = await fetch('https://xivapi.com/api/1/sheet/Action?limit=1');
     const body: unknown = await response.json().catch(() => null);
     expect(response.status).toBe(404);
-    // A body from a different application: no `schema`, no `version`, and not even the `{code, message}` both
-    // live editions send, so none of this package's predicates claim it.
+    // 另一个应用发来的 body：没有 `schema`、没有 `version`，连两个活着的 edition 都会发的 `{code, message}`
+    // 都没有，所以本包没有一个谓词认它。
     expect(schemas.sheetResponseSchema.safeParse(body).success).toBe(false);
     expect([isSheetResponse(body), isApiErrorResponse(body)]).toEqual([false, false]);
   });
@@ -183,10 +189,10 @@ describe.skipIf(!live)('dead and legacy hosts', { tags: ['live'] }, () => {
     const body = (await fetch(url).then((response) => response.json())) as unknown;
     expect(schemas.sheetResponseSchema.safeParse(body).success).toBe(true);
     if (!isSheetResponse(body)) throw new Error('beta.xivapi.com no longer answers the v2 envelope — the older path has changed');
-    // The path keeps a version segment the body does not: same envelope, same data revision as v2.xivapi.com
-    // serves, which is why `/api/1/` is a URL a page still uses rather than a generation of data.
+    // 路径带着一个 body 没有的版本段：同一个信封、同一份数据修订，和 v2.xivapi.com 服务的一样，所以
+    // `/api/1/` 是某个页面还在用的地址，而不是又一代数据。
     expect(body.version).toBeTruthy();
-    // And it is not one of the configured editions, which is a fact about the host, not about the body.
+    // 它也不是任何一个配置过的 edition，这是关于主机的事实，不是关于 body 的。
     const editionHosts = ALL_EDITIONS.map((edition) => new URL(EDITIONS[edition].apiBase).hostname);
     expect(editionHosts).not.toContain(new URL(url).hostname);
   });
@@ -196,13 +202,13 @@ describe.skipIf(!live)('garland mirror', { tags: ['live'] }, () => {
   const client = () => createGarlandClient();
 
   it('reads a document of each kind', async () => {
-    expect((await client().readItem(19890)).item.id).toBe(19890);
-    expect((await client().readAction(16554)).action.id).toBe(16554);
-    expect((await client().readStatus(1892)).status.id).toBe(1892);
+    expect((await client().call(readItem, { id: 19890 })).item.id).toBe(19890);
+    expect((await client().call(readAction, { id: 16554 })).action.id).toBe(16554);
+    expect((await client().call(readStatus, { id: 1892 })).status.id).toBe(1892);
   });
 
   it('still answers search in both scripts', async () => {
-    const english = await client().search({ text: 'Fire', lang: 'en', type: 'action' });
+    const english = await client().call(garlandSearch, { text: 'Fire', lang: 'en', type: 'action' });
     expect(english.length).toBeGreaterThan(0);
     expect(garlandSchemas.garlandSearchResponseSchema.safeParse(english).success).toBe(true);
   });
@@ -221,21 +227,21 @@ describe.skipIf(!live)('datamining dumps', { tags: ['live'] }, () => {
     expect(sheet.columns).toContain('#');
     expect(sheet.columns).toContain('Name');
     expect(sheet.rowCount).toBeGreaterThan(0);
-    // The shape contract of a sheet: a cell per column in every row, and every cell a string.
+    // 一张表的形状契约：每一行每列一格，每格都是字符串。
     expect(sheet.rows.every((row) => row.length === sheet.columns.length)).toBe(true);
     expect(sheet.rows.every((row) => row.every((cell) => typeof cell === 'string'))).toBe(true);
   });
 
   it('answers a sheet the tree does not carry as a 404 rather than an empty grid', async () => {
-    // `DataCenter` is not in the tree at all: the sheet was renamed in modern EXD, and some locales never
-    // got the old file. A caller has to be able to tell that apart from a request that failed.
-    await expect(fetchSheetCsv('DataCenter')).rejects.toMatchObject({ kind: 'not_found', status: 404 });
+    // `DataCenter` 根本不在树里：这张表在现代 EXD 里改了名，有些语种从没拿到过旧文件。调用方得能把这件事
+    // 与"请求失败了"分开。
+    await expect(createDatamineClient().call(fetchSheetCsv, { sheet: 'DataCenter' })).rejects.toMatchObject({ kind: 'not_found', status: 404 });
   });
 
   it('serves Chinese text for the chs locale', async () => {
     const sheet = useSheetTable(await readSheet('ItemUICategory'));
     expect(sheet.cell(1, 'Name')).toBeTruthy();
-    // The braces are the file's spelling, and the only one that resolves.
+    // 大括号是文件自己的拼法，也是唯一解得开的拼法。
     expect(sheet.cell(1, 'Order{Minor}')).toBeDefined();
     expect(sheet.cell(1, 'OrderMinor')).toBeUndefined();
   });

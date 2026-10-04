@@ -1,4 +1,15 @@
-import { garlandDocUrl, iconIdFromImageUrl, sheetRowUrl, siteIconUrl, useSheetTable, type SheetTable } from 'xiv-api-provider';
+import {
+  createXivApiClient,
+  garlandDocUrl,
+  iconIdFromImageUrl,
+  readRowRaw,
+  sheetRowUrl,
+  siteIconUrl,
+  useSheetTable,
+  type SheetName,
+  type SheetTable,
+  type WebFetcher,
+} from 'xiv-api-provider';
 import addon from 'xiv-datamine-polyfill/Addon.csv';
 import itemUICategory from 'xiv-datamine-polyfill/ItemUICategory.csv';
 
@@ -76,6 +87,18 @@ export const linksFor = (itemId: number, categoryKey: string): { xivapi: string;
   garlands: garlandDocUrl('item', itemId).toString(),
   categoryName: categoryName(categoryKey),
 });
+
+/**
+ * One sheet row's `Name`, read through the raw endpoint — the assembly a caller picks when nothing needs the
+ * schema engine at runtime. This is also the bundle check's probe: an artifact that names this and no verified
+ * endpoint must not carry zod, and `test/offline.spec.ts` reads the built file to say so.
+ */
+export const fetchRowName = async (fetch: WebFetcher, sheet: SheetName, row: number): Promise<string | undefined> => {
+  const client = createXivApiClient('chinese-server', { language: 'chs', fetch });
+  const { fields } = await client.call(readRowRaw, { sheet, row, query: { fields: ['Name'] } });
+  const name = fields.Name;
+  return typeof name === 'string' ? name : undefined;
+};
 
 /** One sheet as data: the header lines it declares, the rows that survived the rules, and a trimmed subset. */
 export interface SheetSnapshot {

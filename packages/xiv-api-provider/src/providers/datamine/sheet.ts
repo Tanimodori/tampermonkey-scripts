@@ -1,39 +1,38 @@
 import type { WebFetcher } from 'universal-fetch-type';
-import { ProviderError, sendRequest } from '@/internal/http.ts';
+import { createDatamineClient } from './client.ts';
 import { parseSheetCsv, type SheetRawData } from './csv.ts';
+import { fetchSheetCsv } from './raw.ts';
 
 /**
- * Online access to the SaintCoinach datamining dumps: one flat CSV per sheet per locale.
+ * SaintCoinach 解包数据集的在线访问：一张表一个文件、一语种一份 CSV。
  *
- * This provider knows no sheets. It answers "give me this file" with that file's grid — header lines and all,
- * every cell a string — and what a column means is left to the caller, which is the point of the split: the
- * set of usable tables is upstream's (thousands of them), not this package's.
+ * 这个 provider 不认识任何一张表。它回答"给我这个文件"，交回的就是那个文件的网格——三行表头在内、每格都是
+ * 字符串——列的含义留给调用方，这正是拆分的意义：可用的表是上游的（几千张），不是这个包的。
  *
- * The branch head is the default ref, so a build reads the data as it is now without asking anyone what the
- * newest release was. The GitHub API is not involved at all: `raw.githubusercontent.com` serves a ref name
- * directly, which also means no rate limit and no release-tagging lag. A 404 is a real answer here — some
- * locales simply do not carry a given sheet.
+ * 默认 ref 是分支头，构建因此读到当下的数据，而不必先问任何人"最新 release 是哪个"。GitHub 的 API 完全不
+ * 参与：`raw.githubusercontent.com` 直接按 ref 名服务，于是没有限流、也没有 release 打 tag 的滞后。404 在这
+ * 里是正常答案，有些语种就是不带某张表。
  */
 
-/** The repository's default branch, addressed by name so it cannot go stale. */
+/** 仓库的默认分支，按名字寻址所以不会过期。 */
 export const DEFAULT_REF = 'HEAD';
 
 /** `InfSein/ffxiv-datamining-mixed` */
 export const DATAMINING_REPOSITORY = 'InfSein/ffxiv-datamining-mixed';
 
-/** Simplified Chinese, the locale the two userscripts need. */
+/** 简体中文，两个 userscript 需要的语种。 */
 export const DEFAULT_LOCALE = 'chs';
 
-/** Sheets here run to 19 MB, so this transport waits longer than the API providers do. */
+/** 这里的表能到 19 MB，这条传输等得比 API provider 久。 */
 export const DEFAULT_TIMEOUT_MS = 30_000;
 
 export interface DatamineOptions {
   /**
-   * Where to send the request. Defaults to the ambient `fetch`; a userscript passes the pre-patch native
-   * one, and a Node build may pass something that honours `HTTPS_PROXY`, which `fetch` itself does not.
+   * 请求发往哪里。默认取平台自己的 `fetch`；userscript 传拦截前的那份，Node 侧可以传一个认 `HTTPS_PROXY`
+   * 的实现，那是 `fetch` 自己不做的。
    */
   readonly fetch?: WebFetcher;
-  /** Branch, tag or commit. Defaults to `HEAD`; pass a tag to make a build reproducible. */
+  /** 分支、tag 或 commit。默认 `HEAD`；要复现同一次构建就写死一个。 */
   readonly ref?: string;
   readonly locale?: string;
   readonly timeoutMs?: number;
@@ -44,45 +43,12 @@ export const sheetCsvUrl = (sheet: string, options: { readonly ref?: string; rea
     `https://raw.githubusercontent.com/${DATAMINING_REPOSITORY}/${encodeURIComponent(options.ref ?? DEFAULT_REF)}/${options.locale ?? DEFAULT_LOCALE}/${encodeURIComponent(sheet)}.csv`,
   );
 
-const transport = (options: DatamineOptions, accept: string) => ({
-  provider: 'datamine' as const,
-  fetch: options.fetch ?? globalThis.fetch,
-  timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-  accept,
-});
-
 /**
- * One sheet's CSV text.
- *
- * A 404 comes back as `kind: 'not_found'` rather than `kind: 'http'`, because "this locale has no such sheet"
- * is an answer a caller acts on differently from "the request failed".
+ * 取一张表并解析成它的原始网格，一次调用完成——想要表的调用方伸手够到的那份组合。`./table.ts` 把它读成
+ * 可寻址的表；只想要字节的调用方，改经 client 调 `fetchSheetCsv` 端点。
  */
-export const fetchSheetCsv = async (sheet: string, options: DatamineOptions = {}): Promise<string> => {
-  const url = sheetCsvUrl(sheet, options);
-  const response = await sendRequest(url, transport(options, 'text/csv,text/plain,*/*'));
-  if (response.status === 404)
-    throw new ProviderError({
-      kind: 'not_found',
-      provider: 'datamine',
-      url: url.toString(),
-      status: 404,
-      message: `${sheet}: no ${options.locale ?? DEFAULT_LOCALE} sheet at ${options.ref ?? DEFAULT_REF}`,
-    });
-  if (!response.ok)
-    throw new ProviderError({
-      kind: 'http',
-      provider: 'datamine',
-      url: url.toString(),
-      status: response.status,
-      message: `${sheet}.csv failed: HTTP ${response.status}`,
-    });
-
-  const csv = await response.text();
-  if (csv.trim() === '')
-    throw new ProviderError({ kind: 'shape', provider: 'datamine', url: url.toString(), status: response.status, message: `empty body from ${url}` });
-  return csv;
+export const readSheet = async (sheet: string, options: DatamineOptions = {}): Promise<SheetRawData> => {
+  const client = createDatamineClient({ fetch: options.fetch, timeoutMs: options.timeoutMs });
+  const csv = await client.call(fetchSheetCsv, { sheet, ref: options.ref, locale: options.locale });
+  return parseSheetCsv(csv, `${sheet}.csv@${options.ref ?? DEFAULT_REF}`);
 };
-
-/** Fetch a sheet and parse it into its raw grid in one call. `./table.ts` turns that into a table. */
-export const readSheet = async (sheet: string, options: DatamineOptions = {}): Promise<SheetRawData> =>
-  parseSheetCsv(await fetchSheetCsv(sheet, options), `${sheet}.csv@${options.ref ?? DEFAULT_REF}`);

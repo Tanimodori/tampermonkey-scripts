@@ -1,18 +1,17 @@
 /**
- * The package's whole public surface, as one entry: what the three sources are, read online.
+ * 包的全部公开面，一个入口：三个来源是什么，以及如何在线读取它们。
  *
- * Grouped by provider below, and grouped that way on purpose — the providers share no data model and do not
- * fall back to one another, so the only thing they have in common is the transport and `ProviderError`. Which
- * of these a caller ends up shipping is its bundler's to decide: `sideEffects: false` says an unused export
- * is deletable, and `readSheet` is the only route to `papaparse`, so a caller that never names it does not pay
- * for the parser.
+ * 下面按 provider 分组，是有意的——三者不共享数据模型、也不互相回退，共有的只有调用链、传输与 `ProviderError`。
+ * 一个调用方最终装进产物的是哪几个，由它的打包器决定：`sideEffects: false` 说没被命名的导出可以删，只命名
+ * `Raw` 端点（以及没有校验对的 `readAsset` / `fetchSheetCsv`）的产物里没有 schema 引擎，`parseSheetCsv` 与
+ * `readSheet` 是通往 `papaparse` 的唯一两条路。
  *
- * zod is absent from the emitted JavaScript. The schemas live next to the shapes they describe
- * (`providers/<name>/types/schema.ts`), business code reaches them with `import type` only, and the runtime
- * checks are the hand-written predicates in each provider's `guards.ts`.
+ * 一次读取是一个端点对象，由 client 的 `call` 执行；schema 住在它们描述的形状旁边
+ * （`providers/<name>/types/schema.ts`），填进 verified 端点的响应槽，业务代码只以 `import type` 引用它们，
+ * 运行时检查是各 provider `guards.ts` 里的手写谓词。
  */
 
-// Shared: the memo, the icon arithmetic, and the error every provider throws.
+// 共用：memo、图标换算、调用链的契约，以及每个 provider 都抛的错误。
 export { createMemo } from '@/cache.ts';
 export type { Memo, MemoOptions } from '@/cache.ts';
 
@@ -27,11 +26,12 @@ export {
   texturePathWithoutExtension,
 } from '@/icon.ts';
 
-export { isProviderError, ProviderError } from '@/internal/http.ts';
-export type { Provider, ProviderErrorKind, SendOptions } from '@/internal/http.ts';
+export { isProviderError, ProviderError } from '@/internal/error.ts';
+export type { Provider, ProviderErrorKind } from '@/internal/error.ts';
+export type { ApiRequest, ApiResponse, BodyRead, Endpoint, RequestAdaptor, RequestSchema, ResponseAdaptor, ResponseSchema } from '@/internal/types.ts';
 export type { Fetcher, FetcherHeaders, FetcherRequestInit, FetcherResponse, WebFetcher, WebFetcherRequestInit } from 'universal-fetch-type';
 
-// xivapi: the structured game-data API, both editions.
+// xivapi：结构化游戏数据 API，两个 edition。
 export {
   ALL_EDITIONS,
   CHINESE_SERVER,
@@ -62,7 +62,11 @@ export {
 } from '@/providers/xivapi/guards.ts';
 
 export { createXivApiClient } from '@/providers/xivapi/client.ts';
-export type { XivApiClient, XivApiClientOptions } from '@/providers/xivapi/client.ts';
+export type { XivApiClient, XivApiClientOptions, XivApiEndpoint } from '@/providers/xivapi/client.ts';
+
+export { listSheets, listVersions, readRow, readRows, search } from '@/providers/xivapi/verified.ts';
+export { listSheetsRaw, listVersionsRaw, readAsset, readRowRaw, readRowsRaw, searchRaw } from '@/providers/xivapi/raw.ts';
+export type { ReadRowInput, ReadRowsInput, SheetRowsOutput } from '@/providers/xivapi/raw.ts';
 
 export type {
   ApiErrorResponse,
@@ -81,7 +85,7 @@ export type {
   VersionsResponse,
 } from '@/providers/xivapi/types/schema.ts';
 
-// garlands: the Chinese mirror, which is where Simplified Chinese names and descriptions come from today.
+// garlands：国服镜像，简中名称与描述目前真正的来源。
 export { GARLAND_BASE, GARLAND_SCHEMA_VERSION, garlandDocUrl, garlandIconUrl, garlandSearchUrl } from '@/providers/garlands/endpoints.ts';
 export type { GarlandDocKindUrl, GarlandSearchQuery, GarlandSearchType } from '@/providers/garlands/endpoints.ts';
 
@@ -96,7 +100,11 @@ export {
 } from '@/providers/garlands/guards.ts';
 
 export { createGarlandClient } from '@/providers/garlands/client.ts';
-export type { GarlandClient, GarlandClientOptions } from '@/providers/garlands/client.ts';
+export type { GarlandClient, GarlandClientOptions, GarlandEndpoint } from '@/providers/garlands/client.ts';
+
+export { garlandSearch, readAction, readItem, readStatus } from '@/providers/garlands/verified.ts';
+export { garlandSearchRaw, readActionRaw, readItemRaw, readStatusRaw } from '@/providers/garlands/raw.ts';
+export type { GarlandDocInput } from '@/providers/garlands/raw.ts';
 
 export type {
   GarlandAction,
@@ -113,12 +121,18 @@ export type {
   GarlandSubLocale,
 } from '@/providers/garlands/types/schema.ts';
 
-// datamine: the SaintCoinach dumps, one sheet per CSV file, returned as the grid the file holds.
+// datamine：SaintCoinach 解包数据集，一张表一个 CSV 文件，交回文件持有的网格。
 export { HEADER_LINES, parseSheetCsv } from '@/providers/datamine/csv.ts';
 export type { SheetRawData } from '@/providers/datamine/csv.ts';
 
 export { useSheetTable } from '@/providers/datamine/table.ts';
 export type { SheetTable, TrimRules } from '@/providers/datamine/table.ts';
 
-export { DATAMINING_REPOSITORY, DEFAULT_LOCALE, DEFAULT_REF, DEFAULT_TIMEOUT_MS, fetchSheetCsv, readSheet, sheetCsvUrl } from '@/providers/datamine/sheet.ts';
+export { createDatamineClient } from '@/providers/datamine/client.ts';
+export type { DatamineClient, DatamineClientOptions, DatamineEndpoint } from '@/providers/datamine/client.ts';
+
+export { fetchSheetCsv } from '@/providers/datamine/raw.ts';
+export type { FetchSheetCsvInput } from '@/providers/datamine/raw.ts';
+
+export { DATAMINING_REPOSITORY, DEFAULT_LOCALE, DEFAULT_REF, DEFAULT_TIMEOUT_MS, readSheet, sheetCsvUrl } from '@/providers/datamine/sheet.ts';
 export type { DatamineOptions } from '@/providers/datamine/sheet.ts';

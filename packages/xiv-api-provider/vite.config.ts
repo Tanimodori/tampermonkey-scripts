@@ -16,20 +16,22 @@ export default defineConfig({
       insertTypesEntry: false,
     }),
   ],
-  // The package is a library other packages import, so each entry in `dist/` is a bundle rather than a
-  // per-module tsc emit. That is what makes `@/…` usable throughout `src/`: the alias is resolved here and
-  // disappears from the output. The declarations come out of the same pass and for the same reason —
-  // `unplugin-dts` resolves `paths` while generating them, so an alias a consumer cannot read never reaches
-  // `dist/`, which is what the separate tsc emit used to need a repair script for.
+  // The package is a library other packages import, so `dist/` is emitted module-per-module rather than as
+  // one flat bundle. The boundaries between raw, verified and schema survive to the caller's bundler, which
+  // is what lets an artifact that names only raw endpoints drop zod wholesale instead of asking a bundler to
+  // prove the schema initializers dead. `@/…` is resolved here and disappears from the output; the
+  // declarations come out of the same pass and for the same reason — `unplugin-dts` resolves `paths` while
+  // generating them, so an alias a consumer cannot read never reaches `dist/`.
   build: {
     outDir: resolve(import.meta.dirname, 'dist'),
     emptyOutDir: true,
     minify: false,
     sourcemap: true,
     lib: {
-      // One entry, one file: `src/index.ts` is the whole surface. Trimming it down to what a particular caller
-      // used is that caller's bundler's job — the package is `sideEffects: false`, so an export nobody names
-      // is deleted along with whatever it reached.
+      // One entry, one surface: `src/index.ts` re-exports everything, and the output keeps the module
+      // structure underneath it. Trimming it down to what a particular caller used is that caller's
+      // bundler's job — the package is `sideEffects: false`, so an export nobody names is deleted along with
+      // whatever module it reached.
       entry: { index: resolve(import.meta.dirname, 'src', 'index.ts') },
       formats: ['es'],
     },
@@ -38,15 +40,15 @@ export default defineConfig({
       // how it ends up in a browser bundle at all. The regex form matters — a bare string in `external` would
       // match the specifier written here only.
       //
-      // Nothing in `src/index.ts` imports `zod` — it is reachable through `import type` only, and the runtime
-      // checks are `guards.ts`. It is listed anyway because the alternative failure is silent: drop this line,
-      // and the day a value import appears, 47 KB of schema engine is inlined into the entry and the consumer
-      // finds out from a bundle that will not load.
+      // `zod` is value-imported through `providers/<name>/verified.ts` → `types/schema.ts`, so it is in the
+      // entry's module graph and must not be inlined either. Whether a consumer naming only `Raw` endpoints
+      // (or the slotless ones) really avoids it depends on the module boundaries surviving into `dist/` —
+      // they do, and `tests/xiv-datamine-polyfill-e2e-test` measures the result from outside.
       external: ['zod', /^papaparse(\/|$)/],
       // Declaration generation is most of this build and always will be; the timing check reads that as a
       // warning, and a warning nobody intends to fix is a warning people learn to ignore.
       checks: { pluginTimings: false },
-      output: { entryFileNames: '[name].js' },
+      output: { entryFileNames: '[name].js', preserveModules: true, preserveModulesRoot: 'src' },
     },
   },
   resolve: {

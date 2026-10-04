@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-// Imported through the entry a consumer would use, so the public surface is what these tests cover.
+// 经消费方会用的入口导入，所以这些测试覆盖的就是公开面。
 import {
   assetUrl,
   composedMapUrl,
@@ -10,24 +10,34 @@ import {
   isProviderError,
   knownSheetNames,
   languageRejectionKind,
+  listSheets,
+  listSheetsRaw,
   listSheetsUrl,
+  listVersions,
+  listVersionsRaw,
   openApiUrl,
+  readRow,
+  readRowRaw,
+  readRows,
+  readRowsRaw,
+  search,
+  searchRaw,
   searchUrl,
   sheetRowsUrl,
   sheetRowUrl,
   supportsLanguage,
   versionsUrl,
+  type SheetName,
+  type XivApiEndpoint,
 } from '@/index.ts';
-// The zod definitions are test-time only, so they come from the file that holds them rather than from the entry.
+// zod 定义住在形状旁边；verified 侧在运行时按它们解析，这些测试也用它校验*返回*的 body。
 import * as schemas from '@/providers/xivapi/types/schema.ts';
 
 /**
- * The xivapi provider, checked against hand-written bodies.
+ * xivapi provider，用手写的响应体检查。
  *
- * Only the **shape** is under test. Names and values in these examples are placeholders, deliberately:
- * if a test had to assert that item 19890 is named a particular thing, it would be pinning game content
- * rather than the API contract, and every content patch would break it. A body with the right structure
- * is treated as coming from the right place.
+ * 在测的只有**形状**。示例里的名字与值是占位符，刻意的：一条测试如果要断言 19890 号物品叫某个名字，
+ * 钉住的就是游戏内容而不是 API 契约，每个内容补丁都会把它弄坏。结构对上的 body 就当来自对的地方。
  */
 
 const SCHEMA_TAG = 'exdschema@2:rev:0000000000000000000000000000000000000000';
@@ -45,7 +55,7 @@ const rowsBody = (count = 2) => ({
   rows: Array.from({ length: count }, (_unused, index) => ({ row_id: index + 1, fields: { Name: `name-${index + 1}` } })),
 });
 
-/** Serve one canned body for every request, recording the URLs that were asked for. */
+/** 每个请求都回同一份罐头 body，并记录被问到的地址。 */
 const transport = (body: unknown, status = 200) => {
   const requests: URL[] = [];
   const fetchImpl = vi.fn(async (url: string) => {
@@ -54,6 +64,8 @@ const transport = (body: unknown, status = 200) => {
   });
   return { fetch: fetchImpl, requests };
 };
+
+const api = (body: unknown, status = 200) => createXivApiClient('international', { fetch: transport(body, status).fetch });
 
 describe('edition descriptors', () => {
   it('name where each service lives and what it defaults to', () => {
@@ -85,7 +97,7 @@ describe('edition descriptors', () => {
   });
 
   it('tell apart the two reasons a language was refused', () => {
-    // `chs` is a real format language the global client has no column for; `zh` is not a token at all.
+    // `chs` 是格式里真实存在的语言，只是国际站没有那一列；`zh` 根本不是一个 token。
     expect(languageRejectionKind('invalid request: invalid or unsupported language "chs"')).toBe('unsupported-for-edition');
     expect(languageRejectionKind('invalid request: Failed to deserialize query string: language: invalid or unsupported language "zh"')).toBe('unknown-token');
     expect(languageRejectionKind('not found: something else')).toBe('other');
@@ -107,8 +119,7 @@ describe('url construction', () => {
   });
 
   it('carries the transient decorator through unmodified', () => {
-    // The decorator is the caller's own string: the builder knows nothing about the set of them, and
-    // an unknown one is the API's answer to give.
+    // 装饰器是调用方自己的字符串：构造器不认识它们的集合，未知的那个由 API 来回答。
     const url = sheetRowUrl('chinese-server', 'Action', 1, { transient: ['Description@as(html)'] });
     expect(url.searchParams.get('transient')).toBe('Description@as(html)');
   });
@@ -133,7 +144,7 @@ describe('envelope schemas', () => {
   });
 
   it('reject only on structure, never on content', () => {
-    // Same schema, different values: a name may be any string, but a row without an id is not a row.
+    // 同一个 schema、换不同值：名字可以是任意字符串，但没有 id 的行不是行。
     expect(schemas.rowResponseSchema.safeParse({ ...rowBody(), fields: { Name: 'anything at all 中文 🐚' } }).success).toBe(true);
     expect(schemas.rowResponseSchema.safeParse({ ...rowBody(), row_id: '1' }).success).toBe(false);
     expect(schemas.sheetResponseSchema.safeParse({ ...rowsBody(), rows: {} }).success).toBe(false);
@@ -167,9 +178,7 @@ describe('sheet names', () => {
 
 describe('client', () => {
   it('returns the shape it validated, unmodified', async () => {
-    const { fetch } = transport(rowBody(19890));
-    const client = createXivApiClient('international', { fetch });
-    const row = await client.readRow('Item', 19890, { fields: ['Name', 'Icon'] });
+    const row = await api(rowBody(19890)).call(readRow, { sheet: 'Item', row: 19890, query: { fields: ['Name', 'Icon'] } });
     expect(row.row_id).toBe(19890);
     expect(typeof row.fields.Name).toBe('string');
   });
@@ -177,45 +186,46 @@ describe('client', () => {
   it('applies its configured language but never overrides an explicit one', async () => {
     const { fetch, requests } = transport(rowBody());
     const client = createXivApiClient('chinese-server', { fetch, language: 'chs' });
-    await client.readRow('Action', 1, { fields: ['Name'] });
-    await client.readRow('Action', 1, { fields: ['Name'], language: 'en' });
+    await client.call(readRow, { sheet: 'Action', row: 1, query: { fields: ['Name'] } });
+    await client.call(readRow, { sheet: 'Action', row: 1, query: { fields: ['Name'], language: 'en' } });
     expect(requests.map((url) => url.searchParams.get('language'))).toEqual(['chs', 'en']);
   });
 
-  it('surfaces the API message and status on an http failure', async () => {
-    const { fetch } = transport({ code: 404, message: 'not found: the Excel sheet "Nope" could not be found' }, 404);
-    const error = await createXivApiClient('international', { fetch })
-      .readRow('Nope' as never, 1)
+  it('surfaces the API message and status on an http failure, and names the operation', async () => {
+    const error = await api({ code: 404, message: 'not found: the Excel sheet "Nope" could not be found' }, 404)
+      .call(readRow, { sheet: 'Nope' as SheetName, row: 1 })
       .catch((caught: unknown) => caught);
     expect(isProviderError(error)).toBe(true);
     if (!isProviderError(error)) return;
-    expect((error as { kind: string }).kind).toBe('http');
-    expect((error as { status: number | null }).status).toBe(404);
-    expect((error as { apiCode: number | null }).apiCode).toBe(404);
-    expect((error as { message: string }).message).toContain('could not be found');
+    expect(error.kind).toBe('http');
+    expect(error.status).toBe(404);
+    expect(error.apiCode).toBe(404);
+    expect(error.operation).toBe('readRow');
+    expect(error.url).toContain('/sheet/Nope/1');
+    expect(error.message).toContain('could not be found');
   });
 
   it('rejects a body that is not the envelope it claimed to be', async () => {
-    const { fetch } = transport({ schema: SCHEMA_TAG, version: VERSION, row_id: 'not-a-number', fields: {} });
-    const error = await createXivApiClient('international', { fetch })
-      .readRow('Item', 1)
+    const error = await api({ schema: SCHEMA_TAG, version: VERSION, row_id: 'not-a-number', fields: {} })
+      .call(readRow, { sheet: 'Item', row: 1 })
       .catch((caught: unknown) => caught);
     expect(isProviderError(error)).toBe(true);
     if (!isProviderError(error)) return;
     expect(error.kind).toBe('shape');
-    // Runtime guards name the address, not the offending path. Per-field issue reporting is zod's job, and
-    // zod runs in tests against these same bodies — see the envelope section below.
+    // 运行时 guard 点的是 operation，不是出错的字段路径。逐字段的问题报告是 zod 的事，verified 端点
+    // 就是拿这些同样的 body 去跑的——见下面的两装配一节。
     expect(error.message).toContain('unexpected response shape');
+    expect(error.operation).toBe('readRow');
   });
 
   it('refuses to ask an edition with no version list, without sending anything', async () => {
     const { fetch, requests } = transport(rowsBody(1));
     const error = await createXivApiClient('chinese-server', { fetch })
-      .listVersions()
+      .call(listVersions, {})
       .catch((caught: unknown) => caught);
     expect(isProviderError(error)).toBe(true);
     if (!isProviderError(error)) return;
-    expect((error as { kind: string }).kind).toBe('unsupported');
+    expect(error.kind).toBe('unsupported');
     expect(requests).toHaveLength(0);
   });
 
@@ -225,29 +235,108 @@ describe('client', () => {
         throw new TypeError('down');
       }),
     });
-    const error = await client.readRow('Item', 1).catch((caught: unknown) => caught);
+    const error = await client.call(readRow, { sheet: 'Item', row: 1 }).catch((caught: unknown) => caught);
     expect(isProviderError(error)).toBe(true);
     if (!isProviderError(error)) return;
-    expect((error as { kind: string }).kind).toBe('network');
-    expect((error as { cause: unknown }).cause).toBeInstanceOf(TypeError);
+    expect(error.kind).toBe('network');
+    expect(error.cause).toBeInstanceOf(TypeError);
   });
 
-  it('tolerates a non-JSON error body, which is what a blocked origin sends', async () => {
-    const { fetch } = transport('error code: 1016', 530);
-    const error = await createXivApiClient('international', { fetch })
-      .readRow('Item', 1)
+  it('classifies an assembly failure as `input`, which no built-in endpoint can produce', async () => {
+    // 内置端点永远到不了的那一段：如今没有谁填 request schema，所以这条归类用一个探针端点钉住，
+    // 而不是留给以后去发现它坏了。
+    const reject: XivApiEndpoint<{ n: number }, { ok: true }> = {
+      operation: 'reject',
+      read: 'json',
+      requestSchema: {
+        parse: () => {
+          throw new Error('not a valid input');
+        },
+      },
+      requestAdaptor: () => ({ url: 'https://example.com/', init: {} }),
+      responseAdaptor: () => ({ ok: true }),
+    };
+    const error = await api(rowBody())
+      .call(reject, { n: 1 })
       .catch((caught: unknown) => caught);
     expect(isProviderError(error)).toBe(true);
     if (!isProviderError(error)) return;
-    expect((error as { kind: string }).kind).toBe('http');
-    expect((error as { apiCode: number | null }).apiCode).toBeNull();
-    expect((error as { message: string }).message).toContain('1016');
+    expect(error.kind).toBe('input');
+    expect(error.operation).toBe('reject');
+    expect(error.message).toContain('not a valid input');
   });
 
-  it('keeps a sheet list ordered as sent', async () => {
-    const { fetch } = transport(rowsBody(3));
-    const response = await createXivApiClient('international', { fetch }).readRows('Item', { limit: 3 });
+  it('tolerates a non-JSON error body, which is what a blocked origin sends', async () => {
+    const error = await api('error code: 1016', 530)
+      .call(readRow, { sheet: 'Item', row: 1 })
+      .catch((caught: unknown) => caught);
+    expect(isProviderError(error)).toBe(true);
+    if (!isProviderError(error)) return;
+    expect(error.kind).toBe('http');
+    expect(error.apiCode).toBeNull();
+    expect(error.message).toContain('1016');
+  });
+
+  it('keeps a sheet list ordered and hands back the envelope', async () => {
+    const response = await api(rowsBody(3)).call(readRows, { sheet: 'Item', query: { limit: 3 } });
     expect(response.rows.map((row) => row.row_id)).toEqual([1, 2, 3]);
     expect(response.version).toBe(VERSION);
+  });
+});
+
+describe('raw and verified assemblies', () => {
+  it('answer a shared scenario with the same shape', async () => {
+    const body = rowBody(19890);
+    const raw = await api(body).call(readRowRaw, { sheet: 'Item', row: 19890, query: { fields: ['Name'] } });
+    const verified = await api(body).call(readRow, { sheet: 'Item', row: 19890, query: { fields: ['Name'] } });
+    expect(verified).toEqual(raw);
+  });
+
+  it('refuse a projection only the verified side validates', async () => {
+    // guard 只查 `schema` 是字符串；schema 还查它是 `exdschema` 标签。raw 侧两种都照交——这正是两份
+    // 装配买来的差别。
+    const tolerated = { ...rowsBody(), schema: 'otherformat@1' };
+    const raw = await api(tolerated).call(readRowsRaw, { sheet: 'Item' });
+    expect(raw.rows).toHaveLength(2);
+
+    const error = await api(tolerated)
+      .call(readRows, { sheet: 'Item' })
+      .catch((caught: unknown) => caught);
+    expect(isProviderError(error) && error.kind).toBe('shape');
+  });
+
+  it('refuse a subrow id the guard ignores but the schema does not', async () => {
+    const tolerated = { ...rowBody(), subrow_id: 'not-a-number' };
+    const raw = await api(tolerated).call(readRowRaw, { sheet: 'Item', row: 1 });
+    expect(raw.row_id).toBe(1);
+
+    const error = await api(tolerated)
+      .call(readRow, { sheet: 'Item', row: 1 })
+      .catch((caught: unknown) => caught);
+    expect(isProviderError(error) && error.kind).toBe('shape');
+  });
+
+  it('refuse a sheet list entry the guard lets through, on the verified side only', async () => {
+    const tolerated = { sheets: [{ name: 'Item' }, {}] };
+    const raw = await api(tolerated).call(listSheetsRaw, {});
+    expect(raw.sheets).toHaveLength(2);
+
+    const error = await api(tolerated)
+      .call(listSheets, {})
+      .catch((caught: unknown) => caught);
+    expect(isProviderError(error) && error.kind).toBe('shape');
+  });
+
+  it('carry the search envelope through both assemblies unchanged', async () => {
+    const body = { schema: SCHEMA_TAG, version: VERSION, next: null, results: [{ score: 1, sheet: 'Item', row_id: 1, fields: { Name: 'x' } }] };
+    expect(await api(body).call(searchRaw, { query: 'Name="x"' })).toEqual(body);
+    expect(await api(body).call(search, { query: 'Name="x"' })).toEqual(body);
+    expect(schemas.searchResponseSchema.safeParse(body).success).toBe(true);
+  });
+
+  it('answer the version list through both assemblies', async () => {
+    const body = { versions: [{ key: VERSION, names: ['v1'] }] };
+    expect(await api(body).call(listVersionsRaw, {})).toEqual(body);
+    expect(await api(body).call(listVersions, {})).toEqual(body);
   });
 });

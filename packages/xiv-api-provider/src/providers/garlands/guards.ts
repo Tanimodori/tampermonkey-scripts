@@ -1,9 +1,10 @@
 import type { GarlandActionResponse, GarlandDocKind, GarlandItemResponse, GarlandSearchItem, GarlandStatusResponse } from './types/schema.ts';
 
 /**
- * Runtime checks for the Garland mirror: plain functions, no schema engine.
+ * Garland 镜像的运行时的检查：普通函数，没有 schema 引擎。
  *
- * Everything stricter than this lives in `./types/schema.ts` and runs in tests.
+ * 两份装配都用它们判定响应；verified 端点会额外把投影后的文档按 `./types/schema.ts` 解析一次，更严的形状住在
+ * 那里。
  */
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);

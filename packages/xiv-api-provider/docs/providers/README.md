@@ -6,29 +6,29 @@
 - [garlands](garlands.md) —— Garland Tools 国服镜像,简中名称与描述目前真正的来源。
 - [datamine](datamine.md) —— 解包 CSV 的在线读取:一张表一个文件,取来解析成交给调用方。
 
-分成三个而不是做成一个带来源参数的客户端,是因为三者的差异正是要写下来的东西:xivapi 有 edition、有 `version` 协商、信封是 `{schema, version, rows}`;garlands 按种类返回形状各不相同的文档、没有版本概念;datamine 在 GitHub 的 raw 主机上、按 ref 与语别取一个文件、返回的是表而不是记录。共有的只有传输与错误类型(`ProviderError`,以及注入 `fetch` 这一条缝隙——类型是本仓 `universal-fetch-type` 的 `WebFetcher`,与 `tencent-doc-sdk` 的 transport 同一档,一个 fetcher 能同时喂两边)。
+分成三个而不是做成一个带来源参数的客户端,是因为三者的差异正是要写下来的东西:xivapi 有 edition、有 `version` 协商、信封是 `{schema, version, rows}`;garlands 按种类返回形状各不相同的文档、没有版本概念;datamine 在 GitHub 的 raw 主机上、按 ref 与语别取一个文件、返回的是表而不是记录。共有的只有调用链、传输与错误类型。三个 provider 都经 `client.call(endpoint, input)` 执行自己的端点,失败一律抛 `ProviderError`,注入 `fetch` 是唯一的测试缝隙,类型是本仓 `universal-fetch-type` 的 `WebFetcher`,与 `tencent-doc-sdk` 的 transport 同一档,一个 fetcher 能同时喂两边。
 
 ## 入口
 
-一个默认入口 `xiv-api-provider`,即 `src/index.ts`:文件只做挑选与命名再导出,不写逻辑,按 provider 分组。三个 provider 都从这里出,用不到的那几个由调用方的打包器删掉——包声明 `sideEffects: false`,一个没被命名的导出不进产物,`csv-parse` 也只跟着 `readSheet` 那一条路走。
+一个默认入口 `xiv-api-provider`,即 `src/index.ts`:文件只做挑选与命名再导出,不写逻辑,按 provider 分组。三个 provider 都从这里出,用不到的那几个由调用方的打包器删掉——包声明 `sideEffects: false`,产物又按源结构分文件,一个没被命名的导出连同它所在的模块不进产物;只命名 `Raw` 端点(或 `readAsset`、`fetchSheetCsv` 这类没有校验对的)的产物里没有 schema 引擎,`papaparse` 也只跟着 `readSheet` 与 `parseSheetCsv` 走。
 
-- 共用 —— `createMemo`、图标 id 与路径换算、`ProviderError` / `isProviderError` 与传输层类型。catch 处一定要用它们,实现只有一份。
-- xivapi —— edition 描述符、端点构造、信封判定、客户端。
-- garlands —— 端点构造、判定、客户端、文档与检索类型、语言选择。
-- datamine —— 取一张解包 CSV 并解析成 `SheetRawData`,附 `useSheetTable` 把网格读成可寻址的表与 `trim`。
+- 共用 —— `createMemo`、图标 id 与路径换算、调用链的契约类型(`Endpoint`、适配器、`ApiRequest` / `ApiResponse`)、`ProviderError` / `isProviderError`。catch 处一定要用它们,实现只有一份。
+- xivapi —— edition 描述符、URL 构造、信封判定、每个操作的两份装配与客户端。
+- garlands —— URL 构造、判定、每个文档的两份装配、客户端、文档与检索类型、语言选择。
+- datamine —— `fetchSheetCsv` 端点与 `readSheet` 组合,取一张解包 CSV 并解析成 `SheetRawData`,附 `useSheetTable` 把网格读成可寻址的表与 `trim`。
 
 要把离线数据固化进产物,用另一个包 `xiv-datamine-polyfill`,它调这里的函数在构建期生成模块。
 
-## zod 只在测试里
+## zod 与校验
 
-业务代码从 `providers/<name>/types/schema.ts` 只 `import type`,运行时判定是各 provider 的 `guards.ts` 里的手写 `typeof` 谓词。返回值只在测试里用 zod 校验一次,传入参数不做本地校验:错误的 sheet 名自有 API 的 404 回答,自己先校验只会把服务端的答案换成本地的猜测。
+schema 只在 `providers/<name>/types/schema.ts`,是包内值导入 zod 的唯一地方,业务代码与类型面引用它只用 `import type`。每个操作有两份装配:raw 只写 `operation`、响应体读取方式与适配器,verified 展开 raw 的声明再补 `responseSchema`,默认名归 verified,无校验的那一份带 `Raw` 后缀。适配器先用各 provider `guards.ts` 里的手写 `typeof` 谓词判定响应,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `shape`。没有同构 schema 的操作不配对,保持本名(`readAsset`、`fetchSheetCsv`)。传入参数一律不做本地校验,错误的 sheet 名自有 API 的 404 回答,自己先校验只会把服务端的答案换成本地的猜测。
 
-声明是另一件事:打包声明时 `z.infer<typeof …>` 连同它依赖的 schema 常量一起被留下,所以 `dist/index.d.ts` 第一行就是 `import { z } from 'zod'`。zod 因此记在 `dependencies`——消费方读声明时要能解析它,运行时永远不会 import 它。
+zod 记在 `devDependencies`:本包私有、只经 `workspace:*` 被消费,pnpm 会把 `devDependencies` 一样链进本包的 `node_modules`,所以声明里对 zod 的引用(`z.infer` 展开出的类型与槽类型)照旧解析得到。只命名 raw 的一方不得携带 schema 引擎,这一点由产物保留模块边界来兑现,并由 [e2e 测试](../../../../tests/xiv-datamine-polyfill-e2e-test/README.md) 从包外检查;对外发布时 zod 的落位要改,按 [api-sdk-design-example 的校验与 zod](../../../../tests/api-sdk-design-example/docs/validation.md) 改 optional peer,是不把 zod 作为运行时依赖承诺出去的做法。
 
 ## 测试缝隙
 
-客户端与 `datamine` 的每个取数函数都接受注入的 `fetch`,这是唯一的测试缝隙:离线测试喂手写的小响应体与手写的 CSV,活体测试喂真实的 `fetch`,走的是同一段代码。离线测试目录与 `src/providers/` 一一对应,活体测试在 `test/live/`,两道闸见 [xivapi：类型来源与活体测试](xivapi.md#类型来源与活体测试)。
+每个客户端与 `readSheet` 都接受注入的 `fetch`,这是唯一的测试缝隙:离线测试喂手写的小响应体与手写的 CSV,活体测试喂真实的 `fetch`,走的是同一段代码。离线测试目录与 `src/providers/` 一一对应,活体测试在 `test/live/`,两道闸见 [xivapi：类型来源与活体测试](xivapi.md#类型来源与活体测试)。
 
 ## 当前限制
 
-本包 `private: true`,不发布。产物只有一个入口文件,`dist/` 里没有未列入 `exports` 的共享 chunk;若日后重新拆分子路径,发布白名单要连那些 chunk 一起带上,否则消费方会在运行时静默坏掉。
+本包 `private: true`,不发布,消费都经 `workspace:*`,产物内部的相对导入因此始终解析得到。`exports` 只列入口,`dist/` 按源结构分文件;消费方的打包器沿这些相对导入与 `sideEffects: false` 摇树,raw-only 产物不带 schema 引擎正是靠这一层。若日后对外发布或拆子路径入口,发布内容要覆盖实际会进产物的那批文件。

@@ -1,12 +1,11 @@
 import type { ApiErrorResponse, Fields, IconField, RowResult, SheetName } from './types/schema.ts';
 
 /**
- * Runtime shape checks for the xivapi provider — hand-written, with no zod in sight.
+ * xivapi provider 的运行时的形状检查——手写，看得到的地方没有 zod。
  *
- * zod never runs here: it validates *returned* values from tests, never at runtime, and
- * it never validates outgoing parameters (a bad sheet name is answered by the API's own 404). What stays
- * in the shipped code is the bare minimum needed to tell one envelope from another and to avoid reading a
- * field that is not there, which is a handful of `typeof` checks rather than a schema engine.
+ * 两份装配都用这些谓词判定响应：端点的响应适配器先过它们再投影，不过就是 `shape`。zod 不在这里跑；
+ * verified 端点会额外把投影按 `./types/schema.ts` 的 schema 解析一次，测试也拿它们校验返回的 body。传入参数
+ * 一概不校验——错误的 sheet 名自有 API 的 404 回答，自己先校验只会把服务端的答案换成本地的猜测。
  */
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);

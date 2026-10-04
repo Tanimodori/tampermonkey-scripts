@@ -27,7 +27,7 @@ https://raw.githubusercontent.com/InfSein/ffxiv-datamining-mixed/<ref>/<locale>/
 
 三个真实陷阱:
 
-- 带换行的引号值。`Addon.csv` 从第 6 行起有跨行文本与 `<Switch(...)>` 标记,一条记录可以占数十行。分词交给 `csv-parse` 走 RFC 4180,不按行 split;引号未闭合会抛错而不是把文件余下部分吞掉——被静默截断的表看起来跟一次成功的构建一模一样。
+- 带换行的引号值。`Addon.csv` 从第 6 行起有跨行文本与 `<Switch(...)>` 标记,一条记录可以占数十行。分词交给 `papaparse`,不按行 split。引号未闭合不抛错:papaparse 把它记进 `errors` 并照常交回网格,文件余下部分折进一个字段,本包不额外硬化这一点,结构上只坚持三行表头。
 - 匿名列与重复列。`ClassJob.csv` 52 列里 16 列没有名字(数组子列),`ClassJobCategory.csv` 末尾也有三个匿名 `bool` 列。列一律按**第二行的下标**寻址,名字只是给人看的。
 - `{SubKey}`。`Order{Minor}`、`Modifier{HitPoints}`、`Level{Item}` 是同一列在 API 里的抹平写法(`OrderMinor`),CSV 只保留带大括号的那一种,寻址也就只认那一种。`Name{English}` 的类型是 `byte`,即一个本地化索引——它不是英文名,API 的字符串 `NameEnglish` 在 CSV 里没有对应物,按名字当英文名取会静默产出无意义值。
 
@@ -65,7 +65,7 @@ sheet.column('Icon'); // 整列;也可以给下标
 
 ## 依赖
 
-`csv-parse` 是这个包唯一的运行时依赖,并且**外部化**:产物里只有一句 `import { parse } from "csv-parse/sync"`,由消费者的打包器自己解析。它只被 `fetchSheetCsv` 与 `readSheet` 这条路用到,所以一个只命名了表读函数的消费者,其打包器会把整条链连同那句 import 一起摇掉——包声明 `sideEffects: false`,不靠拆入口来替它省。
+`papaparse` 是 xiv-api-provider 唯一的运行时依赖,并且**外部化**:产物里只有一句 `import Papa from "papaparse"`,由消费者的打包器自己解析。它只被 `readSheet` 与 `parseSheetCsv` 用到,产物又保留模块边界,所以不命名这条路的消费者,其打包器会把整条链连同那句 import 一起删掉——包声明 `sideEffects: false`。zod 记在 `devDependencies`,datamine 侧没有用到它的装配。
 
 宽表是数据量的主要来源:`ClassJobCategory.csv` 48 列、`ClassJob.csv` 52 列。网格形式本身就省掉了每行重复的键名(写成每行一个对象会明显更大),要再缩只有一条路——`trim` 选列,或者在 `xiv-datamine-polyfill` 的构建配置里选。
 

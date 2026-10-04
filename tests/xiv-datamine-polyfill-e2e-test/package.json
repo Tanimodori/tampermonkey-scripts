@@ -34,8 +34,7 @@
     "vite": "^8.3.0",
     "vitest": "^5.0.1",
     "xiv-api-provider": "workspace:*",
-    "xiv-datamine-polyfill": "workspace:*",
-    "zod": "^4.6.5"
+    "xiv-datamine-polyfill": "workspace:*"
   },
   "optionalDependencies": {
     "@oxfmt/binding-win32-x64-msvc": "^0.67.0",

@@ -1,11 +1,10 @@
 import type { WebFetcher } from 'universal-fetch-type';
 import { describe, expect, it } from 'vitest';
-import { isProviderError } from '@/internal/http.ts';
-import { fetchSheetCsv, readSheet, sheetCsvUrl } from '@/providers/datamine/sheet.ts';
+import { createDatamineClient, fetchSheetCsv, isProviderError, readSheet, sheetCsvUrl } from '@/index.ts';
 
 /**
- * The online half of the datamine provider: which address a sheet comes from, and what each kind of answer
- * becomes. Everything runs through an injected fetch, so the live service is only reached by `test:live`.
+ * datamine provider 的在线那一半：一张表的地址从哪来，以及每种回答变成什么。一切都经注入的 fetch 走，
+ * 真实服务只有 `test:live` 会碰。
  */
 
 const CSV = ['key,0', '#,Name', 'int32,str', '1,"格斗武器"'].join('\n');
@@ -41,8 +40,15 @@ describe('addresses', () => {
 describe('fetching', () => {
   it('takes a single request per sheet', async () => {
     const { fetch, asked } = transport({ [HEAD_URL]: { body: CSV } });
-    expect(await fetchSheetCsv('ItemUICategory', { fetch })).toBe(CSV);
+    expect(await createDatamineClient({ fetch }).call(fetchSheetCsv, { sheet: 'ItemUICategory' })).toBe(CSV);
     expect(asked).toEqual([HEAD_URL]);
+  });
+
+  it('carries a pinned ref and a locale into the address', async () => {
+    const pinned = sheetCsvUrl('ItemUICategory', { ref: 'v7.56-hf2' }).toString();
+    const { fetch, asked } = transport({ [pinned]: { body: CSV } });
+    await createDatamineClient({ fetch }).call(fetchSheetCsv, { sheet: 'ItemUICategory', ref: 'v7.56-hf2' });
+    expect(asked).toEqual([pinned]);
   });
 
   it('parses a fetched sheet into its raw grid, headers included', async () => {
@@ -58,20 +64,26 @@ describe('fetching', () => {
   });
 
   it('rejects a body that is not the format at the point it arrives', async () => {
-    // An HTML error page served as 200 has no header lines at all. Refusing it here is what keeps a build from
-    // caching it and failing later in whoever reads a column name.
+    // 一张以 200 发来的 HTML 错误页一行表头都没有。在这里拒掉，构建才不会把它缓存下来、再到读列名的人
+    // 那里才炸。
     const { fetch } = transport({ [HEAD_URL]: { status: 200, body: '<html><body>rate limited</body></html>' } });
     await expect(readSheet('ItemUICategory', { fetch })).rejects.toThrow(/ItemUICategory\.csv@HEAD: expected at least 3 header records/);
   });
 
   it('reports an absent sheet as `not_found`, which is an answer rather than a failure', async () => {
     const { fetch } = transport({});
-    await expect(fetchSheetCsv('DataCenter', { fetch })).rejects.toMatchObject({ name: 'ProviderError', kind: 'not_found', status: 404 });
+    await expect(createDatamineClient({ fetch }).call(fetchSheetCsv, { sheet: 'DataCenter' })).rejects.toMatchObject({
+      name: 'ProviderError',
+      kind: 'not_found',
+      status: 404,
+    });
   });
 
   it('keeps a real failure distinguishable from that answer', async () => {
     const { fetch } = transport({ [HEAD_URL]: { status: 500, body: 'server error' } });
-    const error = await fetchSheetCsv('ItemUICategory', { fetch }).catch((caught: unknown) => caught);
+    const error = await createDatamineClient({ fetch })
+      .call(fetchSheetCsv, { sheet: 'ItemUICategory' })
+      .catch((caught: unknown) => caught);
     expect(isProviderError(error)).toBe(true);
     if (!isProviderError(error)) return;
     expect(error.kind).toBe('http');
@@ -81,7 +93,9 @@ describe('fetching', () => {
 
   it('refuses an empty body instead of handing over an empty table', async () => {
     const { fetch } = transport({ [HEAD_URL]: { status: 200, body: '  ' } });
-    const error = await fetchSheetCsv('ItemUICategory', { fetch }).catch((caught: unknown) => caught);
+    const error = await createDatamineClient({ fetch })
+      .call(fetchSheetCsv, { sheet: 'ItemUICategory' })
+      .catch((caught: unknown) => caught);
     expect(isProviderError(error) && error.kind).toBe('shape');
   });
 });

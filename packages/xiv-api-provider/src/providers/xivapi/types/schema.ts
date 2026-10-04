@@ -3,29 +3,22 @@ import { z } from 'zod';
 /**
  * Zod definitions for the xivapi provider, and the only place zod is mentioned in it.
  *
- * Everything here is a **type import** for business code: `import type { RowResponse } from './types/schema.ts'`
- * brings the shape without bringing zod into the JavaScript. The generated declarations do spell those shapes
- * out with zod's own types, which is why zod is a dependency rather than a build tool — a consumer resolves it
- * when it reads `dist/index.d.ts`, and never at runtime.
+ * Every type in the file is a **type import** for business code: `import type { RowResponse } from
+ * './types/schema.ts'` brings the shape without bringing zod into the JavaScript. The generated declarations
+ * do spell those shapes out with zod's own types; zod is recorded in `devDependencies` because the package is
+ * private and consumed through `workspace:*`, where pnpm links it into this package's own `node_modules` and
+ * the declaration chain still resolves. A published scenario would record it differently — see the example's
+ * `docs/validation.md`.
  *
- * The schemas themselves are used by tests, which validate
- * *returned* values against them — that is where a shape change gets caught. Request parameters are not
- * validated at runtime: a caller passing a bad sheet name is answered by the API's own 404, and re-checking
- * locally would only duplicate that in the bundle.
+ * The schemas fill the verified endpoints' slots (`./verified.ts`), which parse a projected output against
+ * them at runtime, and the tests validate *returned* values against them — that is where a shape change gets
+ * caught. Request parameters are not validated: a caller passing a bad sheet name is answered by the API's
+ * own 404, and re-checking locally would only duplicate that in the bundle.
  */
 
 /** An icon cell. The `.tex` paths are game-internal; `/asset` takes `path`. */
 export const iconFieldSchema = z.looseObject({ id: z.number(), path: z.string(), path_hr1: z.string() });
 export type IconField = z.infer<typeof iconFieldSchema>;
-
-/**
- * A link to a row of another sheet, expanded inline.
- *
- * `fields` stays `unknown`: the API nests arbitrarily deep (asking for `Item.ItemSearchCategory` pulls the
- * whole `ClassJob` row with it) and nothing reads that deep through a typed path.
- */
-export const sheetLinkSchema = z.looseObject({ value: z.number(), sheet: z.string(), row_id: z.number(), fields: z.unknown() });
-export type SheetLink = z.infer<typeof sheetLinkSchema>;
 
 /**
  * Field values keyed by the names asked for in `fields=`.

@@ -15,17 +15,17 @@ FFXIV 数据源的在线访问层,供本仓库的中文本地化 userscript(`uni
 一个默认入口,导出面按 provider 分组:
 
 ```ts
-import { createXivApiClient, readSheet, useSheetTable } from 'xiv-api-provider';
+import { createXivApiClient, readRow, readSheet, useSheetTable } from 'xiv-api-provider';
 import { origFetch } from './hooks';
 
 const client = createXivApiClient('chinese-server', { language: 'chs', fetch: origFetch });
-const row = await client.readRow('Action', 16554, { fields: ['Name'] });
+const row = await client.call(readRow, { sheet: 'Action', row: 16554, query: { fields: ['Name'] } });
 
 const ui = useSheetTable(await readSheet('ItemUICategory', { fetch: origFetch }));
 ui.cell(1, 'Name'); // 格斗武器
 ```
 
-三个 provider 都从这里出,用不到的那几个由调用方的打包器删掉:包声明了 `sideEffects: false`,没有命名的导出不进产物,`csv-parse` 也只跟着 `readSheet` 那一条路走。
+三个 provider 都从这里出,用不到的那几个由调用方的打包器删掉:包声明了 `sideEffects: false`,产物又保留模块边界,一个没被命名的导出连同它所在的模块不进产物——只命名 `Raw` 端点(或 `readAsset`、`fetchSheetCsv` 这类没有校验对的)的产物里没有 schema 引擎,`papaparse` 也只跟着 `readSheet` 与 `parseSheetCsv` 走。
 
 `readSheet` 交回的是一份纯数据(整张网格,含三行表头),`useSheetTable` 才是有寻址能力的那个对象。不带 `ref` 时取分支头 `HEAD` 的那份文件;要复现同一次构建就写死一个 ref(tag、分支名或 commit sha 都可)。行按位置寻址,`#` 既不递增也不连续,所以按 `#` 查要自己 `new Map([...ui.rows].map((r) => [r[0], r]))`。
 
@@ -35,7 +35,9 @@ provider 不内置任何一张表的类型:列名与值都照文件原样,含义
 
 ## 校验与测试
 
-zod 只在测试里跑:业务代码对各 provider 的 schema 只 `import type`,运行时的判定是 `guards.ts` 里的手写谓词。生成的声明仍以 zod 的类型书写,所以 zod 记在 `dependencies`——消费方读声明时要能解析它,运行时不会 import 它。`universal-fetch-type`(`fetch` 那条缝隙的类型)同样只被声明引用、不被运行时 import,但它记在 `devDependencies`:这些包都是私有的、只经 `workspace:*` 被消费,而 pnpm 会把 `devDependencies` 一样链进本包的 `node_modules`,所以从 `xiv-api-provider` 的声明出发,整条声明链(`→ universal-fetch-type → @apollo/utils.fetcher`)照旧解析得到,消费方不需要在任何一处声明 apollo。真要对外发布某个包时,这一条要改记 `dependencies`,否则外部读者解析不到那个名字。取舍见 [zod 只在测试里](docs/providers/README.md#zod-只在测试里)。
+每个读取是一个 endpoint 对象,分两份装配:`raw.ts` 只写 `operation`、响应体读取方式与适配器,`verified.ts` 展开 raw 的声明再补 `responseSchema`。默认名归带校验的那份(`readRow`),无校验的那一份带 `Raw` 后缀(`readRowRaw`);没有同构 schema 的操作不配对,保持本名(`readAsset`、`fetchSheetCsv`)。运行时判定先用各 provider `guards.ts` 里的手写谓词,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `shape`。schema 只在 `providers/<name>/types/schema.ts`,是包内值导入 zod 的唯一地方,传入参数不做本地校验。
+
+zod 与 `universal-fetch-type` 记在 `devDependencies`:这些包都是私有的、只经 `workspace:*` 被消费,而 pnpm 会把 `devDependencies` 一样链进本包的 `node_modules`,所以从 `xiv-api-provider` 的声明出发,声明链(zod 与 `→ universal-fetch-type → @apollo/utils.fetcher`)照旧解析得到,消费方不需要在任何一处声明它们。选择 verified 装配的一方得到运行时校验,只命名 raw 的一方的产物里没有 schema 引擎;真要对外发布某个包时,这两个落位要改,否则外部读者解析不到那个名字。取舍见 [zod 与校验](docs/providers/README.md#zod-与校验)。
 
 ```bash
 rushx test              # 离线,CI 门禁
@@ -49,6 +51,6 @@ rushx test:drift        # OpenAPI 漂移报告,同样仅手动
 
 ## 已知问题
 
-两个 edition 的能力差别(国服表更少、`/version` 与 `/asset/map` 没有、检索命中取决于 `language`)逐条列在 [xivapi：能力差异](docs/providers/xivapi.md#能力差异),并由 `rushx test:live` 的第二组断言逐条测。这些差异不改变 `XivApiClient` 的方法集合:客户端照发请求,服务端怎么答由测试记录。
+两个 edition 的能力差别(国服表更少、`/version` 与 `/asset/map` 没有、检索命中取决于 `language`)逐条列在 [xivapi：能力差异](docs/providers/xivapi.md#能力差异),并由 `rushx test:live` 的第二组断言逐条测。这些差异不改变 xivapi 客户端的端点集合:端点照发请求,服务端怎么答由测试记录。
 
 `cafemaker.wakingsands.com`(国服镜像的 v1 检索服务)实测 530 `error code: 1016`,那个信封在这个包里也不再建模,详见 [xivapi：当前限制](docs/providers/xivapi.md#当前限制)。

@@ -18,7 +18,7 @@ Garland Tools 的国服镜像 `https://www.garlandtools.cn`。它是社区站点
 
 顶层是 `{ <kind>: { … } }`,即 `item` / `action` / `status` 之一。该子对象的 `name` 与 `description` 就是所请求语种的文本(取 `chs` 时即简中),另有 `en` / `ja` / `fr` / `de` / `tc` / `ko` 六个子对象装其他语种。`id` 是数字,`tradeable` 在不上市时整个键缺席而不是等于 `0`,所以 `isGarlandTradeable` 判 `=== 1`,这个判断写成函数而不是调用点的 `Boolean(item.tradeable)`。
 
-运行时判定只到"这是不是一份该种类的文档"(`isGarlandDocument`:顶层有对应键、其 `id` 是数字)。更细的字段校验在 `types/schema.ts`,只在测试里跑。
+运行时判定只到"这是不是一份该种类的文档"(`isGarlandDocument`:顶层有对应键、其 `id` 是数字)。更细的字段校验在 `types/schema.ts`,由 verified 装配在投影之后跑一次,`Raw` 后缀的那份不做;测试同样用它。
 
 ## 检索的形状与语言陷阱
 
@@ -34,7 +34,7 @@ Garland Tools 的国服镜像 `https://www.garlandtools.cn`。它是社区站点
 
 ## 客户端
 
-`createGarlandClient({ fetch, timeoutMs })` 提供 `readItem` / `readAction` / `readStatus` / `search`。xivapi 那套机制对它不适用:没有 edition 可填、没有版本可读、没有共享信封可判,塞进 xivapi 客户端等于给它编一个 edition。错误同样是 `ProviderError`,见 [xivapi 的客户端一节](xivapi.md#客户端)。
+`createGarlandClient({ fetch, timeoutMs })` 提供 `readItem` / `readAction` / `readStatus` / `garlandSearch` 四对端点,默认名带校验、`Raw` 后缀不带,经 `client.call(endpoint, input)` 执行;检索端点在入口叫 `garlandSearch`,因为 `search` 这个名字归 xivapi。xivapi 那套机制对它不适用:没有 edition 可填、没有版本可读、没有共享信封可判,塞进 xivapi 客户端等于给它编一个 edition。错误同样是 `ProviderError`,见 [xivapi 的客户端一节](xivapi.md#客户端)。
 
 ## 当前限制
 

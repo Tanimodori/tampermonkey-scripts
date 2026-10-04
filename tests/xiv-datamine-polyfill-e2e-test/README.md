@@ -6,9 +6,9 @@
 
 ## 构成
 
-- `src/index.ts` —— 数据的消费方。两张 `.csv` 导入在构建期被解析成网格,业务接口把 `universalis-zh-data`、`xivanalysis-zh` 真会做的那几步读出来:按 `#` 建索引的分类表、把表内 icon id 换成 `<img src>` 再换回来、取 `Addon.Text`、给一个物品拼出两个外链。`getData()` 把读到的一切作为纯数据返回,断言不在这里。
+- `src/index.ts` —— 数据的消费方。两张 `.csv` 导入在构建期被解析成网格,业务接口把 `universalis-zh-data`、`xivanalysis-zh` 真会做的那几步读出来:按 `#` 建索引的分类表、把表内 icon id 换成 `<img src>` 再换回来、取 `Addon.Text`、给一个物品拼出两个外链。另外导出 raw 侧的 `fetchRowName`(`createXivApiClient` 加 `readRowRaw`),作为产物组成检查的量具。`getData()` 把读到的一切作为纯数据返回,断言不在这里。
 - `vite.config.ts` —— 插件调用方,取数规则写在这里。`XIV_LIVE` 未设时,取数由文件里的 stub `fetch` 回答(两张几行的小表,其中一行空名、一行带标记,分别喂 `dropEmptyIn` 与 `onlyRowKeys`);设为 `1` 时撤掉 stub 并令 `maxAge: 0`,同一段目标代码对 `raw.githubusercontent.com` 的 `HEAD` 再走一遍。规则对齐真实消费方:`ItemUICategory` 保留它们保留的三列,`Addon` 只要两个 key,一张几十 MB 的表在产物里剩两行。
-- `test/` —— e2e。`offline.spec.ts` 与 `online.spec.ts` 各自读回 `dist/index.js` 的 `getData()`:前者逐格比对桩数据,后者只断言真表才有的性质。`testUtils/invariants.ts` 是两个模式共用的那一组。`XIV_LIVE` 决定用哪套期望值,`describe.skipIf` 保证不会拿一种模式的产物去判另一种。
+- `test/` —— e2e。`offline.spec.ts` 与 `online.spec.ts` 各自读回 `dist/index.js` 的 `getData()`:前者逐格比对桩数据并检查产物的组成(命名了 raw 端点、没有命名 verified 的产物里不得有 schema 引擎),后者只断言真表才有的性质。`testUtils/invariants.ts` 是两个模式共用的那一组。`XIV_LIVE` 决定用哪套期望值,`describe.skipIf` 保证不会拿一种模式的产物去判另一种。
 
 ## 两份 tsconfig
 
@@ -45,7 +45,7 @@ rushx build          # typecheck && test:offline && build-only
 rushx format:check   # 另有 format / lint
 ```
 
-`rush build` 会先构建两个包(它们是本项目的 `workspace:*` 依赖),所以包自己的产物在这里的类型检查与构建之前已经就位。`build` 只走到 `test:offline`,走真实网络的 `test:online` 手动运行。依赖表里的 `zod` 不是本项目在用,而是被检查的那份声明需要它。
+`rush build` 会先构建两个包(它们是本项目的 `workspace:*` 依赖),所以包自己的产物在这里的类型检查与构建之前已经就位。`build` 只走到 `test:offline`,走真实网络的 `test:online` 手动运行。被检查的声明引用 zod,但本项目不为它声明依赖:解析经 `xiv-api-provider` 自己的 `devDependencies`,pnpm 把它们链进那个包的 `node_modules`。
 
 ## 当前限制
 

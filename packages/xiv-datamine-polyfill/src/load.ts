@@ -1,5 +1,4 @@
-import type { WebFetcher } from 'universal-fetch-type';
-import { DEFAULT_REF, fetchSheetCsv, isProviderError, parseSheetCsv, useSheetTable, type SheetRawData } from 'xiv-api-provider';
+import { DEFAULT_REF, createDatamineClient, fetchSheetCsv, isProviderError, parseSheetCsv, useSheetTable, type SheetRawData } from 'xiv-api-provider';
 import { ageOf, contentHash, csvPath, hoursSince, modulePath, readText, writeText } from './cache.ts';
 import { cacheKey, DEFAULT_LOCALE, DEFAULT_MAX_AGE_MS, rulesFor, type DataminePolyfillOptions, type SheetRules, type TableIdentity } from './options.ts';
 
@@ -35,12 +34,6 @@ export interface LoadedSheet {
   readonly warnings: readonly string[];
 }
 
-const transport = (options: LoadOptions): { fetch: WebFetcher; locale: string; timeoutMs?: number } => ({
-  fetch: options.fetch ?? globalThis.fetch,
-  locale: options.locale ?? DEFAULT_LOCALE,
-  timeoutMs: options.timeoutMs,
-});
-
 const csvOf = async (sheet: string, ref: string, options: LoadOptions, warn: (message: string) => void): Promise<{ csv: string; fetched: boolean }> => {
   const file = csvPath(options.cacheDir, ref, sheet);
   const cached = readText(file);
@@ -50,7 +43,8 @@ const csvOf = async (sheet: string, ref: string, options: LoadOptions, warn: (me
   if (cached !== null && age !== null && (pinned || age <= (options.maxAge ?? DEFAULT_MAX_AGE_MS))) return { csv: cached, fetched: false };
 
   try {
-    const csv = await fetchSheetCsv(sheet, { ...transport(options), ref });
+    const client = createDatamineClient({ fetch: options.fetch, timeoutMs: options.timeoutMs });
+    const csv = await client.call(fetchSheetCsv, { sheet, ref, locale: options.locale });
     writeText(file, csv);
     return { csv, fetched: true };
   } catch (cause) {

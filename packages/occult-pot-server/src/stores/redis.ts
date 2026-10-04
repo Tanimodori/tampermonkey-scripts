@@ -27,7 +27,7 @@ let built: { config: AppConfig; client: Redis } | undefined;
 /** The mock's client: one per process is enough, since every instance shares the same store. */
 let mock: Redis | undefined;
 
-/** The mock warning is a property of the process, not of every client that gets built. */
+/** The mock warning is said once per mock: dropping the mock in `closeRedis()` re-arms it. */
 let warnedAboutMock = false;
 
 /** No address means no server: the mock answers instead. */
@@ -63,12 +63,16 @@ export function setRedis(client: Redis | undefined): void {
   injected = client;
 }
 
-/** Closes the clients built here, so a shutdown lets the commands already in flight finish. */
+/**
+ * Closes the clients built here, so a shutdown lets the commands already in flight finish, and
+ * re-arms the mock warning with the mock it drops.
+ */
 export async function closeRedis(): Promise<void> {
   const current = built;
   const inProcess = mock;
   built = undefined;
   mock = undefined;
+  warnedAboutMock = false;
 
   if (current !== undefined) await current.client.quit();
   if (inProcess !== undefined && inProcess !== current?.client) await inProcess.quit();

@@ -1,6 +1,6 @@
 import { captureLogs, loadTestConfig } from '@test/testUtils/helpers.ts';
 import { TencentDocsError } from 'tencent-doc-sdk';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
 import type { ErrorCode } from '@/errors.ts';
 import { metricsRegistry, renderMetrics } from '@/services/metrics.ts';
@@ -45,6 +45,11 @@ function about(records: Array<Record<string, unknown>>, message: string): Array<
 
 beforeEach(() => {
   loadTestConfig();
+});
+
+afterEach(() => {
+  // The pacing case runs on fake timers; nothing it faked should outlive it.
+  vi.useRealTimers();
 });
 
 describe('the log lines a call leaves', () => {
@@ -166,21 +171,34 @@ describe('the metrics a call feeds', () => {
   });
 
   it('waits for its turn before starting the clock, so a paced call is not also a slow one', async () => {
+    // The whole case runs on the fake clock: the wait below is driven by `advanceTimersByTimeAsync`,
+    // and the duration the call reports is read from the same clock, so neither number moves with
+    // how loaded the machine is.
+    vi.useFakeTimers();
     metricsRegistry.resetMetrics();
     // One call per 150 ms window: the second waits for the window to open, and must not be charged for it.
     loadTestConfig({ OPS_UPSTREAM_MAX_PER_INTERVAL: '1', OPS_UPSTREAM_INTERVAL_MS: '150' });
 
     await upstreamCall('getRecords', async () => undefined);
-    const startedAt = Date.now();
-    await upstreamCall('getRecords', async () => undefined);
-    const waited = Date.now() - startedAt;
+    const second = upstreamCall('getRecords', async () => undefined);
+    let tookItsTurn = false;
+    void second.then(() => {
+      tookItsTurn = true;
+    });
+
+    // The window has not opened yet, so the second call cannot have taken its turn.
+    await vi.advanceTimersByTimeAsync(100);
+    expect(tookItsTurn).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(50);
+    await second;
 
     const observed = (await renderMetrics())
       .split('\n')
       .find((line) => line.startsWith('occult_pot_upstream_request_duration_seconds_sum{operation="getRecords",result="ok"}'));
     const reportedMs = Number(observed?.split(' ')[1]) * 1000;
 
-    expect(waited).toBeGreaterThanOrEqual(100);
+    // Had the clock started any earlier, the 150 ms the call spent queued would be in this number.
     expect(reportedMs).toBeLessThan(100);
   });
 

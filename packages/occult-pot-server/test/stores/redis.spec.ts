@@ -73,13 +73,14 @@ describe('getRedis', () => {
 
   it('says so when no address means the mock in production, and says nothing elsewhere', async () => {
     const records = captureLogs();
-    // No address, so the mock — whatever the rest of the environment says.
+    // Not production, whatever the machine itself says: the first build says nothing.
+    vi.stubEnv('NODE_ENV', 'test');
     loadTestConfig({ OPS_SERVER_REDIS_URL: undefined });
     getRedis();
     expect(records.some((entry) => entry.level === 'warning')).toBe(false);
 
-    // The warning is once per process, and the client is only built once — so this is a new process
-    // as far as the module is concerned, and it is the first build made in production.
+    // Closing drops the mock and re-arms the warning, so this is again the first build — and it is
+    // made in production.
     await closeRedis();
     vi.stubEnv('NODE_ENV', 'production');
     loadTestConfig({ OPS_SERVER_REDIS_URL: undefined });

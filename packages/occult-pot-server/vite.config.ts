@@ -56,9 +56,11 @@ export default defineConfig({
         timeout: 60_000,
       },
     ],
-    // The mock upstream every default run points at. A task's env file overrides it, because files
-    // beat the ambient environment (see `src/config.ts`).
-    env: { OPS_DOCS_API_BASE: 'http://127.0.0.1:3100' },
+    // The suite's own environment: `NODE_ENV` is the suite's to decide — the machine may say
+    // `production`, and a case that is about production behaviour stubs it itself. The mock upstream
+    // every default run points at is here too; a task's env file overrides it, because files beat
+    // the ambient environment (see `src/config.ts`).
+    env: { NODE_ENV: 'test', OPS_DOCS_API_BASE: 'http://127.0.0.1:3100' },
   },
   resolve: {
     alias: {

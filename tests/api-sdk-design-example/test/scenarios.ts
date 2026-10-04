@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import type { ListMessagesInput, ListMessagesOutput } from '@/endpoint/schema';
+import type { ListMessagesInput, ListMessagesOutput } from '@/endpoints/schema';
 import { createApi } from '@/index';
 import type { Endpoint } from '@/types';
 import { API_BASE, GOOD_OUTPUT, INPUT, TOKEN } from './fixtures';

@@ -1,45 +1,31 @@
-import { apiOrigin, setupTencentDocsMock, tokenRefused } from '@test/testUtils/document';
+import { apiOrigin, setupTencentDocsMock, tokenRefused } from '@test/testUtils/mockUpstream';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createApi } from '@/client';
 import { endpoints } from '@/endpoints';
 import { createCredentialStore } from '@/token/store';
 
 /**
- * The three credential endpoints against the mocked upstream: what each carries on the wire, what it hands
- * back, and what its failures look like. The identity call also runs against the real document
- * (`../live/oauth.spec.ts`); the two grants do not, because a test document's environment carries no client
- * secret and no code to spend — every boundary of their answer is exercised here instead.
+ * 三个凭据端点对着 mocked 上游：各自在线上带什么、交回什么、失败长什么样。身份那一次也打真实文档
+ * （`./live/oauth.spec.ts`）；两个授权不去，因为测试文档的环境里既没有 client secret 也没有可花的 code——它们答复的每个边界
+ * 都在这里过一遍。
  *
- * These are the endpoints themselves, not the manager that calls them: what the answers become — the
- * credential held, the lifetime read out of a token — is `../../token/manager.spec.ts`.
+ * 这里是端点自己，不是调用它们的 manager：答复变成什么——持下的凭据、从令牌读出的时限——是
+ * `../../token/manager.spec.ts`。
  */
 
 const docs = setupTencentDocsMock();
 const apiBase = apiOrigin();
 
-// The two grants answer in their own vocabulary and carry their `client_id`/`client_secret` in the query,
-// so neither reads the store's credential — this api's store is deliberately empty. `whoIs` is the odd one
-// out: `userinfo` asks about whichever token it is handed, so it builds its own store around that token.
+// 两个授权说自己的词汇、在查询串里带 `client_id`/`client_secret`，因此都不读 store 的凭据——这张 api 的 store 故意是空的。
+// `whoIs` 不一样：`userinfo` 问的是递给它的那枚令牌，所以它围绕那枚令牌建自己的 store。
 const api = createApi({ apiBase, store: createCredentialStore({}), transport: docs.fetcher });
 
-/** One call to each endpoint, on the credential the mocked document was built with. */
+/** 每个端点一次调用，在 mocked 文档被建起来的那份凭据上。 */
 const whoIs = (accessToken: string) => createApi({ apiBase, store: createCredentialStore({ accessToken }), transport: docs.fetcher }).call(endpoints.userinfo);
-const exchange = (input: { clientId: string; clientSecret: string; refreshToken: string }) =>
-  api.call(endpoints.refreshToken, {
-    query: { client_id: input.clientId, client_secret: input.clientSecret, grant_type: 'refresh_token', refresh_token: input.refreshToken },
-  });
-const exchangeCode = (input: { clientId: string; clientSecret: string; code: string; redirectUri: string }) =>
-  api.call(endpoints.accessToken, {
-    query: {
-      client_id: input.clientId,
-      client_secret: input.clientSecret,
-      grant_type: 'authorization_code',
-      code: input.code,
-      redirect_uri: input.redirectUri,
-    },
-  });
+const exchange = (input: { clientId: string; clientSecret: string; refreshToken: string }) => api.call(endpoints.refreshToken, input);
+const exchangeCode = (input: { clientId: string; clientSecret: string; code: string; redirectUri: string }) => api.call(endpoints.accessToken, input);
 
-/** Keeps the calls a case asserts on to the ones that case made. */
+/** 让用例断言的调用只剩它自己发出的那些。 */
 function freshCalls(): void {
   docs.state.calls.length = 0;
 }
@@ -65,7 +51,7 @@ describe('获取用户信息', () => {
 
     expect(docs.state.calls[0]?.url).toBe(`${apiOrigin()}/oauth/v2/userinfo?access_token=some-access-token`);
     expect(docs.state.calls[0]?.method).toBe('GET');
-    // The credential travels in the URL, so this call carries no header triple of its own.
+    // 凭据在 URL 里走，因此这次调用没有自己的头三件套。
     expect(docs.state.calls[0]?.headers['access-token']).toBeUndefined();
   });
 
@@ -73,7 +59,7 @@ describe('获取用户信息', () => {
     const info = await whoIs('some-access-token');
 
     expect(info).toMatchObject({ openID: 'test-open-id', nick: 'tester' });
-    // Measured: the answer also carries `avatar`, `source`, `bindSource`, `fileAuthType`, `unionID`.
+    // 量出来的：答复还带 `avatar`、`source`、`bindSource`、`fileAuthType`、`unionID`。
     expect(info).toHaveProperty('avatar');
   });
 
@@ -135,8 +121,7 @@ describe('刷新 Token', () => {
   });
 
   it('is an answer, not a failure, when the endpoint refuses with its own body', async () => {
-    // Measured contract: a 400 here is a response. Only its caller knows that a missing access token
-    // means the credential is dead, and it is the caller that words that.
+    // 量出来的契约：这里的 400 是一份答复。只有它的调用方知道少了一枚访问令牌意味着凭据已死，也是它来措辞。
     docs.state.refreshFailure = { status: 400, body: tokenRefused };
 
     await expect(exchange(input)).resolves.toMatchObject({ error: 'invalid_grant' });
@@ -174,7 +159,7 @@ describe('获取 Token', () => {
 
     const url = new URL(docs.state.calls[0]!.url);
 
-    // The same path the refresh uses: only the query says which grant is being made.
+    // 与刷新同一个路径：只有查询串说这次做的是哪个授权。
     expect(url.pathname).toBe('/oauth/v2/token');
     expect(Object.fromEntries(url.searchParams)).toEqual({
       client_id: 'test-client-id',
@@ -203,7 +188,7 @@ describe('获取 Token', () => {
   });
 
   it('is an answer, not a failure, when the endpoint refuses the code', async () => {
-    // A spent or forged code is refused the way a spent refresh token is: a body, at a status of its own.
+    // 用过的或伪造的 code 与用过的刷新令牌一样被拒：一份 body，一个它自己的状态。
     docs.state.refreshFailure = { status: 400, body: tokenRefused };
 
     await expect(exchangeCode(input)).resolves.toMatchObject({ error: 'invalid_grant' });

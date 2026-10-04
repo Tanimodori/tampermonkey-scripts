@@ -1,112 +1,254 @@
-import { tokenAnswer, userInfoAnswer } from '@test/testUtils/fixtures/oauth';
-import type { TokenAnswerInput } from '@test/testUtils/fixtures/oauth';
-import { deleteRecordsAnswer, getRecordsAnswer, readRows, writtenRecordsAnswer, writtenRecordsWithoutId } from '@test/testUtils/fixtures/record';
-import { getSheetAnswer } from '@test/testUtils/fixtures/sheet';
 import { MockAgent, fetch as undiciFetch } from 'undici';
 import type { WebFetcher } from 'universal-fetch-type';
-import type { CommonRecord } from '@/validation/types';
+import type { CommonRecord } from '@/endpoints/schema';
+import { EXAMPLE_SHEET_ID } from './fixtures';
 
 /**
- * A programmable stand-in for the Tencent Docs Open API, on undici's `MockAgent`.
+ * 可编程的 Tencent Docs Open API 替身，落在 undici 的 `MockAgent` 上。
  *
- * It exists so that a caller's own tests can drive the whole vocabulary of the upstream — a page that
- * ends, a write that names its rows, a 429 with a `Retry-After`, a body that is not JSON — without a
- * network, a quota, or a document to clean up afterwards. Every endpoint is intercepted, real connections
- * are disabled, and every answer comes from one mutable `state`.
+ * 它让调用方自己的测试能开完上游的全部词汇——会结束的一页、点名了行的写入、带 `Retry-After` 的 429、
+ * 不是 JSON 的 body——不需要网络、配额，也没有事后要清理的文档。每个端点都被拦截，真实连接被禁用，每一份答复都来自
+ * 同一份可变的 `state`。
  *
- * What it hands over is the `transport` a `createDocClient`/`createTokenManager` takes: undici's `fetch`
- * pointed at this mock pool, which is the same shape a caller's own transport has.
+ * 交出去的是 `createApi`/`createTokenManager` 收的那种 `transport`：undici 的 `fetch` 指向这个 mock 池，
+ * 与调用方自己的 transport 是同一个形状。答复形状是对着真实文档量出来的（2026-09-19），并在这里连同默认值一起
+ * 集中定义——一个概念一个文件。
+ *
+ * 它只讲协议，不讲任何调用方的规则：测试改的是 `state`，断言读的是 `state.calls`。
  */
 
-/** A business failure the mock can be told to answer with. */
+// ---------------------------------------------------------------------------
+// 假上游说的词汇：子表、行、凭据
+// ---------------------------------------------------------------------------
+
+/**
+ * 真实文档报告的拼写：`isVisible` 与 `type` 都有；文档自己的示例把可见性字段拼成 `isVibile`，
+ * 两个拼写都留在这里——一个用来答复，一个用来证明读者在另一种拼写下也活着。
+ */
+export function sheet(input: { sheetID: string; title?: string }): Record<string, unknown> {
+  return { sheetID: input.sheetID, title: input.title ?? '智能表1', isVisible: true, type: 'smartsheet' };
+}
+
+/** 文档示例用的可见性拼写，真实文档并不发送。 */
+export const sheetWithDocumentedSpelling: Record<string, unknown> = { sheetID: 'tXXXXXX', title: '智能表1', isVibile: true };
+
+/** `GetSheetResponse`：子表列表，按 `getSheet` 关键字分段。 */
+export function getSheetAnswer(sheets: readonly Record<string, unknown>[]): {
+  ret: number;
+  msg: string;
+  data: { getSheet: readonly Record<string, unknown>[] };
+} {
+  return { ret: 0, msg: 'Succeed', data: { getSheet: sheets } };
+}
+
+/**
+ * 一行，按列标题寻址。标题是这张表自己的发明——智能表的列名由它的主人随便起——值是线上拼法：文本单元格是
+ * `{ text, type }` 的数组，时刻是十三位数字的字符串。
+ */
+export function rawRecord(input: {
+  recordId?: string;
+  name?: string;
+  group?: string;
+  key?: string;
+  sinceMs?: number | string;
+  untilMs?: number | string;
+  values?: Record<string, unknown>;
+  createTime?: string;
+  updateTime?: string;
+}): CommonRecord {
+  const values: Record<string, unknown> = {
+    名称: [{ text: input.name ?? '甲', type: 'text' }],
+    分组: [{ text: input.group ?? '一', type: 'text' }],
+    ID: [{ text: input.key ?? 'K-0001', type: 'text' }],
+    起始时间: String(input.sinceMs ?? 1789200000000),
+    截止时间: String(input.untilMs ?? 1789199000000),
+    ...input.values,
+  };
+  return {
+    recordID: input.recordId ?? 'r00001',
+    createTime: input.createTime ?? '1789100000000',
+    updateTime: input.updateTime ?? '1789199000000',
+    values,
+  };
+}
+
+/** 一次读取报告的一行：表自己的单元格，加上 API 自己添的列。 */
+export function readRow(input: { recordID: string; values?: unknown; createTime?: string; updateTime?: string }): Record<string, unknown> {
+  return {
+    recordID: input.recordID,
+    createTime: input.createTime ?? '1789289445000',
+    updateTime: input.updateTime ?? '1789289445000',
+    values: input.values ?? {},
+    createdUserId: '',
+    creatorName: '',
+    modifiedUserId: '',
+    updaterName: '',
+  };
+}
+
+/** 一次读取答复的各行：表自己的行，加上 API 添的作者列。其余一概不碰。 */
+export function readRows(rows: readonly Record<string, unknown>[]): readonly Record<string, unknown>[] {
+  return rows.map((row) => ({ ...row, createdUserId: '', creatorName: '', modifiedUserId: '', updaterName: '' }));
+}
+
+/** `GetRecordsResponse`：一页，按 `getRecords` 关键字分段。 */
+export function getRecordsAnswer(data: Record<string, unknown>): { ret: number; msg: string; data: { getRecords: Record<string, unknown> } } {
+  return { ret: 0, msg: 'Succeed', data: { getRecords: { autoRawRecords: [], ...data } } };
+}
+
+/** 一次写入答复按关键词分段的那一份 `data`。 */
+export type WrittenAnswer<K extends 'addRecords' | 'updateRecords'> = {
+  readonly ret: number;
+  readonly msg: string;
+  readonly data: Record<K, { records: readonly Record<string, unknown>[] }>;
+};
+
+/** `AddRecordsResponse` / `UpdateRecordsResponse`：被触碰的行，别的什么都不说。 */
+export function writtenRecordsAnswer<K extends 'addRecords' | 'updateRecords'>(keyword: K, records: readonly Record<string, unknown>[]): WrittenAnswer<K> {
+  return {
+    ret: 0,
+    msg: 'Succeed',
+    data: { [keyword]: { records, autoRawRecords: [], newAutoRawRecords: [] } } as unknown as WrittenAnswer<K>['data'],
+  };
+}
+
+/** 同一份答复，来自一个不报告 record id 的文档——是变异，不是量出来的形状。 */
+export function writtenRecordsWithoutId(records: readonly Record<string, unknown>[]): readonly Record<string, unknown>[] {
+  return records.map((record) => ({ values: record.values }));
+}
+
+/** `DeleteRecordsResponse`：量出来只有信封头，没有 `data`。 */
+export function deleteRecordsAnswer(): { ret: number; msg: string } {
+  return { ret: 0, msg: 'Succeed' };
+}
+
+/** `UserInfoResponse`：身份，连同量出来的字段。 */
+export function userInfoAnswer(input: { openID: string; nick?: string }): {
+  ret: number;
+  msg: string;
+  data: { openID: string; nick: string; avatar: string; source: string; bindSource: string; fileAuthType: string; unionID: string };
+} {
+  return {
+    ret: 0,
+    msg: 'Succeed',
+    data: {
+      openID: input.openID,
+      nick: input.nick ?? 'nickTest',
+      avatar: 'https://example.com/avatar.png',
+      source: 'qq',
+      bindSource: '',
+      fileAuthType: 'all',
+      unionID: 'UnionIDTest',
+    },
+  };
+}
+
+/** 一次 token 授权可以被要求交回的东西；时限不给，读者就落到令牌自己的 `exp`。 */
+export interface TokenAnswerInput {
+  accessToken: string;
+  expiresIn?: number | undefined;
+  userId?: string | undefined;
+  refreshToken?: string | undefined;
+}
+
+/** token 端点的答复：一枚访问令牌，以及它愿意说的别的。 */
+export function tokenAnswer(input: TokenAnswerInput): Record<string, unknown> {
+  return {
+    access_token: input.accessToken,
+    token_type: 'Bearer',
+    ...(input.expiresIn === undefined ? {} : { expires_in: input.expiresIn }),
+    scope: 'scope.smartsheet',
+    user_id: input.userId ?? 'OpenIDTest',
+    ...(input.refreshToken === undefined ? {} : { refresh_token: input.refreshToken }),
+  };
+}
+
+/** token 端点的一次拒绝：仍然是一份 body，措辞归调用它的人。 */
+export const tokenRefused: Record<string, unknown> = { error: 'invalid_grant', error_description: 'token grant rejected' };
+
+// ---------------------------------------------------------------------------
+// 假上游本身
+// ---------------------------------------------------------------------------
+
+/** mock 可以被要求答复的业务失败。 */
 export interface MockFailure {
   readonly status: number;
   readonly ret: number;
   readonly msg: string;
-  /** Response headers to send with it, such as the `Retry-After` a 429 may carry. */
+  /** 随它一起发的响应头，比如 429 可能带的 `Retry-After`。 */
   readonly headers?: Record<string, string>;
 }
 
-/** What the fake document holds, and how it misbehaves. */
+/** 假文档拿着什么、又怎么乱来。 */
 export interface TencentDocsMockState {
-  /** Rows the sheet holds. Mutate to simulate sheet changes. */
+  /** 表持有的行。改它来模拟表变化。 */
   records: CommonRecord[];
-  /** How many rows the mock hands back per request; lets a test force pagination. */
+  /** 每次请求 mock 交回多少行；让测试可以逼出翻页。 */
   pageSize: number | undefined;
-  /** Every `addRecords` payload the caller sent, in order. */
+  /** 调用方发过的每一份 `addRecords` 载荷，按序。 */
   added: Array<Record<string, unknown>>;
-  /** The same appends as the sheet stored them: what a later read hands back, id and times included. */
+  /** 同一次追加在表里存下来的样子：之后读取交回的就是它，id 与时刻都在。 */
   addedRecords: CommonRecord[];
-  /** Every `updateRecords` request the caller sent, in order: which row, and the values it was given. */
+  /** 调用方发过的每一次 `updateRecords` 请求，按序：换哪一行，给了什么。 */
   updated: Array<{ recordID: string; values: Record<string, unknown> }>;
-  /** Every `deleteRecords` request's record ids, in order. */
+  /** 每一次 `deleteRecords` 请求的 record id，按序。 */
   deleted: string[];
-  /** Set to make `deleteRecords` answer with this business error instead. */
+  /** 设置它，让 `deleteRecords` 改答这个业务错误。 */
   deleteFailure: MockFailure | undefined;
-  /** Every intercepted request, for assertions about method/body/headers. */
+  /** 每一个被拦截的请求，供断言 method/body/headers。 */
   calls: Array<{ method: string; url: string; body: unknown; headers: Record<string, string> }>;
-  /** Set to make the read fail with this business error instead. */
+  /** 设置它，让读取改答这个业务错误。 */
   readFailure: MockFailure | undefined;
-  /** Set to make `addRecords` answer with this business error instead. */
+  /** 设置它，让 `addRecords` 改答这个业务错误。 */
   writeFailure: MockFailure | undefined;
-  /** Set to make `updateRecords` answer with this business error instead. */
+  /** 设置它，让 `updateRecords` 改答这个业务错误。 */
   updateFailure: MockFailure | undefined;
-  /** Answers `addRecords` with rows that carry no `recordID`, a mutation the measured answer does not have. */
+  /** 让 `addRecords` 答一些不带 `recordID` 的行，量出来的答复里没有这种变异。 */
   addRecordsWithoutId: boolean;
   /**
-   * The instant the sheet stamps on an appended row, as a 13 digit string. A real document keeps its
-   * own `createTime`/`updateTime` per row and never reports them on a write, so a case that cares about
-   * the document's times sets this to its own clock; a reader sees them on the next read, which is what
-   * makes a round trip consistent.
+   * 表章在一次追加上的时刻，十三位字符串。真实文档每行有自己的 `createTime`/`updateTime` 且从不在写入时报告它们，
+   * 所以在意表时刻的用例把它设成自己的钟；读者在下次读取时看到它们，一次往返由此自洽。
    */
   sheetTime: string;
-  /** The document's sub-sheets, as `查询子表` reports them. */
+  /** 文档的子表，按查询子表报告的样子。 */
   sheets: Record<string, unknown>[];
-  /** Set to make the sub-sheet list fail. */
+  /** 设置它，让子表列表失败。 */
   sheetListFailure: MockFailure | undefined;
-  /** Set to make `userinfo` fail (a rejected credential, for instance). */
+  /** 设置它，让 `userinfo` 失败（比如被拒的凭据）。 */
   userInfoFailure: MockFailure | undefined;
-  /** The Open-Id `userinfo` reports; must match the configured one unless a test says otherwise. */
+  /** `userinfo` 报告的 Open-Id；除用例另有交代，应与配置的一致。 */
   userInfoOpenId: string;
-  /** What the 刷新 Token grant answers; `undefined` means the default refreshed token. */
+  /** 刷新 Token 授权答什么；`undefined` 表示默认的刷新令牌。 */
   refresh: TokenAnswerInput | undefined;
-  /** What the 获取 Token grant answers; `undefined` means the same default as a refresh. */
+  /** 获取 Token 授权答什么；`undefined` 表示与刷新同一份默认。 */
   codeExchange: TokenAnswerInput | undefined;
-  /** Set to make the token endpoint fail, whichever grant reached it. */
+  /** 设置它，让 token 端点失败，哪个授权碰到它都算。 */
   refreshFailure: { status: number; body: Record<string, unknown> } | undefined;
-  /**
-   * Answers the next call — at whichever endpoint it arrives — with this body verbatim: an object is
-   * sent as JSON of that shape, a string is sent as-is for a body that is not JSON at all.
-   */
+  /** 让下一次调用——不管落在哪个端点——原样答这份 body：对象按 JSON 发，字符串按原样发（不是 JSON 的 body）。 */
   rawReply: { status: number; body: Record<string, unknown> | string } | undefined;
-  /** Fails this many calls before any response exists, as a dropped connection would. */
+  /** 让接下来这么多次调用在产生任何答复之前失败，像被掐断的连接。 */
   networkFailures: number;
 }
 
 export interface TencentDocsMock {
   readonly state: TencentDocsMockState;
-  /** The transport to hand a client or a manager: undici's `fetch`, on this mock pool. */
+  /** 交给 client 或 manager 的 transport：undici 的 `fetch`，指向这个 mock 池。 */
   readonly fetcher: WebFetcher;
   reset(): void;
   close(): Promise<void>;
 }
 
-/** The document coordinates the example configuration uses, and the mock reports back. */
-export const EXAMPLE_FILE_ID = '300000000$ExAmPlEfIlEiD';
-export const EXAMPLE_SHEET_ID = 'tXXXXXX';
-
 const JSON_HEADERS = { 'content-type': 'application/json' };
 
 /**
- * The origin to intercept: the mock only ever answers this one, so a test run that points the client
- * somewhere else gets a refused connection rather than a real call. `OPS_DOCS_API_BASE` is where a
- * caller's own configuration says the same thing.
+ * 拦截的那个 origin：mock 只答它，因此把 client 指向别处的测试拿到的是被拒的连接而不是真实调用。
+ * `OPS_DOCS_API_BASE` 是调用方自己的配置说同一件事的地方。
  */
 export function apiOrigin(): string {
   return process.env.OPS_DOCS_API_BASE ?? 'https://docs.qq.com';
 }
 
-/** The slice of undici's mock callback this file needs. */
+/** 本文件用到的 undici mock 回调的那一小片。 */
 interface MockRequest {
   readonly path: string;
   readonly method: string;
@@ -124,7 +266,7 @@ function mockReply(statusCode: number, data: MockReply['data'], headers: Record<
   return { statusCode, data, responseOptions: { headers } };
 }
 
-/** One reply for a configured failure, with whatever headers it was told to carry. */
+/** 为一份配置好的失败造一份答复，带上它被交代要带的头。 */
 function failureReply(failure: MockFailure): MockReply {
   return mockReply(failure.status, { ret: failure.ret, msg: failure.msg }, failure.headers ?? JSON_HEADERS);
 }
@@ -135,16 +277,13 @@ function bodyText(body: unknown): string {
   return '';
 }
 
-/** The mock reports headers as they were sent; assertions read them lowercase. */
+/** mock 报告的请求头是发送时的样子；断言读小写。 */
 function lowerHeaders(headers: unknown): Record<string, string> {
   if (typeof headers !== 'object' || headers === null) return {};
   return Object.fromEntries(Object.entries(headers as Record<string, unknown>).map(([key, value]) => [key.toLowerCase(), String(value)]));
 }
 
-/**
- * Intercepts every Tencent Docs Open API call. Real connections are disabled, so a request the mock
- * does not know about fails loudly instead of reaching the network.
- */
+/** 拦截每一个 Tencent Docs Open API 调用。真实连接被禁用，mock 不认识的请求会大声失败而不是走网络。 */
 export function setupTencentDocsMock(
   options: {
     origin?: string;
@@ -179,7 +318,7 @@ export function setupTencentDocsMock(
     networkFailures: 0,
   };
 
-  /** What `reset()` restores the sub-sheet list to; cases that need another one mutate the state. */
+  /** `reset()` 把子表列表恢复成什么；需要另一张表的用例自己改 state。 */
   const initialSheets = state.sheets;
 
   let nextRecordId = 1;
@@ -192,9 +331,8 @@ export function setupTencentDocsMock(
   };
 
   /**
-   * Records the call, then applies whatever failure the case asked for — a dropped connection, or a
-   * body that is not JSON. Both short-circuit the endpoint's own answer, and both are counted from
-   * `calls` either way, which is how a test counts attempts.
+   * 记下这次调用，然后施加用例要求的那份失败——被掐断的连接，或不是 JSON 的 body。两者都短路掉端点自己的答复，
+   * 又都照记 `calls`，测试数尝试次数就数它。
    */
   function prelude(request: MockRequest, body: unknown): MockReply | undefined {
     record(request, body);
@@ -209,7 +347,7 @@ export function setupTencentDocsMock(
         });
   }
 
-  // `查询子表`: the document's sub-sheets.
+  // 查询子表：文档的子表。
   pool
     .intercept({ path: (path) => path.startsWith('/openapi/smartbook/v2/files/') && path.endsWith('/sheets'), method: 'GET' })
     .reply((request) => {
@@ -220,8 +358,7 @@ export function setupTencentDocsMock(
     })
     .persist();
 
-  // The credential endpoints: `userinfo` reports whose token this is, `token` grants a new one — by
-  // authorization code or by refresh token, at the same path.
+  // 凭据端点：`userinfo` 报告这枚令牌是谁的，`token` 发放新的——按授权码或按刷新令牌，同一个路径。
   pool
     .intercept({ path: (path) => path.startsWith('/oauth/v2/userinfo'), method: 'GET' })
     .reply((request) => {
@@ -238,13 +375,12 @@ export function setupTencentDocsMock(
       const early = prelude(request, undefined);
       if (early !== undefined) return early;
       if (state.refreshFailure !== undefined) return mockReply(state.refreshFailure.status, state.refreshFailure.body);
-      // One URL, two grants, told apart by nothing but `grant_type` — which is therefore what decides
-      // which half of the state answers here.
+      // 一个 URL，两个授权，只差 `grant_type`——因此由它决定 state 的哪一半来答。
       const granted = new URL(request.path, origin).searchParams.get('grant_type') === 'authorization_code';
       const answer = granted
         ? (state.codeExchange ?? { accessToken: 'granted-access-token', userId: state.userInfoOpenId })
         : (state.refresh ?? { accessToken: 'refreshed-access-token', expiresIn: 2_592_000, userId: state.userInfoOpenId });
-      // A response without a lifetime makes the reader fall back to the token's own `exp`.
+      // 不带时限的答复会让读者落到令牌自己的 `exp`。
       return mockReply(
         200,
         tokenAnswer({
@@ -270,7 +406,7 @@ export function setupTencentDocsMock(
 
         const payload = body.getRecords as { offset?: number; limit?: number };
         const offset = payload.offset ?? 0;
-        // The client always asks for the API maximum, so the mock decides how much to hand back.
+        // client 总是要 API 上限那么多，交回多少由 mock 说了算。
         const limit = Math.min(payload.limit ?? 100, state.pageSize ?? 100);
         const page = state.records.slice(offset, offset + limit);
         const nextOffset = offset + page.length;
@@ -298,8 +434,7 @@ export function setupTencentDocsMock(
           state.added.push(entry.values);
           return { recordID: `rNew${nextRecordId++}`, ...stamps, values: entry.values };
         });
-        // The document keeps its own times on the row, and says nothing about them on the answer.
-        // `addRecordsWithoutId` is the shape a document that answers without an id would have.
+        // 文档把时刻存在行自己身上，答复里一个字不提。`addRecordsWithoutId` 是不给 id 的文档会有的形状。
         const answered = state.addRecordsWithoutId
           ? writtenRecordsWithoutId(stored)
           : stored.map((entry) => ({ recordID: entry.recordID, values: entry.values }));
@@ -314,8 +449,7 @@ export function setupTencentDocsMock(
         const records = (body.updateRecords as { records: Array<{ recordID: string; values: Record<string, unknown> }> }).records;
         const stored: CommonRecord[] = records.map((entry) => {
           state.updated.push(entry);
-          // The row keeps its own identity and times; only the cells are replaced, which is what the
-          // API does — and why a caller cannot take its timestamps from this answer.
+          // 行保留自己的身份与时刻，只有单元格被换掉，API 就是这么做的——也正因如此，调用方不能从这份答复里拿时间戳。
           const before = state.records.find((row) => row.recordID === entry.recordID);
           return { ...before, recordID: entry.recordID, values: entry.values };
         });
@@ -335,8 +469,7 @@ export function setupTencentDocsMock(
 
   return {
     state,
-    // The transport the library under test calls, on this pool: nothing here reaches the network, since
-    // the agent refuses any connection it was not told to intercept.
+    // 被测库调用的 transport，在这个池上：这里没有任何东西上网，因为 agent 拒绝一切没被告知要拦截的连接。
     fetcher: (url, init) => undiciFetch(url, { ...init, dispatcher: agent }),
     reset: () => {
       state.added.length = 0;
@@ -360,7 +493,7 @@ export function setupTencentDocsMock(
       state.refreshFailure = undefined;
       state.rawReply = undefined;
       state.networkFailures = 0;
-      // The numbering restarts with the state, so a case can name the row its own append produced.
+      // 编号随 state 一起重来，用例因此能叫出自己那次追加产生的行。
       nextRecordId = 1;
     },
     close: () => agent.close(),

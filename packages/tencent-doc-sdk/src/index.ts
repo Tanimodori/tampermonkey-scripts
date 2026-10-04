@@ -1,19 +1,29 @@
-// Re-exported rather than made consumers depend on it themselves: this is the shape a `transport` has to
-// fit, and the package behind it — `universal-fetch-type` — carries types and nothing else.
+// 再转出而不是让使用方自己依赖它：这就是 `transport` 要贴的形状，而它背后的包只装类型。
 export type { Fetcher, FetcherHeaders, FetcherRequestInit, FetcherResponse, WebFetcher, WebFetcherRequestInit } from 'universal-fetch-type';
 
-export type { TencentDocsErrorCode, TencentDocsErrorOptions, UpstreamResponse } from './validation/errors';
-export { TencentDocsError } from './validation/errors';
-export { describeBody } from './validation/classify';
-export * from './validation/schemas';
-export * from './validation/types';
+export type {
+  Api,
+  ApiOptions,
+  ApiRequest,
+  ApiResponse,
+  CallArgs,
+  Endpoint,
+  Envelope,
+  RequestAdaptor,
+  RequestSchema,
+  ResponseAdaptor,
+  ResponseSchema,
+  TencentDocsErrorCode,
+} from './types';
+export { TencentDocsError } from './error';
+export type { TencentDocsErrorOptions } from './error';
+export { describeBody } from './error';
 
-// The endpoints are the package's vocabulary: a caller names the call it wants and `api.call` makes it, so
-// exporting the set is what keeps an endpoint out of the caller's own construction business.
-export type { AnyEndpoint, AuthMode, CallArgs, Endpoint, InputOf, OutputOf } from './endpoint';
-export { defineEndpoint } from './endpoint';
+// schema 与它们的类型是包的一部分词汇：使用方读得到答复的每一段是怎么被描述的。
+export * from './endpoints/schema';
+
+// 端点是包的词汇：调用方点名要哪个调用，`api.call` 把它做成；转出集合与每个名字，端点不必由调用方自己构造。
 export { accessToken, addRecords, deleteRecords, endpoints, getRecords, getSheetList, refreshToken, updateRecords, userinfo } from './endpoints';
-export type { Api, ApiOptions } from './client';
 export { createApi } from './client';
 export type { DocCoordinates, PathParams } from './path';
 export { buildPath, encodePathSegment } from './path';

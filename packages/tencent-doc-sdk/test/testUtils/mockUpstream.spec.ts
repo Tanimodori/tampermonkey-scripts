@@ -1,13 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  addRecordsResponseSchema,
-  deleteRecordsResponseSchema,
-  getRecordsResponseSchema,
-  getSheetResponseSchema,
-  sheetSchema,
-  tokenResponseSchema,
-  userInfoResponseSchema,
-} from '@/validation/schemas';
+import { commonRecordsSchema, sheetListSchema, sheetSchema, tokenResponseSchema, userInfoSchema, writtenRecordsSchema } from '@/endpoints/schema';
 import {
   deleteRecordsAnswer,
   getRecordsAnswer,
@@ -21,22 +13,20 @@ import {
   userInfoAnswer,
   writtenRecordsAnswer,
   writtenRecordsWithoutId,
-} from './document';
+} from './mockUpstream';
 
 /**
- * The mock's answer samples, checked against the response types they stand for.
+ * mock 的答复样例，对着它们所代表的响应类型核。
  *
- * The fixtures are what the fake upstream replies with, so if a sample and a schema disagree, every
- * test built on that sample is agreeing with a fiction. This is the one place that catches the drift:
- * a sample that stops parsing, or a schema that stops accepting what the live document sends, fails
- * here rather than making a green suite meaningless.
+ * 这些样例就是假上游答复的东西，样例与 schema 一旦分歧，建在它上面的每个测试都在与一个虚构达成一致。这里是唯一接住
+ * 漂移的地方：一个不再 parse 的样例，或一个不再接受真实文档发送内容的 schema，在这里失败，而不是让一套绿灯变得没有意义。
  */
 
 describe('the sheet list', () => {
-  it('parses as GetSheetResponse', () => {
+  it('parses as the section 查询子表 reports, ids included', () => {
     const answer = getSheetAnswer([sheet({ sheetID: 'tXXXXXX' }), sheet({ sheetID: 'tYYYYYY', title: '智能表2' })]);
 
-    expect(getSheetResponseSchema.parse(answer).data.getSheet.map((entry) => entry.sheetID)).toEqual(['tXXXXXX', 'tYYYYYY']);
+    expect(sheetListSchema.parse(answer.data.getSheet).map((entry) => entry.sheetID)).toEqual(['tXXXXXX', 'tYYYYYY']);
   });
 
   it('accepts the visibility spelling the documentation uses, not only the one the document sends', () => {
@@ -45,16 +35,16 @@ describe('the sheet list', () => {
 });
 
 describe('a page of records', () => {
-  it('parses as GetRecordsResponse', () => {
+  it('parses as CommonRecords, columns and all', () => {
     const answer = getRecordsAnswer({ records: readRows([{ recordID: 'r00001', values: { 名称: '甲' } }]), total: 1, hasMore: false, next: 1 });
 
-    expect(getRecordsResponseSchema.parse(answer).data.getRecords.records?.[0]?.recordID).toBe('r00001');
+    expect(commonRecordsSchema.parse(answer.data.getRecords).records?.[0]?.recordID).toBe('r00001');
   });
 
   it('sends each row with the columns the live document adds', () => {
     const row = readRow({ recordID: 'r00001' });
 
-    expect(getRecordsResponseSchema.parse(getRecordsAnswer({ records: [row] })).data.getRecords.records?.[0]).toMatchObject({
+    expect(commonRecordsSchema.parse(getRecordsAnswer({ records: [row] }).data.getRecords).records?.[0]).toMatchObject({
       createdUserId: '',
       updaterName: '',
     });
@@ -62,26 +52,26 @@ describe('a page of records', () => {
 });
 
 describe('the write answers', () => {
-  it('parse as AddRecordsResponse and carry no timestamps', () => {
+  it('parse as WrittenRecords and carry no timestamps', () => {
     const answer = writtenRecordsAnswer('addRecords', [{ recordID: 'rNew1', values: { 名称: '甲' } }]);
 
-    expect(addRecordsResponseSchema.parse(answer).data.addRecords.records).toEqual([{ recordID: 'rNew1', values: { 名称: '甲' } }]);
+    expect(writtenRecordsSchema.parse(answer.data.addRecords).records).toEqual([{ recordID: 'rNew1', values: { 名称: '甲' } }]);
   });
 
   it('parse without a record id, the shape a caller reports rather than fails on', () => {
     const answer = writtenRecordsAnswer('addRecords', writtenRecordsWithoutId([{ recordID: 'rNew1', values: { 名称: '甲' } }]));
 
-    expect(addRecordsResponseSchema.parse(answer).data.addRecords.records?.[0]?.recordID).toBeUndefined();
+    expect(writtenRecordsSchema.parse(answer.data.addRecords).records?.[0]?.recordID).toBeUndefined();
   });
 
   it('leave the delete answer without a data section at all', () => {
-    expect(deleteRecordsResponseSchema.parse(deleteRecordsAnswer())).toEqual({ ret: 0, msg: 'Succeed' });
+    expect(deleteRecordsAnswer()).toEqual({ ret: 0, msg: 'Succeed' });
   });
 });
 
 describe('the credential endpoints', () => {
   it('report the identity directly under data', () => {
-    expect(userInfoResponseSchema.parse(userInfoAnswer({ openID: 'OpenIDTest' })).data.openID).toBe('OpenIDTest');
+    expect(userInfoSchema.parse(userInfoAnswer({ openID: 'OpenIDTest' }).data).openID).toBe('OpenIDTest');
   });
 
   it('answer a token grant with the token, with or without a lifetime and a rotated refresh token', () => {

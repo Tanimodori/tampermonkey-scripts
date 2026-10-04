@@ -2,11 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { parseJwtToken, readAccessTokenClaims, readAccessTokenExpiresAt } from '@/token/jwt';
 
 /**
- * Reading a lifetime and an identity off an access token.
+ * 从一枚访问令牌上读时限与身份。
  *
- * The signature is never verified: the upstream decides whether a token works, and this is only for the
- * case where it stated no lifetime of its own. So the whole contract is *reading* — a token that is not
- * a token answers `undefined`, which its callers read as "unknown" rather than as "expired".
+ * 签名从不验证：令牌能不能用是上游说了算，这里只为上游没说自己时限的情况。因此整个契约就是**读**——不是令牌的令牌
+ * 答 `undefined`，它的读者把那个读成「未知」而不是「过期」。
  */
 
 function segment(payload: unknown): string {
@@ -24,7 +23,7 @@ describe('the three parts', () => {
 
     expect(parsed?.header).toEqual({ alg: 'HS256', typ: 'JWT' });
     expect(parsed?.payload).toMatchObject({ clt: 'client-id', typ: 1, exp: 1_790_621_942.196758, iat: 1_788_029_942.196758, sub: 'open-id' });
-    // The signature is never decoded or checked — only carried through untouched.
+    // 签名从不解码也从不检查——只原样带过。
     expect(parsed?.signature).toBe('the-signature-as-sent');
   });
 
@@ -37,7 +36,7 @@ describe('the three parts', () => {
     expect(parseJwtToken(`${segment({ exp: 1 })}.${segment({ exp: 1 })}`)).toBeUndefined();
     expect(parseJwtToken('a.b.c.d')).toBeUndefined();
     expect(parseJwtToken('')).toBeUndefined();
-    // A header or payload that is not a JSON object fails the whole token, not just that part.
+    // 头或载荷不是 JSON 对象会让整枚令牌失败，而不只是那一段。
     expect(parseJwtToken(`${segment({ alg: 'HS256' })}.${segment([1, 2, 3])}.s`)).toBeUndefined();
     expect(parseJwtToken(`${Buffer.from('not json').toString('base64url')}.${segment({ exp: 1 })}.s`)).toBeUndefined();
   });
@@ -49,7 +48,7 @@ describe('the claims', () => {
   });
 
   it('tolerates a payload whose base64url needed padding', () => {
-    // Ten characters of it: `Buffer#toString('base64url')` leaves the two `=` off the end.
+    // 十个字符：`Buffer#toString('base64url')` 会把结尾两个 `=` 去掉。
     const bare = `${segment({ alg: 'HS256' })}.${Buffer.from('{"exp":12}', 'utf8').toString('base64url')}.c2ln`;
 
     expect(readAccessTokenClaims(bare)).toEqual({ exp: 12 });

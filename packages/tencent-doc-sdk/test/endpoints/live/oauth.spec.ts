@@ -5,14 +5,12 @@ import { live, store, tokens } from '@test/testUtils/liveDocument';
 import { describe, expect, it } from 'vitest';
 
 /**
- * The identity endpoint against a **real** Tencent Docs document, asked through the manager rather than at
- * the raw endpoint: of the three credential calls, this is the one a live run can make without changing
- * anything the suite then depends on.
+ * 身份端点对着**真实** Tencent Docs 文档，并且是通过 manager 问的、不是直接打裸端点：三个凭据调用里，这是 live 运行
+ * 能不改变套件随后要依赖的任何东西就做掉的那一个。
  *
- * Neither grant is here. A test document's environment carries an access token but neither the client
- * secret nor a refresh token, and refreshing one token invalidates the one the suite runs on. Every
- * boundary of a grant's answer — a rotated refresh token, a missing lifetime, a `400` refusal — is
- * exercised against the mock instead, in `../mock/oauth.spec.ts`.
+ * 两个授权都不在这里。测试文档的环境带着一枚访问令牌，却没有 client secret 也没有刷新令牌，而刷新一枚令牌会让套件赖以
+ * 运行的那枚失效。授权答复的每个边界——轮换的刷新令牌、缺失的时限、`400` 的拒绝——都在 mock 上过一遍，在
+ * `../oauth.spec.ts`。
  */
 
 describe.skipIf(!live)('the real document: the credential', () => {
@@ -22,13 +20,13 @@ describe.skipIf(!live)('the real document: the credential', () => {
     expect(typeof info.openID).toBe('string');
     expect(info.openID!.length).toBeGreaterThan(0);
 
-    // The environment may name no Open-Id and leave it to the token's own claim, which this compares.
+    // 环境可能不说 Open-Id、把它留给令牌自己的声明，这里就是与它比对。
     const held = store.get().openId;
     if (held !== undefined) expect(info.openID).toBe(held);
   });
 
   it('answers with the identity directly under `data`, with no section key', async () => {
-    // The one endpoint whose answer the envelope's own naming rule does not apply to.
+    // 唯一一个信封自己的命名规则不适用的端点。
     const info = await tokens.getUserInfo();
 
     expect(info).not.toHaveProperty('userinfo');

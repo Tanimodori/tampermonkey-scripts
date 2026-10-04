@@ -1,15 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { TencentDocsError } from '@/error';
 import { createCredentialStore } from '@/token/store';
-import { TencentDocsError } from '@/validation/errors';
 
 /**
- * The synchronous half of the credential: what `get()` reports, which parts the four readers refuse to let
- * a call go out without, and what `set` is allowed to change.
+ * 凭据的同步那一半：`get()` 报告什么、四个读取各拒绝让调用不带什么出门、`set` 允许改什么。
  *
- * The endpoints that produce these values are `manager.spec.ts`'s; nothing here reaches the network.
+ * 产出这些值的端点是 `manager.spec.ts` 的；这里什么都不触网。
  */
 
-/** A token this library can read claims out of: three segments, a JSON payload, no signature. */
+/** 一枚本库读得出声明的令牌：三段，JSON 载荷，没有签名。 */
 function token(input: { sub?: string; exp?: number; iat?: number }): string {
   const encode = (part: unknown): string => Buffer.from(JSON.stringify(part)).toString('base64url');
   return `${encode({ alg: 'none' })}.${encode({ ...input })}.signature`;
@@ -42,7 +41,7 @@ describe('an empty store', () => {
 
     expect(() => store.getAccessToken()).toThrow(EXPECTED_CONFIG);
     expect(() => store.getAuthHeaders()).toThrow(/access token/);
-    // An empty token does not speak of the client id, so the one said outright is still held.
+    // 一枚空令牌没有说过 client id 的事，明说的那一个因此仍然被持有。
     expect(store.get().clientId).toBe('c-id');
   });
 });
@@ -54,11 +53,10 @@ describe('what `get()` reflects, and what a call refuses to invent', () => {
     expect(store.getAccessToken()).toBe('an-opaque-token');
     expect(() => store.getClientId()).toThrow(/client id/);
     expect(() => store.getRefreshToken()).toThrow(/refresh token/);
-    // The Open-Id has no reading of its own, so its absence surfaces in the header — which is why this
-    // asks of a credential whose other two parts are held, and the header then names the one it lacks.
+    // Open-Id 没有自己的读取，因此它的缺席会显在头上——这正是这里问一份持有另外两部分的凭据、再由头点出它缺的那一个的原因。
     const noOpenId = createCredentialStore({ accessToken: 'an-opaque-token', clientId: 'c-id' });
     expect(() => noOpenId.getAuthHeaders()).toThrow(/sub. claim/);
-    // Unknown, which is not the same as expired: an opaque token states no lifetime either.
+    // 未知，与过期不是一回事：一枚不透明令牌也没有说自己任何时限。
     expect(store.get().expiresAt).toBeUndefined();
   });
 
@@ -83,7 +81,7 @@ describe('what `get()` reflects, and what a call refuses to invent', () => {
 
     expect(withBoth.get().openId).toBe('configured');
     expect(statedAfter.get().openId).toBe('configured-later');
-    // The header follows the same rule, which is the only place the Open-Id is ever sent.
+    // 头跟着同一条规则，那是 Open-Id 唯一被发送的地方。
     expect(withBoth.getAuthHeaders()['Open-Id']).toBe('configured');
   });
 
@@ -115,7 +113,7 @@ describe('the issue time', () => {
   it('is resolved at write time and merely read back, so an unrelated `set` keeps a literal value', () => {
     const store = createCredentialStore({ accessToken: 'an-opaque-token', issueAt: 1_700_000_000_000 });
 
-    // An opaque token parses to no issue time, yet the value said outright survives — reading does not re-parse.
+    // 不透明令牌解析不出签发时间，但明说的那个值活了下来——读取不重新解析。
     store.set({ openId: 'o-id' });
 
     expect(store.get().issueAt).toBe(1_700_000_000_000);
@@ -145,7 +143,7 @@ describe('set', () => {
 
     store.set({ accessToken: token({ exp: 1_800_000_000 }) });
 
-    // The refresh token that made the exchange possible outlives the token it exchanged for.
+    // 让那次兑换成立的刷新令牌活得比被它换掉的令牌久。
     expect(store.get()).toEqual({
       accessToken: token({ exp: 1_800_000_000 }),
       clientId: 'c-id',
@@ -166,7 +164,7 @@ describe('set', () => {
   it('drops a carried-over expiry when the token it described was replaced', () => {
     const store = createCredentialStore({ accessToken: 'old-token', expiresAt: 1_700_000_000_000 });
 
-    // A token whose own claim says nothing has no known lifetime — and the old one's expiry is not it.
+    // 自己的声明什么都不说的令牌没有已知时限——旧的那一个的到期时间不是它。
     store.set({ accessToken: 'an-opaque-token' });
     expect(store.get().expiresAt).toBeUndefined();
 

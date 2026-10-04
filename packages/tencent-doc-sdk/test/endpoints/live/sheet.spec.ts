@@ -1,17 +1,15 @@
 import { api, live, params, store, tokens, useLiveDocument } from '@test/testUtils/liveDocument';
+import { describe, expect, it } from 'vitest';
+import { endpoints } from '@/endpoints';
 /**
  * @module-tag live
  */
-import { describe, expect, it } from 'vitest';
-import { endpoints } from '@/endpoints';
 
 /**
- * The sub-sheet list against a **real** Tencent Docs document: the answer a caller checks its
- * configured `sheetID` against. The same call against the mocked upstream, including every failure the
- * endpoint can answer with, is `../mock/sheet.spec.ts`.
+ * 子表列表对着**真实** Tencent Docs 文档：调用方拿它核对配置的 `sheetID` 的那份答复。同样的调用对着 mocked 上游、
+ * 连同端点能答的每种失败，是 `../sheet.spec.ts`。
  *
- * It runs only when the `live` tag is filtered in and the environment names a document other than the
- * example one; see `test/testUtils/liveDocument.ts`.
+ * 它只在 `live` 标签被过滤进来、且环境点名的文档不是示例 id 时运行；见 `test/testUtils/liveDocument.ts`。
  */
 
 describe.skipIf(!live)('the real document: sub-sheets', () => {
@@ -21,8 +19,7 @@ describe.skipIf(!live)('the real document: sub-sheets', () => {
     const reported = (await tokens.getUserInfo()).openID;
     expect(reported!.length).toBeGreaterThan(0);
 
-    // The library reports what the upstream said and sends what the store holds; whether the two agree
-    // is the caller's judgement, and here it is the reason the read works at all.
+    // 本库报上游说的、发 store 拿的；两者是否一致是调用方的判断，在这里它正是这次读取能成立的理由。
     const held = store.get().openId;
     if (held !== undefined) expect(reported).toBe(held);
   });

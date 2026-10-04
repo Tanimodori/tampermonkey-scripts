@@ -1,56 +1,36 @@
 import { createApi } from '@/client';
-import type { Api } from '@/client';
+import type { CommonRecord } from '@/endpoints/schema';
 import { createTokenManager } from '@/token/manager';
 import type { TokenManager } from '@/token/manager';
 import { createCredentialStore } from '@/token/store';
 import type { CredentialStore } from '@/token/store';
-import type { CommonRecord } from '@/validation/types';
-import { apiOrigin, EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, setupTencentDocsMock } from './mockUpstream';
+import type { Api } from '@/types';
+import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, TEST_CREDENTIAL, TEST_SECRET } from './fixtures';
+import { apiOrigin, setupTencentDocsMock } from './mockUpstream';
 import type { TencentDocsMock, TencentDocsMockState } from './mockUpstream';
 
-export * from '@test/testUtils/fixtures/sheet';
-export * from '@test/testUtils/fixtures/record';
-export * from '@test/testUtils/fixtures/oauth';
-export { apiOrigin, EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, setupTencentDocsMock } from './mockUpstream';
-export type { MockFailure, TencentDocsMock, TencentDocsMockState } from './mockUpstream';
-export type { Api } from '@/client';
-export type { TokenManager } from '@/token/manager';
-export type { CredentialStore } from '@/token/store';
-export type { DocCoordinates } from '@/path';
-export type { CommonRecord, CommonRecords, Sheet } from '@/validation/types';
-
-/** The credential a test client is built with, unless a case says otherwise. */
-const TEST_CREDENTIAL = {
-  accessToken: 'test-access-token-value',
-  clientId: 'test-client-id',
-  openId: 'test-open-id',
-  refreshToken: 'test-refresh-token',
-};
+/**
+ * 一张 `Api` 与一个 `TokenManager` 共用一份凭据、一起接在假上游上，给只想调端点、看文档怎么反应的测试。
+ * id 与凭据是 mock 答复的示例那一套——是默认值，不是规矩：mock 什么 file id 都答，想看线上地址的用例自己传。
+ *
+ * 坐标交给 `createApi` 而不是每次调用，这正是只有一个文档的调用方会做的事；想寻址别处的用例传自己的 `params`，
+ * client 的坐标就是被它覆盖的那一份。
+ */
 
 export interface TestUpstream {
-  /** Makes every call, over the fake document and this `store`. */
+  /** 做每一次调用，落在假文档与这份 store 上。 */
   readonly api: Api;
   readonly tokens: TokenManager;
-  /** The credential the two are built on: what a token grant writes and a document call reads. */
+  /** 两个 client 共用的凭据：token 授权往哪写、文档调用从哪读。 */
   readonly store: CredentialStore;
   readonly mock: TencentDocsMock;
   readonly state: TencentDocsMockState;
-  /** The coordinates the client was built with, which is what its call paths carry. */
+  /** client 被装配时拿到的坐标，也就是它调用路径上带的。 */
   readonly fileId: string;
   readonly sheetId: string;
   close(): Promise<void>;
 }
 
-/**
- * An `Api` and a `TokenManager` sharing one credential store, both wired onto the fake upstream, for a test
- * that only wants to call the endpoints and watch what the document did. The ids and the credential are the
- * example ones the mock answers for — which is a default, not a rule: the mock answers any file id, so a
- * case that wants to see an address on the wire says so here.
- *
- * The coordinates are handed to `createApi` rather than to each call, which is what a caller with one
- * document does too. A case that wants a call addressed somewhere else passes its own `params`, and the
- * client's are what it overrides.
- */
 export function testUpstream(
   options: { records?: CommonRecord[]; sheets?: Record<string, unknown>[]; userInfoOpenId?: string; fileId?: string; sheetId?: string } = {},
 ): TestUpstream {
@@ -58,7 +38,7 @@ export function testUpstream(
   const apiBase = apiOrigin();
   const params = { fileId: options.fileId ?? EXAMPLE_FILE_ID, sheetId: options.sheetId ?? EXAMPLE_SHEET_ID };
   const store = createCredentialStore(TEST_CREDENTIAL);
-  const tokens = createTokenManager({ apiBase, store, clientSecret: 'test-client-secret', transport: mock.fetcher });
+  const tokens = createTokenManager({ apiBase, store, clientSecret: TEST_SECRET, transport: mock.fetcher });
   const api = createApi({ apiBase, store, params, transport: mock.fetcher });
 
   return { api, tokens, store, mock, state: mock.state, ...params, close: () => mock.close() };

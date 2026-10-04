@@ -1,55 +1,76 @@
-import { defineEndpoint } from '@/endpoint';
-import { accessTokenQuerySchema, refreshTokenQuerySchema, tokenResponseSchema, userInfoResponseSchema } from '@/validation/schemas';
+import { getBareAnswer, getEnvelope, verifyEnvelope } from '@/error';
+import type { Endpoint } from '@/types';
+import { accessTokenInputSchema, refreshTokenInputSchema, tokenResponseSchema, userInfoSchema } from './schema';
+import type { AccessTokenInput, RefreshTokenInput, TokenResponse, UserInfo } from './schema';
 
 /**
- * The three OAuth endpoints: who an access token belongs to, and the two ways one is obtained.
+ * 三个凭据端点：访问令牌属于谁，以及获得新令牌的两条路。
  *
- * They speak their own vocabulary, which is why each names the shape it expects — `userinfo` answers inside
- * the smartsheet envelope but files the identity directly under `data`, and the token endpoint answers with
- * a bare body and no envelope at all. Neither one words the other's failure: a refused grant is an answer,
- * and only the caller knows whether that means "ask the operator" or "carry on with a fresh token". That
- * is what `envelope: false` buys — the table in `validation/classify.ts` declines to judge a body it has no
- * contract for, so a `400` naming a spent refresh token survives to be read by `token/manager.ts`.
+ * 它们说自己的词汇：`userinfo` 的信封里身份**直接**落在 `data` 下；token 端点答复裸 body、没有信封。两者互不替对方
+ * 措辞：被拒的授权也是一份答复，只有调用方知道那意味着「问运维」还是「换个新令牌继续」。这正是裸答契约买到的东西——
+ * 判定表对一个没有契约的 body 不下判，写着作废刷新令牌的 `400` 因此能活着交到 `token/manager.ts` 手里。
  *
- * No `auth` mode here is `'headers'`: none of these three carries the three-piece header the Open API
- * demands. `userinfo` is asked about a token through its query string, and the two grants are addressed by
- * the application's own id and secret, which are declared as their `query` parameters rather than treated
- * as a credential — the secret renews a credential, it is not one, and it never enters the store.
+ * 三个端点都不带 Open API 要求的三件套头：`userinfo` 通过查询串被问起令牌，两个授权的身份是应用自己的 id 与 secret，
+ * 它们声明在入参里而不是当作凭据——secret 续的是一个凭据，它自己不是，也从不进 store。
  *
- * The two grants share one address and differ only by `grant_type`, which each states in its own query
- * schema. A literal there is worth the repetition of two declarations: it is the only thing that tells a
- * code exchange from a refresh, so naming it is the clearest place to record which one an endpoint is.
+ * 两个授权同址，只差 `grant_type`；这个字面量写在各自的适配器里，因为那正是区分两者唯一的东西。
  *
- * See https://docs.qq.com/open/document/app/oauth2/user_info.html,
+ * 见 https://docs.qq.com/open/document/app/oauth2/user_info.html、
  * https://docs.qq.com/open/document/app/oauth2/access_token.html
- * and https://docs.qq.com/open/document/app/oauth2/refresh_token.html
+ * 与 https://docs.qq.com/open/document/app/oauth2/refresh_token.html
  */
 
-/** 获取用户信息: the credential's own identity. */
-export const userinfo = defineEndpoint({
+/** 获取用户信息：凭据自己的身份。 */
+export const userinfo: Endpoint<undefined, UserInfo> = {
   operation: 'userinfo',
-  path: '/oauth/v2/userinfo',
-  method: 'GET',
-  auth: 'query-token',
-  response: { schema: userInfoResponseSchema, unwrap: (answer) => answer.data },
-});
+  responseSchema: userInfoSchema,
 
-/** 获取 Token: exchanges an authorization code for a credential, which the answer states as a bare body. */
-export const accessToken = defineEndpoint({
+  requestAdaptor: (client) => {
+    const url = new URL('/oauth/v2/userinfo', client.apiBase);
+    url.searchParams.set('access_token', client.store.getAccessToken());
+    return { url: url.href, init: { method: 'GET' } };
+  },
+
+  responseAdaptor: (_client, response) => {
+    const envelope = getEnvelope<UserInfo>(response, 'userinfo');
+    verifyEnvelope(envelope);
+    return envelope.data;
+  },
+};
+
+/** 获取 Token：把授权码换成凭据，答复是一段裸 body。 */
+export const accessToken: Endpoint<AccessTokenInput, TokenResponse> = {
   operation: 'accessToken',
-  path: '/oauth/v2/token',
-  method: 'GET',
-  auth: 'none',
-  query: accessTokenQuerySchema,
-  response: { schema: tokenResponseSchema, envelope: false },
-});
+  requestSchema: accessTokenInputSchema,
+  responseSchema: tokenResponseSchema,
 
-/** 刷新 Token: exchanges a refresh token for a new access token, which may come with a new refresh token. */
-export const refreshToken = defineEndpoint({
+  requestAdaptor: (client, input) => {
+    const url = new URL('/oauth/v2/token', client.apiBase);
+    url.searchParams.set('client_id', input.clientId);
+    url.searchParams.set('client_secret', input.clientSecret);
+    url.searchParams.set('grant_type', 'authorization_code');
+    url.searchParams.set('code', input.code);
+    url.searchParams.set('redirect_uri', input.redirectUri);
+    return { url: url.href, init: { method: 'GET' } };
+  },
+
+  responseAdaptor: (_client, response) => getBareAnswer<TokenResponse>(response, 'accessToken'),
+};
+
+/** 刷新 Token：用刷新令牌换一枚新访问令牌，答复可能还捎回一枚新刷新令牌。 */
+export const refreshToken: Endpoint<RefreshTokenInput, TokenResponse> = {
   operation: 'refreshToken',
-  path: '/oauth/v2/token',
-  method: 'GET',
-  auth: 'none',
-  query: refreshTokenQuerySchema,
-  response: { schema: tokenResponseSchema, envelope: false },
-});
+  requestSchema: refreshTokenInputSchema,
+  responseSchema: tokenResponseSchema,
+
+  requestAdaptor: (client, input) => {
+    const url = new URL('/oauth/v2/token', client.apiBase);
+    url.searchParams.set('client_id', input.clientId);
+    url.searchParams.set('client_secret', input.clientSecret);
+    url.searchParams.set('grant_type', 'refresh_token');
+    url.searchParams.set('refresh_token', input.refreshToken);
+    return { url: url.href, init: { method: 'GET' } };
+  },
+
+  responseAdaptor: (_client, response) => getBareAnswer<TokenResponse>(response, 'refreshToken'),
+};

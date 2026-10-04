@@ -1,28 +1,24 @@
 import { afterAll } from 'vitest';
 import { createApi } from '@/client';
-import type { Api } from '@/client';
 import { endpoints } from '@/endpoints';
+import type { CommonRecord, CommonRecords } from '@/endpoints/schema';
 import { createTokenManager } from '@/token/manager';
 import type { TokenManager } from '@/token/manager';
 import { createCredentialStore } from '@/token/store';
 import type { CredentialStore } from '@/token/store';
-import type { CommonRecord, CommonRecords } from '@/validation/types';
+import type { Api } from '@/types';
 import { liveEnv } from './env';
-import { EXAMPLE_FILE_ID } from './mockUpstream';
+import { EXAMPLE_FILE_ID } from './fixtures';
 
 /**
- * The shared front of the live suite: what it takes to point a spec file at a real Tencent Docs
- * document, and what it takes to leave that document as it was found.
+ * live 套件的公共前沿：把一份 spec 指向真实 Tencent Docs 文档需要什么，以及怎么让那份文档在结束后还是原样。
  *
- * Three files use this (`endpoints/live/{sheet,record,oauth}.spec.ts`), which is why the guard and the
- * bookkeeping live here rather than in each: the run conditions are one rule, and the rows the suite
- * writes are cleaned by the file that wrote them.
+ * 三个文件用它（`endpoints/live/{sheet,record,oauth}.spec.ts`），守卫与记账因此住在这里而不是各写各的：运行条件是一条
+ * 规则，套件写进去的行由写它的文件清掉。
  *
- * The rule has two halves, and both matter. The `live` tag selects these files, but a plain run passes
- * no tag filter at all — every tagged test matches — so what keeps that run off the network is the
- * second half: the environment must name a document that is not the example id, and carry a token that
- * is not the template's placeholder. A file that got as far as importing this module and found `live`
- * false is skipped, not silently passing against a mock.
+ * 规则有两半，两半都算数。`live` 标签选中这些文件，但一次普通运行不带任何标签过滤——每个带标签的用例都匹配——因此拦住
+ * 它上网的是另一半：环境必须点名一个不是示例 id 的文档，并带着一枚不是模板占位符的令牌。走到导入本模块的文件若发现
+ * `live` 为假，就被 skip，而不是安静地在 mock 上通过。
  */
 
 const NAMED = {
@@ -34,7 +30,7 @@ const NAMED = {
   openId: liveEnv.OPS_DOCS_OPEN_ID,
 };
 
-/** Why this run may or may not reach the network — said out loud, so a skip is never a mystery. */
+/** 这次运行可能或不可能触网的原因——说出口，skip 因此从不是谜。 */
 export const liveReason: string =
   NAMED.fileId === undefined
     ? 'OPS_DOCS_FILE_ID is not set: name a document in .env.test-live.local and run test:live'
@@ -46,28 +42,27 @@ export const liveReason: string =
           ? 'OPS_DOCS_SHEET_ID is not set'
           : '';
 
-/** Whether this run may reach the network. */
+/** 这次运行是否可以触网。 */
 export const live = liveReason === '';
 
-/** Where the live document is: the same origin the client below sends to, for a spec that calls an endpoint directly. */
+/** live 文档在哪：与下面 client 发往同一个 origin，给直接调端点的 spec 用。 */
 export const apiBase: string = NAMED.apiBase;
 
 export const params = { fileId: NAMED.fileId ?? '', sheetId: NAMED.sheetId ?? '' };
 
-/** The credential the live document is read with: the token the environment names, and nothing else. */
+/** live 文档用什么读：环境点名的令牌，别的什么都没有。 */
 export const store: CredentialStore = createCredentialStore({
   accessToken: NAMED.accessToken ?? '',
   clientId: NAMED.clientId,
   openId: NAMED.openId,
 });
 
-// No transport is handed over: a live run is the one place that means the platform's own `fetch`, on the
-// real address, with nothing in between.
+// 不给 transport：live 运行正是那个意思——平台自己的 `fetch`，真实地址上，中间什么都没有。
 export const tokens: TokenManager = createTokenManager({ apiBase: NAMED.apiBase, store });
 
 export const api: Api = createApi({ apiBase: NAMED.apiBase, store, params });
 
-/** A row the suite appends and deletes again, named by a value only it writes. */
+/** 套件追加再删掉的一行，用一个只有它写进去的值命名。 */
 export interface LiveMarker {
   readonly token: string;
   readonly values: Record<string, unknown>;
@@ -75,7 +70,7 @@ export interface LiveMarker {
 
 let marker: LiveMarker | undefined;
 
-/** Holds the document steady for the file's lifetime, and removes this file's rows after it. */
+/** 让文档在文件的生命周期里保持不动，并在结束后移除这个文件的行。 */
 export function useLiveDocument(writes?: LiveMarker): void {
   marker = writes;
 
@@ -85,12 +80,12 @@ export function useLiveDocument(writes?: LiveMarker): void {
   });
 }
 
-/** One page, in the API's own terms. */
+/** 一页，用 API 自己的词。 */
 export function page(offset = 0, limit = 100): Promise<CommonRecords> {
-  return api.call(endpoints.getRecords, { body: { getRecords: { offset, limit } } });
+  return api.call(endpoints.getRecords, { offset, limit });
 }
 
-/** Every row the document holds, read page by page. */
+/** 文档持有的每一行，一页一页读。 */
 export async function allRecords(): Promise<readonly CommonRecord[]> {
   const records: CommonRecord[] = [];
   let offset = 0;
@@ -107,7 +102,7 @@ export async function allRecords(): Promise<readonly CommonRecord[]> {
   }
 }
 
-/** The ids of this file's marker rows, so a cleanup never touches another file's. */
+/** 这个文件的标记行的 id，好让清理不碰到别的文件的行。 */
 export async function markerRecordIds(): Promise<string[]> {
   const current = marker;
   if (current === undefined) return [];
@@ -115,20 +110,18 @@ export async function markerRecordIds(): Promise<string[]> {
   return (await allRecords()).filter((record) => JSON.stringify(record.values ?? '').includes(token)).map((record) => record.recordID);
 }
 
-/** Appends a marker row and hands back its id, which is what a test then reads or updates. */
+/** 追加一个标记行，交回它的 id，测试随后读它或改它。 */
 export async function appendMarker(one: LiveMarker): Promise<string | undefined> {
-  const answer = await api.call(endpoints.addRecords, { body: { addRecords: { records: [{ values: one.values }] } } });
+  const answer = await api.call(endpoints.addRecords, { records: [{ values: one.values }] });
   return answer.records?.[0]?.recordID;
 }
 
 /**
- * Removes rows by id. A cleanup has to be able to say so even when the file that wrote the rows never
- * called `deleteRecords` itself, which is also the point: it goes through the production call path.
+ * 按 id 移除行。一次清理得说得出这句话，即便写行的文件自己从没调用过 `deleteRecords`——这也正是重点：它走生产的调用路径。
  *
- * The empty check is the caller's, and `deleteRecords` now enforces it: a sweep with nothing to delete is
- * a caller that lost track of its own rows, not a request to spend quota on.
+ * 空列表的检查是调用方的，`deleteRecords` 现在也自己拦：没什么可删的清扫是一个丢了自己账的调用方，不是一次该花配额的请求。
  */
 export async function deleteRecords(recordIDs: readonly string[]): Promise<void> {
   if (recordIDs.length === 0) return;
-  await api.call(endpoints.deleteRecords, { body: { deleteRecords: { recordIDs: [...recordIDs] } } });
+  await api.call(endpoints.deleteRecords, { recordIDs: [...recordIDs] });
 }

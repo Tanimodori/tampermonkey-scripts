@@ -1,24 +1,22 @@
 import { allRecords, appendMarker, api, deleteRecords, live, markerRecordIds, page, useLiveDocument } from '@test/testUtils/liveDocument';
 import type { LiveMarker } from '@test/testUtils/liveDocument';
+import { describe, expect, it } from 'vitest';
+import { endpoints } from '@/endpoints';
+import { cellValuesSchema } from '@/endpoints/schema';
+import type { CommonRecord } from '@/endpoints/schema';
 /**
  * @module-tag live
  */
-import { describe, expect, it } from 'vitest';
-import { endpoints } from '@/endpoints';
-import { cellValuesSchema } from '@/validation/schemas';
-import type { CommonRecord } from '@/validation/types';
 
 /**
- * The record endpoints against a **real** Tencent Docs document: the page a caller pages through, the
- * three shapes a write is answered with, and the deletion that leaves nothing behind. The same calls
- * against the mocked upstream, with every failure shape they can take, are `../mock/record.spec.ts`.
+ * 记录端点对着**真实** Tencent Docs 文档：调用方翻的那一页、写入被答复的三种形状，以及什么都不留下的删除。同样的
+ * 调用对着 mocked 上游、连同它们能走的每种失败形状，是 `../record.spec.ts`。
  *
- * This is the only live file that writes, so it is the only one that hands a marker row to
- * `useLiveDocument`; the row is deleted whatever else the run does. Paging over several pages and the
- * rules a caller applies to a row are the caller's own tests.
+ * 这是唯一会写的 live 文件，因此也是唯一把标记行交给 `useLiveDocument` 的；无论运行还做了什么，行都会被删掉。多页
+ * 之间的翻页与调用方对一行施加的规则，是调用方自己的测试。
  */
 
-/** The row this file appends, deleted again by id afterwards. */
+/** 这个文件追加、随后按 id 删掉的行。 */
 const MARKER: LiveMarker = {
   token: '99-9-4000DEAD',
   values: {
@@ -30,10 +28,10 @@ const MARKER: LiveMarker = {
   },
 };
 
-/** The five columns the test document heads its sheet with. */
+/** 测试文档给它的表起的五个列头。 */
 const COLUMNS = ['区服', '地图', 'ID', '北罐刷新时间', '最后一次进岛时间'] as const;
 
-/** The marker row, read back out of the whole table. */
+/** 从整张表里把标记行读回来。 */
 async function markerRow(): Promise<CommonRecord | undefined> {
   const token = MARKER.token;
   return (await allRecords()).find((record) => JSON.stringify(record.values ?? '').includes(token));
@@ -54,7 +52,7 @@ describe.skipIf(!live)('the real document: records', () => {
       expect(typeof record.recordID).toBe('string');
       const values = cellValuesSchema.parse(record.values);
       for (const column of COLUMNS) expect(values).toHaveProperty(column);
-      // Both instants are stored as 13 digit epoch milliseconds, in whichever encoding the cell holds.
+      // 两个时刻都存成十三位 epoch 毫秒，单元格用哪种编码就是哪种。
       for (const column of ['北罐刷新时间', '最后一次进岛时间'] as const) expect(String(values[column])).toMatch(/^\d{13}/);
     }
   });
@@ -62,7 +60,7 @@ describe.skipIf(!live)('the real document: records', () => {
   it('keeps the columns an answer carries beyond the ones it is read for', async () => {
     const [first] = (await page(0, 1)).records ?? [];
 
-    // Measured: every row also names who wrote and who last changed it.
+    // 量出来的：每一行还会说谁写的、谁最后改的。
     expect(first).toMatchObject({ createdUserId: expect.any(String), updaterName: expect.any(String) });
   });
 
@@ -87,10 +85,10 @@ describe.skipIf(!live)('the real document: records', () => {
     expect(await markerRecordIds()).toHaveLength(1);
 
     const answer = await api.call(endpoints.updateRecords, {
-      body: { updateRecords: { records: [{ recordID: appended!, values: { ...MARKER.values, 北罐刷新时间: '1789201860000' } }] } },
+      records: [{ recordID: appended!, values: { ...MARKER.values, 北罐刷新时间: '1789201860000' } }],
     });
 
-    // Measured: the update answer names the row it touched and says nothing about its times.
+    // 量出来的：更新答复点名它触碰的行，关于它的时刻一个字不说。
     expect(answer.records).toHaveLength(1);
     expect(answer.records?.[0]?.recordID).toBe(appended);
     expect(answer.records?.[0]).not.toHaveProperty('updateTime');

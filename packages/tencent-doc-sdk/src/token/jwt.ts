@@ -1,24 +1,22 @@
-import { jwtHeaderSchema, jwtPayloadSchema } from '@/validation/schemas';
-import type { JwtHeader, JwtPayload } from '@/validation/types';
+import { jwtHeaderSchema, jwtPayloadSchema } from '@/endpoints/schema';
+import type { JwtHeader, JwtPayload } from '@/endpoints/schema';
 
 /**
- * Reading a lifetime and an identity out of an access token, for a caller that has to know when a
- * credential stops being usable.
+ * 从一枚访问令牌里读时限与身份，给一个必须知道凭据什么时候不能用的调用方。
  *
- * The signature is **not** verified: a forged token gets us nothing, because authorisation happens
- * upstream — and asking the upstream about the token (`userinfo`) is what actually decides it. This is
- * only for the case where the upstream stated no lifetime of its own.
+ * 签名**不**验证：一枚伪造的令牌换不来什么，因为授权发生在上游——真正做决定的是问上游（`userinfo`）。这里只服务
+ * 上游自己没说时限的情况。
  */
 
-/** A token split into its three wire parts, each decoded as far as it decodes. */
+/** 一枚令牌切成的三个线上部分，各自解码到解得出的程度。 */
 export interface JwtToken {
   readonly header: JwtHeader;
   readonly payload: JwtPayload;
-  /** The signature segment verbatim — never verified, only carried through so a reader sees the whole token. */
+  /** 签名段原样——从不验证，只带着走，让读者看见整枚令牌。 */
   readonly signature: string;
 }
 
-/** Decodes one base64url segment, tolerating missing padding. */
+/** 解出一段 base64url，容忍缺失的填充。 */
 function decodeSegment(segment: string): unknown {
   const padded = segment.replace(/-/g, '+').replace(/_/g, '/');
   const remainder = padded.length % 4;
@@ -27,12 +25,11 @@ function decodeSegment(segment: string): unknown {
 }
 
 /**
- * The token split into `Header.Payload.Signature`, or `undefined` for anything that is not a decodable
- * three-segment token (opaque tokens, bad base64, non-object header or payload).
+ * 令牌切成 `Header.Payload.Signature`，任何不是可解码三段令牌的东西（不透明令牌、坏 base64、头或载荷不是对象）都是
+ * `undefined`。
  *
- * The signature is returned exactly as the wire sent it; only the two JSON segments are decoded, and
- * each is validated against its schema with every key optional, so a token that carries more than this
- * library reads still parses.
+ * 签名按线路发来的原样交回；只有两段 JSON 被解码，每段都对着自己的 schema 检查、且每个键都可选，因此一枚带的东西比本库读的
+ * 多的令牌仍能 parse。
  */
 export function parseJwtToken(token: string): JwtToken | undefined {
   const parts = token.split('.');
@@ -49,15 +46,14 @@ export function parseJwtToken(token: string): JwtToken | undefined {
 }
 
 /**
- * The payload claims of an access token, or `undefined` for anything that is not a decodable
- * three-segment token — which is what `parseJwtToken` reports, so a caller reading one part cannot be
- * handed a partially-read token it might mistake for a whole one.
+ * 一枚访问令牌的载荷声明，任何不是可解码三段令牌的东西都是 `undefined`——正是 `parseJwtToken` 报告的那种，因此只读一部分的
+ * 调用方不会被交到一枚可能被误当成整枚的半读令牌。
  */
 export function readAccessTokenClaims(token: string): JwtPayload | undefined {
   return parseJwtToken(token)?.payload;
 }
 
-/** The claims' `exp` as epoch milliseconds, when the token carries a usable one. */
+/** 声明里的 `exp` 折成 epoch 毫秒，令牌带着一个可用值的时候。 */
 export function readAccessTokenExpiresAt(token: string): number | undefined {
   const exp = parseJwtToken(token)?.payload.exp;
   if (typeof exp !== 'number' || !Number.isFinite(exp)) return undefined;

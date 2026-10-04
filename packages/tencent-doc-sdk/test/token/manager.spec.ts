@@ -1,4 +1,5 @@
-import { apiOrigin, EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, setupTencentDocsMock } from '@test/testUtils/document';
+import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID } from '@test/testUtils/fixtures';
+import { apiOrigin, setupTencentDocsMock } from '@test/testUtils/mockUpstream';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createApi } from '@/client';
 import { endpoints } from '@/endpoints';
@@ -8,18 +9,15 @@ import { createCredentialStore } from '@/token/store';
 import type { CredentialRecord, CredentialStore } from '@/token/store';
 
 /**
- * What the three credential endpoints do to the credential held: which parts an answer writes, which it
- * leaves alone, and what a caller is handed back to store somewhere of its own.
+ * 三个凭据端点对持有的凭据做了什么：答复写入哪几个部分、放过哪几个，以及调用方被交回什么去自己找地方存。
  *
- * The wire itself — the query parameters, the bare body, the refusals — is `../api/mock/oauth.spec.ts`.
- * How a credential is merged and read back when nothing is missing is `./store.spec.ts`. What is pinned
- * here is the seam between the two: a manager only ever says what the upstream said, and the store is the
- * one place it says it to.
+ * 线上本身——查询参数、裸 body、拒绝——是 `../endpoints/oauth.spec.ts`。什么都没有或缺时一份凭据怎么合并、读回，是
+ * `./store.spec.ts`。这里钉的是两者之间的缝：manager 只说上游说过的话，store 是它唯一说给听的地方。
  */
 
 const docs = setupTencentDocsMock();
 
-/** A token this library can read a lifetime out of: three segments, a JSON payload, no signature. */
+/** 一枚本库读得出时限的令牌：三段，JSON 载荷，没有签名。 */
 function token(input: { sub?: string; exp?: number }): string {
   const encode = (part: unknown): string => Buffer.from(JSON.stringify(part)).toString('base64url');
   return `${encode({ alg: 'none' })}.${encode({ ...input })}.signature`;
@@ -27,7 +25,7 @@ function token(input: { sub?: string; exp?: number }): string {
 
 const BASE: Pick<TokenManagerOptions, 'apiBase' | 'transport'> = { apiBase: apiOrigin(), transport: docs.fetcher };
 
-/** One credential, the manager that may change it, and the number of calls made so far. */
+/** 一份凭据、可能改动它的 manager，以及到目前为止的调用数。 */
 function credential(initial: Partial<CredentialRecord>, options: Partial<TokenManagerOptions> = {}): { store: CredentialStore; tokens: TokenManager } {
   const store = createCredentialStore(initial);
   return { store, tokens: createTokenManager({ ...BASE, store, ...options }) };
@@ -99,7 +97,7 @@ describe('刷新 Token', () => {
       refreshToken: 'rotated-refresh',
       expiresAt: 1_789_500_000_000 + 2_592_000_000,
     });
-    // The store is where it went, which is why a reader of that store needs nothing else.
+    // store 就是它去的地方，这正是那份 store 的读者不需要别的东西的原因。
     expect(store.get()).toEqual(held);
   });
 
@@ -113,7 +111,7 @@ describe('刷新 Token', () => {
     await tokens.refreshToken();
 
     expect(store.getClientId()).toBe('c-id');
-    // An Open-Id the answer does name outranks one merely carried over, and both are said out loud.
+    // 答复点名的 Open-Id 压过一个只是被带过来的，两个都明说。
     expect(store.get().openId).toBe('answered-open-id');
   });
 
@@ -194,7 +192,7 @@ describe('获取 Token', () => {
 
     await tokens.fetchToken(GRANT);
 
-    // The code grant answers as a full credential, so the record a restart would reload is this one.
+    // 授权码兑换答的是一整份凭据，因此一次重启会重新载入的记录就是这一份。
     expect(store.getAccessToken()).toBe('fresh-token');
     expect(store.get().openId).toBe('new-open-id');
   });

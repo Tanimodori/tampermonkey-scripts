@@ -1,81 +1,69 @@
-import { TencentDocsError } from '@/validation/errors';
+import { TencentDocsError } from '@/error';
 import { parseJwtToken } from './jwt';
 
 /**
- * The credential one document is opened with, and the synchronous holder of it.
+ * 一个文档被打开时用的凭据，以及它的同步持有者。
  *
- * This is the whole of what the library knows about who it is calling as: an access token, the client it
- * was issued to, the Open-Id it belongs to, and the refresh token that can replace it. Nothing here is
- * async and nothing here talks to the upstream — the endpoints that change a credential are
- * `token/manager.ts`, and they change it *through* this store, so everything reading one — the document
- * client above all — sees the change without being wired to whoever made it.
+ * 这就是本库对自己以谁的身份调用所知道的全部：一枚访问令牌、它被签发给的 client、它归属的 Open-Id，以及能换掉它的
+ * 刷新令牌。这里没有异步，也不和上游说话——改动凭据的端点是 `token/manager.ts`，而且它们**通过**这份 store 去改，
+ * 因此每一个读它的人（首当其冲是上面的文档 client）都看得到变化，不需要被接到做出改动的那一方上。
  *
- * Where a credential is kept beyond this process is the caller's own business: `set()` is how one is
- * loaded back in after a restart and `get()` is the snapshot to write out. `clientSecret` is deliberately
- * not a field of either: it is the half that never leaves the environment it was configured from, and a
- * record that could carry it would be a record somebody writes it somewhere.
+ * 凭据在这个进程之外放哪儿是调用方自己的事：`set()` 是一次重启后把它载回来的方式，`get()` 是要写出去的那份快照。
+ * `clientSecret` 刻意不是两者任何一个的字段：它是从不离开被配置进来的那个环境的一半，一份能带上它的记录就是一份
+ * 有人会把它写到某处的记录。
  *
- * Two kinds of question are asked of a credential, and they are asked differently. `get()` answers "what
- * is held right now", where a part being absent is itself the answer and nothing throws. The four readers
- * — `getAccessToken()`, `getClientId()`, `getRefreshToken()`, `getAuthHeaders()` — answer "can this call
- * go out at all": a call that cannot be made because a part is missing is a configuration failure, and it
- * is reported as one rather than handed back as `undefined` for the caller to notice on its own. Deciding
- * whether to renew, or what to write out for the next start, asks the first kind; sending, asks the second.
+ * 对一份凭据问两类问题，问法不同。`get()` 答「现在持有什么」，某个部分缺席本身就是答案，什么都不抛。四个读取
+ * ——`getAccessToken()`、`getClientId()`、`getRefreshToken()`、`getAuthHeaders()`——答「这次调用到底出不出得去」：
+ * 因为缺一个部分而发不出的调用是一起配置失败，就要按失败报出来，而不是交回 `undefined` 让调用方自己发现。
+ * 决定要不要续期、下个进程要写出去什么，问第一类；发送，问第二类。
  */
 
 /**
- * What one holds about a credential: enough to make a call, and enough to restore it after a restart.
+ * 关于一份凭据持有什么：够发一次调用，也够一次重启后恢复它。
  *
- * Every field is optional because `get()` answers with whatever is held right now, and a part may simply
- * not have been said yet — an empty store has no token, a refresh answer may state no lifetime, user info
- * may state no Open-Id. A part being absent is information, not an error; the readers above are where it
- * becomes one.
+ * 每个字段都可选，因为 `get()` 答的是此刻持有的东西，而一个部分可能只是还没被说过——空 store 没有令牌，刷新答复可能不
+ * 说时限，userinfo 可能不说 Open-Id。一个部分缺席是信息，不是错误；它变成错误的地方在上面那几个读取里。
  *
- * The three parts a token can speak for (`openId` off `sub`, `expiresAt` off `exp`, `issueAt` off `iat`)
- * are resolved the moment the token is written and then held, so `get()` never re-parses it.
+ * 令牌能替自己说的三个部分（`openId` 来自 `sub`、`expiresAt` 来自 `exp`、`issueAt` 来自 `iat`）在令牌被写进来的那一刻
+ * 就解析好并持有，因此 `get()` 从不重新解析它。
  */
 export interface CredentialRecord {
   readonly accessToken?: string | undefined;
   readonly refreshToken?: string | undefined;
   readonly openId?: string | undefined;
   readonly clientId?: string | undefined;
-  /** Epoch milliseconds at which `accessToken` stops working, when it is known. */
+  /** `accessToken` 失效的时刻，epoch 毫秒，已知的话。 */
   readonly expiresAt?: number | undefined;
-  /** Epoch milliseconds at which `accessToken` was issued, when it is known. */
+  /** `accessToken` 被签发的时刻，epoch 毫秒，已知的话。 */
   readonly issueAt?: number | undefined;
 }
 
 /**
- * The credential, and what a call needs from it.
+ * 凭据，以及一次调用需要问它要的东西。
  *
- * `get()` is a plain projection of what is held; `set(record)` merges a partial over it, where a field the
- * record does not speak of keeps its current value, and resolves the token-derived parts whenever the
- * access token is replaced. The four readers then state which parts a given call cannot go out without:
- * the three-piece header the Open API demands, the access token the OAuth `userinfo` endpoint is asked
- * about, the `client_id` both grants name their application by, and the refresh token that makes a refresh
- * possible at all. There is no `getOpenId()`: outside that header the Open-Id is never sent anywhere, so a
- * caller who only wants to look at it reads `get().openId`.
+ * `get()` 是持有内容的一份朴素投影；`set(record)` 把一份局部合并在它上面——记录没说的字段保持原值——并在访问令牌被
+ * 替换时重算令牌派生的部分。四个读取接着讲明某次调用缺了哪个部分就出不去：Open API 要求的三件套头、OAuth 的
+ * `userinfo` 被问起的那枚访问令牌、两个授权用来点名自己应用的 `client_id`，以及让刷新成为可能的刷新令牌。
+ * 没有 `getOpenId()`：在这个头之外 Open-Id 哪儿都不去，只想看看它的调用方读 `get().openId`。
  */
 export interface CredentialStore {
   get(): CredentialRecord;
   set(record: Partial<CredentialRecord>): void;
-  /** The authentication three-piece every Open API call carries. `config` when any one of them is missing. */
+  /** 每个 Open API 调用都带的三件套。缺任何一个都是 `config`。 */
   getAuthHeaders(): { 'Access-Token': string; 'Client-Id': string; 'Open-Id': string };
-  /** The access token to call with. `config` when the credential holds none. */
+  /** 调用用的访问令牌。凭据一个都没有时是 `config`。 */
   getAccessToken(): string;
-  /** The `client_id` the token was issued to. `config` when nobody ever said one. */
+  /** 令牌被签发给的 `client_id`。从没人说过就是 `config`。 */
   getClientId(): string;
-  /** The refresh token that can replace the access token. `config` when there is none to replace it with. */
+  /** 能换掉访问令牌的刷新令牌。没得换就是 `config`。 */
   getRefreshToken(): string;
 }
 
 /**
- * The store's own state: the parts said outright, held alongside the parts read off the access token.
+ * store 自己的状态：明说的部分，与从访问令牌读出、放在旁边的部分并存。
  *
- * A literal and a derived value never share a field, because they age differently: a configured Open-Id
- * stays through every refresh, while a claim-derived value belongs to the token it was read from and is
- * recomputed the moment that token is replaced. `get()` answers `literal ?? derived`, which is the whole
- * of the read — no parsing.
+ * 字面值与派生值从不共用一个字段，因为它们的寿命不同：配置的 Open-Id 穿过每一次刷新都活着，而声明派生的值属于读出它的
+ * 那枚令牌，令牌一被替换就重算。`get()` 答 `literal ?? derived`，这就是读取的全部——没有解析。
  */
 interface CredentialStoreState {
   readonly accessToken?: string | undefined;
@@ -89,20 +77,18 @@ interface CredentialStoreState {
   readonly tokenIssueAt?: number | undefined;
 }
 
-/** A store holding what it was given. Every part the initial record leaves out stays unknown until said. */
+/** 一个持有被给内容的 store。初始记录漏掉的每个部分都保持未知，直到被说出来。 */
 export function createCredentialStore(initial?: Partial<CredentialRecord>): CredentialStore {
   let state: CredentialStoreState = {};
 
   /**
-   * `record` over `state`, field by field, where a field `record` does not speak is left as it was.
+   * `record` 逐字段盖在 `state` 上，记录没说的字段保持原样。
    *
-   * Absent, empty string and a non-finite number all mean "not said" rather than "clear it", because a
-   * merged record is what gets written back to a caller's store after a refresh that only handed out a new
-   * access token — and dropping the refresh token that made it possible would end the credential.
+   * 缺席、空字符串与一个不是数的数，都表示「没说」而不是「清掉」：合并后的记录正是刷新只发了一枚新访问令牌之后要写回
+   * 调用方存储的东西——把让这次刷新成为可能的刷新令牌丢掉，等于终止这份凭据。
    *
-   * The three token-derived parts are read off the access token once, and only when the token is actually
-   * replaced: a fresh token's expiry and issue time are its own to state (the old one's shed with it),
-   * while a stated Open-Id is kept and only falls back to the new token's `sub` if none was ever said.
+   * 三个令牌派生的部分在访问令牌真的被替换时才读一次：新令牌的到期与签发时间是它自己说的（旧的随它一起脱掉），
+   * 而明说的 Open-Id 保持不变，只有在从没人说过时才落到新令牌的 `sub` 上。
    */
   function set(record: Partial<CredentialRecord>): void {
     const token = text(record.accessToken);
@@ -113,8 +99,7 @@ export function createCredentialStore(initial?: Partial<CredentialRecord>): Cred
       clientId: text(record.clientId) ?? state.clientId,
       openId: text(record.openId) ?? state.openId,
       refreshToken: text(record.refreshToken) ?? state.refreshToken,
-      // A literal lifetime is the token's own to state; carried over onto a replacement it would only
-      // misread the new one, so replacing the token without stating it drops the expiry and issue time.
+      // 字面时限是令牌自己说的；被带到替换后的令牌上只会读错新的那一个，因此替换令牌而不说时限就是丢掉到期与签发时间。
       expiresAt: finite(record.expiresAt) ?? (replacing ? undefined : state.expiresAt),
       issueAt: finite(record.issueAt) ?? (replacing ? undefined : state.issueAt),
       tokenOpenId: replacing ? text(claims?.payload.sub) : state.tokenOpenId,
@@ -158,6 +143,6 @@ const text = (value: string | undefined): string | undefined => (value === undef
 
 const finite = (value: number | undefined): number | undefined => (value === undefined || !Number.isFinite(value) ? undefined : value);
 
-/** A JWT numeric timestamp (seconds, sub-second included) as epoch milliseconds, or `undefined`. */
+/** 一个 JWT 数值时间戳（秒，可含小数）折成 epoch 毫秒，或 `undefined`。 */
 const epochMs = (seconds: number | undefined): number | undefined =>
   seconds !== undefined && Number.isFinite(seconds) ? Math.round(seconds * 1000) : undefined;

@@ -2,14 +2,12 @@ import { existsSync, readFileSync } from 'node:fs';
 import { parseEnv } from 'node:util';
 
 /**
- * The environment a live run reads, in the same shape the library's own configuration takes.
+ * live 运行读取的环境，形状与本库自己的配置一致。
  *
- * `OPS_ENV_PATH` names a file, and an ignored `<file>.local` beside it holds this machine's values: a
- * task commits the template and a developer drops the credential in without it ever reaching the
- * repository. Later sources win, so the local file beats the template and both beat the shell.
+ * `OPS_ENV_PATH` 点名一个文件，旁边一个被 ignore 的 `<file>.local` 放这台机器的值：模板提交进仓库，开发者把凭据放下，
+ * 且它从不进仓库。后面的来源赢，因此 local 文件压过模板，两个都压过 shell。
  *
- * Nothing here reads a real document unless a file (or the shell) named one: the default is the
- * example id, which `liveDocument.ts` refuses to call.
+ * 除非文件（或 shell）确实点名了一个文档，这里不读任何真实文档：默认是示例 id，`liveDocument.ts` 拒绝用它发起调用。
  */
 
 const NAMED = 'OPS_ENV_PATH';
@@ -18,7 +16,7 @@ function read(file: string): Record<string, string> {
   return existsSync(file) ? (parseEnv(readFileSync(file, 'utf8')) as Record<string, string>) : {};
 }
 
-/** The names the file `OPS_ENV_PATH` points at must exist; its `.local` sibling need not. */
+/** `OPS_ENV_PATH` 指向的文件必须存在；它的 `.local` 兄弟不必。 */
 function sources(): string[] {
   const named = process.env[NAMED];
   if (named === undefined || named === '') return [];

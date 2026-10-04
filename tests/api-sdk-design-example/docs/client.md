@@ -1,6 +1,6 @@
 # Client
 
-`Client` 是跨调用信息的唯一持有者，负责执行 `Endpoint` 描述的调用。
+client 是跨调用信息的唯一持有者，负责执行 `Endpoint` 描述的调用。
 
 ```ts
 export interface ApiOptions {
@@ -32,7 +32,7 @@ export interface Api {
 
 ## 边界
 
-`Client` 的职责止于一次往返，包括装配、发出、读取一次与归类失败。
+client 的职责止于一次往返，包括装配、发出、读取一次与归类失败。
 
 - 重试、节流、翻页、日志与拒绝由调用方在 `call` 外面决定。
 - 超时不设，由 `transport` 控制。

@@ -1,135 +1,140 @@
-import { getRecordsAnswer, getSheetAnswer, rawRecord, tokenAnswer, userInfoAnswer, writtenRecordsAnswer } from '@test/testUtils/document';
+import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, TEST_CREDENTIAL } from '@test/testUtils/fixtures';
+import { getRecordsAnswer, getSheetAnswer, tokenAnswer, userInfoAnswer, writtenRecordsAnswer } from '@test/testUtils/mockUpstream';
 import { describe, expect, it } from 'vitest';
-import { defineEndpoint, endpoints } from '@/index';
-import { pathPlaceholders } from '@/path';
-import { sheetParamsSchema } from '@/validation/schemas';
+import { createApi } from '@/client';
+import { accessToken, addRecords, deleteRecords, endpoints, getRecords, getSheetList, refreshToken, updateRecords, userinfo } from '@/endpoints';
+import { createCredentialStore } from '@/token/store';
 
 /**
- * The declarations, checked as data.
+ * 声明，按适配器当纯函数读。
  *
- * An endpoint is a value now, so the whole set can be walked — which is the one class of mistake a
- * template can otherwise carry silently. `pupa` only discovers a placeholder nothing fills when a call is
- * made, and by then the address it would have built is the thing at fault: these cases find it at the desk
- * instead, by asking each `path` what it names and whether the schema beside it can say those things.
+ * 端点是值，两个适配器可以直接喂入参与造好的答复，不必有 transport；因此这里放的是每份声明自己的形状——请求拼成
+ * 什么、答复读哪一段——而完整往返（含失败、掩码、重试边界）在 `endpoints/*.spec.ts` 与 `client.spec.ts`。
  */
 
-/** The keys a declared `params` schema accepts, or nothing where an endpoint takes no coordinates. */
-function accepts(endpoint: unknown): string[] {
-  const shape = (endpoint as { params?: { shape?: Record<string, unknown> } }).params?.shape;
-  return shape === undefined ? [] : Object.keys(shape);
-}
+const client = createApi({
+  apiBase: 'https://docs.qq.com',
+  store: createCredentialStore(TEST_CREDENTIAL),
+  params: { fileId: EXAMPLE_FILE_ID, sheetId: EXAMPLE_SHEET_ID },
+});
 
-/** The top-level keys a declared `body` schema accepts, which is where the keyword lives. */
-function bodyKeys(endpoint: unknown): string[] {
-  const shape = (endpoint as { body?: { shape?: Record<string, unknown> } }).body?.shape;
-  return shape === undefined ? [] : Object.keys(shape);
-}
-
-const everyCall = Object.entries(endpoints);
+/** 一份造好的答复，判定与投影看到的东西与线上一致。 */
+const answered = (body: unknown): { status: number; headers: Record<string, string>; body: unknown } => ({ status: 200, headers: {}, body });
 
 describe('every declaration', () => {
-  it('names a placeholder its params schema can fill', () => {
-    for (const [name, endpoint] of everyCall) {
-      for (const placeholder of pathPlaceholders(endpoint.path)) {
-        expect(accepts(endpoint), `${name} addresses {${placeholder}} with no schema for it`).toContain(placeholder);
-      }
-    }
-  });
-
-  it('is addressed under the upstream’s own paths, and nowhere else', () => {
-    expect([...new Set(everyCall.map(([, endpoint]) => endpoint.path))].sort()).toEqual([
-      '/oauth/v2/token',
-      '/oauth/v2/userinfo',
-      '/openapi/smartbook/v2/files/{fileId}/sheets',
-      '/openapi/smartbook/v2/files/{fileId}/sheets/{sheetId}',
-    ]);
-  });
-
-  it('sends a body only where the upstream reads one, and that body is wrapped in its own keyword', () => {
-    // The two facts are the same fact: a record call's body is `{ <operation>: … }`, so a body that exists
-    // and a keyword that does not match `operation` would be a call the upstream answers as no operation.
-    for (const [name, endpoint] of everyCall) {
-      expect(bodyKeys(endpoint), name).toEqual(endpoint.body === undefined ? [] : [endpoint.operation]);
-    }
+  it('names each call by the operation its reports use', () => {
+    expect(Object.fromEntries(Object.entries(endpoints).map(([name, endpoint]) => [name, endpoint.operation]))).toEqual({
+      getSheetList: 'getSheet',
+      getRecords: 'getRecords',
+      addRecords: 'addRecords',
+      updateRecords: 'updateRecords',
+      deleteRecords: 'deleteRecords',
+      userinfo: 'userinfo',
+      accessToken: 'accessToken',
+      refreshToken: 'refreshToken',
+    });
   });
 });
 
-describe('defineEndpoint', () => {
-  const base = {
-    operation: 'example',
-    path: '/example',
-    response: { schema: sheetParamsSchema },
-  } as const;
+describe('the requests the adapters assemble', () => {
+  it('addresses a record call with the client’s coordinates, the `$` intact', () => {
+    const request = getRecords.requestAdaptor(client, { offset: 0, limit: 100 });
 
-  it('fills the shape every call in this package shares', () => {
-    const endpoint = defineEndpoint(base);
-
-    expect(endpoint.method).toBe('POST');
-    expect(endpoint.auth).toBe('headers');
-    expect(endpoint.response.envelope).toBe(true);
+    expect(request.url).toBe(`https://docs.qq.com/openapi/smartbook/v2/files/${EXAMPLE_FILE_ID}/sheets/${EXAMPLE_SHEET_ID}`);
+    expect(request.init.method).toBe('POST');
+    expect(request.init.body).toBe(JSON.stringify({ getRecords: { offset: 0, limit: 100 } }));
+    expect(request.init.headers).toMatchObject({
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'Access-Token': 'test-access-token-value',
+      'Client-Id': 'test-client-id',
+      'Open-Id': 'test-open-id',
+    });
   });
 
-  it('lets a declaration say where it departs, and only that', () => {
-    const endpoint = defineEndpoint({ ...base, method: 'GET', auth: 'none', response: { schema: sheetParamsSchema, envelope: false } });
+  it('prefers a call’s own coordinates, which is what lets one client read a sibling sheet', () => {
+    const request = getRecords.requestAdaptor(client, { offset: 0, limit: 100, params: { sheetId: 'tYYYYYY' } });
 
-    expect(endpoint.method).toBe('GET');
-    expect(endpoint.auth).toBe('none');
-    expect(endpoint.response.envelope).toBe(false);
+    expect(request.url).toBe(`https://docs.qq.com/openapi/smartbook/v2/files/${EXAMPLE_FILE_ID}/sheets/tYYYYYY`);
   });
 
-  it('carries the schemas through untouched, since checking them is the pipeline’s business', () => {
-    const endpoint = defineEndpoint(base);
-
-    expect(endpoint.response.schema).toBe(sheetParamsSchema);
-    expect(endpoint.params).toBeUndefined();
-    expect(endpoint.query).toBeUndefined();
+  it('wraps each write under its own keyword, spelled as the sheet spells it', () => {
+    expect(addRecords.requestAdaptor(client, { records: [{ values: { ID: 'K-0002' } }] }).init.body).toBe(
+      JSON.stringify({ addRecords: { records: [{ values: { ID: 'K-0002' } }] } }),
+    );
+    expect(updateRecords.requestAdaptor(client, { records: [{ recordID: 'r00001', values: { 名称: '乙' } }] }).init.body).toBe(
+      JSON.stringify({ updateRecords: { records: [{ recordID: 'r00001', values: { 名称: '乙' } }] } }),
+    );
+    expect(deleteRecords.requestAdaptor(client, { recordIDs: ['r00001'] }).init.body).toBe(JSON.stringify({ deleteRecords: { recordIDs: ['r00001'] } }));
   });
 
-  it('adds no unwrap of its own, so an absent one means the whole answer is the result', () => {
-    expect(defineEndpoint(base).response.unwrap).toBeUndefined();
+  it('sends the sub-sheet list as a GET with no body', () => {
+    const request = getSheetList.requestAdaptor(client, undefined);
+
+    expect(request.url).toBe(`https://docs.qq.com/openapi/smartbook/v2/files/${EXAMPLE_FILE_ID}/sheets`);
+    expect(request.init.method).toBe('GET');
+    expect(request.init.body).toBeUndefined();
+  });
+
+  it('puts the access token in the query string for userinfo, and nowhere in the headers', () => {
+    const request = userinfo.requestAdaptor(client, undefined);
+
+    expect(request.url).toBe('https://docs.qq.com/oauth/v2/userinfo?access_token=test-access-token-value');
+    expect(request.init.headers).toBeUndefined();
+  });
+
+  it('tells the two grants apart by the literal their own adapter carries', () => {
+    const exchanged = new URL(
+      accessToken.requestAdaptor(client, { clientId: 'c', clientSecret: 's', code: 'the-code', redirectUri: 'https://app.example/cb' }).url,
+    );
+    const refreshed = new URL(refreshToken.requestAdaptor(client, { clientId: 'c', clientSecret: 's', refreshToken: 'r' }).url);
+
+    expect(Object.fromEntries(exchanged.searchParams)).toEqual({
+      client_id: 'c',
+      client_secret: 's',
+      grant_type: 'authorization_code',
+      code: 'the-code',
+      redirect_uri: 'https://app.example/cb',
+    });
+    expect(Object.fromEntries(refreshed.searchParams)).toEqual({ client_id: 'c', client_secret: 's', grant_type: 'refresh_token', refresh_token: 'r' });
   });
 });
 
-describe('what each endpoint hands back', () => {
-  // Each of these is the answer one measured endpoint gives, and the one part of it the caller is given.
-  // The point is that the projection is stated where the contract is: an endpoint that reads
-  // `data.getRecords` cannot quietly start answering `data.addRecords`.
+describe('what each response adapter reads', () => {
+  // 每条都是某个端点量到的答复，以及调用方被交回的那一段。投影与契约在同一处：读 `data.getRecords` 的端点不会悄悄改成 `data.addRecords`。
 
   it('reads a page out of the section the keyword filed it under', () => {
-    const answer = getRecordsAnswer({ records: [rawRecord({ recordId: 'r00001' })], total: 1, hasMore: false, next: 1 });
+    const answer = getRecordsAnswer({ records: [{ recordID: 'r00001' }], total: 1, hasMore: false, next: 1 });
 
-    expect(endpoints.getRecords.response.unwrap?.(answer)).toMatchObject({ total: 1, next: 1 });
+    expect(getRecords.responseAdaptor(client, answered(answer))).toMatchObject({ total: 1, next: 1 });
   });
 
   it('reads the sub-sheets out of theirs', () => {
     const answer = getSheetAnswer([{ sheetID: 'tXXXXXX', title: '智能表1' }]);
 
-    expect(endpoints.getSheetList.response.unwrap?.(answer)).toEqual([{ sheetID: 'tXXXXXX', title: '智能表1' }]);
+    expect(getSheetList.responseAdaptor(client, answered(answer))).toEqual([{ sheetID: 'tXXXXXX', title: '智能表1' }]);
   });
 
   it('reads the rows a write touched out of theirs', () => {
     const answer = writtenRecordsAnswer('addRecords', [{ recordID: 'rNew1', values: { ID: 'K-0002' } }]);
 
-    // `autoRawRecords` and friends ride along: the write answer carries columns nothing here reads, and the
-    // schema is loose precisely so that they stay visible to whoever is looking at the answer.
-    expect(endpoints.addRecords.response.unwrap?.(answer)).toMatchObject({ records: [{ recordID: 'rNew1', values: { ID: 'K-0002' } }] });
+    // `autoRawRecords` 之类的列随行一起过：写入答复带着没人读的列，schema 宽松正是为了让它们在要看的人眼里留着。
+    expect(addRecords.responseAdaptor(client, answered(answer))).toMatchObject({ records: [{ recordID: 'rNew1', values: { ID: 'K-0002' } }] });
   });
 
   it('reads nothing at all from a deletion, which is what a deletion answers with', () => {
-    expect(endpoints.deleteRecords.response.unwrap?.({ ret: 0, msg: 'Succeed' })).toBeUndefined();
+    expect(deleteRecords.responseAdaptor(client, answered({ ret: 0, msg: 'Succeed' }))).toBeUndefined();
   });
 
   it('reads the identity out of `data` itself, where userinfo files it directly', () => {
     const answer = userInfoAnswer({ openID: 'test-open-id', nick: 'tester' });
 
-    expect(endpoints.userinfo.response.unwrap?.(answer)).toMatchObject({ openID: 'test-open-id' });
+    expect(userinfo.responseAdaptor(client, answered(answer))).toMatchObject({ openID: 'test-open-id' });
   });
 
   it('hands a token answer over whole, because it has no envelope to read a section out of', () => {
     const answer = tokenAnswer({ accessToken: 'fresh', expiresIn: 2_592_000, userId: 'u' });
 
-    expect(endpoints.accessToken.response.unwrap).toBeUndefined();
-    expect(endpoints.refreshToken.response.envelope).toBe(false);
-    expect(endpoints.refreshToken.response.schema.parse(answer)).toMatchObject({ access_token: 'fresh' });
+    expect(refreshToken.responseAdaptor(client, answered(answer))).toMatchObject({ access_token: 'fresh', expires_in: 2_592_000 });
   });
 });

@@ -1,12 +1,11 @@
 import type {
   Api,
-  AnyEndpoint,
   CallArgs,
   CommonRecord,
   CommonRecords,
   CredentialRecord,
   CredentialStore,
-  OutputOf,
+  Endpoint,
   Sheet,
   TencentDocsError,
   TencentDocsErrorCode,
@@ -27,8 +26,9 @@ import type {
  *
  * The endpoints themselves are the real ones: the install spreads the actual module and replaces only the
  * factories, so a call arrives here with the same `operation` the library would have sent, and this file
- * dispatches on it. That is also why the fake unwraps the keyword a `body` carries — `{ getRecords: … }` is
- * the wire's arrangement, and what a case wants to see is the page that was asked for.
+ * dispatches on it. That is also why the fake records the caller-shaped input a call hands over — the
+ * keyword-wrapped `{ getRecords: … }` body is the library's arrangement, and what a case wants to see is
+ * the page that was asked for.
  *
  * `vi.mock` is hoisted into the file that calls it, so every spec installs this itself — and the
  * install reaches this file with a dynamic import, because `vi.mock` runs above its own imports:
@@ -276,12 +276,12 @@ export function fakeTencentDocsSdk(TencentError: TencentDocsErrorClass): {
   const call = failures(TencentError);
   return {
     createCredentialStore: (initial) => fakeCredentialStore(initial, TencentError),
-    createApi: () => fakeApi(call),
+    createApi: () => fakeApi(call, TencentError),
     createTokenManager: (options) => fakeTokenManager(options, call),
   };
 }
 
-/** `vi.mock('tencent-doc-sdk', …)`, spelled once: the real module with its two factories swapped out. */
+/** `vi.mock('tencent-doc-sdk', …)`, spelled once: the real module with its three factories swapped out. */
 export function fakeTencentDocsModule(actual: { TencentDocsError: TencentDocsErrorClass }): Record<string, unknown> {
   return { ...actual, ...fakeTencentDocsSdk(actual.TencentDocsError) };
 }
@@ -317,10 +317,10 @@ export function credentialExpires(value: number | undefined): void {
  *
  * The `operation` is the real one — `endpoints` is the actual module, untouched by the install — so the
  * labels a case counts calls by (`getSheet`, `getRecords`, …) are the same words the library puts in an
- * error. What the fake drops is the wire: a `body` arrives wrapped in its keyword, and the payload inside
- * that wrapper is what a case wants to see, so that is what gets recorded.
+ * error. What the fake drops is the wire: the library's adapters assemble the keyword-wrapped request
+ * from the caller-shaped input, and that input is what a case wants to see, so that is what gets recorded.
  */
-function fakeApi(call: FakeFailures): Api {
+function fakeApi(call: FakeFailures, TencentError: TencentDocsErrorClass): Api {
   function dispatch(operation: string, payload: unknown): unknown {
     switch (operation) {
       case 'getSheet':
@@ -370,12 +370,16 @@ function fakeApi(call: FakeFailures): Api {
   }
 
   return {
+    // The three fields an adapter would reach for are here because `Api` declares them; the service only
+    // ever reaches this fake through `call`.
+    apiBase: 'https://fake.invalid',
+    store: fakeCredentialStore(undefined, TencentError),
+    params: undefined,
     // The generic form is the one `Api` declares, and the fake answers each operation with its own type, so
     // the pairing is what this function cannot show: the cast is the fake saying "the answer below matches
     // the endpoint above", which is exactly what a case relies on when it reads `records` off a read.
-    call: <E extends AnyEndpoint>(endpoint: E, ...input: CallArgs<E>): Promise<OutputOf<E>> => {
-      const body = (input[0] as { body?: Record<string, unknown> } | undefined)?.body;
-      return dispatch(endpoint.operation, body === undefined ? undefined : Object.values(body)[0]) as Promise<OutputOf<E>>;
+    call: <In, Out>(endpoint: Endpoint<In, Out>, ...input: CallArgs<In>): Promise<Out> => {
+      return dispatch(endpoint.operation, input[0]) as Promise<Out>;
     },
   };
 }

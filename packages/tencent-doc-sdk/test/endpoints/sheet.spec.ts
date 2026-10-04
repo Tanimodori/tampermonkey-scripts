@@ -1,20 +1,20 @@
-import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, apiOrigin, sheet, sheetWithDocumentedSpelling, testUpstream } from '@test/testUtils/document';
-import type { Sheet } from '@test/testUtils/document';
+import { testUpstream } from '@test/testUtils/document';
+import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID } from '@test/testUtils/fixtures';
+import { apiOrigin, sheet, sheetWithDocumentedSpelling } from '@test/testUtils/mockUpstream';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { endpoints } from '@/endpoints';
+import type { Sheet } from '@/endpoints/schema';
 
 /**
- * The sub-sheet list, against the mocked upstream: what the call puts on the wire, what comes back, and
- * what the failures look like. The same call against the real document is `../live/sheet.spec.ts`.
+ * 子表列表对着 mocked 上游：这次调用往线上放什么、回来什么、失败长什么样。同样的调用打真实文档是 `./live/sheet.spec.ts`。
  *
- * Paging and rows are `./record.spec.ts`; how an id is turned into a path is `../address.spec.ts`; and
- * what a caller decides to do with this answer at startup is its own business.
+ * 翻页与行是 `./record.spec.ts`；id 怎么变成路径是 `../path.spec.ts`；调用方在启动时拿这份答复做什么决定是它自己的事。
  */
 
 const upstream = testUpstream();
 const { api, mock, state } = upstream;
 
-/** Keeps the calls a case asserts on to the ones that case made. */
+/** 让用例断言的调用只剩它自己发出的那些。 */
 function freshCalls(): void {
   state.calls.length = 0;
 }
@@ -77,8 +77,7 @@ describe('the answer', () => {
   });
 
   it('reads the same whichever spelling of the visibility field the answer uses', async () => {
-    // The documentation's example spells it `isVibile`; the document itself sends `isVisible`. Neither
-    // is read — sub-sheets are addressed by id — so both have to keep parsing.
+    // 文档的示例把它拼成 `isVibile`；文档自己发 `isVisible`。两个都不读——子表按 id 寻址——因此两个都得继续能 parse。
     state.sheets = [sheetWithDocumentedSpelling];
 
     await expect(api.call(endpoints.getSheetList)).resolves.toMatchObject([{ sheetID: EXAMPLE_SHEET_ID }]);

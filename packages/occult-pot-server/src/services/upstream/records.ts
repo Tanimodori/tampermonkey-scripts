@@ -15,21 +15,21 @@ import type { CommonRecords, WrittenRecords } from '@/validation/index.ts';
  *
  * All four record calls are one address and one verb: only the body keyword differs (`getRecords`,
  * `addRecords`, `updateRecords`, `deleteRecords`), and each names its own response type, which is also the
- * key its answer is filed under (`data.getRecords` …). The keyword is written out here rather than added
- * for this module by the library: what a call hands over is what goes on the wire, which is also what the
- * library checks before it sends, so nothing this service assembled can differ from what left.
+ * key its answer is filed under (`data.getRecords` …). The keyword wrapper is the library's adapter's
+ * business: this module hands over the caller-shaped input, and the library assembles the wire request
+ * from it — and checks that input — before a byte goes out.
  *
  * See https://docs.qq.com/open/document/app/openapi/v2/smartsheet/record/params.html
  */
 
 /** One page of raw rows, in the envelope's own terms (`records`, `hasMore`, `next`, `total`). */
 export function getRecords(page: { offset: number; limit: number }): Promise<CommonRecords> {
-  return answered(upstreamCall('getRecords', () => upstreamStore.api.call(endpoints.getRecords, { body: { getRecords: page } })));
+  return answered(upstreamCall('getRecords', () => upstreamStore.api.call(endpoints.getRecords, page)));
 }
 
 /** Appends rows, in the order given, and hands back the response's own `records` section. */
 export function addRecords(records: readonly { values: Record<string, unknown> }[]): Promise<WrittenRecords> {
-  return answered(upstreamCall('addRecords', () => upstreamStore.api.call(endpoints.addRecords, { body: { addRecords: { records: [...records] } } })));
+  return answered(upstreamCall('addRecords', () => upstreamStore.api.call(endpoints.addRecords, { records: [...records] })));
 }
 
 /**
@@ -40,7 +40,7 @@ export function addRecords(records: readonly { values: Record<string, unknown> }
  * neither reports the row's times.
  */
 export function updateRecords(records: readonly { recordID: string; values: Record<string, unknown> }[]): Promise<WrittenRecords> {
-  return answered(upstreamCall('updateRecords', () => upstreamStore.api.call(endpoints.updateRecords, { body: { updateRecords: { records: [...records] } } })));
+  return answered(upstreamCall('updateRecords', () => upstreamStore.api.call(endpoints.updateRecords, { records: [...records] })));
 }
 
 /**
@@ -52,9 +52,7 @@ export function updateRecords(records: readonly { recordID: string; values: Reco
  * beyond whether the call succeeded.
  */
 export function deleteRecords(recordIDs: readonly string[]): Promise<void> {
-  return answered(
-    upstreamCall('deleteRecords', () => upstreamStore.api.call(endpoints.deleteRecords, { body: { deleteRecords: { recordIDs: [...recordIDs] } } })),
-  );
+  return answered(upstreamCall('deleteRecords', () => upstreamStore.api.call(endpoints.deleteRecords, { recordIDs: [...recordIDs] })));
 }
 
 /** A failure the library judged, in the vocabulary this service answers with. */

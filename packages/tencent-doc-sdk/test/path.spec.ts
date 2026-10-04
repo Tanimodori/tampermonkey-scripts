@@ -1,16 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { buildPath, encodePathSegment, pathPlaceholders } from '@/path';
+import { fileIdParamsSchema, sheetParamsSchema } from '@/endpoints/schema';
+import { TencentDocsError } from '@/error';
+import { buildPath, encodePathSegment, resolveCoordinates } from '@/path';
 
 /**
- * The one place a Tencent Docs path is interpolated.
+ * 本库唯一做路径插值的地方，以及一次调用实际寻址的坐标。
  *
- * A document is addressed by an id that is not a path segment the way `encodeURIComponent` would leave it:
- * real ids carry a `$` (`300000000$ExAmPlEfIlEiD`), and escaping one produces a path the upstream answers
- * with a document that does not exist. And a coordinate is a value that arrives from a caller's
- * configuration, so it cannot be trusted to stay inside the segment it is dropped into. Those two facts
- * pull in opposite directions, which is why the escaping is per-value, at the moment of substitution, and
- * not a pass over the finished path: a finished pass would take the `$` with it, and no pass at all would
- * let one id speak as much path as it liked.
+ * 一个文档由一个并非「encodeURIComponent 留下的那种路径段」的 id 寻址：真实 id 带 `$`（`300000000$ExAmPlEfIlEiD`），转义它
+ * 会得到一个上游答「文档不存在」的路径。而坐标是来自调用方配置的值，不能指望它老实待在被放进的那一段里。这两件事朝相反方向
+ * 拉，所以转义是按值、在替换的那一刻做的，不是对拼好的路径做一遍：对成品做会连 `$` 一起带走，一遍不做会让一个 id 想说什么路径
+ * 就说什么路径。
  */
 
 describe('one path segment', () => {
@@ -51,16 +50,15 @@ describe('interpolating a template', () => {
   });
 
   it('keeps a value carrying separators inside the segment it was substituted into', () => {
-    // The finding this function exists to make impossible: one id that says `/`, `#` or `?` must not be
-    // able to open a segment, drop the query, or escape the origin. Encoded per value, it cannot.
+    // 这个函数存在的意义，就是让这不可能发生：一个带着 `/`、`#` 或 `?` 的 id 不能开一段新路径、丢掉查询串、逃出 origin。
+    // 按值编码之后，它做不到。
     expect(buildPath('/files/{fileId}/sheets', { fileId: '../../admin' })).toBe('/files/..%2F..%2Fadmin/sheets');
     expect(buildPath('/files/{fileId}/sheets', { fileId: 'a?b=c' })).toBe('/files/a%3Fb%3Dc/sheets');
     expect(buildPath('/files/{fileId}/sheets', { fileId: 'a#b' })).toBe('/files/a%23b/sheets');
   });
 
   it('carries a value that says it is a template, as text', () => {
-    // A `{` in an id is not a second round of interpolation: values are encoded, and the template itself is
-    // the only thing parsed.
+    // id 里的一个 `{` 不是第二轮插值：值会被编码，模板本身才是唯一被解析的东西。
     expect(buildPath('/files/{fileId}', { fileId: '{sheetId}' })).toBe('/files/%7BsheetId%7D');
   });
 
@@ -69,16 +67,53 @@ describe('interpolating a template', () => {
   });
 
   it('names a placeholder the params do not carry, which is how a template and a schema disagree', () => {
-    // `pupa` throws rather than substituting an empty segment. `client.ts` catches it as a `config` failure,
-    // so a typo in a `path` is an error naming the placeholder instead of a request to a wrong address.
+    // `pupa` 抛错而不是替一个空段：client 把它接成 `config` 失败，因此 `path` 里的一个笔误是一个点名占位符的错误，
+    // 不是一次发往错误地址的请求。
     expect(() => buildPath('/files/{fileId}/sheets/{sheetId}', { fileId: 'f' })).toThrow(/sheetId/);
   });
 });
 
-describe('the placeholders of a template', () => {
-  it('lists each one once, for the check that a params schema can fill them all', () => {
-    expect(pathPlaceholders('/openapi/smartbook/v2/files/{fileId}/sheets/{sheetId}')).toEqual(['fileId', 'sheetId']);
-    expect(pathPlaceholders('/oauth/v2/token')).toEqual([]);
-    expect(pathPlaceholders('/a/{x}/b/{x}')).toEqual(['x']);
+describe('resolving the coordinates a call addresses by', () => {
+  const configured = { fileId: '300000000$ExAmPlEfIlEiD', sheetId: 'tXXXXXX' };
+
+  it('takes the configured pair when the call brings none', () => {
+    expect(resolveCoordinates('getRecords', sheetParamsSchema, configured, undefined)).toEqual(configured);
+  });
+
+  it('lets a call override one half of it, which is what lets one client read a sibling sheet', () => {
+    expect(resolveCoordinates('getRecords', sheetParamsSchema, configured, { sheetId: 'tYYYYYY' })).toEqual({
+      fileId: '300000000$ExAmPlEfIlEiD',
+      sheetId: 'tYYYYYY',
+    });
+  });
+
+  it('takes a call that carries both coordinates itself', () => {
+    expect(resolveCoordinates('getRecords', sheetParamsSchema, undefined, { fileId: 'f', sheetId: 's' })).toEqual({ fileId: 'f', sheetId: 's' });
+  });
+
+  it('drops what the endpoint’s own template cannot name', () => {
+    // client 拿着两个坐标，每个文档调用都被递了那一对；子表列表只声明 `fileId`，只读它，多出来的那一个因此无害，
+    // 而不是对一件调用方配置正确的东失败。
+    expect(resolveCoordinates('getSheet', fileIdParamsSchema, configured, undefined)).toEqual({ fileId: '300000000$ExAmPlEfIlEiD' });
+  });
+
+  it('refuses a pair that is missing a coordinate, as a `config` failure naming the field', () => {
+    const caught = (() => {
+      try {
+        resolveCoordinates('getRecords', sheetParamsSchema, undefined, { fileId: 'f' });
+        return undefined;
+      } catch (cause) {
+        return cause as TencentDocsError;
+      }
+    })();
+
+    expect(caught).toBeInstanceOf(TencentDocsError);
+    expect(caught?.code).toBe('config');
+    expect(caught?.message).toContain('getRecords');
+    expect(caught?.message).toContain('sheetId');
+  });
+
+  it('refuses a coordinate that is not an id', () => {
+    expect(() => resolveCoordinates('getRecords', sheetParamsSchema, configured, { fileId: '' })).toThrow(TencentDocsError);
   });
 });

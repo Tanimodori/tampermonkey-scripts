@@ -2,22 +2,18 @@ import type { WebFetcher, WebFetcherRequestInit } from 'universal-fetch-type';
 import { describe, expect, it } from 'vitest';
 import { createApi } from '@/client';
 import { endpoints } from '@/endpoints';
+import type { TencentDocsError } from '@/error';
 import { createCredentialStore } from '@/token/store';
 import type { CredentialStore } from '@/token/store';
-import type { TencentDocsError } from '@/validation/errors';
 
 /**
- * The pipeline: what one `api.call` assembles, in what order it fails, and what it hands back.
+ * 调用链：一次 `api.call` 装配出什么、按什么顺序失败、交回什么。
  *
- * The endpoint declarations say what a call is; `test/endpoints/*.spec.ts` drives them against a fake
- * document. What lives here is the seam between them — the parts a declaration cannot express because they
- * are the same for every call: how an address comes out of a template and a base, where the credential goes
- * and where it must never be repeated, which of several things that could be wrong gets reported when more
- * than one is, and the three shapes an answer can have that make it unusable.
+ * 声明说什么是一次调用，是 `endpoint.spec.ts` 的；对假文档驱动它们的是 `endpoints/*.spec.ts`。住在这里的是两者之间
+ * 那条缝——声明表达不了、因为每次调用都一样的东西：地址怎么从模板与 base 出来、凭据放在哪、永远不重复放在哪、几件事
+ * 可能同时出错时报哪一件，以及答复不可用的三种形状。
  *
- * A transport that only records is enough for all of it. Nothing here reads the upstream's vocabulary
- * through a mock; the bodies below are written out as the answers they stand for, because the point of most
- * of these cases is the request that preceded them.
+ * 一条只会记录的 transport 就够所有这些了：下面的 body 是按它们所代表的答复写出来的，多数用例的重点在于它之前的那次请求。
  */
 
 const API_BASE = 'https://docs.qq.com';
@@ -26,7 +22,7 @@ const CREDENTIAL = { accessToken: 'a-token-value', clientId: 'c-id', openId: 'o-
 
 const store = createCredentialStore(CREDENTIAL);
 
-/** The client under test, with a transport that records every call it was asked to make. */
+/** 被测的 client，带着一条记录下每次调用的 transport。 */
 function wired(options: { apiBase?: string; store?: CredentialStore; reply?: { status?: number; body: unknown; headers?: Record<string, string> } } = {}) {
   const seen: Array<{ url: string; init: WebFetcherRequestInit }> = [];
   const transport: WebFetcher = async (url, init) => {
@@ -42,7 +38,7 @@ function wired(options: { apiBase?: string; store?: CredentialStore; reply?: { s
   return { api: createApi({ apiBase: options.apiBase ?? API_BASE, store: options.store ?? store, params: COORDINATES, transport }), seen };
 }
 
-/** The first call the client was asked to make, said plainly. */
+/** 第一次被要求发出的调用，平铺地说出来。 */
 function sent(seen: Array<{ url: string; init: WebFetcherRequestInit }>): {
   url: URL;
   method: string;
@@ -63,27 +59,28 @@ async function failure(causing: Promise<unknown>): Promise<TencentDocsError> {
   return (await causing.catch((caught: unknown) => caught)) as TencentDocsError;
 }
 
-const RECORDS_BODY = { getRecords: { offset: 0, limit: 100 } };
+/** 一页请求，调用方形状；线上形状是 `{ getRecords: … }`。 */
+const PAGE = { offset: 0, limit: 100 };
 const ENVELOPE = { ret: 0, msg: 'Succeed', data: { getRecords: { records: [{ recordID: 'r00001' }], total: 1 } } };
 
 describe('the address a call goes to', () => {
   it('interpolates the coordinates the client was configured with, the `$` intact', async () => {
     const { api, seen } = wired({ reply: { body: ENVELOPE } });
-    await api.call(endpoints.getRecords, { body: RECORDS_BODY });
+    await api.call(endpoints.getRecords, PAGE);
 
     expect(sent(seen).url.pathname).toBe('/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets/tXXXXXX');
   });
 
   it('prefers a call’s own coordinates, which is what lets one client read a sibling sheet', async () => {
     const { api, seen } = wired({ reply: { body: ENVELOPE } });
-    await api.call(endpoints.getRecords, { params: { fileId: 'other', sheetId: 'tYYYYYY' }, body: RECORDS_BODY });
+    await api.call(endpoints.getRecords, { ...PAGE, params: { fileId: 'other', sheetId: 'tYYYYYY' } });
 
     expect(sent(seen).url.pathname).toBe('/openapi/smartbook/v2/files/other/sheets/tYYYYYY');
   });
 
   it('takes the origin from the configured base, not from the production host', async () => {
     const { api, seen } = wired({ apiBase: 'http://127.0.0.1:3100', reply: { body: ENVELOPE } });
-    await api.call(endpoints.getRecords, { body: RECORDS_BODY });
+    await api.call(endpoints.getRecords, PAGE);
 
     expect(sent(seen).url.origin).toBe('http://127.0.0.1:3100');
   });
@@ -101,7 +98,7 @@ describe('the address a call goes to', () => {
 
   it('refuses a base that is not a URL, before anything is sent', async () => {
     const { api, seen } = wired({ apiBase: 'docs-not-a-url', reply: { body: ENVELOPE } });
-    const thrown = await failure(api.call(endpoints.getRecords, { body: RECORDS_BODY }));
+    const thrown = await failure(api.call(endpoints.getRecords, PAGE));
 
     expect(thrown.code).toBe('config');
     expect(thrown.message).toContain('getRecords');
@@ -110,12 +107,12 @@ describe('the address a call goes to', () => {
 });
 
 describe('the verb, the body and the headers', () => {
-  it('sends a record call as a POST of the body it was given, verbatim', async () => {
+  it('sends a record call as a POST of the body the adapter assembled, verbatim', async () => {
     const { api, seen } = wired({ reply: { body: ENVELOPE } });
-    await api.call(endpoints.getRecords, { body: RECORDS_BODY });
+    await api.call(endpoints.getRecords, PAGE);
 
     expect(sent(seen).method).toBe('POST');
-    expect(sent(seen).body).toBe(JSON.stringify(RECORDS_BODY));
+    expect(sent(seen).body).toBe(JSON.stringify({ getRecords: PAGE }));
   });
 
   it('sends a read of the sheet list as a GET with no body at all', async () => {
@@ -128,9 +125,9 @@ describe('the verb, the body and the headers', () => {
 
   it('carries the three-piece header and the media types on every Open API call', async () => {
     const { api, seen } = wired({ reply: { body: ENVELOPE } });
-    await api.call(endpoints.getRecords, { body: RECORDS_BODY });
+    await api.call(endpoints.getRecords, PAGE);
 
-    // Read as sent, not as the mock reports them: these are the spellings the upstream's own examples use.
+    // 按发出去的样子读，不是按 mock 报告的样子：这些是上游自己的示例用的拼写。
     expect(sent(seen).headers).toMatchObject({
       'Access-Token': 'a-token-value',
       'Client-Id': 'c-id',
@@ -142,18 +139,17 @@ describe('the verb, the body and the headers', () => {
 
   it('reports which piece a credential is missing, as the store words it', async () => {
     const { api, seen } = wired({ store: createCredentialStore({ accessToken: 'a-token-value', clientId: 'c-id' }), reply: { body: ENVELOPE } });
-    const thrown = await failure(api.call(endpoints.getRecords, { body: RECORDS_BODY }));
+    const thrown = await failure(api.call(endpoints.getRecords, PAGE));
 
     expect(thrown.code).toBe('config');
     expect(thrown.message).toContain('Open-Id');
-    // The credential is read after the address is settled, so a call that was never going to leave says
-    // nothing about what it would have carried.
+    // 凭据在读地址之后才读，因此一个根本不会出去的调用不说它本来会带上什么。
     expect(seen).toHaveLength(0);
   });
 
   it('sends no header of its own to the OAuth endpoints, which carry their credential in the query', async () => {
     const { api, seen } = wired({ reply: { body: { access_token: 'fresh' } } });
-    await api.call(endpoints.refreshToken, { query: { client_id: 'c-id', client_secret: 'secret', grant_type: 'refresh_token', refresh_token: 'r-token' } });
+    await api.call(endpoints.refreshToken, { clientId: 'c-id', clientSecret: 'secret', refreshToken: 'r-token' });
 
     expect(sent(seen).headers).toEqual({});
     expect(sent(seen).body).toBeUndefined();
@@ -173,16 +169,14 @@ describe('the query string', () => {
 
   it('carries the parameters a grant named, in the order it named them', async () => {
     const { api, seen } = wired({ reply: { body: { access_token: 'fresh' } } });
-    await api.call(endpoints.accessToken, {
-      query: { client_id: 'cid', client_secret: 'secret', grant_type: 'authorization_code', code: 'c', redirect_uri: 'https://app.example/cb' },
-    });
+    await api.call(endpoints.accessToken, { clientId: 'cid', clientSecret: 'secret', code: 'c', redirectUri: 'https://app.example/cb' });
 
     expect([...sent(seen).url.searchParams.keys()]).toEqual(['client_id', 'client_secret', 'grant_type', 'code', 'redirect_uri']);
   });
 
   it('encodes a value that is not URL-safe, which is what a real secret often is', async () => {
     const { api, seen } = wired({ reply: { body: { access_token: 'fresh' } } });
-    await api.call(endpoints.refreshToken, { query: { client_id: 'cid', client_secret: 'a+b/c=', grant_type: 'refresh_token', refresh_token: 'r' } });
+    await api.call(endpoints.refreshToken, { clientId: 'cid', clientSecret: 'a+b/c=', refreshToken: 'r' });
 
     expect(sent(seen).url.search.slice(1)).toContain('client_secret=a%2Bb%2Fc%3D');
   });
@@ -192,23 +186,22 @@ describe('what a call answers with', () => {
   it('hands back the section the endpoint named, and nothing of the envelope around it', async () => {
     const { api } = wired({ reply: { body: ENVELOPE } });
 
-    await expect(api.call(endpoints.getRecords, { body: RECORDS_BODY })).resolves.toMatchObject({ total: 1, records: [{ recordID: 'r00001' }] });
+    await expect(api.call(endpoints.getRecords, PAGE)).resolves.toMatchObject({ total: 1, records: [{ recordID: 'r00001' }] });
   });
 
   it('answers nothing at all for a deletion, which is the header alone', async () => {
     const { api } = wired({ reply: { body: { ret: 0, msg: 'Succeed' } } });
 
-    await expect(api.call(endpoints.deleteRecords, { body: { deleteRecords: { recordIDs: ['rMW8vK'] } } })).resolves.toBeUndefined();
+    await expect(api.call(endpoints.deleteRecords, { recordIDs: ['rMW8vK'] })).resolves.toBeUndefined();
   });
 
   it('says which shape it wanted when the answer has no section to read', async () => {
     const { api } = wired({ reply: { body: { ret: 0, msg: 'Succeed' } } });
-    const thrown = await failure(api.call(endpoints.getRecords, { body: RECORDS_BODY }));
+    const thrown = await failure(api.call(endpoints.getRecords, PAGE));
 
     expect(thrown.code).toBe('invalid_answer');
     expect(thrown.message).toContain('getRecords');
-    // `status` is left off on purpose: this answer passed the verdict table, so the upstream was right and
-    // it is the reading of it that failed. The answer itself is still kept for whoever looks again.
+    // `status` 是故意不带的：这份答复过了判定，上游没有不对，是读它的方式不对。答复本身仍然留着给要看第二眼的人。
     expect(thrown.status).toBeUndefined();
     expect(thrown.response).toMatchObject({ status: 200 });
   });
@@ -216,18 +209,13 @@ describe('what a call answers with', () => {
   it('lets a refused grant survive as an answer, because it has no envelope to judge it by', async () => {
     const { api } = wired({ reply: { status: 400, body: { error: 'invalid_grant', error_description: 'refresh token expired' } } });
 
-    // The table in `validation/classify.ts` declines to read a business code out of a body that never
-    // carried one, so this resolves: deciding what a refused refresh means is `token/manager.ts`'s.
-    await expect(
-      api.call(endpoints.refreshToken, { query: { client_id: 'c', client_secret: 's', grant_type: 'refresh_token', refresh_token: 'r' } }),
-    ).resolves.toMatchObject({});
+    // 判定对一个从来没带过业务码的 body 不下判，所以这里 resolve：被拒的刷新意味着什么，是 `token/manager.ts` 的事。
+    await expect(api.call(endpoints.refreshToken, { clientId: 'c', clientSecret: 's', refreshToken: 'r' })).resolves.toMatchObject({});
   });
 
   it('still judges what the transport itself says, envelope or no envelope', async () => {
     const { api } = wired({ reply: { status: 429, body: { ret: 400007, msg: '请求数超过限制' }, headers: { 'retry-after': '7' } } });
-    const thrown = await failure(
-      api.call(endpoints.refreshToken, { query: { client_id: 'c', client_secret: 's', grant_type: 'refresh_token', refresh_token: 'r' } }),
-    );
+    const thrown = await failure(api.call(endpoints.refreshToken, { clientId: 'c', clientSecret: 's', refreshToken: 'r' }));
 
     expect(thrown.code).toBe('rate_limited');
     expect(thrown.retryAfterSeconds).toBe(7);
@@ -237,19 +225,18 @@ describe('what a call answers with', () => {
 describe('a call that never became a request', () => {
   it('refuses an input its endpoint cannot send, without reaching the transport', async () => {
     const { api, seen } = wired({ reply: { body: ENVELOPE } });
-    const thrown = await failure(api.call(endpoints.getRecords, { body: { getRecords: { offset: -1, limit: 10 } } }));
+    const thrown = await failure(api.call(endpoints.getRecords, { offset: -1, limit: 10 }));
 
     expect(thrown.code).toBe('config');
-    expect(thrown.message).toContain('getRecords.offset');
+    expect(thrown.message).toContain('offset');
     expect(seen).toHaveLength(0);
   });
 
-  it('refuses a body shaped for a different endpoint than the one named', async () => {
+  it('refuses an input shaped for a different endpoint than the one named', async () => {
     const { api, seen } = wired({ reply: { body: ENVELOPE } });
-    // TypeScript rejects this call outright — `{ addRecords: … }` is not a shape `getRecords` will accept —
-    // so the cast is the finding: it stands for every caller outside the type system, a plain JS import or an
-    // `as`, and the schema is what catches what they send.
-    const wrongEndpointBody = { body: { addRecords: { records: [{ values: {} }] } } };
+    // TypeScript 会把这种调用拒在编译期——`{ addRecords: … }` 不是 `getRecords` 收的形状——所以这个断言就是发现本身：
+    // 它代表类型系统够不着的调用方，一个裸 JS import 或一次 `as`，schema 是接住他们的那一层。
+    const wrongEndpointBody = { addRecords: { records: [{ values: {} }] } };
     const thrown = await failure(api.call(endpoints.getRecords, wrongEndpointBody as never));
 
     expect(thrown.code).toBe('config');
@@ -261,10 +248,9 @@ describe('a call that never became a request', () => {
     const circular: Record<string, unknown> = {};
     circular.self = circular;
 
-    const thrown = await failure(api.call(endpoints.addRecords, { body: { addRecords: { records: [{ values: circular }] } } }));
+    const thrown = await failure(api.call(endpoints.addRecords, { records: [{ values: circular }] }));
 
-    // The schema lets a circular object through — `values` is the sheet's business — so this is the
-    // serializer's finding, and the reason is kept rather than quoted into the message.
+    // schema 让一个环状对象过了——`values` 是表自己的事——因此这是序列化器的发现，原因被留着而不是引用进消息。
     expect(thrown.code).toBe('config');
     expect(thrown.message).toContain('addRecords');
     expect((thrown.cause as Error).message).toContain('circular');
@@ -296,9 +282,7 @@ describe('an answer that never arrived', () => {
 
   it('keeps the secret out of the reported path of a call that carries one in its query', async () => {
     const { api, seen } = wired({ reply: { status: 500, body: { message: 'boom' } } });
-    const thrown = await failure(
-      api.call(endpoints.refreshToken, { query: { client_id: 'c', client_secret: 'a-secret', grant_type: 'refresh_token', refresh_token: 'r-token' } }),
-    );
+    const thrown = await failure(api.call(endpoints.refreshToken, { clientId: 'c', clientSecret: 'a-secret', refreshToken: 'r-token' }));
 
     expect(thrown.code).toBe('server');
     expect(thrown.path).toBe('/oauth/v2/token');
@@ -315,7 +299,7 @@ describe('the transport', () => {
       return new Response(JSON.stringify(ENVELOPE));
     };
     const api = createApi({ apiBase: API_BASE, store, params: COORDINATES, transport });
-    await api.call(endpoints.getRecords, { body: RECORDS_BODY });
+    await api.call(endpoints.getRecords, PAGE);
 
     expect(seen).toHaveLength(1);
     expect(seen[0]?.url).toBe(`${API_BASE}/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets/tXXXXXX`);
@@ -330,8 +314,7 @@ describe('the transport', () => {
     };
 
     try {
-      // `userinfo` is the one call that takes no header of its own, so what is left is the request as the
-      // endpoint describes it and nothing else.
+      // `userinfo` 是唯一不带头字段的调用，因此剩下的就是端点描述的请求本身，别的什么都没有。
       const api = createApi({ apiBase: API_BASE, store, params: COORDINATES });
       await api.call(endpoints.userinfo);
     } finally {
@@ -340,7 +323,7 @@ describe('the transport', () => {
 
     expect(seen).toHaveLength(1);
     expect(String(seen[0]?.url)).toBe(`${API_BASE}/oauth/v2/userinfo?access_token=a-token-value`);
-    // No `signal`: how long a call may hang is what the fetch was built to allow.
+    // 没有 `signal`：一次调用能挂多久是 fetch 被造成什么样说的。
     expect(seen[0]?.init).toEqual({ method: 'GET' });
   });
 });

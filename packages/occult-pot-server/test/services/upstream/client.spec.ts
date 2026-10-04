@@ -10,8 +10,8 @@ import { getFetcher, getClient, invalidateClient, useClient } from '@/services/u
  * handed, and that pool seen as the one function `tencent-doc-sdk` sends through. These cases pin exactly
  * that, plus the two things the process-wide transport adds: it is built once per configuration, and
  * `loadConfig()`/`invalidateClient()` drop it so the next caller rebuilds it. What a call then does —
- * judging an answer, counting attempts — is `tencent-doc-sdk`'s own suite: `test/validation/classify.spec.ts`
- * and `test/client/request.spec.ts` over there.
+ * judging an answer, counting attempts — is `tencent-doc-sdk`'s own suite: `test/error.spec.ts`
+ * and `test/client.spec.ts` over there.
  */
 
 const servers: Array<{ close(): Promise<void> }> = [];

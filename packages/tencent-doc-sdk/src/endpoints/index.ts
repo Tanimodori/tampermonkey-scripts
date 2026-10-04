@@ -3,13 +3,9 @@ import { addRecords, deleteRecords, getRecords, updateRecords } from './record';
 import { getSheetList } from './sheet';
 
 /**
- * Every endpoint this library knows, under the name a caller reaches it by.
+ * 本库认识的全部端点，按调用方够到它们的名字。
  *
- * One record rather than eight loose imports because the set is closed: the upstream's smartsheet and
- * OAuth surface is what this package translates, and a caller that wants to know what can be called reads
- * this. It is also what lets a test walk every endpoint at once — `test/endpoint.spec.ts` checks each
- * `path`'s placeholders against the schema that fills them, which is the one class of mistake a template
- * can carry silently.
+ * 一个记录而不是八份散落的导入，因为集合是封闭的：上游的智能表与 OAuth 面就是本包翻译的东西，想弄清能调什么就读它。
  */
 export const endpoints = { getSheetList, getRecords, addRecords, updateRecords, deleteRecords, userinfo, accessToken, refreshToken } as const;
 

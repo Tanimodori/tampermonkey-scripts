@@ -4,7 +4,7 @@
     "lib": ["ES2023"],
     /*
       Node 类型是这一份编译能认出 `Response` 与 `globalThis.fetch` 的唯一来源。这一份 program 同时收下 `src/` 与
-      `test/`。本包不产出 `dist/`，它的全部用途就是把这份声明跑起来，所以不需要为两者各配一份 program。
+      `test/`。tsc 在这里只做检查，`dist/` 由 vite 构建，所以不需要为两者各配一份 program。
     */
     "types": ["node"],
     "module": "ESNext",

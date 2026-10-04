@@ -40,16 +40,15 @@ rushx typecheck      # tsc -p tsconfig.json && tsc -p tsconfig.node.json
 rushx build-only     # vite build,离线那份产物
 rushx test:offline   # 构建 + 判桩数据
 rushx test:online    # XIV_LIVE=1 构建 + 判真表
-rushx test           # 两条腿
-rushx build          # typecheck && build-only && test
+rushx test           # test:offline 与 test:online 各跑一遍
+rushx build          # typecheck && test:offline && build-only
 rushx format:check   # 另有 format / lint
 ```
 
-`rush build` 会先构建两个包(它们是本项目的 `workspace:*` 依赖),所以包自己的产物在这里的类型检查与构建之前已经就位。依赖表里的 `zod` 不是本项目在用,而是被检查的那份声明需要它。
+`rush build` 会先构建两个包(它们是本项目的 `workspace:*` 依赖),所以包自己的产物在这里的类型检查与构建之前已经就位。`build` 只走到 `test:offline`,走真实网络的 `test:online` 手动运行。依赖表里的 `zod` 不是本项目在用,而是被检查的那份声明需要它。
 
 ## 当前限制
 
-- 活体腿在 CI 门禁里:`rush rebuild` 会真去下载两张表,`raw.githubusercontent.com` 不可用即门禁红。缓解的改法是给活体腿固定 `ref`,那会让它不再覆盖 `HEAD` 这条路径。
-- 断言只覆盖对桩数据与真实数据同时成立的性质,离线腿的逐格相等除外:两张表在真与桩之间差两个数量级,钉住数字会让活体运行变成第二份数据快照。
+- 断言只覆盖对桩数据与真实数据同时成立的性质,离线运行的逐格相等除外:两张表在真与桩之间差两个数量级,钉住数字会让活体运行变成第二份数据快照。
 - `loadTable` 的声明随默认入口一起被读到,但本项目不调用它:示例消费方不需要在构建期之外取表。
 - 本项目在构建图里排在两包之后,它的失败既可能来自"包坏了"也可能来自"消费方视角坏了":这里能发现的是解析与调用那一侧。声明内部坏了不影响使用点,而两个包的 `build` 都不做类型检查,所以那一格只有手动跑 `xiv-datamine-polyfill` 的 `rushx typecheck:declarations` 才看得见。

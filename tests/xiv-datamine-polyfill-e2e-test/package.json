@@ -15,7 +15,7 @@
   "author": "Tanimodori",
   "type": "module",
   "scripts": {
-    "build": "npm run typecheck && npm run build-only && npm test",
+    "build": "npm run typecheck && npm run test:offline && npm run build-only",
     "build-only": "vite build",
     "format": "oxfmt",
     "format:check": "oxfmt --check",

@@ -1,7 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  // Not an emit configuration: vite bundles the JavaScript and `unplugin-dts` generates the declarations from
-  // it. This file answers which sources are public surface, and here there is exactly one — the whole package
-  // is that one file.
-  "include": ["src/**/*.ts"]
-}

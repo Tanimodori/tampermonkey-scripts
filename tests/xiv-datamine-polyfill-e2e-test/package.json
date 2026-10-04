@@ -23,7 +23,7 @@
     "test": "npm run test:offline && npm run test:online",
     "test:offline": "vite build && vitest run test/offline.spec.ts",
     "test:online": "cross-env XIV_LIVE=1 vite build && cross-env XIV_LIVE=1 vitest run test/online.spec.ts",
-    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json"
+    "typecheck": "tsc -b"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

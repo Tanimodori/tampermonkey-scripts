@@ -10,12 +10,12 @@
 - `vite.config.ts` —— 插件调用方,取数规则写在这里。`XIV_LIVE` 未设时,取数由文件里的 stub `fetch` 回答(两张几行的小表,其中一行空名、一行带标记,分别喂 `dropEmptyIn` 与 `onlyRowKeys`);设为 `1` 时撤掉 stub 并令 `maxAge: 0`,同一段目标代码对 `raw.githubusercontent.com` 的 `HEAD` 再走一遍。规则对齐真实消费方:`ItemUICategory` 保留它们保留的三列,`Addon` 只要两个 key,一张几十 MB 的表在产物里剩两行。
 - `test/` —— e2e。`offline.spec.ts` 与 `online.spec.ts` 各自读回 `dist/index.js` 的 `getData()`:前者逐格比对桩数据并检查产物的组成(命名了 raw 端点、没有命名 verified 的产物里不得有 schema 引擎),后者只断言真表才有的性质。`testUtils/invariants.ts` 是两个模式共用的那一组。`XIV_LIVE` 决定用哪套期望值,`describe.skipIf` 保证不会拿一种模式的产物去判另一种。
 
-## 两份 tsconfig
+## tsconfig 拆分
 
-两份都 `skipLibCheck: true`:这里判的是消费方读不读得到、读到的类型喂不喂得进调用,判的不是声明自身的内容。声明自身是否自洽由 [xiv-datamine-polyfill 的设计说明](../../packages/xiv-datamine-polyfill/docs/design.md#测试)里的 `typecheck:declarations` 判,那一份编译读到的声明含被检查的两个包,而它是手动跑的脚本,不在 `rush build` 的门禁里。`skipLibCheck` 这一项同时决定了第三方声明不参与这里的判定。
+`tsconfig.json` 是 solution:`files: []` 加两份 program 的 references,`tsc -b` 由它进入。两份 program 都 `skipLibCheck: true`:这里判的是消费方读不读得到、读到的类型喂不喂得进调用,判的不是声明自身的内容。声明自身是否自洽由 [xiv-datamine-polyfill 的设计说明](../../packages/xiv-datamine-polyfill/docs/design.md#测试)里的 `typecheck:declarations` 判,那一份编译读到的声明含被检查的两个包,而它是手动跑的脚本,不在 `rush build` 的门禁里。`skipLibCheck` 这一项同时决定了第三方声明不参与这里的判定。
 
-- `tsconfig.json` 只管 `src/`。每一个导入都经过目标包的 `package.json#exports`,声明解析不到就用不起来。`types` 只有 `xiv-datamine-polyfill/client`,没有 `node` —— 目标代码是浏览器侧的,不装 Node 类型也能编译同样是被检查的事实。
-- `tsconfig.node.json` 管 `vite.config.ts` 与 `test/`,即 Node 侧的全部代码,`xiv-datamine-polyfill` 默认入口的声明在这里被读到。`vite.config.ts` 的 `defineConfig` 取自 `vite` 而不是 `vitest/config`:消费方的构建配置本来也不带 `test` 段,这里复刻的是那个形状。
+- `tsconfig.app.json` 只管 `src/`。每一个导入都经过目标包的 `package.json#exports`,声明解析不到就用不起来。`types` 只有 `xiv-datamine-polyfill/client`,没有 `node` —— 目标代码是浏览器侧的,不装 Node 类型也能编译同样是被检查的事实。
+- `tsconfig.node.json` 管 `vite.config.ts` 与 `test/`,即 Node 侧的全部代码;它继承 app 的选项,只在 `types` 里补上 `node`。`xiv-datamine-polyfill` 默认入口的声明在这里被读到。`vite.config.ts` 的 `defineConfig` 取自 `vite` 而不是 `vitest/config`:消费方的构建配置本来也不带 `test` 段,这里复刻的是那个形状。
 
 ## 缓存与模式
 
@@ -36,7 +36,7 @@
 ## 运行
 
 ```bash
-rushx typecheck      # tsc -p tsconfig.json && tsc -p tsconfig.node.json
+rushx typecheck      # tsc -b
 rushx build-only     # vite build,离线那份产物
 rushx test:offline   # 构建 + 判桩数据
 rushx test:online    # XIV_LIVE=1 构建 + 判真表

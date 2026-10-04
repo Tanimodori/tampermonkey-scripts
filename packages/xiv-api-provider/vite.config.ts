@@ -6,9 +6,9 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [
     dts({
-      // Only `src/` is public surface: `tsconfig.json` also names `test/`, and a spec that reached a
-      // consumer's type check would be a bug in the wrong direction.
-      tsconfigPath: 'tsconfig.build.json',
+      // Only `src/` is public surface: `tsconfig.app.json` names exactly that, so a spec cannot reach a
+      // consumer's type check.
+      tsconfigPath: 'tsconfig.app.json',
       bundleTypes: true,
       // `package.json#exports` is hand-maintained: which subpath resolves to which declaration is part of the
       // surface this package publishes, so a build must not rewrite it. Whether a consumer can read the result

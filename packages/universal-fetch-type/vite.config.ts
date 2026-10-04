@@ -14,7 +14,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [
     dts({
-      tsconfigPath: 'tsconfig.build.json',
+      tsconfigPath: 'tsconfig.app.json',
       bundleTypes: true,
       // `package.json#exports` is hand-maintained and says more than a generated `types` field could: that
       // this entry has types and deliberately no runtime.

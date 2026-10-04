@@ -1,38 +1,4 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    /*
-      DOM and nothing else: `src/` is userscript-side code, so the absence of `node` in `types` is itself a
-      fact being checked — a consumer can compile this example without ever installing Node types.
-
-      `DOM.Iterable` is not decoration: a DOM `Headers` only declares `entries`/`keys`/`values` and
-      `[Symbol.iterator]` when it is present, and `FetcherHeaders` is an `Iterable<[string, string]>`. Leave
-      this out and a stub that returns a real `Response` stops being a `Fetcher` — every other userscript
-      project here pairs DOM with DOM.Iterable for the same reason.
-    */
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["xiv-datamine-polyfill/client"],
-    /*
-      What this project judges is the consumer's view: every import resolves through the checked package's
-      `exports`, the wildcard `.csv` declaration is there to be found, and what it gives back feeds
-      `useSheetTable`. Those three surface in `src/`, and they fail this compile whatever this flag says — a
-      declaration that is missing reports `TS2307` at the import, one of the wrong shape `TS2345` at the call.
-      Whether the declarations the packages ship are internally sound is not this project's question; that is
-      `xiv-datamine-polyfill`'s `tsconfig.declarations.json`, which reads both packages' shipped declarations.
-      Reading a `.d.ts` without judging it also keeps third-party declarations out of the verdict here.
-    */
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
-  },
-  "include": ["src/**/*.ts"]
+  "files": [],
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
 }

@@ -27,7 +27,7 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b",
     "test": "vitest --passWithNoTests",
     "test:live": "cross-env XIV_LIVE=1 vitest run --tags-filter=live",
     "test:drift": "cross-env XIV_LIVE=1 vitest run test/live"

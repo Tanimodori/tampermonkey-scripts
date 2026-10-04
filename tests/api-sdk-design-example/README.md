@@ -11,7 +11,7 @@
 
 ## 运行
 
-- `rushx typecheck`：`tsc --noEmit`。
+- `rushx typecheck`：`tsc -b`。
 - `rushx test`：vitest，场景表在带校验与无校验两侧各跑一遍。
 - `rushx build-only`：`vite build`，产出 `dist/index.js` 与 `dist/index.d.ts`。
 - `rushx build`：`typecheck`、`test`、`build-only` 依次跑一遍。

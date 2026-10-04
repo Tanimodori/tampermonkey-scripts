@@ -48,4 +48,4 @@ await writeToWhereverItIsKept(store.get());
 - `rushx build`：产出 `dist/`。
 - `rushx test:unit`：vitest，对着 `test/testUtils/mockUpstream.ts` 的假文档；测试只讲协议，重构 `src/` 不动它们。
 - `rushx test:live`：vitest，对着真实文档；读 `OPS_ENV_PATH` 点名的环境文件，未配置时整组跳过。
-- `rushx lint` / `rushx format`：oxlint 与 oxfmt；`rushx typecheck`：`tsc --noEmit`。
+- `rushx lint` / `rushx format`：oxlint 与 oxfmt；`rushx typecheck`：`tsc -b`。

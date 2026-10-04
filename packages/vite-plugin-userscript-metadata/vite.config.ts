@@ -17,9 +17,8 @@ const nodeBuiltins = new Set([...builtinModules, ...builtinModules.map((name) =>
 export default defineConfig({
   plugins: [
     dts({
-      // Only `src/` is public surface. Left to itself the plugin takes the file list from `tsconfig.json`,
-      // which also names `test/`.
-      tsconfigPath: 'tsconfig.build.json',
+      // Only `src/` is public surface, and that is what `tsconfig.app.json` names.
+      tsconfigPath: 'tsconfig.app.json',
       bundleTypes: true,
       // The manifest stays hand-authored: `exports.types` is part of what a consumer's type check reads, and
       // a build that rewrites it is a build nobody can review.

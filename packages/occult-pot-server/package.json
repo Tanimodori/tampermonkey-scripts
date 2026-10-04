@@ -19,13 +19,13 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc --noEmit && vite build",
-    "dev": "tsx watch src/index.ts",
+    "build": "tsc -b && vite build",
+    "dev": "tsx watch --tsconfig tsconfig.app.json src/index.ts",
     "start": "node dist/index.js",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b",
     "test": "npm run test:unit && npm run test:redis && npm run test:live",
     "test:unit": "vitest --run --passWithNoTests",
     "test:redis": "cross-env OPS_ENV_PATH=.env.test-redis vitest --run --no-file-parallelism --tags-filter=redis",

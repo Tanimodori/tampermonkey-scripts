@@ -55,7 +55,7 @@ docker run -d --name test-redis -p 6399:6379 --restart unless-stopped redis:7-al
 ## 质量检查
 
 ```bash
-rushx typecheck   # tsc --noEmit
+rushx typecheck   # tsc -b
 rushx lint        # oxlint
 rushx format      # oxfmt，format:check 只检查不写回
 ```

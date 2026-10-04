@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.app.json",
   "compilerOptions": {
     /*
       The Node side of the example: the config file that configures the plugin, and the specs that read the
@@ -11,7 +11,10 @@
       `defineConfig` from `vite` rather than from `vitest/config`: a consumer's own build config carries no test
       section, and copying that shape is what the example is for.
     */
-    "types": ["node", "xiv-datamine-polyfill/client"]
+    "types": ["node", "xiv-datamine-polyfill/client"],
+
+    /* tsc -b's incremental state. */
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
   "include": ["vite.config.ts", "test/**/*.ts"]
 }

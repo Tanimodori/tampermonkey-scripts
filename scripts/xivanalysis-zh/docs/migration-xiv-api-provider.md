@@ -18,7 +18,7 @@
 | ----------------------- | ----- | ------------------ |
 | `dist/index.js`(探测版) | 52006 | `4ffd7108cd1e51d9` |
 
-- `tsc --noEmit` 通过;`vite build` 成功;oxlint 0 error;oxfmt clean。
+- `tsc -b` 通过;`vite build` 成功;oxlint 0 error;oxfmt clean。
 - 与原版的差异:**新增旁路日志**(不改可见翻译)+ **传输改走 `GM_xmlhttpRequest`**(见下《传输修复》)。
 - 探测为一次性脚手架:每种类型(Action/ActionRich/Item/Status/Addon)命中后各探测一次;`xiv-datamine-polyfill` 未接入。
 - 浏览器产物已确认**不含** Node 全局(仅剩标准的 `response.arrayBuffer()`),且 `grep csv-parse` = 0。
@@ -120,7 +120,7 @@
 
 ## Stage B 实现(已落地)
 
-最终产物 `dist/index.js`:34474 bytes,`4774c0b5ee1062c3`。tsc / oxlint / oxfmt / `rushx build` 全绿;产物 `Buffer`=0、`csv-parse`=0、含 `xivapi-v2.xivcdn.com` 与 `GM.xmlHttpRequest`。用户浏览器实测“一切正常”。批量预热为逐行版验证通过之后追加:每包先一次 `readRows` 填 `useCache`,批量失败/缺 id 自动回退逐行读(即已验证那条),只减请求不改行为。
+最终产物 `dist/index.js`:34474 bytes,`4774c0b5ee1062c3`。`tsc -b` / oxlint / oxfmt / `rushx build` 全绿;产物 `Buffer`=0、`csv-parse`=0、含 `xivapi-v2.xivcdn.com` 与 `GM.xmlHttpRequest`。用户浏览器实测“一切正常”。批量预热为逐行版验证通过之后追加:每包先一次 `readRows` 填 `useCache`,批量失败/缺 id 自动回退逐行读(即已验证那条),只减请求不改行为。
 
 无浏览器下的两项自检:
 
@@ -185,7 +185,7 @@ Stage B/C 是「截获页面 fetch → 反查 → 逐字段替换响应」。但
 
 **验证链**:离线用 `xiv.ts` 的等价逻辑打真实国服,10 条标签结果如上全部合理;URL 改写侧浏览器两轮实测:枚举轮(页面 fetch 全落 `*.xivapi.com/api/sheet/*`)、rewrite-on 轮(12 条全 200、零 520)。图标/时间轴 DOM 反查待浏览器 #3。
 
-**改动汇总**:`hooks.ts`(导出 `pageFetch`;URL 改写经 `pageFetch`,无 GM)、`xiv.ts`(新)、`timeline.ts`、`icon.ts`、`index.ts`。`vite.config.ts`:`@grant` 仅 `unsafeWindow`,**无 `@connect`**、**无 papaparse 别名**(脚本已不 import `xiv-api-provider`,泄漏源消失)。产物 **10,568 bytes**(vs 起点 31.5 kB / 原 v0.0.5 更大),`grep garlandtools|papaparse|xiv-api-provider|GM|@connect|processPackage` 全 0。tsc/oxlint/oxfmt/`rushx build` 全绿。
+**改动汇总**:`hooks.ts`(导出 `pageFetch`;URL 改写经 `pageFetch`,无 GM)、`xiv.ts`(新)、`timeline.ts`、`icon.ts`、`index.ts`。`vite.config.ts`:`@grant` 仅 `unsafeWindow`,**无 `@connect`**、**无 papaparse 别名**(脚本已不 import `xiv-api-provider`,泄漏源消失)。产物 **10,568 bytes**(vs 起点 31.5 kB / 原 v0.0.5 更大),`grep garlandtools|papaparse|xiv-api-provider|GM|@connect|processPackage` 全 0。`tsc -b` / oxlint / oxfmt / `rushx build` 全绿。
 
 **待**:浏览器 #3——tooltip/详情中文、时间轴/图标经反查变中、Network 只剩 xivcdn、无 520、无 `v2.xivapi.com`——再定 bump/提交。回退:各阶段产物在 `.migration-backup/`。
 
@@ -204,6 +204,6 @@ D-2 之后浏览器多轮实测暴露两个问题并促成此版:
 
 **文件**:`hooks/request.ts`(整行合并 + 导出 `pageFetch` + 520 救火 + 在线职业字典合并)、`hooks/fetch.ts`(仅给 garlands 兜底用的 `GM.xmlHttpRequest` 封装,类型复用 `types/gm.d.ts`)、`hooks/timeline.ts`/`hooks/icon.ts`(同步查表 + 异步兜底 + 增长重扫)、`data/store.ts`(`addEntry`/`recordPair` + `notifyMapGrowth` 增长通知,含同名保留首个)、`data/jobAbbr.ts`(在线职业缩写字典)、`data/search.ts`(garlands 兜底,按串去重缓存)、`data/override.ts`(手工覆盖数组源 + 派生查表)、`data/unknown.ts`(兜底也失败才报)、`types/gm.d.ts`(`GM`/`GM_xmlhttpRequest`/`unsafeWindow` 全局声明)。
 
-**依赖/元数据**:`@grant` = `GM_xmlhttpRequest` + `unsafeWindow`;`@connect` = `www.garlandtools.cn`(仅 garlands 兜底要;CN 读全走原生 fetch,靠其 `ACAO:*`)。不 import `xiv-api-provider`(无 papaparse/桶泄漏)。产物 **18.06 kB**(grep:garlands search.php=1、xivapi `/api/search`=0、papaparse=0、`技能：`=0)。tsc/oxlint/oxfmt/`rushx build` 全绿。
+**依赖/元数据**:`@grant` = `GM_xmlhttpRequest` + `unsafeWindow`;`@connect` = `www.garlandtools.cn`(仅 garlands 兜底要;CN 读全走原生 fetch,靠其 `ACAO:*`)。不 import `xiv-api-provider`(无 papaparse/桶泄漏)。产物 **18.06 kB**(grep:garlands search.php=1、xivapi `/api/search`=0、papaparse=0、`技能：`=0)。`tsc -b` / oxlint / oxfmt / `rushx build` 全绿。
 
 **用户实测(末轮)**:buff/团辅经 garlands 兜底转中、`counts` 升到 90+、`[xiv-warn]` 清空、无报错。**待**:确认多职业稳定后 bump 版本 + 提交(工作树含 Stage A–E 全部改动;浏览器控制台 dump 已 `.gitignore`,结论均并入本文)。回退:各阶段产物在 `.migration-backup/`。

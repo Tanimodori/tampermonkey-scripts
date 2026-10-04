@@ -1,6 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  // 不是产物配置：JavaScript 由 vite 打包，声明由 `unplugin-dts` 在同一趟里生成。这一份回答的是「哪些源码算公开面」，
-  // `tsconfig.json` 回答不了，因为它还收着 `test/` 与 `vite.config.ts`。
-  "include": ["src/**/*.ts"]
-}

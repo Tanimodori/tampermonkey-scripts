@@ -15,14 +15,14 @@
   "author": "Tanimodori",
   "type": "module",
   "scripts": {
-    "build:vite": "tsc && node build/build.ts",
-    "build": "tsc --noEmit && node build/build.ts && esbuild dist/**/*.js --outdir=dist --allow-overwrite --charset=utf8 --minify-whitespace --format=esm --log-level=warning",
+    "build:vite": "tsc -b && node build/build.ts",
+    "build": "tsc -b && node build/build.ts && esbuild dist/**/*.js --outdir=dist --allow-overwrite --charset=utf8 --minify-whitespace --format=esm --log-level=warning",
     "dev": "vite",
     "preview": "vite preview",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b",
     "test": "vitest --passWithNoTests"
   },
   "devDependencies": {

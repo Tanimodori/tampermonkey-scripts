@@ -6,9 +6,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [
     dts({
-      // Only `src/` is public surface: the default file list comes from `tsconfig.json`, which also names
-      // `test/` and this config file.
-      tsconfigPath: 'tsconfig.build.json',
+      // Only `src/` is public surface, and that is exactly what `tsconfig.app.json` names.
+      tsconfigPath: 'tsconfig.app.json',
       bundleTypes: true,
       // `main`, `types` and `exports` are hand-maintained; the consumer-side checks read them as authored.
       insertTypesEntry: false,

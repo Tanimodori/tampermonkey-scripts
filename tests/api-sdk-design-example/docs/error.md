@@ -1,22 +1,25 @@
-# 错误处理
+# 错误
 
-`api.call` 抛出的都是 `ApiError`：链上的三段 catch 各递一份 init 给 `wrapApiError`，由它定出这次失败的 `errorCode`。实现见 [error.ts](../src/error.ts)。
-
-## 字段
+`ApiError` 承载一次失败的全部信息，字段与构造入参 `ApiErrorInit` 对应。`api.call` 抛出的错误都是 `ApiError`。
 
 ```ts
 export class ApiError extends Error {
+  /** 错误代码 */
   readonly errorCode: ApiErrorCode;
+  /** 调用名 */
   operation: string | undefined;
+  /** 请求 */
   request: ApiRequest | undefined;
+  /** 响应 */
   response: ApiResponse | undefined;
+  /** 底层错误 */
   cause: unknown;
 }
 ```
 
-字段与构造入参 `ApiErrorInit` 一一对应，其中只有 `errorCode` 必填。`errorCode`、`message` 与 `cause` 由说出这次失败的那一处写下——`cause` 里是底层错误的原件，`message` 就是那一句话本身；`operation`、`request`、`response` 可由 `wrapApiError` 在出栈处用 `??=` 补上，已有的值不动。
-
 ## 错误码
+
+`ApiErrorCode` 是一次失败的分类，各值的来源：
 
 - `BAD_INPUT` —— 装配阶段：`requestSchema.parse` 判定不过，或 `requestAdaptor` 拼不出地址。
 - `NETWORK_ERROR` —— 发出阶段：连接失败、body 未到、到的不是 JSON，或交出的地址被接缝拒收。

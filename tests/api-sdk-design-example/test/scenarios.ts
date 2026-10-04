@@ -6,10 +6,9 @@ import { API_BASE, GOOD_OUTPUT, INPUT, TOKEN } from './fixtures';
 import { upstreamEnvelope, upstreamOk, upstreamRateLimited, upstreamServerError, upstreamUnreachable } from './upstream';
 
 /**
- * 本项目重心的一半：一次调用的错误处理。同一个下场在带 zod 与不带 zod 两份装配上各成立一次，所以这张表只写一遍，
- * 由两份 spec 各自拿去跑——用例清单里两份装配因此都点得到名。
+ * 一次调用的错误处理：同一个下场在带校验与无校验两侧各成立一次；这张表只写一遍，两侧各自拿去跑。
  *
- * 上游只由 `upstream.ts` 的自定义 fetch 扮演：每例现装一份，当 `transport` 递给这一次的 client，不碰全局。
+ * 上游只由 `upstream.ts` 的自定义 fetch 扮演——每例现装一份，当 `transport` 递给这一次的 client，不碰全局。
  */
 
 const MESSAGE_URL = 'https://example.com/api/message?limit=100';
@@ -44,8 +43,7 @@ export const SCENARIOS: readonly Scenario[] = [
     },
   },
   {
-    // `Retry-After` 不由库解析：它就原样躺在 `response.headers` 上（见 docs/error-handling.md 的「重试提示原样留着」），
-    // 这一例钉住的是「原样保留」，而不是某个解析结果。
+    // `Retry-After` 不由库解析，原样留在 `response.headers` 上（见 docs/error.md）；这一例钉住原样保留。
     label: '限流',
     run: async (endpoint) => {
       const api = createApi({ apiBase: API_BASE, token: TOKEN, transport: upstreamRateLimited({ 'retry-after': '7' }) });

@@ -2,12 +2,9 @@ import type { WebFetcherRequestInit } from 'universal-fetch-type';
 import { vi } from 'vitest';
 
 /**
- * 上游只由这一份自定义 fetch 扮演：四种下场（正常会校验凭据、429、服务器错误、不可达）与它们各自的默认回答体都写在这里。
- * 它作为一个 `transport` 递给 `createApi`，不顶替全局 `fetch`，并行用例因此互不干扰。
- *
- * 被要求发出的调用留在 mock 自己的记录（`mock.calls`）里，不另造 `seen` / `sent` 之类的结构。
- *
- * 正常与凭据被拒走同一条 `upstreamOk`：它认一枚凭据，认不出就以自己的 401 体拒。
+ * 上游只由这一份自定义 fetch 扮演：各下场（正常会校验凭据、429、服务器错误、不可达）与默认回答体都写在这里，作为 `transport`
+ * 递给 `createApi`，不顶替全局 `fetch`。被要求发出的调用留在 mock 自己的记录（`mock.calls`）里；正常与凭据被拒走同一条
+ * `upstreamOk`。
  */
 
 /** 上游答出的那几个字节。 */
@@ -33,7 +30,7 @@ function serve(answer: (headers: Record<string, string>) => Reply) {
   });
 }
 
-/** 正常：认这枚凭据就答出可用信封，认不出就以自己的 401 体拒。承载「正常（会校验凭据）」与「凭据被拒」。 */
+/** 正常：认这枚凭据就答出可用信封，认不出以 401 体拒。 */
 export function upstreamOk(opts: { accept: string; data: unknown }) {
   return serve((headers) =>
     headers.Authorization === opts.accept
@@ -42,12 +39,12 @@ export function upstreamOk(opts: { accept: string; data: unknown }) {
   );
 }
 
-/** 限流：429，`headers` 原样透传——用例要断言 `Retry-After` 没有被这一侧动过。 */
+/** 限流：429；`headers` 原样透传。 */
 export function upstreamRateLimited(headers?: Record<string, string>) {
   return serve(() => ({ status: 429, body: { code: 429, msg: 'too many requests' }, headers }));
 }
 
-/** 服务器错误：500，状态先说，信封里写着什么都不相干。 */
+/** 服务器错误：500，状态先说。 */
 export function upstreamServerError() {
   return serve(() => ({ status: 500, body: { code: 500, msg: 'internal' } }));
 }

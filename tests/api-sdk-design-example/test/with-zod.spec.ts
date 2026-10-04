@@ -5,9 +5,8 @@ import { SCENARIOS } from './scenarios';
 import { upstreamEnvelope, upstreamOk } from './upstream';
 
 /**
- * 重心之一：带 zod 装配下，一次调用的错误处理。
- *
- * 上游只由 `upstream.ts` 的自定义 fetch 扮演，六种下场一例一个；「只带 zod 才有的一半」把多出来的那一半与 raw 的原样通过并排摆出来。
+ * 带 zod 装配下，一次调用的错误处理。上游只由 `upstream.ts` 的自定义 fetch 扮演；「只带 zod 才有的一半」把多出来的那一半与
+ * raw 的原样通过并排摆出来。
  */
 
 describe('带 zod 装配', () => {

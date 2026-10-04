@@ -5,7 +5,7 @@ import { SCENARIOS } from './scenarios';
 import { upstreamEnvelope, upstreamOk } from './upstream';
 
 /**
- * 带 zod 装配下，一次调用的错误处理。上游只由 `upstream.ts` 的自定义 fetch 扮演；「只带 zod 才有的一半」把多出来的那一半与
+ * 带 zod 装配下，一次调用的错误处理。上游只由 `upstream.ts` 的自定义 fetch 扮演。「只带 zod 才有的一半」把多出来的那一半与
  * raw 的原样通过并排摆出来。
  */
 
@@ -26,7 +26,7 @@ describe('只带 zod 才有的一半', () => {
   });
 
   it('投影形状不符：verified 校验之后抛 BAD_OUTPUT，raw 安静交出 undefined', async () => {
-    // 一个读得出、业务码为 0、却没有 `data` 那一段的信封：坏的是取出来的那一段，不是状态。
+    // 一个读得出、业务码为 0、却没有 `data` 那一段的信封，坏的是取出来的那一段，不是状态。
     const page = { code: 0, msg: '', page: GOOD_OUTPUT };
     const api = createApi({ apiBase: API_BASE, token: TOKEN, transport: upstreamEnvelope(page) });
 

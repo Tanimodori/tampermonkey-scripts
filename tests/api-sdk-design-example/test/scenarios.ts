@@ -6,14 +6,14 @@ import { API_BASE, GOOD_OUTPUT, INPUT, TOKEN } from './fixtures';
 import { upstreamEnvelope, upstreamOk, upstreamRateLimited, upstreamServerError, upstreamUnreachable } from './upstream';
 
 /**
- * 一次调用的错误处理：同一个下场在带校验与无校验两侧各成立一次；这张表只写一遍，两侧各自拿去跑。
+ * 一次调用的错误处理，同一个场景在带校验与无校验两侧各成立一次。这张表只写一遍，两侧各自拿去跑。
  *
- * 上游只由 `upstream.ts` 的自定义 fetch 扮演——每例现装一份，当 `transport` 递给这一次的 client，不碰全局。
+ * 上游只由 `upstream.ts` 的自定义 fetch 扮演，每例现装一份，当 `transport` 递给这一次的 client，不碰全局。
  */
 
 const MESSAGE_URL = 'https://example.com/api/message?limit=100';
 
-/** 一个下场：`run` 自己装上游、调用、断言，收下的是被测的那一份装配。 */
+/** 一个场景，`run` 自己装上游、调用、断言，收下的是被测的那一份装配。 */
 export interface Scenario {
   readonly label: string;
   readonly run: (endpoint: Endpoint<ListMessagesInput, ListMessagesOutput>) => Promise<void>;
@@ -43,7 +43,7 @@ export const SCENARIOS: readonly Scenario[] = [
     },
   },
   {
-    // `Retry-After` 不由库解析，原样留在 `response.headers` 上（见 docs/error.md）；这一例钉住原样保留。
+    // `Retry-After` 不由库解析，原样留在 `response.headers` 上。这一例钉住原样保留。
     label: '限流',
     run: async (endpoint) => {
       const api = createApi({ apiBase: API_BASE, token: TOKEN, transport: upstreamRateLimited({ 'retry-after': '7' }) });

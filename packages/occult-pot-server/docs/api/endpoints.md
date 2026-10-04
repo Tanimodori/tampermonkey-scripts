@@ -118,6 +118,7 @@ Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 178
 ### 功能
 
 - 存活探针，说明进程还在运行。
+- `version` 是构建标识，由包版本与提交短哈希组成。
 
 ### 参数
 
@@ -126,7 +127,7 @@ Invalid body: northRefreshAt: must be a 13 digit epoch in milliseconds, e.g. 178
 ### 正常返回值
 
 ```json
-{ "code": "SUCCESS", "data": { "status": "ok", "uptimeSeconds": 42, "version": "v1" }, "message": "ok", "requestId": "…" }
+{ "code": "SUCCESS", "data": { "status": "ok", "uptimeSeconds": 42, "version": "v0.0.1 (deadbeef)" }, "message": "ok", "requestId": "…" }
 ```
 
 ### 可能的报错

@@ -11,8 +11,11 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     /* `@/…` 是 `src/` 下的模块；别名在 vite.config.ts 里为 vite 声明，vitest 与打包走的就是它。 */
+    /* `~build/*` 是 unplugin-info 在构建时提供的虚拟模块（见 vite.config.ts）；tsx dev 不经过 vite，这两个说明符在这里落到 dev 替身。 */
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "~build/git": ["./src/buildInfo.dev.ts"],
+      "~build/package": ["./src/buildInfo.dev.ts"]
     },
     "isolatedModules": true,
     "moduleDetection": "force",

@@ -5,6 +5,8 @@ import { credentialExpires } from '@test/testUtils/fakeDocument.ts';
  * @module-tag redis
  */
 import { describe, expect, it, vi } from 'vitest';
+import { abbreviatedSha } from '~build/git';
+import { version } from '~build/package';
 
 // Every module under test reads the time through `@/services/time.ts`, which this replaces with
 // `@test/testUtils/clock.ts`.
@@ -32,6 +34,13 @@ describe('GET /healthz, /readyz', () => {
     expect((response.body as { data: { status: string } }).data.status).toBe('ok');
     // Startup resolves the document, so what matters is that the probe itself calls nothing.
     expect(callsOf('getRecords')).toHaveLength(0);
+  });
+
+  it('reports the build identity', async () => {
+    const { client } = await startApp();
+
+    const response = await client.get('/healthz').expect(200);
+    expect((response.body as { data: { version: string } }).data.version).toBe(`v${version} (${abbreviatedSha})`);
   });
 
   it('answers readiness with the status and nothing else', async () => {

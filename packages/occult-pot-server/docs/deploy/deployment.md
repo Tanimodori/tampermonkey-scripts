@@ -58,6 +58,12 @@ sudo docker compose --env-file .env.deploy --env-file .env.deploy.local up -d --
 
 `--env-file` 指向不存在的文件会直接报错，所以没有 `.env.deploy.local` 时就只带前一个。它只喂 compose 的插值，不会取代服务定义里的 `env_file`——容器变量照旧来自 `.env.production` 与 `.env.production.local`。不带任何 `--env-file` 时端口与时区取 compose 里的默认值，凭据仍然生效。
 
+- 核对正在运行的构建标识（`/healthz` 不经 nginx，从容器网络发问）：
+
+```bash
+sudo docker compose exec nginx wget -qO- http://occult-pot-server:3000/healthz   # 响应中的 data.version
+```
+
 - 默认对外端口是 `29070`，把 `OPS_COMPOSE_NGINX_PORT=…` 写进 `.env.deploy.local` 或 shell 即可覆盖；改端口前先在云安全组放行。变量清单见 [配置：编排](../config/compose.md)。
 - 只改了 nginx 配置时：
 

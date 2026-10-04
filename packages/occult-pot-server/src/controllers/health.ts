@@ -1,6 +1,8 @@
 import { getLogger } from '@logtape/logtape';
 import { Router } from 'express';
 import type { RequestHandler } from 'express';
+import { abbreviatedSha } from '~build/git';
+import { version } from '~build/package';
 import { ok } from '@/errors.ts';
 import { LOG_CATEGORIES } from '@/logger.ts';
 import { getRequestId } from '@/middlewares/requestId.ts';
@@ -43,7 +45,8 @@ export function createHealthController(deps: HealthControllerDeps): Router {
     ok(res, req, {
       status: 'ok',
       uptimeSeconds: Math.round((now() - deps.startedAt) / 1000),
-      version: 'v1',
+      // The build identity: the package version plus the commit this image was built from.
+      version: `v${version} (${abbreviatedSha})`,
     });
   };
 

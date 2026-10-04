@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { builtinModules } from 'node:module';
 import { resolve } from 'path';
+import Info from 'unplugin-info/vite';
 import { defineConfig } from 'vitest/config';
 
 // The server bundle is self-contained: runtime dependencies (express, helmet, cors,
@@ -9,6 +10,9 @@ import { defineConfig } from 'vitest/config';
 const nodeBuiltins = new Set([...builtinModules, ...builtinModules.map((name) => `node:${name}`)]);
 
 export default defineConfig({
+  // The build identity `/healthz` reports: `~build/package` carries the version, `~build/git` the
+  // commit. Vitest shares this config, so tests resolve the virtual modules like the bundle does.
+  plugins: [Info()],
   build: {
     ssr: resolve(import.meta.dirname, 'src/index.ts'),
     outDir: resolve(import.meta.dirname, 'dist'),

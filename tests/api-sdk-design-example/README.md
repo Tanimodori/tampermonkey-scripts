@@ -7,7 +7,7 @@
 - [endpoint](docs/endpoint.md) —— endpoint 的构成与适配器类型。
 - [client](docs/client.md) —— client 持有什么，一次调用怎么走，边界在哪。
 - [错误处理](docs/error.md) —— `ApiError` 的字段与错误码。
-- [校验与 zod](docs/validation.md) —— schema 层的文件划分与 zod 运行时分离。
+- [校验与 zod](docs/validation.md) —— zod 的类型擦除：文件划分、导出规定与构建配置。
 
 ## 运行
 

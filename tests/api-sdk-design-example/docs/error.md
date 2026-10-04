@@ -21,9 +21,9 @@ export class ApiError extends Error {
 
 `ApiErrorCode` 是一次失败的分类，各值的来源：
 
-- `BAD_INPUT` —— 装配阶段：`requestSchema.parse` 判定不过，或 `requestAdaptor` 拼不出地址。
+- `BAD_INPUT` —— 装配阶段：`requestSchema.parse` 校验不过，或 `requestAdaptor` 拼不出地址。
 - `NETWORK_ERROR` —— 发出阶段：连接失败、body 未到、到的不是 JSON，或交出的地址被接缝拒收。
-- `BAD_OUTPUT` —— 回答阶段：读不出信封，或投影与 `responseSchema.parse` 判不过。
+- `BAD_OUTPUT` —— 回答阶段：读不出信封、投影失败，或 `responseSchema.parse` 校验不过。
 - `UNAUTHORIZED` —— 上游 401 / 403。
 - `RATE_LIMIT` —— 上游 429；`Retry-After` 原样留在 `response.headers` 上。
 - `SERVER_ERROR` —— 上游 5xx。

@@ -25,7 +25,7 @@ describe('只带 zod 才有的一半', () => {
     expect(transport).toHaveBeenCalledTimes(1);
   });
 
-  it('投影形状不符：verified 判定之后抛 BAD_OUTPUT，raw 安静交出 undefined', async () => {
+  it('投影形状不符：verified 校验之后抛 BAD_OUTPUT，raw 安静交出 undefined', async () => {
     // 一个读得出、业务码为 0、却没有 `data` 那一段的信封：坏的是取出来的那一段，不是状态。
     const page = { code: 0, msg: '', page: GOOD_OUTPUT };
     const api = createApi({ apiBase: API_BASE, token: TOKEN, transport: upstreamEnvelope(page) });

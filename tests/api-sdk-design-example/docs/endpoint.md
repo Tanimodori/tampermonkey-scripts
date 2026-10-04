@@ -10,7 +10,7 @@ export interface Endpoint<In, Out> {
   readonly requestSchema?: RequestSchema<In>;
   /** 校验投影后的出参 */
   readonly responseSchema?: ResponseSchema<Out>;
-  /** 参数适配器：把已校验的入参造成要发的请求 */
+  /** 参数适配器：把入参造成要发的请求 */
   readonly requestAdaptor: RequestAdaptor<In, ApiRequest>;
   /** 返回值适配器：把到达的响应造成调用方所要的 `Out` */
   readonly responseAdaptor: ResponseAdaptor<Out, ApiResponse>;

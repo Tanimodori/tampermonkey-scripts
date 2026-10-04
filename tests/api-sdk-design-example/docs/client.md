@@ -24,11 +24,11 @@ API端点实际输入输出由 `Endpoint` 声明。
 
 ## 调用链
 
-1. `requestSchema?.parse` 判定整份入参；不通过抛 `BAD_INPUT`，此时还没有字节被装配。
+1. `requestSchema?.parse` 校验整份入参；不通过抛 `BAD_INPUT`，此时还没有字节被装配。
 2. `requestAdaptor` 装配出 `ApiRequest`；它自己抛出的错误（地址拼不出来）同样归 `BAD_INPUT`。
 3. `transport` 发出请求并读取一次响应：连接失败、body 读不出、到的不是 JSON，或交出的地址被接缝拒收，都归 `NETWORK_ERROR`。
 4. `responseAdaptor` 判定并投影这份回答；读不出信封、投影失败归 `BAD_OUTPUT`。
-5. `responseSchema?.parse` 判定投影结果；不通过同样归 `BAD_OUTPUT`。
+5. `responseSchema?.parse` 校验投影结果；不通过同样归 `BAD_OUTPUT`。
 
 ## 边界
 

@@ -5,7 +5,7 @@ import type { ListMessagesInput, ListMessagesOutput } from './schema';
 /**
  * 无校验装配：`operation` 与适配器，校验槽不写；这一侧不出现 zod 的值，回答的读法（`getEnvelope`、`verifyEnvelope`）也在这里。
  *
- * 导出名带 `Raw` 后缀：后缀写在声明处，带判定的那一份占默认名字，入口只负责转出。
+ * 导出名带 `Raw` 后缀：后缀写在声明处，带校验的那一份占默认名字，入口只负责转出。
  */
 
 export const listMessagesRaw: Endpoint<ListMessagesInput, ListMessagesOutput> = {

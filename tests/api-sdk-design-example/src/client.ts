@@ -54,7 +54,7 @@ async function invoke<In, Out>(api: Api, endpoint: Endpoint<In, Out>, input: In,
     const projected = endpoint.responseAdaptor(api, response);
     return endpoint.responseSchema === undefined ? projected : endpoint.responseSchema.parse(projected);
   } catch (cause) {
-    // 投影抛出的、投影之后判定不过的，都归 `BAD_OUTPUT`；整份回答留在 `response` 上。
+    // 投影抛出的、投影之后校验不过的，都归 `BAD_OUTPUT`；整份回答留在 `response` 上。
     throw wrapApiError(cause, { errorCode: 'BAD_OUTPUT', operation, request, response });
   }
 }

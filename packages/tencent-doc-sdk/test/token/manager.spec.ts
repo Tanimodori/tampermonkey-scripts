@@ -1,7 +1,8 @@
 import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID } from '@test/testUtils/fixtures';
 import { apiOrigin, setupTencentDocsMock } from '@test/testUtils/mockUpstream';
+import { ApiErrorCodes } from 'api-sdk-framework';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createApi } from '@/client';
+import { createTDocClient } from '@/client';
 import { endpoints } from '@/endpoints';
 import { createTokenManager } from '@/token/manager';
 import type { TokenManager, TokenManagerOptions } from '@/token/manager';
@@ -67,14 +68,14 @@ describe('获取用户信息', () => {
     docs.state.userInfoFailure = { status: 200, ret: 10303, msg: 'token 无效' };
     const { tokens } = credential({ accessToken: 'a-token', openId: 'o-id' });
 
-    await expect(tokens.getUserInfo()).rejects.toMatchObject({ code: 'auth' });
+    await expect(tokens.getUserInfo()).rejects.toMatchObject({ errorCode: ApiErrorCodes.UNAUTHORIZED });
   });
 
   it('says so when there is no token to ask about, rather than calling', async () => {
     const { tokens } = credential({});
     calls().length = 0;
 
-    await expect(tokens.getUserInfo()).rejects.toMatchObject({ code: 'config' });
+    await expect(tokens.getUserInfo()).rejects.toMatchObject({ errorCode: ApiErrorCodes.BAD_INPUT });
     expect(calls()).toHaveLength(0);
   });
 });
@@ -138,8 +139,8 @@ describe('刷新 Token', () => {
     const secretless = credential({ accessToken: 'a-token', clientId: 'c-id', refreshToken: 'r' }).tokens;
     const tokenless = credential({ accessToken: 'a-token', clientId: 'c-id' }, { clientSecret: 'the-secret' }).tokens;
 
-    await expect(secretless.refreshToken()).rejects.toMatchObject({ code: 'config' });
-    await expect(tokenless.refreshToken()).rejects.toMatchObject({ code: 'config' });
+    await expect(secretless.refreshToken()).rejects.toMatchObject({ errorCode: ApiErrorCodes.BAD_INPUT });
+    await expect(tokenless.refreshToken()).rejects.toMatchObject({ errorCode: ApiErrorCodes.BAD_INPUT });
     expect(calls()).toHaveLength(0);
   });
 
@@ -202,8 +203,8 @@ describe('获取 Token', () => {
     const secretless = credential({ accessToken: 'a-token', clientId: 'c-id' }).tokens;
     const anonymous = credential({ accessToken: 'a-token' }, { clientSecret: 'the-secret' }).tokens;
 
-    await expect(secretless.fetchToken(GRANT)).rejects.toMatchObject({ code: 'config' });
-    await expect(anonymous.fetchToken(GRANT)).rejects.toMatchObject({ code: 'config' });
+    await expect(secretless.fetchToken(GRANT)).rejects.toMatchObject({ errorCode: ApiErrorCodes.BAD_INPUT });
+    await expect(anonymous.fetchToken(GRANT)).rejects.toMatchObject({ errorCode: ApiErrorCodes.BAD_INPUT });
     expect(calls()).toHaveLength(0);
   });
 });
@@ -211,7 +212,7 @@ describe('获取 Token', () => {
 describe('the credential a manager changes', () => {
   it('is the credential the next document call is sent with, unprompted', async () => {
     const { store, tokens } = credential({ accessToken: 'old-token', clientId: 'c-id', openId: 'o-id', refreshToken: 'r' }, { clientSecret: 'the-secret' });
-    const client = createApi({
+    const client = createTDocClient({
       apiBase: apiOrigin(),
       params: { fileId: EXAMPLE_FILE_ID, sheetId: EXAMPLE_SHEET_ID },
       store,

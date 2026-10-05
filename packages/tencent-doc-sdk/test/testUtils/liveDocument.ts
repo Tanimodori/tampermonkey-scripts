@@ -1,12 +1,12 @@
 import { afterAll } from 'vitest';
-import { createApi } from '@/client';
+import { createTDocClient } from '@/client';
+import type { TDocClient } from '@/client';
 import { endpoints } from '@/endpoints';
 import type { CommonRecord, CommonRecords } from '@/endpoints/schema';
 import { createTokenManager } from '@/token/manager';
 import type { TokenManager } from '@/token/manager';
 import { createCredentialStore } from '@/token/store';
 import type { CredentialStore } from '@/token/store';
-import type { Api } from '@/types';
 import { liveEnv } from './env';
 import { EXAMPLE_FILE_ID } from './fixtures';
 
@@ -60,7 +60,7 @@ export const store: CredentialStore = createCredentialStore({
 // 不给 transport：live 运行正是那个意思——平台自己的 `fetch`，真实地址上，中间什么都没有。
 export const tokens: TokenManager = createTokenManager({ apiBase: NAMED.apiBase, store });
 
-export const api: Api = createApi({ apiBase: NAMED.apiBase, store, params });
+export const api: TDocClient = createTDocClient({ apiBase: NAMED.apiBase, store, params });
 
 /** 套件追加再删掉的一行，用一个只有它写进去的值命名。 */
 export interface LiveMarker {

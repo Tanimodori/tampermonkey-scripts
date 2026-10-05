@@ -1,10 +1,11 @@
 import { testUpstream } from '@test/testUtils/document';
 import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID } from '@test/testUtils/fixtures';
 import { apiOrigin, rawRecord } from '@test/testUtils/mockUpstream';
+import { ApiErrorCodes } from 'api-sdk-framework';
+import type { ApiError } from 'api-sdk-framework';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createApi } from '@/client';
+import { createTDocClient } from '@/client';
 import { endpoints } from '@/endpoints';
-import type { TencentDocsError } from '@/error';
 
 /**
  * 四个记录调用，对着 mocked 上游：各自往线上放什么、交回什么、失败长什么样。同样的调用打真实文档是
@@ -99,7 +100,7 @@ describe('getRecords', () => {
 
     const error = (await api.call(endpoints.getRecords, { offset: 0, limit: 100 }).catch((caught: unknown) => caught)) as Error;
 
-    expect(error).toMatchObject({ code: 'invalid_answer' });
+    expect(error).toMatchObject({ errorCode: ApiErrorCodes.BAD_OUTPUT });
     expect(error.message).toContain('getRecords');
   });
 
@@ -107,15 +108,15 @@ describe('getRecords', () => {
     state.readFailure = { status: 400, ret: 400001, msg: '请求参数错误' };
 
     await expect(api.call(endpoints.getRecords, { offset: 0, limit: 100 })).rejects.toMatchObject({
-      code: 'bad_request',
-      status: 400,
+      errorCode: ApiErrorCodes.BAD_REQUEST,
+      response: { status: 400 },
     });
   });
 
   it('gives up on a body that is not JSON', async () => {
     state.rawReply = { status: 200, body: '<html>Bad Gateway</html>' };
 
-    await expect(api.call(endpoints.getRecords, { offset: 0, limit: 100 })).rejects.toMatchObject({ code: 'transport' });
+    await expect(api.call(endpoints.getRecords, { offset: 0, limit: 100 })).rejects.toMatchObject({ errorCode: ApiErrorCodes.NETWORK_ERROR });
   });
 });
 
@@ -146,7 +147,7 @@ describe('addRecords', () => {
     state.writeFailure = { status: 429, ret: 400007, msg: '请求数超过限制' };
 
     await expect(api.call(endpoints.addRecords, { records: [{ values: { ID: 'K-0002' } }] })).rejects.toMatchObject({
-      code: 'rate_limited',
+      errorCode: ApiErrorCodes.RATE_LIMIT,
     });
     expect(state.added).toHaveLength(0);
   });
@@ -175,7 +176,7 @@ describe('updateRecords', () => {
     state.updateFailure = { status: 200, ret: 400001, msg: '请求参数错误' };
 
     await expect(api.call(endpoints.updateRecords, { records: [{ recordID: 'r00001', values: { 名称: '乙' } }] })).rejects.toMatchObject({
-      code: 'bad_request',
+      errorCode: ApiErrorCodes.BAD_REQUEST,
     });
     expect(state.updated).toHaveLength(0);
   });
@@ -200,7 +201,7 @@ describe('deleteRecords', () => {
     state.records = [rawRecord({ recordId: 'r00001' })];
     state.deleteFailure = { status: 200, ret: 10007, msg: 'No corresponding permissions required' };
 
-    await expect(api.call(endpoints.deleteRecords, { recordIDs: ['r00001'] })).rejects.toMatchObject({ code: 'auth' });
+    await expect(api.call(endpoints.deleteRecords, { recordIDs: ['r00001'] })).rejects.toMatchObject({ errorCode: ApiErrorCodes.UNAUTHORIZED });
     expect(state.deleted).toHaveLength(0);
   });
 });
@@ -209,13 +210,13 @@ describe('a call that never became a request', () => {
   // 参数、地址与载荷都在上游被问到之前定下，因此它们没有一个碰到 mock：`state.calls` 空着就是这句话的断言。这些用例
   // 比 `test/client.spec.ts` 多出来的是，它们证明的是真实端点——一个地址拼不出来的 `getRecords`，不是一个组装不了的示例声明。
 
-  it('words an address built from something that is not a URL as a `config` failure, keeping the reason', async () => {
-    const misconfigured = createApi({ apiBase: 'docs-not-a-url', params: { fileId, sheetId }, store, transport: mock.fetcher });
+  it('words an address built from something that is not a URL as a `BAD_INPUT` failure, keeping the reason', async () => {
+    const misconfigured = createTDocClient({ apiBase: 'docs-not-a-url', params: { fileId, sheetId }, store, transport: mock.fetcher });
 
-    const error = (await misconfigured.call(endpoints.getRecords, { offset: 0, limit: 100 }).catch((caught: unknown) => caught)) as TencentDocsError;
+    const error = (await misconfigured.call(endpoints.getRecords, { offset: 0, limit: 100 }).catch((caught: unknown) => caught)) as ApiError;
 
-    expect(error.code).toBe('config');
-    expect(error.message).toContain('getRecords');
+    expect(error.errorCode).toBe(ApiErrorCodes.BAD_INPUT);
+    expect(error.operation).toBe('getRecords');
     expect(error.cause).toBeInstanceOf(Error);
     expect(state.calls).toHaveLength(0);
   });
@@ -224,10 +225,10 @@ describe('a call that never became a request', () => {
     const circular: Record<string, unknown> = {};
     circular.self = circular;
 
-    const error = (await api.call(endpoints.addRecords, { records: [{ values: circular }] }).catch((caught: unknown) => caught)) as TencentDocsError;
+    const error = (await api.call(endpoints.addRecords, { records: [{ values: circular }] }).catch((caught: unknown) => caught)) as ApiError;
 
-    expect(error.code).toBe('config');
-    expect(error.message).toContain('addRecords');
+    expect(error.errorCode).toBe(ApiErrorCodes.BAD_INPUT);
+    expect(error.operation).toBe('addRecords');
     expect((error.cause as Error).message).toContain('circular');
     expect(state.calls).toHaveLength(0);
   });

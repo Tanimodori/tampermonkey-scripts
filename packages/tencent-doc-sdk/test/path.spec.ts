@@ -1,6 +1,6 @@
+import { ApiError, ApiErrorCodes } from 'api-sdk-framework';
 import { describe, expect, it } from 'vitest';
 import { fileIdParamsSchema, sheetParamsSchema } from '@/endpoints/schema';
-import { TencentDocsError } from '@/error';
 import { buildPath, encodePathSegment, resolveCoordinates } from '@/path';
 
 /**
@@ -67,7 +67,7 @@ describe('interpolating a template', () => {
   });
 
   it('names a placeholder the params do not carry, which is how a template and a schema disagree', () => {
-    // `pupa` 抛错而不是替一个空段：client 把它接成 `config` 失败，因此 `path` 里的一个笔误是一个点名占位符的错误，
+    // `pupa` 抛错而不是替一个空段：装配段的失败被框架归成 `BAD_INPUT`，因此 `path` 里的一个笔误是一个点名占位符的错误，
     // 不是一次发往错误地址的请求。
     expect(() => buildPath('/files/{fileId}/sheets/{sheetId}', { fileId: 'f' })).toThrow(/sheetId/);
   });
@@ -97,23 +97,24 @@ describe('resolving the coordinates a call addresses by', () => {
     expect(resolveCoordinates('getSheet', fileIdParamsSchema, configured, undefined)).toEqual({ fileId: '300000000$ExAmPlEfIlEiD' });
   });
 
-  it('refuses a pair that is missing a coordinate, as a `config` failure naming the field', () => {
+  it('refuses a pair that is missing a coordinate, as a `BAD_INPUT` failure naming the field', () => {
     const caught = (() => {
       try {
         resolveCoordinates('getRecords', sheetParamsSchema, undefined, { fileId: 'f' });
         return undefined;
       } catch (cause) {
-        return cause as TencentDocsError;
+        return cause as ApiError;
       }
     })();
 
-    expect(caught).toBeInstanceOf(TencentDocsError);
-    expect(caught?.code).toBe('config');
+    expect(caught).toBeInstanceOf(ApiError);
+    expect(caught?.errorCode).toBe(ApiErrorCodes.BAD_INPUT);
+    expect(caught?.operation).toBe('getRecords');
     expect(caught?.message).toContain('getRecords');
     expect(caught?.message).toContain('sheetId');
   });
 
   it('refuses a coordinate that is not an id', () => {
-    expect(() => resolveCoordinates('getRecords', sheetParamsSchema, configured, { fileId: '' })).toThrow(TencentDocsError);
+    expect(() => resolveCoordinates('getRecords', sheetParamsSchema, configured, { fileId: '' })).toThrow(ApiError);
   });
 });

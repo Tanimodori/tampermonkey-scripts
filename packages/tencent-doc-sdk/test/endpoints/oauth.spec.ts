@@ -1,6 +1,7 @@
 import { apiOrigin, setupTencentDocsMock, tokenRefused } from '@test/testUtils/mockUpstream';
+import { ApiErrorCodes } from 'api-sdk-framework';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createApi } from '@/client';
+import { createTDocClient } from '@/client';
 import { endpoints } from '@/endpoints';
 import { createCredentialStore } from '@/token/store';
 
@@ -18,10 +19,11 @@ const apiBase = apiOrigin();
 
 // 两个授权说自己的词汇、在查询串里带 `client_id`/`client_secret`，因此都不读 store 的凭据——这张 api 的 store 故意是空的。
 // `whoIs` 不一样：`userinfo` 问的是递给它的那枚令牌，所以它围绕那枚令牌建自己的 store。
-const api = createApi({ apiBase, store: createCredentialStore({}), transport: docs.fetcher });
+const api = createTDocClient({ apiBase, store: createCredentialStore({}), transport: docs.fetcher });
 
 /** 每个端点一次调用，在 mocked 文档被建起来的那份凭据上。 */
-const whoIs = (accessToken: string) => createApi({ apiBase, store: createCredentialStore({ accessToken }), transport: docs.fetcher }).call(endpoints.userinfo);
+const whoIs = (accessToken: string) =>
+  createTDocClient({ apiBase, store: createCredentialStore({ accessToken }), transport: docs.fetcher }).call(endpoints.userinfo);
 const exchange = (input: { clientId: string; clientSecret: string; refreshToken: string }) => api.call(endpoints.refreshToken, input);
 const exchangeCode = (input: { clientId: string; clientSecret: string; code: string; redirectUri: string }) => api.call(endpoints.accessToken, input);
 
@@ -72,13 +74,13 @@ describe('获取用户信息', () => {
   it('names a rejected token as an authentication failure', async () => {
     docs.state.userInfoFailure = { status: 200, ret: 10303, msg: 'token 无效' };
 
-    await expect(whoIs('some-access-token')).rejects.toMatchObject({ code: 'auth' });
+    await expect(whoIs('some-access-token')).rejects.toMatchObject({ errorCode: ApiErrorCodes.UNAUTHORIZED });
   });
 
   it('gives up on a body that is not JSON', async () => {
     docs.state.rawReply = { status: 200, body: '<html>Bad Gateway</html>' };
 
-    await expect(whoIs('some-access-token')).rejects.toMatchObject({ code: 'transport' });
+    await expect(whoIs('some-access-token')).rejects.toMatchObject({ errorCode: ApiErrorCodes.NETWORK_ERROR });
   });
 });
 
@@ -130,13 +132,13 @@ describe('刷新 Token', () => {
   it('is a failure when the transport itself says so', async () => {
     docs.state.refreshFailure = { status: 500, body: { error: 'server_error' } };
 
-    await expect(exchange(input)).rejects.toMatchObject({ code: 'server', status: 500 });
+    await expect(exchange(input)).rejects.toMatchObject({ errorCode: ApiErrorCodes.SERVER_ERROR, response: { status: 500 } });
   });
 
   it('gives up on a body that is not JSON', async () => {
     docs.state.rawReply = { status: 200, body: '- - - HTTP Status: 405 Service Error - - -' };
 
-    await expect(exchange(input)).rejects.toMatchObject({ code: 'transport' });
+    await expect(exchange(input)).rejects.toMatchObject({ errorCode: ApiErrorCodes.NETWORK_ERROR });
   });
 
   it('answers from the refresh half of the mock, which is what makes its `grant_type` observable', async () => {

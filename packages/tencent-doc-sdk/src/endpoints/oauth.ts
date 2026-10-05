@@ -1,5 +1,6 @@
+import type { Endpoint } from 'api-sdk-framework';
+import type { TDocClient } from '@/client';
 import { getBareAnswer, getEnvelope, verifyEnvelope } from '@/error';
-import type { Endpoint } from '@/types';
 import { accessTokenInputSchema, refreshTokenInputSchema, tokenResponseSchema, userInfoSchema } from './schema';
 import type { AccessTokenInput, RefreshTokenInput, TokenResponse, UserInfo } from './schema';
 
@@ -21,7 +22,7 @@ import type { AccessTokenInput, RefreshTokenInput, TokenResponse, UserInfo } fro
  */
 
 /** 获取用户信息：凭据自己的身份。 */
-export const userinfo: Endpoint<undefined, UserInfo> = {
+export const userinfo: Endpoint<TDocClient, undefined, UserInfo> = {
   operation: 'userinfo',
   responseSchema: userInfoSchema,
 
@@ -39,7 +40,7 @@ export const userinfo: Endpoint<undefined, UserInfo> = {
 };
 
 /** 获取 Token：把授权码换成凭据，答复是一段裸 body。 */
-export const accessToken: Endpoint<AccessTokenInput, TokenResponse> = {
+export const accessToken: Endpoint<TDocClient, AccessTokenInput, TokenResponse> = {
   operation: 'accessToken',
   requestSchema: accessTokenInputSchema,
   responseSchema: tokenResponseSchema,
@@ -58,7 +59,7 @@ export const accessToken: Endpoint<AccessTokenInput, TokenResponse> = {
 };
 
 /** 刷新 Token：用刷新令牌换一枚新访问令牌，答复可能还捎回一枚新刷新令牌。 */
-export const refreshToken: Endpoint<RefreshTokenInput, TokenResponse> = {
+export const refreshToken: Endpoint<TDocClient, RefreshTokenInput, TokenResponse> = {
   operation: 'refreshToken',
   requestSchema: refreshTokenInputSchema,
   responseSchema: tokenResponseSchema,

@@ -1,6 +1,7 @@
+import type { Endpoint } from 'api-sdk-framework';
+import type { TDocClient } from '@/client';
 import { getEnvelope, verifyEnvelope } from '@/error';
 import { buildPath, resolveCoordinates } from '@/path';
-import type { Endpoint } from '@/types';
 import { fileIdParamsSchema, sheetListInputSchema, sheetListSchema } from './schema';
 import type { Sheet, SheetListInput } from './schema';
 
@@ -17,7 +18,7 @@ import type { Sheet, SheetListInput } from './schema';
 const SHEET_PATH = '/openapi/smartbook/v2/files/{fileId}/sheets';
 
 /** 文档自己的子表列表。 */
-export const getSheetList: Endpoint<SheetListInput | undefined, Sheet[]> = {
+export const getSheetList: Endpoint<TDocClient, SheetListInput | undefined, Sheet[]> = {
   operation: 'getSheet',
   requestSchema: sheetListInputSchema.optional(),
   responseSchema: sheetListSchema,

@@ -168,6 +168,9 @@ importers:
 
   ../../packages/tencent-doc-sdk:
     dependencies:
+      api-sdk-framework:
+        specifier: workspace:*
+        version: link:../api-sdk-framework
       zod:
         specifier: ^4.6.5
         version: 4.6.5

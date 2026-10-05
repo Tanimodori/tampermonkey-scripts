@@ -1,5 +1,5 @@
+import { ApiError, ApiErrorCodes } from 'api-sdk-framework';
 import { describe, expect, it } from 'vitest';
-import { TencentDocsError } from '@/error';
 import { createCredentialStore } from '@/token/store';
 
 /**
@@ -14,7 +14,7 @@ function token(input: { sub?: string; exp?: number; iat?: number }): string {
   return `${encode({ alg: 'none' })}.${encode({ ...input })}.signature`;
 }
 
-const EXPECTED_CONFIG = expect.objectContaining({ name: 'TencentDocsError', code: 'config' } as const satisfies Partial<TencentDocsError>);
+const EXPECTED_CONFIG = expect.objectContaining({ name: 'ApiError', errorCode: ApiErrorCodes.BAD_INPUT } as const satisfies Partial<ApiError>);
 
 describe('an empty store', () => {
   it('holds nothing, so `get()` reports every part unknown rather than failing', () => {

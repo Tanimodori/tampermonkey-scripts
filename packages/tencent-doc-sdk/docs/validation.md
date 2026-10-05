@@ -11,6 +11,6 @@ schema 全部集中在 `endpoints/schema.ts`：线上契约（响应、信封头
 
 ## 校验发生在两处
 
-- 入参：调用链第一步，`requestSchema?.parse` 不过即 `config`，字段路径按调用方形状走（`offset`，不是 `getRecords.offset`）。
-- 出参：适配器投影之后，`responseSchema?.parse` 不过即 `invalid_answer`；投影自己抛出的（比如答复里没有 `data`）同样归 `invalid_answer`。
-- 信封头由判定自己读，不经过端点的 schema：读不出就当没有业务码，信封契约下报 `invalid_answer`，裸答契约下交给调用方，见 [错误处理](error.md)。
+- 入参：调用链第一步，`requestSchema?.parse` 不过即 `BAD_INPUT`，字段路径按调用方形状走（`offset`，不是 `getRecords.offset`）；坐标校验不过同样是 `BAD_INPUT`。
+- 出参：适配器投影之后，`responseSchema?.parse` 不过即 `BAD_OUTPUT`；投影自己抛出的（比如答复里没有 `data`）同样归 `BAD_OUTPUT`。
+- 信封头由判定自己读，不经过端点的 schema：读不出就当没有业务码，信封契约下报 `BAD_OUTPUT`，裸答契约下交给调用方，见 [错误处理](error.md)。

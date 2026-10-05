@@ -1,6 +1,6 @@
+import { ApiError, ApiErrorCodes } from 'api-sdk-framework';
 import pupa from 'pupa';
 import type { z } from 'zod';
-import { inputRejected } from '@/error';
 
 /**
  * 文档坐标如何成为路径：本库唯一做路径插值的地方。
@@ -43,7 +43,7 @@ export function buildPath(template: string, params: PathParams): string {
  * 一次调用实际寻址的坐标：client 配置的与调用自带的两份合并，再按端点自己的坐标 schema 校验。
  *
  * 合并后校验而不是各查各的，从前的行为就是这样：调用方可以只覆盖一半（同文档换一张子表），另一半由配置补齐；
- * 多出来的键在整对校验时被剥掉。校验不过报 `inputRejected`，点名字段。
+ * 多出来的键在整对校验时被剥掉。校验不过抛 `BAD_INPUT`，点名字段。
  */
 export function resolveCoordinates<S extends z.ZodType>(
   operation: string,
@@ -52,6 +52,18 @@ export function resolveCoordinates<S extends z.ZodType>(
   override: Partial<DocCoordinates> | undefined,
 ): z.output<S> {
   const parsed = schema.safeParse({ ...configured, ...override });
-  if (!parsed.success) throw inputRejected(operation, parsed.error);
+  if (!parsed.success) {
+    throw new ApiError({
+      errorCode: ApiErrorCodes.BAD_INPUT,
+      operation,
+      message: `The ${operation} call was given an input it cannot send (${broken(parsed.error)})`,
+      cause: parsed.error,
+    });
+  }
   return parsed.data as z.output<S>;
+}
+
+/** 请求的哪一段被它声明的入参拒了：点名字段，然后停下。 */
+function broken(issues: z.ZodError): string {
+  return issues.issues.map((issue) => `${issue.path.length === 0 ? '(body)' : issue.path.join('.')}: ${issue.message}`).join('; ');
 }

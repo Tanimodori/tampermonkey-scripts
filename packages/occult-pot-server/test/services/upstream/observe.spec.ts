@@ -1,5 +1,5 @@
 import { captureLogs, loadTestConfig } from '@test/testUtils/helpers.ts';
-import { TencentDocsError } from 'tencent-doc-sdk';
+import { ApiError, ApiErrorCodes } from 'tencent-doc-sdk';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '@/errors.ts';
 import type { ErrorCode } from '@/errors.ts';
@@ -17,25 +17,28 @@ import { serviceCodeOf, toAppError, upstreamCall } from '@/services/upstream/obs
  */
 
 const SHEET_PATH = '/openapi/smartbook/v2/files/300000000$ExAmPlEfIlEiD/sheets/tXXXXXX';
+const SHEET_URL = `https://docs.qq.com${SHEET_PATH}`;
 
 /** The three shapes a call leaves in: an answer, a verdict, and no answer at all. */
 const answeredAs = <T>(value: T): Promise<T> => upstreamCall('getRecords', () => Promise.resolve(value));
-const failedAs = (error: TencentDocsError): Promise<never> => upstreamCall('getRecords', () => Promise.reject(error));
+const failedAs = (error: ApiError): Promise<never> => upstreamCall('getRecords', () => Promise.reject(error));
 /** The same failure, for a case about what was counted rather than about what was thrown. */
-const failedQuietly = async (error: TencentDocsError): Promise<void> => {
+const failedQuietly = async (error: ApiError): Promise<void> => {
   await failedAs(error).catch(() => undefined);
 };
 
-const RATE_LIMITED = new TencentDocsError('rate_limited', 'Tencent Docs rate limit reached (status=429, ret=400007, msg=请求数超过限制)', {
-  status: 429,
-  ret: 400007,
-  retryAfterSeconds: 7,
-  path: SHEET_PATH,
+const RATE_LIMITED = new ApiError({
+  errorCode: ApiErrorCodes.RATE_LIMIT,
+  message: 'Tencent Docs rate limit reached (status=429, ret=400007, msg=请求数超过限制)',
+  request: { url: SHEET_URL, init: { method: 'POST' } },
+  response: { status: 429, headers: { 'retry-after': '7' }, body: { ret: 400007, msg: '请求数超过限制' } },
 });
-const UNSENT = new TencentDocsError('transport', 'Request to https://docs.qq.com/oauth/v2/token failed', {
+const UNSENT = new ApiError({
+  errorCode: ApiErrorCodes.NETWORK_ERROR,
+  message: 'Simulated transport failure for https://docs.qq.com/oauth/v2/token?client_secret=a-secret-value',
   // What the transport actually said, quoted in full — which is why it stays the cause and not the line.
   cause: new Error('connect ETIMEDOUT https://docs.qq.com/oauth/v2/token?client_secret=a-secret-value'),
-  path: '/oauth/v2/token',
+  request: { url: 'https://docs.qq.com/oauth/v2/token', init: { method: 'GET' } },
 });
 
 /** The records about the one thing a case is looking at, ignoring whatever else the run wrote. */
@@ -89,17 +92,19 @@ describe('the log lines a call leaves', () => {
     await expect(failedAs(UNSENT)).rejects.toBe(UNSENT);
 
     expect(about(records, 'Tencent Docs call could not be sent')).toEqual([
-      expect.objectContaining({ level: 'warning', operation: 'getRecords', path: '/oauth/v2/token', reason: UNSENT.message }),
+      expect.objectContaining({ level: 'warning', operation: 'getRecords', path: '/oauth/v2/token', reason: expect.any(String) }),
     ]);
     expect(about(records, 'Tencent Docs call could not be sent')[0]).not.toHaveProperty('status');
-    // The library's wording is what is written down, never the cause's, which quotes the URL in full.
+    // The line carries the message with every URL's query string dropped, and never the cause's wording.
     expect(JSON.stringify(records)).not.toContain('a-secret-value');
   });
 
   it('records an answer that arrived in a shape nobody can read', async () => {
     const records = captureLogs();
-    const unreadable = new TencentDocsError('invalid_answer', 'Tencent Docs answered getRecords with a shape that cannot be read (data: expected object)', {
-      path: SHEET_PATH,
+    const unreadable = new ApiError({
+      errorCode: ApiErrorCodes.BAD_OUTPUT,
+      message: 'Tencent Docs answered getRecords with a shape that cannot be read (data: expected object)',
+      request: { url: SHEET_URL, init: { method: 'POST' } },
       response: { status: 200, headers: {}, body: { ret: 0, msg: 'Succeed' } },
     });
 
@@ -119,7 +124,12 @@ describe('the log lines a call leaves', () => {
 
     await answeredAs(sheet);
     await failedQuietly(
-      new TencentDocsError('invalid_answer', 'a shape that cannot be read', { path: SHEET_PATH, response: { status: 200, headers: {}, body: sheet } }),
+      new ApiError({
+        errorCode: ApiErrorCodes.BAD_OUTPUT,
+        message: 'a shape that cannot be read',
+        request: { url: SHEET_URL, init: { method: 'POST' } },
+        response: { status: 200, headers: {}, body: sheet },
+      }),
     );
 
     // The whole answer rides on the error now, for whoever has to look at it again; a log line is not that.
@@ -163,7 +173,7 @@ describe('the metrics a call feeds', () => {
   it('counts an unreadable answer as the failure its caller was handed', async () => {
     metricsRegistry.resetMetrics();
 
-    await failedQuietly(new TencentDocsError('invalid_answer', 'a shape that cannot be read', { path: SHEET_PATH }));
+    await failedQuietly(new ApiError({ errorCode: ApiErrorCodes.BAD_OUTPUT, message: 'a shape that cannot be read' }));
 
     const body = await renderMetrics();
     expect(body).toMatch(/occult_pot_upstream_requests_total\{operation="getRecords",result="ERR_UPSTREAM_FAILED"\} 1/);
@@ -214,22 +224,28 @@ describe('the metrics a call feeds', () => {
 describe("translating the library's verdict", () => {
   it('gives each verdict the code this service answers with', () => {
     const expected: Record<string, ErrorCode> = {
-      auth: 'ERR_UPSTREAM_AUTH_FAILED',
-      rate_limited: 'ERR_UPSTREAM_RATE_LIMITED',
-      bad_request: 'ERR_UPSTREAM_BAD_REQUEST',
-      server: 'ERR_UPSTREAM_FAILED',
-      transport: 'ERR_UPSTREAM_FAILED',
-      invalid_answer: 'ERR_UPSTREAM_FAILED',
-      config: 'ERR_CONFIG_INVALID',
+      UNAUTHORIZED: 'ERR_UPSTREAM_AUTH_FAILED',
+      RATE_LIMIT: 'ERR_UPSTREAM_RATE_LIMITED',
+      BAD_REQUEST: 'ERR_UPSTREAM_BAD_REQUEST',
+      SERVER_ERROR: 'ERR_UPSTREAM_FAILED',
+      NETWORK_ERROR: 'ERR_UPSTREAM_FAILED',
+      BAD_OUTPUT: 'ERR_UPSTREAM_FAILED',
+      BAD_INPUT: 'ERR_CONFIG_INVALID',
     };
 
     for (const [code, wanted] of Object.entries(expected)) {
-      expect(serviceCodeOf(code as never)).toBe(wanted);
+      expect(serviceCodeOf(code)).toBe(wanted);
     }
+    // A code this service has never seen still lands on the generic upstream failure rather than crashing.
+    expect(serviceCodeOf('SOME_FUTURE_CODE')).toBe('ERR_UPSTREAM_FAILED');
   });
 
   it("keeps the upstream's own wording, and says nothing about another attempt", () => {
-    const error = new TencentDocsError('server', 'Tencent Docs returned HTTP 500 for getRecords (ret=400010, msg=服务内部错误)', { status: 500 });
+    const error = new ApiError({
+      errorCode: ApiErrorCodes.SERVER_ERROR,
+      message: 'Tencent Docs returned HTTP 500 for getRecords (ret=400010, msg=服务内部错误)',
+      response: { status: 500, headers: {}, body: { ret: 400010 } },
+    });
 
     const mapped = toAppError(error);
 
@@ -242,11 +258,15 @@ describe("translating the library's verdict", () => {
   it('carries the cause across the translation', () => {
     const cause = new Error('socket hang up');
 
-    expect(toAppError(new TencentDocsError('transport', 'Request to getRecords failed', { cause })).cause).toBe(cause);
+    expect(toAppError(new ApiError({ errorCode: ApiErrorCodes.NETWORK_ERROR, message: 'Request to getRecords failed', cause })).cause).toBe(cause);
   });
 
   it('tells a rate-limited client to wait as long as our own pacing window, not the upstream’s minute', () => {
-    const error = new TencentDocsError('rate_limited', 'Tencent Docs rate limit reached (status=429)', { status: 429, retryAfterSeconds: 7 });
+    const error = new ApiError({
+      errorCode: ApiErrorCodes.RATE_LIMIT,
+      message: 'Tencent Docs rate limit reached (status=429)',
+      response: { status: 429, headers: { 'retry-after': '7' }, body: {} },
+    });
 
     // A sub-second window still says "a second", which is the smallest thing a `Retry-After` can say.
     loadTestConfig({ OPS_UPSTREAM_INTERVAL_MS: '30000' });
@@ -256,7 +276,11 @@ describe("translating the library's verdict", () => {
   });
 
   it('leaves the upstream hint with any other failure', () => {
-    const error = new TencentDocsError('auth', 'Tencent Docs rejected the credential (ret=10303)', { status: 401, retryAfterSeconds: 7 });
+    const error = new ApiError({
+      errorCode: ApiErrorCodes.UNAUTHORIZED,
+      message: 'Tencent Docs rejected the credential (ret=10303)',
+      response: { status: 401, headers: { 'retry-after': '7' }, body: { ret: 10303 } },
+    });
 
     expect(toAppError(error).retryAfterSeconds).toBeUndefined();
   });

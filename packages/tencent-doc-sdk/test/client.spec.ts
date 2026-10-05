@@ -1,8 +1,8 @@
+import { ApiError, ApiErrorCodes } from 'api-sdk-framework';
 import type { WebFetcher, WebFetcherRequestInit } from 'universal-fetch-type';
 import { describe, expect, it } from 'vitest';
-import { createApi } from '@/client';
+import { createTDocClient } from '@/client';
 import { endpoints } from '@/endpoints';
-import type { TencentDocsError } from '@/error';
 import { createCredentialStore } from '@/token/store';
 import type { CredentialStore } from '@/token/store';
 
@@ -35,7 +35,7 @@ function wired(options: { apiBase?: string; store?: CredentialStore; reply?: { s
     });
   };
 
-  return { api: createApi({ apiBase: options.apiBase ?? API_BASE, store: options.store ?? store, params: COORDINATES, transport }), seen };
+  return { api: createTDocClient({ apiBase: options.apiBase ?? API_BASE, store: options.store ?? store, params: COORDINATES, transport }), seen };
 }
 
 /** 第一次被要求发出的调用，平铺地说出来。 */
@@ -55,8 +55,8 @@ function sent(seen: Array<{ url: string; init: WebFetcherRequestInit }>): {
   };
 }
 
-async function failure(causing: Promise<unknown>): Promise<TencentDocsError> {
-  return (await causing.catch((caught: unknown) => caught)) as TencentDocsError;
+async function failure(causing: Promise<unknown>): Promise<ApiError> {
+  return (await causing.catch((caught: unknown) => caught)) as ApiError;
 }
 
 /** 一页请求，调用方形状；线上形状是 `{ getRecords: … }`。 */
@@ -100,8 +100,9 @@ describe('the address a call goes to', () => {
     const { api, seen } = wired({ apiBase: 'docs-not-a-url', reply: { body: ENVELOPE } });
     const thrown = await failure(api.call(endpoints.getRecords, PAGE));
 
-    expect(thrown.code).toBe('config');
-    expect(thrown.message).toContain('getRecords');
+    expect(thrown.errorCode).toBe(ApiErrorCodes.BAD_INPUT);
+    expect(thrown.operation).toBe('getRecords');
+    expect((thrown.cause as Error).message).toContain('Invalid URL');
     expect(seen).toHaveLength(0);
   });
 });
@@ -141,7 +142,7 @@ describe('the verb, the body and the headers', () => {
     const { api, seen } = wired({ store: createCredentialStore({ accessToken: 'a-token-value', clientId: 'c-id' }), reply: { body: ENVELOPE } });
     const thrown = await failure(api.call(endpoints.getRecords, PAGE));
 
-    expect(thrown.code).toBe('config');
+    expect(thrown.errorCode).toBe(ApiErrorCodes.BAD_INPUT);
     expect(thrown.message).toContain('Open-Id');
     // 凭据在读地址之后才读，因此一个根本不会出去的调用不说它本来会带上什么。
     expect(seen).toHaveLength(0);
@@ -199,10 +200,9 @@ describe('what a call answers with', () => {
     const { api } = wired({ reply: { body: { ret: 0, msg: 'Succeed' } } });
     const thrown = await failure(api.call(endpoints.getRecords, PAGE));
 
-    expect(thrown.code).toBe('invalid_answer');
+    expect(thrown.errorCode).toBe(ApiErrorCodes.BAD_OUTPUT);
     expect(thrown.message).toContain('getRecords');
-    // `status` 是故意不带的：这份答复过了判定，上游没有不对，是读它的方式不对。答复本身仍然留着给要看第二眼的人。
-    expect(thrown.status).toBeUndefined();
+    // 整份答复仍然留着给要看第二眼的人。
     expect(thrown.response).toMatchObject({ status: 200 });
   });
 
@@ -217,8 +217,8 @@ describe('what a call answers with', () => {
     const { api } = wired({ reply: { status: 429, body: { ret: 400007, msg: '请求数超过限制' }, headers: { 'retry-after': '7' } } });
     const thrown = await failure(api.call(endpoints.refreshToken, { clientId: 'c', clientSecret: 's', refreshToken: 'r' }));
 
-    expect(thrown.code).toBe('rate_limited');
-    expect(thrown.retryAfterSeconds).toBe(7);
+    expect(thrown.errorCode).toBe(ApiErrorCodes.RATE_LIMIT);
+    expect(thrown.response?.headers['retry-after']).toBe('7');
   });
 });
 
@@ -227,7 +227,7 @@ describe('a call that never became a request', () => {
     const { api, seen } = wired({ reply: { body: ENVELOPE } });
     const thrown = await failure(api.call(endpoints.getRecords, { offset: -1, limit: 10 }));
 
-    expect(thrown.code).toBe('config');
+    expect(thrown.errorCode).toBe(ApiErrorCodes.BAD_INPUT);
     expect(thrown.message).toContain('offset');
     expect(seen).toHaveLength(0);
   });
@@ -239,7 +239,7 @@ describe('a call that never became a request', () => {
     const wrongEndpointBody = { addRecords: { records: [{ values: {} }] } };
     const thrown = await failure(api.call(endpoints.getRecords, wrongEndpointBody as never));
 
-    expect(thrown.code).toBe('config');
+    expect(thrown.errorCode).toBe(ApiErrorCodes.BAD_INPUT);
     expect(seen).toHaveLength(0);
   });
 
@@ -251,43 +251,43 @@ describe('a call that never became a request', () => {
     const thrown = await failure(api.call(endpoints.addRecords, { records: [{ values: circular }] }));
 
     // schema 让一个环状对象过了——`values` 是表自己的事——因此这是序列化器的发现，原因被留着而不是引用进消息。
-    expect(thrown.code).toBe('config');
-    expect(thrown.message).toContain('addRecords');
+    expect(thrown.errorCode).toBe(ApiErrorCodes.BAD_INPUT);
+    expect(thrown.operation).toBe('addRecords');
     expect((thrown.cause as Error).message).toContain('circular');
     expect(seen).toHaveLength(0);
   });
 });
 
 describe('an answer that never arrived', () => {
-  it('is a transport failure, worded from the address with its query gone', async () => {
+  it('is a network failure, leaving the raw reason to the cause', async () => {
     const transport: WebFetcher = async () => {
       throw new TypeError('fetch failed: https://docs.qq.com/oauth/v2/userinfo?access_token=a-token-value');
     };
-    const api = createApi({ apiBase: API_BASE, store, params: COORDINATES, transport });
+    const api = createTDocClient({ apiBase: API_BASE, store, params: COORDINATES, transport });
     const thrown = await failure(api.call(endpoints.userinfo));
 
-    expect(thrown.code).toBe('transport');
-    expect(thrown.path).toBe('/oauth/v2/userinfo');
-    expect(thrown.message).not.toContain('access_token');
-    expect((thrown.cause as Error).message).toContain('access_token');
+    expect(thrown.errorCode).toBe(ApiErrorCodes.NETWORK_ERROR);
+    // 框架的缺省措辞是 cause 自己的话；凭据在查询串里这件事仍由调用方决定要不要、怎么脱敏。
+    expect(thrown.cause).toBeInstanceOf(TypeError);
+    expect(thrown.message).toContain('fetch failed');
   });
 
-  it('is a transport failure when the body is not JSON either, which is what a gateway answers with', async () => {
+  it('is a network failure when the body is not JSON either, which is what a gateway answers with', async () => {
     const { api } = wired({ reply: { body: '<html>Bad Gateway</html>' } });
     const thrown = await failure(api.call(endpoints.userinfo));
 
-    expect(thrown.code).toBe('transport');
-    expect(thrown.status).toBeUndefined();
+    expect(thrown.errorCode).toBe(ApiErrorCodes.NETWORK_ERROR);
+    expect(thrown.response).toBeUndefined();
   });
 
-  it('keeps the secret out of the reported path of a call that carries one in its query', async () => {
-    const { api, seen } = wired({ reply: { status: 500, body: { message: 'boom' } } });
+  it('keeps the request a call carried, for whoever wants the address', async () => {
+    const { api } = wired({ reply: { status: 500, body: { message: 'boom' } } });
     const thrown = await failure(api.call(endpoints.refreshToken, { clientId: 'c', clientSecret: 'a-secret', refreshToken: 'r-token' }));
 
-    expect(thrown.code).toBe('server');
-    expect(thrown.path).toBe('/oauth/v2/token');
-    expect(thrown.path).not.toContain('a-secret');
-    expect(seen).toHaveLength(1);
+    expect(thrown.errorCode).toBe(ApiErrorCodes.SERVER_ERROR);
+    // 框架原样带上完整 URL；要不要脱敏、怎么脱敏是调用方自己的事。
+    expect(thrown.request?.url).toContain('/oauth/v2/token');
+    expect(thrown.response?.status).toBe(500);
   });
 });
 
@@ -298,7 +298,7 @@ describe('the transport', () => {
       seen.push({ url, init });
       return new Response(JSON.stringify(ENVELOPE));
     };
-    const api = createApi({ apiBase: API_BASE, store, params: COORDINATES, transport });
+    const api = createTDocClient({ apiBase: API_BASE, store, params: COORDINATES, transport });
     await api.call(endpoints.getRecords, PAGE);
 
     expect(seen).toHaveLength(1);
@@ -315,7 +315,7 @@ describe('the transport', () => {
 
     try {
       // `userinfo` 是唯一不带头字段的调用，因此剩下的就是端点描述的请求本身，别的什么都没有。
-      const api = createApi({ apiBase: API_BASE, store, params: COORDINATES });
+      const api = createTDocClient({ apiBase: API_BASE, store, params: COORDINATES });
       await api.call(endpoints.userinfo);
     } finally {
       globalThis.fetch = original;

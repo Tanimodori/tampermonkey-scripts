@@ -1,49 +1,24 @@
-import { z } from 'zod';
+import { ApiError, ApiErrorCodes } from 'api-sdk-framework';
+import type { ApiResponse } from 'api-sdk-framework';
 import { answerHeaderSchema } from '@/endpoints/schema';
-import type { ApiResponse, Envelope, TencentDocsErrorCode } from '@/types';
 
 /**
- * 一次调用只抛 `TencentDocsError`。上游语义由 `getEnvelope`/`getBareAnswer` 与 `verifyEnvelope` 直接抛出，其余失败由
- * 四个构造 helper 归类，client 在出栈处补上 `path`。
+ * 判定层：一次调用只抛 `ApiError`（框架的唯一失败类型）。上游语义由 `getEnvelope`/`getBareAnswer` 与
+ * `verifyEnvelope` 直接抛出，错误码取框架 `ApiErrorCodes` 里语义对应的那一个；`operation` 与 `response` 由出栈处
+ * （框架的 `call`）或这里补上。
  *
  * 判定是「读过的答复查一张表」，不发送、不计时、不重试：每个端点每答一次查一次，怎么处理由调用方决定。
  */
 
-export interface TencentDocsErrorOptions {
-  readonly status?: number | undefined;
-  readonly ret?: number | undefined;
-  readonly msg?: string | undefined;
-  readonly retryAfterSeconds?: number | undefined;
-  readonly maskedBody?: string | undefined;
-  readonly response?: ApiResponse | undefined;
-  readonly path?: string | undefined;
-  readonly cause?: unknown;
-}
-
-/** 一次失败的调用，带着上游说过的全部信息。 */
-export class TencentDocsError extends Error {
-  override readonly name = 'TencentDocsError';
-  readonly code: TencentDocsErrorCode;
-  readonly status: number | undefined;
-  readonly ret: number | undefined;
+/** 一次答复的信封：传输级判定之后，交给适配器读取的那一份。 */
+export interface Envelope<T = unknown> {
+  /** 业务码，判定之后已确定是数字。 */
+  readonly ret: number;
   readonly msg: string | undefined;
-  readonly retryAfterSeconds: number | undefined;
-  readonly maskedBody: string | undefined;
-  readonly response: ApiResponse | undefined;
-  /** 调用发往的路径，查询串已丢（三个 OAuth 调用都有凭据在查询串里）；分类失败由 client 在出栈处补上。 */
-  path: string | undefined;
-
-  constructor(code: TencentDocsErrorCode, message: string, options: TencentDocsErrorOptions = {}) {
-    super(message, options.cause === undefined ? undefined : { cause: options.cause });
-    this.code = code;
-    this.status = options.status;
-    this.ret = options.ret;
-    this.msg = options.msg;
-    this.retryAfterSeconds = options.retryAfterSeconds;
-    this.maskedBody = options.maskedBody;
-    this.response = options.response;
-    this.path = options.path;
-  }
+  /** `body.data` 那一段；缺失由端点的 `responseSchema` 兜底。 */
+  readonly data: T;
+  /** 原样答复，判定失败时随错误带上。 */
+  readonly response: ApiResponse;
 }
 
 /**
@@ -59,27 +34,36 @@ const RATE_LIMIT_RET_CODES = new Set([400007]);
  * 传输级判定：429 与限流 ret、5xx、401/403。这些状态压过业务码，两种答复契约都先过这一关——
  * `400010`（服务内部错误）带着 HTTP 500 到达，判在业务范围之前就会把它说成 bad request。
  */
-function transportVerdict(response: ApiResponse, ret: number | undefined, msg: string | undefined, operation: string): TencentDocsError | undefined {
+function transportVerdict(response: ApiResponse, ret: number | undefined, msg: string | undefined, operation: string): ApiError | undefined {
   const said = joined([ret === undefined ? undefined : `ret=${ret}`, msg === undefined ? undefined : `msg=${msg}`]);
   const because = said === '' ? '' : ` (${said})`;
 
   if (response.status === 429 || (ret !== undefined && RATE_LIMIT_RET_CODES.has(ret))) {
-    return new TencentDocsError('rate_limited', `Tencent Docs rate limit reached (${joined([`status=${response.status}`, said === '' ? undefined : said])})`, {
-      ...detailsOf(response, ret, msg),
-      retryAfterSeconds: retryAfterSeconds(response.headers),
+    return new ApiError({
+      errorCode: ApiErrorCodes.RATE_LIMIT,
+      message: `Tencent Docs rate limit reached (${joined([`status=${response.status}`, said === '' ? undefined : said])})`,
+      response,
     });
   }
   if (response.status >= 500) {
-    return new TencentDocsError('server', `Tencent Docs returned HTTP ${response.status} for ${operation}${because}`, detailsOf(response, ret, msg));
+    return new ApiError({
+      errorCode: ApiErrorCodes.SERVER_ERROR,
+      message: `Tencent Docs returned HTTP ${response.status} for ${operation}${because}`,
+      response,
+    });
   }
   if (response.status === 401 || response.status === 403) {
-    return new TencentDocsError('auth', `Tencent Docs returned HTTP ${response.status} for ${operation}${because}`, detailsOf(response, ret, msg));
+    return new ApiError({
+      errorCode: ApiErrorCodes.UNAUTHORIZED,
+      message: `Tencent Docs returned HTTP ${response.status} for ${operation}${because}`,
+      response,
+    });
   }
   return undefined;
 }
 
 /**
- * 信封契约的答复：传输级判定后读信封头，`ret` 读不出即 `invalid_answer`；通过后交给适配器读段落。
+ * 信封契约的答复：传输级判定后读信封头，`ret` 读不出即 `BAD_OUTPUT`；通过后交给适配器读段落。
  *
  * 读不出 `ret` 的答复与「业务码非零」不同：后者是上游判了失败，前者是这份答复根本不是本库的词汇。
  */
@@ -89,9 +73,11 @@ export function getEnvelope<T = unknown>(response: ApiResponse, operation: strin
   if (failure !== undefined) throw failure;
   if (ret === undefined) {
     const masked = describeBody(response.body);
-    throw new TencentDocsError('invalid_answer', `Unexpected response from Tencent Docs for ${operation} (status=${response.status}, body=${masked})`, {
-      ...detailsOf(response, ret, msg),
-      maskedBody: masked,
+    throw new ApiError({
+      errorCode: ApiErrorCodes.BAD_OUTPUT,
+      operation,
+      message: `Unexpected response from Tencent Docs for ${operation} (status=${response.status}, body=${masked})`,
+      response,
     });
   }
   return { ret, msg, data: (response.body as { data?: T }).data as T, response };
@@ -117,17 +103,12 @@ export function verifyEnvelope(envelope: Envelope): void {
   const said = joined([`ret=${ret}`, msg === undefined ? undefined : `msg=${msg}`]);
   const because = ` (${said})`;
   if (AUTH_RET_CODES.has(ret)) {
-    throw new TencentDocsError('auth', `Tencent Docs rejected the credential${because}`, detailsOf(response, ret, msg));
+    throw new ApiError({ errorCode: ApiErrorCodes.UNAUTHORIZED, message: `Tencent Docs rejected the credential${because}`, response });
   }
   if (ret >= 400000 && ret < 500000) {
-    throw new TencentDocsError('bad_request', `Tencent Docs rejected the request${because}`, detailsOf(response, ret, msg));
+    throw new ApiError({ errorCode: ApiErrorCodes.BAD_REQUEST, message: `Tencent Docs rejected the request${because}`, response });
   }
-  throw new TencentDocsError('bad_request', `Tencent Docs request failed${because}`, detailsOf(response, ret, msg));
-}
-
-/** 一次失败随错误携带的那一份答复。 */
-function detailsOf(response: ApiResponse, ret: number | undefined, msg: string | undefined): TencentDocsErrorOptions {
-  return { status: response.status, ret, msg, response };
+  throw new ApiError({ errorCode: ApiErrorCodes.BAD_REQUEST, message: `Tencent Docs request failed${because}`, response });
 }
 
 /**
@@ -137,53 +118,6 @@ function detailsOf(response: ApiResponse, ret: number | undefined, msg: string |
 function headerOf(body: unknown): { ret: number | undefined; msg: string | undefined } {
   const header = answerHeaderSchema.safeParse(body);
   return header.success ? { ret: header.data.ret, msg: header.data.msg } : { ret: undefined, msg: undefined };
-}
-
-/** 没有等到可读答复的失败：超时、连接被拒、socket 断开、body 没读完、body 不是 JSON。 */
-export function transportFailure(cause: unknown, target: string, path: string): TencentDocsError {
-  return new TencentDocsError('transport', `Request to ${target} failed`, { cause, path });
-}
-
-/**
- * 答复到了、信封也在，但不是端点承诺的形状。
- *
- * `status` 刻意不带上：这份答复已经过了上面的判定，上游没有不对，是读它的方式不对。整份答复仍留在 `response` 上，
- * 给要看第二眼的人。
- */
-export function invalidAnswer(operation: string, response: ApiResponse, path: string, cause: unknown): TencentDocsError {
-  const said = cause instanceof z.ZodError ? broken(cause) : cause instanceof Error ? cause.message : String(cause);
-  const masked = describeBody(response.body);
-  return new TencentDocsError('invalid_answer', `Tencent Docs answered ${operation} with a shape that cannot be read (${said}; body: ${masked})`, {
-    maskedBody: masked,
-    response,
-    path,
-  });
-}
-
-/**
- * 调用没能成为请求的失败：地址拼不出来、body 写不出去。
- *
- * 原因被引用，因为它点名字段，也被留作 cause；两样都读在凭据进入地址或头字段之前，所以这里带不出去一枚凭据。
- */
-export function cannotAssemble(operation: string, cause: unknown): TencentDocsError {
-  const said = cause instanceof Error ? cause.message : String(cause);
-  return new TencentDocsError('config', `The ${operation} call could not be assembled (${said})`, { cause });
-}
-
-/**
- * 调用自带的入参不是它端点声明的形状。
- *
- * 报成 `config` 而不是一个自己的码，因为这正是它的意思：这次调用没法按点单的样子发出去。它也是唯一不读上游就定下的失败，
- * 所以什么都不带 `status`、`ret` 或 `response`——没有答复，也没有花掉配额。字段名来自 schema，这就是它值得吵一句的原因：
- * `offset` 指向调用方自己的代码，上游的 `请求参数错误` 只指向请求。
- */
-export function inputRejected(operation: string, issues: z.ZodError): TencentDocsError {
-  return new TencentDocsError('config', `The ${operation} call was given an input it cannot send (${broken(issues)})`, { cause: issues });
-}
-
-/** 答复里哪个字段是端点的类型没有词读的，或请求的哪一段被它声明的入参拒了。同一个问题，想要同一个答案：点名字段，然后停下。 */
-function broken(issues: z.ZodError): string {
-  return issues.issues.map((issue) => `${issue.path.length === 0 ? '(body)' : issue.path.join('.')}: ${issue.message}`).join('; ');
 }
 
 /**
@@ -214,17 +148,4 @@ function maskCredentials(body: unknown): unknown {
 /** 拼一段诊断信息，丢掉上游没有给的部分。 */
 function joined(parts: ReadonlyArray<string | undefined>): string {
   return parts.filter((part): part is string => part !== undefined).join(', ');
-}
-
-/** 响应的 `Retry-After` 折成秒数，读不出就是 `undefined`。 */
-export function retryAfterSeconds(headers: ApiResponse['headers'], at: number = Date.now()): number | undefined {
-  const raw = headers['retry-after'];
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  if (value === undefined) return undefined;
-
-  const seconds = Number(value);
-  if (Number.isFinite(seconds) && seconds >= 0) return Math.round(seconds);
-
-  const date = Date.parse(value);
-  return Number.isFinite(date) ? Math.max(0, Math.round((date - at) / 1000)) : undefined;
 }

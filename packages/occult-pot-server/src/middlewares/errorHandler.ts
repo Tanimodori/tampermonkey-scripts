@@ -1,6 +1,6 @@
 import { getLogger } from '@logtape/logtape';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
-import { TencentDocsError } from 'tencent-doc-sdk';
+import { isApiError } from 'tencent-doc-sdk';
 import { AppError, isAppError } from '@/errors.ts';
 import type { ErrorCode } from '@/errors.ts';
 import { LOG_CATEGORIES } from '@/logger.ts';
@@ -65,7 +65,7 @@ export function errorHandler(deps: ErrorHandlerDeps): (error: unknown, req: Requ
 
     // A failure the upstream library judged reaches here untranslated whenever nothing on the request
     // path caught it; the code, the status and the wait a client is told all come from that verdict.
-    const claimed = error instanceof TencentDocsError ? toAppError(error) : error;
+    const claimed = isApiError(error) ? toAppError(error) : error;
     const { status, code, message } = describe(claimed);
     const appError = isAppError(claimed) ? claimed : undefined;
     const requestId = getRequestId(req);

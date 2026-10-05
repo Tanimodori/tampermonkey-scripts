@@ -1,8 +1,9 @@
+import { ApiError, ApiErrorCodes } from 'api-sdk-framework';
 import type { WebFetcher } from 'universal-fetch-type';
-import { createApi } from '@/client';
+import { createTDocClient } from '@/client';
 import { endpoints } from '@/endpoints';
 import type { TokenResponse, UserInfo } from '@/endpoints/schema';
-import { describeBody, TencentDocsError } from '@/error';
+import { describeBody } from '@/error';
 import type { CredentialRecord, CredentialStore } from './store';
 
 /**
@@ -12,7 +13,7 @@ import type { CredentialRecord, CredentialStore } from './store';
  * 进程之间把它放哪，是 `token/store.ts` 的事——store 是注入的而不是在这里造的，正是为了让发文档调用的 client 和兑换
  * 令牌的这个管理同一份凭据：这里刷新的令牌就是下一次读取要带的令牌，不需要谁被接到那次兑换上。
  *
- * 三次调用都走一张普通的 `Api`，与别的端点一样。这里加的是两件不是调用的事：一次授权为哪个应用而做，以及一份答复
+ * 三次调用都走一张普通的 `TDocClient`，与别的端点一样。这里加的是两件不是调用的事：一次授权为哪个应用而做，以及一份答复
  * 对凭据意味着什么——上游把授权拼成 `client_id` 与 `redirect_uri`，本库叫它们 `clientId` 与 `redirectUri`，
  * 这层翻译跟着占凭据的人走，授权端点自己的入参已经收下调用方形状。
  *
@@ -44,7 +45,7 @@ export interface TokenManager {
 
 /** 在一份共享凭据上装配一个管理。 */
 export function createTokenManager(options: TokenManagerOptions): TokenManager {
-  const api = createApi({ apiBase: options.apiBase, store: options.store, transport: options.transport });
+  const api = createTDocClient({ apiBase: options.apiBase, store: options.store, transport: options.transport });
   const store = options.store;
   const now = options.now ?? Date.now;
 
@@ -52,7 +53,7 @@ export function createTokenManager(options: TokenManagerOptions): TokenManager {
   function grant(): { clientId: string; clientSecret: string } {
     const secret = options.clientSecret;
     if (secret === undefined || secret.length === 0) {
-      throw new TencentDocsError('config', 'The token endpoints need a client secret, and none was configured');
+      throw new ApiError({ errorCode: ApiErrorCodes.BAD_INPUT, message: 'The token endpoints need a client secret, and none was configured' });
     }
     return { clientId: store.getClientId(), clientSecret: secret };
   }
@@ -60,7 +61,7 @@ export function createTokenManager(options: TokenManagerOptions): TokenManager {
   function hold(body: TokenResponse): CredentialRecord {
     const accessToken = body.access_token;
     if (accessToken === undefined || accessToken.length === 0) {
-      throw new TencentDocsError('auth', `Tencent Docs refused to exchange the credential (body: ${describeBody(body)})`);
+      throw new ApiError({ errorCode: ApiErrorCodes.UNAUTHORIZED, message: `Tencent Docs refused to exchange the credential (body: ${describeBody(body)})` });
     }
 
     const expiresIn = body.expires_in;

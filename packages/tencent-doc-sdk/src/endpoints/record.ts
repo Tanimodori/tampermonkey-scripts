@@ -1,7 +1,8 @@
+import type { ApiRequest, Endpoint } from 'api-sdk-framework';
+import type { TDocClient } from '@/client';
 import { getEnvelope, verifyEnvelope } from '@/error';
 import { buildPath, resolveCoordinates } from '@/path';
 import type { DocCoordinates } from '@/path';
-import type { Api, ApiRequest, Endpoint } from '@/types';
 import {
   addRecordsInputSchema,
   commonRecordsSchema,
@@ -32,7 +33,7 @@ const RECORDS_PATH = '/openapi/smartbook/v2/files/{fileId}/sheets/{sheetId}';
  * 顺序就是失败代价的顺序：坐标的合并与校验最先，写不出的 body 其次，然后才是地址与凭据——一个发不出去的调用
  * 不该报告它本来会带上什么。
  */
-function recordRequest(client: Api, operation: string, override: Partial<DocCoordinates> | undefined, body: unknown): ApiRequest {
+function recordRequest(client: TDocClient, operation: string, override: Partial<DocCoordinates> | undefined, body: unknown): ApiRequest {
   const coordinates = resolveCoordinates(operation, sheetParamsSchema, client.params, override);
   const payload = JSON.stringify(body);
   const url = new URL(buildPath(RECORDS_PATH, coordinates), client.apiBase);
@@ -47,7 +48,7 @@ function recordRequest(client: Api, operation: string, override: Partial<DocCoor
 }
 
 /** 查询记录：一页裸行，用信封自己的词读（`records`、`hasMore`、`next`、`total`）。 */
-export const getRecords: Endpoint<GetRecordsInput, CommonRecords> = {
+export const getRecords: Endpoint<TDocClient, GetRecordsInput, CommonRecords> = {
   operation: 'getRecords',
   requestSchema: getRecordsInputSchema,
   responseSchema: commonRecordsSchema,
@@ -62,7 +63,7 @@ export const getRecords: Endpoint<GetRecordsInput, CommonRecords> = {
 };
 
 /** 新增记录：按给定顺序追加行，答复是收下的行。 */
-export const addRecords: Endpoint<AddRecordsInput, WrittenRecords> = {
+export const addRecords: Endpoint<TDocClient, AddRecordsInput, WrittenRecords> = {
   operation: 'addRecords',
   requestSchema: addRecordsInputSchema,
   responseSchema: writtenRecordsSchema,
@@ -77,7 +78,7 @@ export const addRecords: Endpoint<AddRecordsInput, WrittenRecords> = {
 };
 
 /** 更新记录：按 record id 换掉已有行的单元格。 */
-export const updateRecords: Endpoint<UpdateRecordsInput, WrittenRecords> = {
+export const updateRecords: Endpoint<TDocClient, UpdateRecordsInput, WrittenRecords> = {
   operation: 'updateRecords',
   requestSchema: updateRecordsInputSchema,
   responseSchema: writtenRecordsSchema,
@@ -92,7 +93,7 @@ export const updateRecords: Endpoint<UpdateRecordsInput, WrittenRecords> = {
 };
 
 /** 删除记录：按 record id 删行；答复只有信封头，没有可读的段落。 */
-export const deleteRecords: Endpoint<DeleteRecordsInput, undefined> = {
+export const deleteRecords: Endpoint<TDocClient, DeleteRecordsInput, undefined> = {
   operation: 'deleteRecords',
   requestSchema: deleteRecordsInputSchema,
 

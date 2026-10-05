@@ -1,6 +1,7 @@
 import { testUpstream } from '@test/testUtils/document';
 import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID } from '@test/testUtils/fixtures';
 import { apiOrigin, sheet, sheetWithDocumentedSpelling } from '@test/testUtils/mockUpstream';
+import { ApiErrorCodes } from 'api-sdk-framework';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { endpoints } from '@/endpoints';
 import type { Sheet } from '@/endpoints/schema';
@@ -88,13 +89,16 @@ describe('the failures', () => {
   it('names a rejected credential as the endpoint said, not as a bad request', async () => {
     state.sheetListFailure = { status: 200, ret: 10007, msg: 'No corresponding permissions required' };
 
-    await expect(api.call(endpoints.getSheetList)).rejects.toMatchObject({ code: 'auth' });
+    await expect(api.call(endpoints.getSheetList)).rejects.toMatchObject({ errorCode: ApiErrorCodes.UNAUTHORIZED });
   });
 
   it('names a rate limit, with the wait the upstream asked for', async () => {
     state.sheetListFailure = { status: 429, ret: 400007, msg: '请求数超过限制', headers: { 'retry-after': '1' } };
 
-    await expect(api.call(endpoints.getSheetList)).rejects.toMatchObject({ code: 'rate_limited', retryAfterSeconds: 1 });
+    await expect(api.call(endpoints.getSheetList)).rejects.toMatchObject({
+      errorCode: ApiErrorCodes.RATE_LIMIT,
+      response: { headers: { 'retry-after': '1' } },
+    });
   });
 
   it('gives up on an answer with no section to read, and says which shape it wanted', async () => {
@@ -102,7 +106,7 @@ describe('the failures', () => {
 
     const error = (await api.call(endpoints.getSheetList).catch((caught: unknown) => caught)) as Error;
 
-    expect(error).toMatchObject({ code: 'invalid_answer' });
+    expect(error).toMatchObject({ errorCode: ApiErrorCodes.BAD_OUTPUT });
     expect(error.message).toContain('getSheet');
   });
 
@@ -110,7 +114,7 @@ describe('the failures', () => {
     state.rawReply = { status: 200, body: '- - - HTTP Status: 405 Service Error - - -' };
 
     freshCalls();
-    await expect(api.call(endpoints.getSheetList)).rejects.toMatchObject({ code: 'transport' });
+    await expect(api.call(endpoints.getSheetList)).rejects.toMatchObject({ errorCode: ApiErrorCodes.NETWORK_ERROR });
     expect(state.calls).toHaveLength(1);
   });
 
@@ -118,7 +122,7 @@ describe('the failures', () => {
     state.networkFailures = 1;
 
     freshCalls();
-    await expect(api.call(endpoints.getSheetList)).rejects.toMatchObject({ code: 'transport' });
+    await expect(api.call(endpoints.getSheetList)).rejects.toMatchObject({ errorCode: ApiErrorCodes.NETWORK_ERROR });
     expect(state.calls).toHaveLength(1);
   });
 });

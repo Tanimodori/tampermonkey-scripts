@@ -1,7 +1,7 @@
 import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, TEST_CREDENTIAL } from '@test/testUtils/fixtures';
 import { getRecordsAnswer, getSheetAnswer, tokenAnswer, userInfoAnswer, writtenRecordsAnswer } from '@test/testUtils/mockUpstream';
 import { describe, expect, it } from 'vitest';
-import { createApi } from '@/client';
+import { createTDocClient } from '@/client';
 import { accessToken, addRecords, deleteRecords, endpoints, getRecords, getSheetList, refreshToken, updateRecords, userinfo } from '@/endpoints';
 import { createCredentialStore } from '@/token/store';
 
@@ -12,7 +12,7 @@ import { createCredentialStore } from '@/token/store';
  * 什么、答复读哪一段——而完整往返（含失败、掩码、重试边界）在 `endpoints/*.spec.ts` 与 `client.spec.ts`。
  */
 
-const client = createApi({
+const client = createTDocClient({
   apiBase: 'https://docs.qq.com',
   store: createCredentialStore(TEST_CREDENTIAL),
   params: { fileId: EXAMPLE_FILE_ID, sheetId: EXAMPLE_SHEET_ID },

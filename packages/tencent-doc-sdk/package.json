@@ -37,6 +37,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "api-sdk-framework": "workspace:*",
     "zod": "^4.6.5"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 import { getLogger } from '@logtape/logtape';
-import { createApi, createCredentialStore, createTokenManager, describeBody, endpoints, readAccessTokenExpiresAt } from 'tencent-doc-sdk';
-import type { Api, CredentialRecord, CredentialStore, TokenManager } from 'tencent-doc-sdk';
+import { createTDocClient, createCredentialStore, createTokenManager, describeBody, endpoints, readAccessTokenExpiresAt } from 'tencent-doc-sdk';
+import type { TDocClient, CredentialRecord, CredentialStore, TokenManager } from 'tencent-doc-sdk';
 import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
 import { formatInstant, LOG_CATEGORIES } from '@/logger.ts';
@@ -58,7 +58,7 @@ export interface UpstreamStore {
   readonly sheetId: string;
   readonly accessToken: string;
   /** Makes the record and sub-sheet calls, over the credential and coordinates wired up below. */
-  readonly api: Api;
+  readonly api: TDocClient;
   /** Epoch ms at which the current credential expires, when known. */
   expiresAt(): number | undefined;
   /** True once `resolve()` has run for the current configuration. */
@@ -128,7 +128,7 @@ export async function rememberCredential(record: CredentialRecord): Promise<void
 interface Wired {
   readonly store: CredentialStore;
   readonly tokens: TokenManager;
-  readonly api: Api;
+  readonly api: TDocClient;
 }
 
 /**
@@ -197,7 +197,7 @@ export function useUpstreamStore(): UpstreamStore {
     return {
       store,
       tokens: createTokenManager({ apiBase, store, transport, clientSecret }),
-      api: createApi({ apiBase, params: { fileId, sheetId }, store, transport }),
+      api: createTDocClient({ apiBase, params: { fileId, sheetId }, store, transport }),
     };
   }
 
@@ -338,7 +338,7 @@ export function useUpstreamStore(): UpstreamStore {
     get accessToken(): string {
       return library().store.getAccessToken();
     },
-    get api(): Api {
+    get api(): TDocClient {
       return library().api;
     },
     expiresAt(): number | undefined {

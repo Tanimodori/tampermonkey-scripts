@@ -1,5 +1,6 @@
 import type {
-  Api,
+  ApiErrorCode,
+  ApiErrorInit,
   CallArgs,
   CommonRecord,
   CommonRecords,
@@ -7,15 +8,13 @@ import type {
   CredentialStore,
   Endpoint,
   Sheet,
-  TencentDocsError,
-  TencentDocsErrorCode,
-  TencentDocsErrorOptions,
+  TDocClient,
   TokenManager,
   WrittenRecords,
 } from 'tencent-doc-sdk';
 
 /**
- * The fake this service's tests run on: an in-memory sub-sheet behind an `Api`, and a credential
+ * The fake this service's tests run on: an in-memory sub-sheet behind a `TDocClient`, and a credential
  * behind a `CredentialStore` that a `TokenManager` writes.
  *
  * It stands in for `tencent-doc-sdk`'s three factories — see `fakeTencentDocsModule()` — and nothing else:
@@ -41,8 +40,8 @@ import type {
  * ```
  *
  * The fake borrows one thing from the real module it replaces — its error class, which is why the
- * install takes `importOriginal`'s answer. A failure the service maps is a `TencentDocsError` by
- * `instanceof`, and this file imports nothing from the library at all: a value import would be
+ * install takes `importOriginal`'s answer. A failure the service maps is the framework's `ApiError` by
+ * `isApiError`, and this file imports nothing from the library at all: a value import would be
  * redirected to the mock the factory is still building.
  *
  * The mock is per spec file, which is also why the state below is a module-level singleton: within one
@@ -141,21 +140,16 @@ export function resetSheet(): void {
  */
 const AUTH_RET_CODES = new Set([10007, 10302, 10303, 10313, 37019]);
 
-function verdictOf(failure: FakeFailure): TencentDocsErrorCode {
-  if (failure.status === 429 || failure.ret === 400007) return 'rate_limited';
-  if (failure.status >= 500) return 'server';
-  if (failure.status === 401 || failure.status === 403 || AUTH_RET_CODES.has(failure.ret)) return 'auth';
-  return 'bad_request';
+function verdictOf(failure: FakeFailure): ApiErrorCode {
+  if (failure.status === 429 || failure.ret === 400007) return 'RATE_LIMIT';
+  if (failure.status >= 500) return 'SERVER_ERROR';
+  if (failure.status === 401 || failure.status === 403 || AUTH_RET_CODES.has(failure.ret)) return 'UNAUTHORIZED';
+  return 'BAD_REQUEST';
 }
 
-function readNumber(value: string | undefined): number | undefined {
-  const parsed = Number(value);
-  return value === undefined || !Number.isFinite(parsed) ? undefined : parsed;
-}
-
-/** The library's own error class, which is what a caller's mapping recognises a failure as. */
-export interface TencentDocsErrorClass {
-  new (code: TencentDocsErrorCode, message: string, options?: TencentDocsErrorOptions): TencentDocsError;
+/** The framework's `ApiError` class, which is what a caller's mapping recognises a failure as. */
+export interface ApiErrorClass {
+  new (init: ApiErrorInit): Error;
 }
 
 /** How one fake call is recorded and, when the case asked for it, failed. */
@@ -164,21 +158,20 @@ interface FakeFailures {
   begin<T>(operation: string, args: unknown, failure: FakeFailure | undefined, answer: () => T): Promise<T>;
 }
 
-function failures(TencentError: TencentDocsErrorClass): FakeFailures {
-  const answered = (failure: FakeFailure, operation: string): TencentDocsError => {
-    const retryAfterSeconds = readNumber(failure.headers?.['retry-after']);
-    return new TencentError(verdictOf(failure), `Tencent Docs rejected the request for ${operation} (ret=${failure.ret}, msg=${failure.msg})`, {
-      status: failure.status,
-      ret: failure.ret,
-      msg: failure.msg,
-      ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }),
+function failures(ApiError: ApiErrorClass): FakeFailures {
+  const answered = (failure: FakeFailure, operation: string): Error => {
+    return new ApiError({
+      errorCode: verdictOf(failure),
+      message: `Tencent Docs rejected the request for ${operation} (ret=${failure.ret}, msg=${failure.msg})`,
+      response: { status: failure.status, headers: failure.headers ?? {}, body: { ret: failure.ret, msg: failure.msg } },
+      request: { url: 'https://fake.invalid/', init: { method: 'GET' } },
     });
   };
 
   /** Before any answer: the transport's own failure, worded without a URL. */
-  const unsent = (operation: string): TencentDocsError => {
+  const unsent = (operation: string): Error => {
     sheet.networkFailures -= 1;
-    return new TencentError('transport', `Request to ${operation} failed`, { cause: new Error('simulated transport failure') });
+    return new ApiError({ errorCode: 'NETWORK_ERROR', message: `Request to ${operation} failed`, cause: new Error('simulated transport failure') });
   };
 
   return {
@@ -216,11 +209,11 @@ interface FakeHeldCredential {
 /**
  * The shape of `CredentialStore`, which the fake keeps as a plain object rather than a JWT to read.
  *
- * The four readers throw the library's own `config` failure, because the service's guards are exactly the
+ * The four readers throw the library's own `BAD_INPUT` failure, because the service's guards are exactly the
  * thing those failures are for: a refresh with nothing to refresh has to arrive as the refusal the service
  * then words.
  */
-function fakeCredentialStore(initial: Partial<CredentialRecord> | undefined, TencentError: TencentDocsErrorClass): CredentialStore {
+function fakeCredentialStore(initial: Partial<CredentialRecord> | undefined, ApiError: ApiErrorClass): CredentialStore {
   const held: FakeHeldCredential = {
     accessToken: initial?.accessToken ?? '',
     clientId: initial?.clientId,
@@ -229,7 +222,7 @@ function fakeCredentialStore(initial: Partial<CredentialRecord> | undefined, Ten
   };
 
   const said = (value: string | undefined, what: string): string => {
-    if (value === undefined || value.length === 0) throw new TencentError('config', `The fake credential has no ${what}`);
+    if (value === undefined || value.length === 0) throw new ApiError({ errorCode: 'BAD_INPUT', message: `The fake credential has no ${what}` });
     return value;
   };
 
@@ -268,22 +261,22 @@ export interface FakeManagerOptions {
 }
 
 /** The fake factories, as a `vi.mock` of `tencent-doc-sdk` wants them. */
-export function fakeTencentDocsSdk(TencentError: TencentDocsErrorClass): {
+export function fakeTencentDocsSdk(ApiError: ApiErrorClass): {
   createCredentialStore: (initial?: Partial<CredentialRecord>) => CredentialStore;
-  createApi: (options: unknown) => Api;
+  createTDocClient: (options: unknown) => TDocClient;
   createTokenManager: (options: FakeManagerOptions) => TokenManager;
 } {
-  const call = failures(TencentError);
+  const call = failures(ApiError);
   return {
-    createCredentialStore: (initial) => fakeCredentialStore(initial, TencentError),
-    createApi: () => fakeApi(call, TencentError),
+    createCredentialStore: (initial) => fakeCredentialStore(initial, ApiError),
+    createTDocClient: () => fakeApi(call, ApiError),
     createTokenManager: (options) => fakeTokenManager(options, call),
   };
 }
 
 /** `vi.mock('tencent-doc-sdk', …)`, spelled once: the real module with its three factories swapped out. */
-export function fakeTencentDocsModule(actual: { TencentDocsError: TencentDocsErrorClass }): Record<string, unknown> {
-  return { ...actual, ...fakeTencentDocsSdk(actual.TencentDocsError) };
+export function fakeTencentDocsModule(actual: { ApiError: ApiErrorClass }): Record<string, unknown> {
+  return { ...actual, ...fakeTencentDocsSdk(actual.ApiError) };
 }
 
 function fakeTokenManager(options: FakeManagerOptions, call: FakeFailures): TokenManager {
@@ -320,7 +313,7 @@ export function credentialExpires(value: number | undefined): void {
  * error. What the fake drops is the wire: the library's adapters assemble the keyword-wrapped request
  * from the caller-shaped input, and that input is what a case wants to see, so that is what gets recorded.
  */
-function fakeApi(call: FakeFailures, TencentError: TencentDocsErrorClass): Api {
+function fakeApi(call: FakeFailures, ApiError: ApiErrorClass): TDocClient {
   function dispatch(operation: string, payload: unknown): unknown {
     switch (operation) {
       case 'getSheet':
@@ -370,15 +363,15 @@ function fakeApi(call: FakeFailures, TencentError: TencentDocsErrorClass): Api {
   }
 
   return {
-    // The three fields an adapter would reach for are here because `Api` declares them; the service only
-    // ever reaches this fake through `call`.
+    // The three fields an adapter would reach for are here because `TDocClient` declares them; the service
+    // only ever reaches this fake through `call`.
     apiBase: 'https://fake.invalid',
-    store: fakeCredentialStore(undefined, TencentError),
+    store: fakeCredentialStore(undefined, ApiError),
     params: undefined,
-    // The generic form is the one `Api` declares, and the fake answers each operation with its own type, so
-    // the pairing is what this function cannot show: the cast is the fake saying "the answer below matches
+    // The generic form is the one `TDocClient` declares, and the fake answers each operation with its own type,
+    // so the pairing is what this function cannot show: the cast is the fake saying "the answer below matches
     // the endpoint above", which is exactly what a case relies on when it reads `records` off a read.
-    call: <In, Out>(endpoint: Endpoint<In, Out>, ...input: CallArgs<In>): Promise<Out> => {
+    call: <In, Out>(endpoint: Endpoint<TDocClient, In, Out>, ...input: CallArgs<In>): Promise<Out> => {
       return dispatch(endpoint.operation, input[0]) as Promise<Out>;
     },
   };

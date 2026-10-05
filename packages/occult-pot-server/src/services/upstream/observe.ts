@@ -1,6 +1,6 @@
 import { getLogger } from '@logtape/logtape';
-import { TencentDocsError } from 'tencent-doc-sdk';
-import type { TencentDocsErrorCode } from 'tencent-doc-sdk';
+import { ApiErrorCodes, isApiError } from 'tencent-doc-sdk';
+import type { ApiError, ApiErrorCode } from 'tencent-doc-sdk';
 import { getConfig } from '@/config.ts';
 import { AppError } from '@/errors.ts';
 import type { ErrorCode } from '@/errors.ts';
@@ -13,8 +13,8 @@ import { waitTurn } from '@/services/upstream/throttle.ts';
  * What this service keeps of its calls to Tencent Docs: the counters, the histograms, the log lines,
  * and the translation from the library's own verdict into the error taxonomy every endpoint answers in.
  *
- * The library judges a call and says which of seven things went wrong. Deciding what that is *worth* — a
- * metric label, a warning line, an HTTP status, a `Retry-After` — happens here and nowhere else, so the
+ * The library judges a call and says which of its known codes went wrong. Deciding what that is *worth* —
+ * a metric label, a warning line, an HTTP status, a `Retry-After` — happens here and nowhere else, so the
  * same calls can be watched by this service without the library knowing what a service is.
  *
  * The library hands over no hook to watch from, by design, so `upstreamCall` is the seam instead: every
@@ -24,22 +24,23 @@ import { waitTurn } from '@/services/upstream/throttle.ts';
  * the library's error knows it did.
  *
  * One hazard arrives with the error's `response`: it carries the upstream's whole answer, and a read's
- * answer is its whole sheet. `message`, `status` and `ret` are what belong on a line here.
+ * answer is its whole sheet. `message`, the path of `request` and the status of `response` are what belong
+ * on a line here.
  */
 
 /** The library's verdict, in the words this service answers with. */
-const CODE_BY_TENCENT_ERROR: Record<TencentDocsErrorCode, ErrorCode> = {
-  auth: 'ERR_UPSTREAM_AUTH_FAILED',
-  rate_limited: 'ERR_UPSTREAM_RATE_LIMITED',
-  bad_request: 'ERR_UPSTREAM_BAD_REQUEST',
-  server: 'ERR_UPSTREAM_FAILED',
-  transport: 'ERR_UPSTREAM_FAILED',
-  invalid_answer: 'ERR_UPSTREAM_FAILED',
-  config: 'ERR_CONFIG_INVALID',
+const CODE_BY_TENCENT_ERROR: Record<(typeof ApiErrorCodes)[keyof typeof ApiErrorCodes], ErrorCode> = {
+  UNAUTHORIZED: 'ERR_UPSTREAM_AUTH_FAILED',
+  RATE_LIMIT: 'ERR_UPSTREAM_RATE_LIMITED',
+  BAD_REQUEST: 'ERR_UPSTREAM_BAD_REQUEST',
+  SERVER_ERROR: 'ERR_UPSTREAM_FAILED',
+  NETWORK_ERROR: 'ERR_UPSTREAM_FAILED',
+  BAD_OUTPUT: 'ERR_UPSTREAM_FAILED',
+  BAD_INPUT: 'ERR_CONFIG_INVALID',
 };
 
-export function serviceCodeOf(error: TencentDocsErrorCode): ErrorCode {
-  return CODE_BY_TENCENT_ERROR[error];
+export function serviceCodeOf(errorCode: ApiErrorCode): ErrorCode {
+  return CODE_BY_TENCENT_ERROR[errorCode as (typeof ApiErrorCodes)[keyof typeof ApiErrorCodes]] ?? 'ERR_UPSTREAM_FAILED';
 }
 
 /**
@@ -50,22 +51,19 @@ export function serviceCodeOf(error: TencentDocsErrorCode): ErrorCode {
  */
 export function toAppError(error: unknown): AppError {
   if (error instanceof AppError) return error;
-  if (!(error instanceof TencentDocsError)) return new AppError('ERR_INTERNAL_ERROR', 'Internal server error', { cause: error });
+  if (!isApiError(error)) return new AppError('ERR_INTERNAL_ERROR', 'Internal server error', { cause: error });
 
-  const code = serviceCodeOf(error.code);
+  const code = serviceCodeOf(error.errorCode);
   // A client that was rate limited is told to wait as long as *our* window, not a guessed minute: the
   // upstream's own `Retry-After` names a budget this service cannot see.
-  const hint = error.code === 'rate_limited' ? rateLimitHintSeconds() : undefined;
+  const hint = error.errorCode === ApiErrorCodes.RATE_LIMIT ? rateLimitHintSeconds() : undefined;
   return new AppError(code, error.message, {
     ...(hint === undefined ? {} : { retryAfterSeconds: hint }),
     ...(error.cause === undefined ? {} : { cause: error.cause }),
   });
 }
 
-/**
- * What a client is told to wait after a rate limit. The upstream window is our own pacing interval,
- * so that is what it is derived from — a stated minute would be a guess.
- */
+/** What a client is told to wait after a rate limit. The upstream window is our own pacing interval, so that is what it is derived from — a stated minute would be a guess. */
 export function rateLimitHintSeconds(): number {
   return Math.max(1, Math.round(getConfig().upstream.intervalMs / 1000));
 }
@@ -75,6 +73,44 @@ function count(operation: string, result: string, durationMs: number): void {
   const labels = { operation, result };
   upstreamRequests.inc(labels);
   upstreamRequestDuration.observe(labels, durationMs / 1000);
+}
+
+/**
+ * The path a call was addressed to, without the query string two of the calls carry a credential in.
+ * A failure that never became a request has no path to report.
+ */
+function pathOf(error: ApiError): string | undefined {
+  const url = error.request?.url;
+  if (url === undefined) return undefined;
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return undefined;
+  }
+}
+
+/** The business code the upstream filed its answer under, when the answer was one this service can read it off. */
+function retOf(error: ApiError): number | undefined {
+  const body = error.response?.body;
+  if (typeof body !== 'object' || body === null) return undefined;
+  const ret = (body as { ret?: unknown }).ret;
+  return typeof ret === 'number' ? ret : undefined;
+}
+
+/**
+ * The library's message may quote a URL in full — a transport failure hands the cause's own words
+ * through. A log line reports every address without its query string, which is where the credential sits.
+ */
+function withoutQuery(message: string): string {
+  return message.replace(/https?:\/\/\S+/g, (match) => {
+    try {
+      const url = new URL(match);
+      url.search = '';
+      return url.href;
+    } catch {
+      return match;
+    }
+  });
 }
 
 /**
@@ -100,23 +136,23 @@ export async function upstreamCall<T>(operation: string, run: () => Promise<T>):
   } catch (error) {
     const durationMs = now() - startedAt;
 
-    if (error instanceof TencentDocsError) {
-      const code = serviceCodeOf(error.code);
+    if (isApiError(error)) {
+      const code = serviceCodeOf(error.errorCode);
       count(operation, code, durationMs);
-      // The path is the library's, whose query string it has already dropped — which is where two of the
-      // calls carry a credential. The reason is its wording for the same reason.
-      const described = { operation, code, path: error.path, durationMs, reason: error.message };
+      // The path is the call's own, with the query string dropped — which is where two of the calls carry a
+      // credential — and the reason is stripped of URLs' queries for the same reason.
+      const described = { operation, code, path: pathOf(error), durationMs, reason: withoutQuery(error.message) };
 
-      if (error.code === 'invalid_answer') {
+      if (error.errorCode === ApiErrorCodes.BAD_OUTPUT) {
         // The bytes arrived and said `ret: 0`; they were not the shape the endpoint promises. This line is
         // the only sign an operator gets that the upstream changed a response.
         logger.warning('Tencent Docs answer could not be read', described);
-      } else if (error.code === 'transport' || error.code === 'config') {
+      } else if (error.errorCode === ApiErrorCodes.NETWORK_ERROR || error.errorCode === ApiErrorCodes.BAD_INPUT) {
         // Nothing arrived to answer with, or nothing was ever sent: either way there is no status to
         // invent, and saying so is the whole content of the line.
         logger.warning('Tencent Docs call could not be sent', described);
       } else {
-        logger.warning('Tencent Docs call failed', { ...described, status: error.status, ret: error.ret ?? null });
+        logger.warning('Tencent Docs call failed', { ...described, status: error.response?.status, ret: retOf(error) ?? null });
       }
     }
 

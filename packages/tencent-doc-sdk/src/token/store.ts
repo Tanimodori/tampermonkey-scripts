@@ -1,4 +1,4 @@
-import { TencentDocsError } from '@/error';
+import { ApiError, ApiErrorCodes } from 'api-sdk-framework';
 import { parseJwtToken } from './jwt';
 
 /**
@@ -14,7 +14,7 @@ import { parseJwtToken } from './jwt';
  *
  * 对一份凭据问两类问题，问法不同。`get()` 答「现在持有什么」，某个部分缺席本身就是答案，什么都不抛。四个读取
  * ——`getAccessToken()`、`getClientId()`、`getRefreshToken()`、`getAuthHeaders()`——答「这次调用到底出不出得去」：
- * 因为缺一个部分而发不出的调用是一起配置失败，就要按失败报出来，而不是交回 `undefined` 让调用方自己发现。
+ * 因为缺一个部分而发不出的调用是一起配置失败（`BAD_INPUT`），就要按失败报出来，而不是交回 `undefined` 让调用方自己发现。
  * 决定要不要续期、下个进程要写出去什么，问第一类；发送，问第二类。
  */
 
@@ -49,13 +49,13 @@ export interface CredentialRecord {
 export interface CredentialStore {
   get(): CredentialRecord;
   set(record: Partial<CredentialRecord>): void;
-  /** 每个 Open API 调用都带的三件套。缺任何一个都是 `config`。 */
+  /** 每个 Open API 调用都带的三件套。缺任何一个都是 `BAD_INPUT`。 */
   getAuthHeaders(): { 'Access-Token': string; 'Client-Id': string; 'Open-Id': string };
-  /** 调用用的访问令牌。凭据一个都没有时是 `config`。 */
+  /** 调用用的访问令牌。凭据一个都没有时是 `BAD_INPUT`。 */
   getAccessToken(): string;
-  /** 令牌被签发给的 `client_id`。从没人说过就是 `config`。 */
+  /** 令牌被签发给的 `client_id`。从没人说过就是 `BAD_INPUT`。 */
   getClientId(): string;
-  /** 能换掉访问令牌的刷新令牌。没得换就是 `config`。 */
+  /** 能换掉访问令牌的刷新令牌。没得换就是 `BAD_INPUT`。 */
   getRefreshToken(): string;
 }
 
@@ -136,7 +136,7 @@ export function createCredentialStore(initial?: Partial<CredentialRecord>): Cred
 }
 
 function missing(what: string, hint: string): never {
-  throw new TencentDocsError('config', `The credential has no ${what} to call with: ${hint}`);
+  throw new ApiError({ errorCode: ApiErrorCodes.BAD_INPUT, message: `The credential has no ${what} to call with: ${hint}` });
 }
 
 const text = (value: string | undefined): string | undefined => (value === undefined || value.length === 0 ? undefined : value);

@@ -22,6 +22,7 @@
  * the same column is written as `OrderMinor` in the API. Both spellings are kept exactly as the file has them.
  */
 import Papa from 'papaparse';
+import { HEADER_LINES } from './constants.ts';
 
 /** One sheet exactly as its file holds it: every line of the grid, every cell a string. */
 export interface SheetRawData {
@@ -30,9 +31,6 @@ export interface SheetRawData {
   /** The grid, header lines included: `data[0]` is the index line, `data[1]` the names, `data[2]` the types. */
   readonly data: readonly (readonly string[])[];
 }
-
-/** The three header lines every file starts with. */
-export const HEADER_LINES = 3;
 
 /**
  * Read one document into records.

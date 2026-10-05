@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSheetCsv, type SheetRawData } from '@/providers/datamine/csv.ts';
+import { parseSheetCsv, type SheetRawData } from '@/providers/datamine/parse.ts';
 import { useSheetTable } from '@/providers/datamine/table.ts';
 
 /**

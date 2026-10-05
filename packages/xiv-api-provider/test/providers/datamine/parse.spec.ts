@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSheetCsv } from '@/providers/datamine/csv.ts';
+import { parseSheetCsv } from '@/providers/datamine/parse.ts';
 
 /**
  * The SaintCoinach CSV format: what the tokenizer guarantees and what the three header lines mean.

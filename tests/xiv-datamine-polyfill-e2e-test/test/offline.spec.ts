@@ -62,10 +62,18 @@ describe.skipIf(live)('the stub-fed build', () => {
 /**
  * The artifact's composition: what naming a raw endpoint and no verified one leaves in the bundle.
  *
- * The package's build keeps the module boundaries (`preserveModules`), so this consumer's bundler deletes the
- * verified modules — and with them `types/schema.ts` and zod — wholesale, instead of having to prove the
- * schema initializers dead. Flatten the package back into one file and zod comes along silently, which is the
- * failure this check exists to catch: weight, not a broken import.
+ * The package's build partitions `dist/` along its two heavyweight dependencies (`codeSplitting` groups):
+ * `schema.js` carries zod, `parse.js` carries papaparse, and each wall imports only downward (`schema` →
+ * `core`, `parse` → `constants`), never back. This consumer names raw endpoints and `useSheetTable`, which
+ * touch neither wall, so its bundler deletes both chunks — and zod and papaparse with them — wholesale
+ * instead of having to prove the schema initializers dead. Flatten the package back into one file and zod
+ * comes along silently, which is the failure this check exists to catch: weight, not a broken import.
+ *
+ * `treeshake.moduleSideEffects` is not a substitute: it only decides whether an unused whole module may be
+ * removed, while a module's statements count as side-effect-free only while none of its exports are used. A
+ * flat artifact defines a used export, so its schema initializers — and zod — stay whatever the consumer
+ * sets; `moduleSideEffects: false` and a per-package rule were measured against this bundle and changed
+ * nothing. See <https://rolldown.rs/in-depth/dead-code-elimination#marking-entire-modules-as-side-effect-free>.
  */
 describe.skipIf(live)('the bundle', () => {
   it('carries no schema engine, which is what naming only the raw endpoint buys', () => {

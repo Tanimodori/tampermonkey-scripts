@@ -65,7 +65,7 @@ sheet.column('Icon'); // 整列;也可以给下标
 
 ## 依赖
 
-`papaparse` 是 xiv-api-provider 唯一的运行时依赖,并且**外部化**:产物里只有一句 `import Papa from "papaparse"`,由消费者的打包器自己解析。它只被 `readSheet` 与 `parseSheetCsv` 用到,产物又保留模块边界,所以不命名这条路的消费者,其打包器会把整条链连同那句 import 一起删掉——包声明 `sideEffects: false`。zod 记在 `devDependencies`,datamine 侧没有用到它的装配。
+`papaparse` 是 xiv-api-provider 唯一的运行时依赖,并且**外部化**:产物里只有一句 `import Papa from "papaparse"`,由消费者的打包器自己解析。它只被 `readSheet` 与 `parseSheetCsv` 用到,产物又把解析层单独分进 `parse` chunk,所以不命名这条路的消费者,其打包器会把整条链连同那句 import 一起删掉——包声明 `sideEffects: false`。zod 记在 `devDependencies`,datamine 侧没有用到它的装配。
 
 宽表是数据量的主要来源:`ClassJobCategory.csv` 48 列、`ClassJob.csv` 52 列。网格形式本身就省掉了每行重复的键名(写成每行一个对象会明显更大),要再缩只有一条路——`trim` 选列,或者在 `xiv-datamine-polyfill` 的构建配置里选。
 

@@ -122,8 +122,9 @@ export type {
 } from '@/providers/garlands/types/schema.ts';
 
 // datamine：SaintCoinach 解包数据集，一张表一个 CSV 文件，交回文件持有的网格。
-export { HEADER_LINES, parseSheetCsv } from '@/providers/datamine/csv.ts';
-export type { SheetRawData } from '@/providers/datamine/csv.ts';
+export { HEADER_LINES } from '@/providers/datamine/constants.ts';
+export { parseSheetCsv } from '@/providers/datamine/parse.ts';
+export type { SheetRawData } from '@/providers/datamine/parse.ts';
 
 export { useSheetTable } from '@/providers/datamine/table.ts';
 export type { SheetTable, TrimRules } from '@/providers/datamine/table.ts';

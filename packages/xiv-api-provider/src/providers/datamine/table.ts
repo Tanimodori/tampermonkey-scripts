@@ -1,4 +1,5 @@
-import { HEADER_LINES, type SheetRawData } from './csv.ts';
+import { HEADER_LINES } from './constants.ts';
+import type { SheetRawData } from './parse.ts';
 
 /**
  * How a sheet is selected down: whole columns, whole rows by key, and rows whose marker column is empty.

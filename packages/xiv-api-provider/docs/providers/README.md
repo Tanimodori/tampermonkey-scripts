@@ -10,7 +10,7 @@
 
 ## 入口
 
-一个默认入口 `xiv-api-provider`,即 `src/index.ts`:文件只做挑选与命名再导出,不写逻辑,按 provider 分组。三个 provider 都从这里出,用不到的那几个由调用方的打包器删掉——包声明 `sideEffects: false`,产物又按源结构分文件,一个没被命名的导出连同它所在的模块不进产物;只命名 `Raw` 端点(或 `readAsset`、`fetchSheetCsv` 这类没有校验对的)的产物里没有 schema 引擎,`papaparse` 也只跟着 `readSheet` 与 `parseSheetCsv` 走。
+一个默认入口 `xiv-api-provider`,即 `src/index.ts`:文件只做挑选与命名再导出,不写逻辑,按 provider 分组。三个 provider 都从这里出,用不到的那几个由调用方的打包器删掉——包声明 `sideEffects: false`,产物又沿 zod 与 papaparse 两道墙分块,没被牵动的块连同它背着的重依赖整块不进产物;只命名 `Raw` 端点(或 `readAsset`、`fetchSheetCsv` 这类没有校验对的)的产物里没有 schema 引擎,`papaparse` 也只跟着 `readSheet` 与 `parseSheetCsv` 走。
 
 - 共用 —— `createMemo`、图标 id 与路径换算、调用链的契约类型(`Endpoint`、适配器、`ApiRequest` / `ApiResponse`)、`ProviderError` / `isProviderError`。catch 处一定要用它们,实现只有一份。
 - xivapi —— edition 描述符、URL 构造、信封判定、每个操作的两份装配与客户端。
@@ -23,7 +23,13 @@
 
 schema 只在 `providers/<name>/types/schema.ts`,是包内值导入 zod 的唯一地方,业务代码与类型面引用它只用 `import type`。每个操作有两份装配:raw 只写 `operation`、响应体读取方式与适配器,verified 展开 raw 的声明再补 `responseSchema`,默认名归 verified,无校验的那一份带 `Raw` 后缀。适配器先用各 provider `guards.ts` 里的手写 `typeof` 谓词判定响应,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `shape`。没有同构 schema 的操作不配对,保持本名(`readAsset`、`fetchSheetCsv`)。传入参数一律不做本地校验,错误的 sheet 名自有 API 的 404 回答,自己先校验只会把服务端的答案换成本地的猜测。
 
-zod 记在 `devDependencies`:本包私有、只经 `workspace:*` 被消费,pnpm 会把 `devDependencies` 一样链进本包的 `node_modules`,所以声明里对 zod 的引用(`z.infer` 展开出的类型与槽类型)照旧解析得到。只命名 raw 的一方不得携带 schema 引擎,这一点由产物保留模块边界来兑现,并由 [e2e 测试](../../../../tests/xiv-datamine-polyfill-e2e-test/README.md) 从包外检查;对外发布时 zod 的落位要改,按 [api-sdk-design-example 的校验与 zod](../../../../tests/api-sdk-design-example/docs/validation.md) 改 optional peer,是不把 zod 作为运行时依赖承诺出去的做法。
+zod 记在 `devDependencies`:本包私有、只经 `workspace:*` 被消费,pnpm 会把 `devDependencies` 一样链进本包的 `node_modules`,所以声明里对 zod 的引用(`z.infer` 展开出的类型与槽类型)照旧解析得到。对外发布时 zod 的落位要改,按 [api-sdk-design-example 的校验与 zod](../../../../tests/api-sdk-design-example/docs/validation.md) 改 optional peer,是不把 zod 作为运行时依赖承诺出去的做法。
+
+只命名 raw 的一方不得携带 schema 引擎,[e2e 测试](../../../../tests/xiv-datamine-polyfill-e2e-test/README.md) 从包外检查这一性质;产物侧的分离方式:
+
+- `output.codeSplitting` 分组,即现状,入口只做挑选与命名再导出,`core`、`schema`、`datamine`、`parse`、`constants` 各自成 chunk,`core` 不反向引用入口。zod 只出现在 `schema.js`,papaparse 只出现在 `parse.js`,`HEADER_LINES` 住在 `constants.js`;`useSheetTable` 不牵动 `parse.js`,不命名 `parseSheetCsv` 与 `readSheet` 的消费方整块丢弃它和 papaparse。
+- `preserveModules` 按源结构分文件:每个源模块一件,靠模块边界达成同样的整块删除,产物文件数多。
+- [zod/mini](https://zod.dev/packages/mini) 是 zod 的 tree-shakable 替代 API,语法与 zod 不同,未采用。
 
 ## 测试缝隙
 
@@ -31,4 +37,4 @@ zod 记在 `devDependencies`:本包私有、只经 `workspace:*` 被消费,pnpm 
 
 ## 当前限制
 
-本包 `private: true`,不发布,消费都经 `workspace:*`,产物内部的相对导入因此始终解析得到。`exports` 只列入口,`dist/` 按源结构分文件;消费方的打包器沿这些相对导入与 `sideEffects: false` 摇树,raw-only 产物不带 schema 引擎正是靠这一层。若日后对外发布或拆子路径入口,发布内容要覆盖实际会进产物的那批文件。
+本包 `private: true`,不发布,消费都经 `workspace:*`,产物内部的相对导入因此始终解析得到。`exports` 只列入口,`dist/` 沿 zod 与 papaparse 两道墙分块;消费方的打包器沿这些相对导入与 `sideEffects: false` 摇树,raw-only 产物不带 schema 引擎正是靠这一层。若日后对外发布或拆子路径入口,发布内容要覆盖实际会进产物的那批文件。

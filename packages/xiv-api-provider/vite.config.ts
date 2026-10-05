@@ -3,6 +3,8 @@ import { resolve } from 'path';
 import dts from 'unplugin-dts/vite';
 import { defineConfig } from 'vitest/config';
 
+const schemaSide = /types[\\/]schema\.ts$|providers[\\/](xivapi|garlands)[\\/]verified\.ts$/;
+
 export default defineConfig({
   plugins: [
     dts({
@@ -16,22 +18,24 @@ export default defineConfig({
       insertTypesEntry: false,
     }),
   ],
-  // The package is a library other packages import, so `dist/` is emitted module-per-module rather than as
-  // one flat bundle. The boundaries between raw, verified and schema survive to the caller's bundler, which
-  // is what lets an artifact that names only raw endpoints drop zod wholesale instead of asking a bundler to
-  // prove the schema initializers dead. `@/…` is resolved here and disappears from the output; the
-  // declarations come out of the same pass and for the same reason — `unplugin-dts` resolves `paths` while
-  // generating them, so an alias a consumer cannot read never reaches `dist/`.
+  // The package is a library other packages import, so `dist/` is partitioned along the two heavyweight,
+  // un-shakeable dependencies rather than emitted as one flat bundle or one file per source module — the
+  // `codeSplitting` groups below. The zod wall and the papaparse wall become chunks of their own, so a
+  // consumer that names neither verified endpoints nor `readSheet`/`parseSheetCsv` drops them, and whatever
+  // else only they reached, wholesale instead of asking a bundler to prove the schema initializers dead. The
+  // `@/…` alias is resolved here and disappears from the output; the declarations come out of the same pass
+  // and for the same reason — `unplugin-dts` resolves `paths` while generating them, so an alias a consumer
+  // cannot read never reaches `dist/`.
   build: {
     outDir: resolve(import.meta.dirname, 'dist'),
     emptyOutDir: true,
     minify: false,
     sourcemap: true,
     lib: {
-      // One entry, one surface: `src/index.ts` re-exports everything, and the output keeps the module
-      // structure underneath it. Trimming it down to what a particular caller used is that caller's
-      // bundler's job — the package is `sideEffects: false`, so an export nobody names is deleted along with
-      // whatever module it reached.
+      // One entry, one surface: `src/index.ts` re-exports everything, and the chunks underneath are an
+      // internal partition rather than a subpath map — `package.json#exports` still lists the entry only.
+      // Trimming the artifact down to what a particular caller used is that caller's bundler's job: the
+      // package is `sideEffects: false`, so a chunk nobody names is deleted along with what it carried.
       entry: { index: resolve(import.meta.dirname, 'src', 'index.ts') },
       formats: ['es'],
     },
@@ -42,13 +46,39 @@ export default defineConfig({
       //
       // `zod` is value-imported through `providers/<name>/verified.ts` → `types/schema.ts`, so it is in the
       // entry's module graph and must not be inlined either. Whether a consumer naming only `Raw` endpoints
-      // (or the slotless ones) really avoids it depends on the module boundaries surviving into `dist/` —
-      // they do, and `tests/xiv-datamine-polyfill-e2e-test` measures the result from outside.
+      // (or the slotless ones) really avoids it depends on the chunk partition below surviving into `dist/`,
+      // and `tests/xiv-datamine-polyfill-e2e-test` measures the result from outside.
       external: ['zod', /^papaparse(\/|$)/],
+      // The partition, from the walls outward: `schema` (the two `types/schema.ts` and the two `verified.ts`),
+      // `parse` (`datamine/parse.ts`, the papaparse caller) and `constants` (`datamine/constants.ts`, the
+      // `HEADER_LINES` leaf both `parse` and `table` reach without touching either wall) become chunks of
+      // their own; `datamine` takes the rest of that provider, `core` everything left. Dependencies are not
+      // captured into a group, which keeps the direction acyclic — `core` imports nothing back — and the
+      // walls droppable: a group that swallowed `core` would keep zod or papaparse alive for every consumer.
+      // `allow-extension` is the entry-signature setting `includeDependenciesRecursively: false` requires;
+      // priorities just order the capture of overlapping tests.
+      preserveEntrySignatures: 'allow-extension',
       // Declaration generation is most of this build and always will be; the timing check reads that as a
       // warning, and a warning nobody intends to fix is a warning people learn to ignore.
       checks: { pluginTimings: false },
-      output: { entryFileNames: '[name].js', preserveModules: true, preserveModulesRoot: 'src' },
+      output: {
+        entryFileNames: '[name].js',
+        chunkFileNames: '[name].js',
+        codeSplitting: {
+          groups: [
+            { name: 'schema', test: schemaSide, priority: 5, includeDependenciesRecursively: false },
+            { name: 'parse', test: /providers[\\/]datamine[\\/]parse\.ts$/, priority: 4, includeDependenciesRecursively: false },
+            { name: 'constants', test: /providers[\\/]datamine[\\/]constants\.ts$/, priority: 3, includeDependenciesRecursively: false },
+            { name: 'datamine', test: /providers[\\/]datamine[\\/]/, priority: 2, includeDependenciesRecursively: false },
+            {
+              name: 'core',
+              test: (id: string) => id.replace(/\\/g, '/').includes('/src/') && !id.endsWith('/src/index.ts'),
+              priority: 1,
+              includeDependenciesRecursively: false,
+            },
+          ],
+        },
+      },
     },
   },
   resolve: {

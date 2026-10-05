@@ -1,6 +1,6 @@
 import type { WebFetcher } from 'universal-fetch-type';
 import { createDatamineClient } from './client.ts';
-import { parseSheetCsv, type SheetRawData } from './csv.ts';
+import { parseSheetCsv, type SheetRawData } from './parse.ts';
 import { fetchSheetCsv } from './raw.ts';
 
 /**

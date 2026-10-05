@@ -25,7 +25,7 @@ const ui = useSheetTable(await readSheet('ItemUICategory', { fetch: origFetch })
 ui.cell(1, 'Name'); // 格斗武器
 ```
 
-三个 provider 都从这里出,用不到的那几个由调用方的打包器删掉:包声明了 `sideEffects: false`,产物又保留模块边界,一个没被命名的导出连同它所在的模块不进产物——只命名 `Raw` 端点(或 `readAsset`、`fetchSheetCsv` 这类没有校验对的)的产物里没有 schema 引擎,`papaparse` 也只跟着 `readSheet` 与 `parseSheetCsv` 走。
+三个 provider 都从这里出,用不到的那几个由调用方的打包器删掉:包声明了 `sideEffects: false`,产物又沿 zod 与 papaparse 两道墙分块,没被牵动的块连同它背着的重依赖整块不进产物——只命名 `Raw` 端点(或 `readAsset`、`fetchSheetCsv` 这类没有校验对的)的产物里没有 schema 引擎,`papaparse` 也只跟着 `readSheet` 与 `parseSheetCsv` 走。
 
 `readSheet` 交回的是一份纯数据(整张网格,含三行表头),`useSheetTable` 才是有寻址能力的那个对象。不带 `ref` 时取分支头 `HEAD` 的那份文件;要复现同一次构建就写死一个 ref(tag、分支名或 commit sha 都可)。行按位置寻址,`#` 既不递增也不连续,所以按 `#` 查要自己 `new Map([...ui.rows].map((r) => [r[0], r]))`。
 

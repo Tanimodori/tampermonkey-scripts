@@ -126,5 +126,6 @@ dist-storybook/
 .commandcode/*
 
 # zcode
-.zcode/**
+.zcode/*
+!.zcode/workflows/
 .zcodeignore

@@ -124,3 +124,7 @@ dist-storybook/
 # Command Code
 .commandcode
 .commandcode/*
+
+# zcode
+.zcode/**
+.zcodeignore

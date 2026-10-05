@@ -3,6 +3,12 @@
 # keep every checkout identical on its own. It also matches endOfLine in .oxfmtrc.json.
 *                            text=auto eol=crlf
 
+# ZCode parses a saved workflow's `/* zcode-workflow` metadata block by splitting the file
+# on "\n" and rejoining it with "\n". Under CRLF the block's last line keeps a stray "\r",
+# which YAML folds into the scalar (`required: true` parses as "true\r"), so the workflow is
+# rejected as invalid_metadata. These files must therefore be stored and checked out as LF.
+*.dwf.ts                     text eol=lf
+
 # Don't allow people to merge changes to these generated files, because the result
 # may be invalid.  You need to run "rush update" again.
 pnpm-lock.yaml               merge=text

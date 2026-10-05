@@ -58,8 +58,8 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   build: {
-    // zod 作为外部依赖解析，不内联进产物。
-    rolldownOptions: { external: ['zod'] },
+    // zod 与框架都作为外部依赖解析，不内联进产物。
+    rolldownOptions: { external: ['zod', 'api-sdk-framework'] },
   },
 });
 ```

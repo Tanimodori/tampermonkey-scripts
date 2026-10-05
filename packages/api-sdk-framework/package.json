@@ -1,8 +1,8 @@
 {
-  "name": "api-sdk-design-example",
+  "name": "api-sdk-framework",
   "version": "0.0.1",
   "private": true,
-  "description": "The executable consumer example of api-sdk-framework: one client, one endpoint declared in three tiers, and the two call sites driven as vitest specs against a recording transport.",
+  "description": "Shared call/endpoint framework for the repo's API SDKs: a call chain over one transport seam, endpoint contracts with a generic context, response-code verification and body unpacking, and ApiError as the only failure type.",
   "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
   "bugs": {
     "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
@@ -20,12 +20,15 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "sideEffects": false,
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "npm run typecheck && npm run test && npm run build-only",
-    "build-only": "vite build",
+    "build": "tsc -b && vite build",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
@@ -36,15 +39,13 @@
   "devDependencies": {
     "@microsoft/api-extractor": "^7.59.1",
     "@types/node": "^22.10.5",
-    "api-sdk-framework": "workspace:*",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",
     "typescript": "~5.9.3",
     "universal-fetch-type": "workspace:*",
     "unplugin-dts": "^1.1.1",
     "vite": "^8.3.0",
-    "vitest": "^5.0.1",
-    "zod": "^4.6.5"
+    "vitest": "^5.0.1"
   },
   "optionalDependencies": {
     "@oxfmt/binding-win32-x64-msvc": "^0.67.0",

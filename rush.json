@@ -451,6 +451,11 @@
     },
     // shared libraries
     {
+      "packageName": "api-sdk-framework",
+      "projectFolder": "packages/api-sdk-framework",
+      "tags": [ "library" ]
+    },
+    {
       "packageName": "vite-plugin-userscript-metadata",
       "projectFolder": "packages/vite-plugin-userscript-metadata",
       "tags": [ "library" ]

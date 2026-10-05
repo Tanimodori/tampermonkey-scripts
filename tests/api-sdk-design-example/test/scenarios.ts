@@ -1,7 +1,7 @@
 import { expect } from 'vitest';
 import type { ListMessagesInput, ListMessagesOutput } from '@/endpoints/schema';
 import { createApi } from '@/index';
-import type { Endpoint } from '@/types';
+import type { Api, Endpoint } from '@/index';
 import { API_BASE, GOOD_OUTPUT, INPUT, TOKEN } from './fixtures';
 import { upstreamEnvelope, upstreamOk, upstreamRateLimited, upstreamServerError, upstreamUnreachable } from './upstream';
 
@@ -16,7 +16,7 @@ const MESSAGE_URL = 'https://example.com/api/message?limit=100';
 /** 一个场景，`run` 自己装上游、调用、断言，收下的是被测的那一份装配。 */
 export interface Scenario {
   readonly label: string;
-  readonly run: (endpoint: Endpoint<ListMessagesInput, ListMessagesOutput>) => Promise<void>;
+  readonly run: (endpoint: Endpoint<Api, ListMessagesInput, ListMessagesOutput>) => Promise<void>;
 }
 
 export const SCENARIOS: readonly Scenario[] = [

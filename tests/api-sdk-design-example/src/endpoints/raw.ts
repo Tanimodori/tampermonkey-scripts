@@ -1,14 +1,18 @@
-import { getEnvelope, verifyEnvelope } from '@/error';
-import type { ApiRequest, Endpoint } from '@/types';
+import { useBodyUnpacker, verifyResponseCode } from 'api-sdk-framework';
+import type { ApiRequest, Endpoint } from 'api-sdk-framework';
+import type { Api } from '@/client';
 import type { ListMessagesInput, ListMessagesOutput } from './schema';
 
 /**
- * 无校验装配，只写 `operation` 与适配器，不写校验槽。这一侧不出现 zod 的值，响应的读法（`getEnvelope` 与 `verifyEnvelope`）也在这里。
+ * 无校验装配，只写 `operation` 与适配器，不写校验槽。这一侧不出现 zod 的值，响应的读法（`verifyResponseCode` 与
+ * `useBodyUnpacker`）也在这里。
  *
  * 导出名带 `Raw` 后缀，后缀写在声明处，带校验的那一份占默认名字，入口只负责转出。
  */
 
-export const listMessagesRaw: Endpoint<ListMessagesInput, ListMessagesOutput> = {
+const unpack = useBodyUnpacker<ListMessagesOutput>();
+
+export const listMessagesRaw: Endpoint<Api, ListMessagesInput, ListMessagesOutput> = {
   operation: 'listMessages',
   requestAdaptor: (client, { before, limit }): ApiRequest => {
     // 地址在这里拼完，base 也从 client 读出，`new URL(路径, client.apiBase)` 顺手管住尾斜杠与相对路径。
@@ -27,9 +31,8 @@ export const listMessagesRaw: Endpoint<ListMessagesInput, ListMessagesOutput> = 
   },
   // 用不到 client 也要写在第一位，下划线前缀过 `noUnusedParameters`。
   responseAdaptor: (_client, response) => {
-    // `getEnvelope` 交出信封（状态不对或读不出就抛），`verifyEnvelope` 判定业务码。两者都在 `error.ts`。
-    const envelope = getEnvelope<ListMessagesOutput>(response);
-    verifyEnvelope(envelope);
-    return envelope.data;
+    // `verifyResponseCode` 先过通用状态码，`unpack` 再按信封读 code/msg/data；两者都来自 api-sdk-framework。
+    verifyResponseCode(response);
+    return unpack(response);
   },
 };

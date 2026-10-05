@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    /* 供 xiv 的 userscript 侧沿用：目标与库取 ES2020，`Error` 的 cause 因此手动声明为字段，不走 super 的两参构造。 */
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    /* 不引 DOM：`fetch`、`Response`、`URL` 都取 `@types/node`（undici）的版本，与兄弟包一致。 */
+    "lib": ["ES2020"],
+    "types": ["node"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    /* `@/…` 是 `src/` 下的模块；别名在 vite.config.ts 里为 vite 声明，声明由 `unplugin-dts` 在打包同趟生成。 */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+
+    /* tsc -b 的增量状态文件。 */
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"]
+}

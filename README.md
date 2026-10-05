@@ -12,6 +12,7 @@ JavaScript monorepo for ffxiv and userscripts.
 
 **Libraries**
 
+- **[api-sdk-framework](packages/api-sdk-framework/README.md)**: Shared call/endpoint framework behind the repo's API SDKs
 - **[xiv-api-provider](packages/xiv-api-provider/README.md)**: API SDK for xivapi, Garland Tools and the datamining CSV dumps
 - **[xiv-datamine-polyfill](packages/xiv-datamine-polyfill/README.md)**: Vite plugin turning a datamining sheet import into a build-time generated module
 - **[vite-plugin-userscript-metadata](packages/vite-plugin-userscript-metadata/README.md)**: Vite plugin generating the userscript metadata block in front of each entry bundle
@@ -28,7 +29,7 @@ JavaScript monorepo for ffxiv and userscripts.
 
 **Example**
 
-- **[api-sdk-design-example](tests/api-sdk-design-example/README.md)**: Executable instance of the API SDK design architecture
+- **[api-sdk-design-example](tests/api-sdk-design-example/README.md)**: Executable consumer example of api-sdk-framework
 
 ## Development
 

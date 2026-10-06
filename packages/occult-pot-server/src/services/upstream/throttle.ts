@@ -55,13 +55,24 @@ export async function waitTurn(operation: string): Promise<void> {
   queue ??= build();
 
   const queuedAt = now();
-  await queue(async () => {
+  // The queue hands a turn it can start at once back through a microtask, and a turn it has to hold
+  // back only once the timer that opens the next window fires. The marker below is queued behind the
+  // turn, so it tells the two apart: by the time it has run, a grant still to come can only be the
+  // timer's. Without it the milliseconds between asking and starting cannot be attributed — a clock
+  // tick across the hop is one — and a line saying a free turn "waited in the pacing queue" is false.
+  let held = false;
+  const turn = queue(async () => {
     const { maxPerInterval, intervalMs } = getConfig().upstream;
-    const waitMs = now() - queuedAt;
+    const waitMs = held ? now() - queuedAt : 0;
     if (waitMs > 0) {
       getLogger(LOG_CATEGORIES.upstream).debug('Tencent Docs call waited in the pacing queue', { operation, waitMs, maxPerInterval, intervalMs });
     }
   });
+  queueMicrotask(() => {
+    held = true;
+  });
+
+  await turn;
 }
 
 /** A queue sized from the configuration in hand. */

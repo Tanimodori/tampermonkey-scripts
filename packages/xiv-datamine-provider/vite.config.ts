@@ -23,11 +23,12 @@ export default defineConfig({
     minify: false,
     sourcemap: true,
     lib: {
-      // One entry, one format: the package has a single public surface, and everything below it — the
-      // constants, the parser, the table accessors and the client — is reached through `src/index.ts`.
-      entry: resolve(import.meta.dirname, 'src', 'index.ts'),
+      // One entry, one surface: `src/index.ts` re-exports everything, and the chunks underneath are an
+      // internal partition rather than a subpath map — `package.json#exports` still lists the entry only.
+      // Trimming the artifact down to what a particular caller used is that caller's bundler's job: the
+      // package is `sideEffects: false`, so a chunk nobody names is deleted along with what it carried.
+      entry: { index: resolve(import.meta.dirname, 'src', 'index.ts') },
       formats: ['es'],
-      fileName: () => 'index.js',
     },
     rolldownOptions: {
       // `papaparse` is imported by the shipped code and is not inlined: the consumer resolves it, which is
@@ -38,6 +39,34 @@ export default defineConfig({
       // type a caller branches on, so a second copy inside this bundle would break `instanceof` against the
       // caller's own import.
       external: ['api-sdk-framework', /^papaparse(\/|$)/],
+      // The partition, from the wall inwards. `parse` is the only papaparse caller and `table` — the one
+      // module a caller naming `useSheetTable` reaches — value-imports nothing but `constants`, so the two
+      // have to be separate chunks: put them together and the papaparse import rides back into the table
+      // path, which is exactly what flattening the package into one file used to do. `constants` is the leaf
+      // both sides share without touching either wall; `core` (`client`, `raw`, `sheet`, `error`) takes the
+      // rest, and being a separate chunk it can point down at `parse` without dragging `table` along.
+      // Dependencies are not captured into a group, which keeps the direction acyclic — `parse` → `constants`
+      // and `core` → `parse` → `constants`, never back — and the wall droppable.
+      // `allow-extension` is the entry-signature setting `includeDependenciesRecursively: false` requires;
+      // priorities just order the capture of overlapping tests.
+      preserveEntrySignatures: 'allow-extension',
+      output: {
+        entryFileNames: '[name].js',
+        chunkFileNames: '[name].js',
+        codeSplitting: {
+          groups: [
+            { name: 'parse', test: /src[\\/]parse\.ts$/, priority: 4, includeDependenciesRecursively: false },
+            { name: 'table', test: /src[\\/]table\.ts$/, priority: 3, includeDependenciesRecursively: false },
+            { name: 'constants', test: /src[\\/]constants\.ts$/, priority: 2, includeDependenciesRecursively: false },
+            {
+              name: 'core',
+              test: (id: string) => id.replace(/\\/g, '/').includes('/src/') && !id.endsWith('/src/index.ts'),
+              priority: 1,
+              includeDependenciesRecursively: false,
+            },
+          ],
+        },
+      },
     },
   },
   resolve: {

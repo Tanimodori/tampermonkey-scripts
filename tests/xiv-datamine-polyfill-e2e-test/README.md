@@ -8,7 +8,7 @@
 
 - `src/index.ts` —— 数据的消费方。两张 `.csv` 导入在构建期被解析成网格,业务接口把 `universalis-zh-data`、`xivanalysis-zh` 真会做的那几步读出来:按 `#` 建索引的分类表、把表内 icon id 换成 `<img src>` 再换回来、取 `Addon.Text`、给一个物品拼出两个外链。网格本身用 `xiv-datamine-provider` 的 `useSheetTable` 读成可寻址的表,xivapi/garlands 侧的名字(`createXivApiClient`、`sheetRowUrl`、`garlandDocUrl` 等)仍从 `xiv-api-provider` 来。另外导出 raw 侧的 `fetchRowName`(`createXivApiClient` 加 `readRowRaw`),作为产物组成检查的量具。`getData()` 把读到的一切作为纯数据返回,断言不在这里。
 - `vite.config.ts` —— 插件调用方,取数规则写在这里。`XIV_LIVE` 未设时,取数由文件里的 stub `fetch` 回答(两张几行的小表,其中一行空名、一行带标记,分别喂 `dropEmptyIn` 与 `onlyRowKeys`);设为 `1` 时撤掉 stub 并令 `maxAge: 0`,同一段目标代码对 `raw.githubusercontent.com` 的 `HEAD` 再走一遍。规则对齐真实消费方:`ItemUICategory` 保留它们保留的三列,`Addon` 只要两个 key,一张几十 MB 的表在产物里剩两行。
-- `test/` —— e2e。`offline.spec.ts` 与 `online.spec.ts` 各自读回 `dist/index.js` 的 `getData()`:前者逐格比对桩数据并检查产物的组成(命名了 raw 端点、没有命名 verified 的产物里不得有 schema 引擎),后者只断言真表才有的性质。`testUtils/invariants.ts` 是两个模式共用的那一组。`XIV_LIVE` 决定用哪套期望值,`describe.skipIf` 保证不会拿一种模式的产物去判另一种。
+- `test/` —— e2e。`offline.spec.ts` 与 `online.spec.ts` 各自读回 `dist/index.js` 的 `getData()`:前者逐格比对桩数据并检查产物的组成(命名了 raw 端点、没有命名 verified 的产物里不得有 schema 引擎;只命名 `useSheetTable` 的产物里不得有 papaparse),后者只断言真表才有的性质。`testUtils/invariants.ts` 是两个模式共用的那一组。`XIV_LIVE` 决定用哪套期望值,`describe.skipIf` 保证不会拿一种模式的产物去判另一种。
 
 ## tsconfig 拆分
 
@@ -51,5 +51,4 @@ rushx format:check   # 另有 format / lint
 
 - 断言只覆盖对桩数据与真实数据同时成立的性质,离线运行的逐格相等除外:两张表在真与桩之间差两个数量级,钉住数字会让活体运行变成第二份数据快照。
 - `loadTable` 的声明随默认入口一起被读到,但本项目不调用它:示例消费方不需要在构建期之外取表。
-- 产物里带着 `papaparse`:读表用的 `useSheetTable` 来自 `xiv-datamine-provider`,而那个包的单文件 bundle 在模块顶层 `import` 了 papaparse(`parseSheetCsv` 用),UMD 载入时的赋值是 bundler 删不掉的副作用——导入它的任何一个名字都会跟进整个库,`useSheetTable` 并不调用解析器也一样。组成检查因此只否认 zod,不否认 papaparse。
 - 本项目在构建图里排在被检查的包之后,它的失败既可能来自"包坏了"也可能来自"消费方视角坏了":这里能发现的是解析与调用那一侧。声明内部坏了不影响使用点,而 `xiv-api-provider` 与 `xiv-datamine-polyfill` 的 `build` 都只跑 `vite build`,所以那一格只有手动跑 `xiv-datamine-polyfill` 的 `rushx typecheck:declarations` 才看得见。

@@ -60,21 +60,25 @@ describe.skipIf(live)('the stub-fed build', () => {
 });
 
 /**
- * The artifact's composition: what naming a raw endpoint and no verified one leaves in the bundle.
+ * The artifact's composition: what naming a raw endpoint, no verified one, and only `useSheetTable` leaves in
+ * the bundle.
  *
- * `xiv-api-provider`'s build partitions `dist/` along its two heavyweight dependencies (`codeSplitting`
- * groups): `schema.js` carries zod, `parse.js` carries papaparse, and each wall imports only downward
- * (`schema` → `core`, `parse` → `constants`), never back. This consumer names that package's raw endpoints and
- * no verified one, so its bundler deletes the `schema.js` chunk — and zod with it — wholesale instead of
- * having to prove the schema initializers dead. Flatten the package back into one file and zod comes along
- * silently, which is the failure this check exists to catch: weight, not a broken import.
+ * Both heavyweight libraries ride on a wall that a bundler can only drop whole. `xiv-api-provider`'s build
+ * partitions `dist/` along its two heavyweight dependencies (`codeSplitting` groups): `schema.js` carries zod,
+ * `parse.js` carries papaparse, and each wall imports only downward (`schema` → `core`, `parse` → `constants`),
+ * never back. This consumer names that package's raw endpoints and no verified one, so its bundler deletes the
+ * `schema.js` chunk — and zod with it — wholesale instead of having to prove the schema initializers dead.
+ * Flatten the package back into one file and zod comes along silently, which is the failure this check exists
+ * to catch: weight, not a broken import.
  *
- * papaparse is the one library that does ride along, and it arrives from the other direction: the grids are
- * read through `xiv-datamine-provider`, whose single-file bundle imports papaparse at module scope for
- * `parseSheetCsv`. `useSheetTable` never calls the parser — the plugin parsed the CSVs at build time — but the
- * import sits at the top of that module, and papaparse loads through a UMD wrapper whose top-level assignment
- * a bundler cannot drop, so naming anything at all in that package brings the library with it. The negative
- * checks below therefore name zod alone; papaparse's absence is not a property of this artifact.
+ * papaparse arrives from the other direction — the grids are read through `xiv-datamine-provider` — and that
+ * package is partitioned the same way: `parse.js` is the only module that names papaparse, and `table.js`,
+ * where `useSheetTable` lives, value-imports `constants.js` alone. So a build that names `useSheetTable` and
+ * nothing else never reaches the `parse.js` chunk, and the library goes the way of `schema.js`. That partition
+ * is what makes papaparse's absence testable here rather than a matter of luck: while the package was one
+ * file, the parser import sat at the top of the very module `useSheetTable` was defined in, and papaparse
+ * loads through a UMD wrapper whose top-level assignment a bundler may not drop, so naming anything at all in
+ * that package brought the library along. The chunk is the droppable unit; a single file is not.
  *
  * `treeshake.moduleSideEffects` is not a substitute: it only decides whether an unused whole module may be
  * removed, while a module's statements count as side-effect-free only while none of its exports are used. A
@@ -83,7 +87,7 @@ describe.skipIf(live)('the stub-fed build', () => {
  * nothing. See <https://rolldown.rs/in-depth/dead-code-elimination#marking-entire-modules-as-side-effect-free>.
  */
 describe.skipIf(live)('the bundle', () => {
-  it('carries no schema engine, which is what naming only the raw endpoint buys', () => {
+  it('carries neither a schema engine nor a CSV parser, which is what naming only the used entries buys', () => {
     const bundle = readFileSync(new URL('../dist/index.js', import.meta.url), 'utf8');
 
     // Positive control first: the probe and the raw endpoint really are in the artifact, so a build that
@@ -94,5 +98,9 @@ describe.skipIf(live)('the bundle', () => {
     // constant. Comments that say the word "zod" are expected — the raw modules' own comments do; code is not.
     expect(bundle).not.toContain('_zod');
     expect(bundle).not.toContain('rowResultSchema');
+    // `require_papaparse_min` is the identifier rolldown gives papaparse's CJS wrapper
+    // (`var require_papaparse_min = __commonJSMin(…)`), so only a bundle that really pulled the library in
+    // has it. The bare word is not evidence: the retained comments of `parse.js` say "papaparse" in prose.
+    expect(bundle).not.toContain('require_papaparse_min');
   });
 });

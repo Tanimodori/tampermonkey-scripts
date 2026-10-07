@@ -506,6 +506,11 @@
       "packageName": "api-sdk-design-example",
       "projectFolder": "tests/api-sdk-design-example",
       "tags": [ "test" ]
+    },
+    {
+      "packageName": "xiv-provider-raw-endpoints",
+      "projectFolder": "tests/xiv-provider-raw-endpoints",
+      "tags": [ "test" ]
     }
   ]
 }

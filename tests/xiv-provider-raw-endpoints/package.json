@@ -1,0 +1,48 @@
+{
+  "name": "xiv-provider-raw-endpoints",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Black-box measurement of the three providers' dist chunking: three entries naming only raw endpoints, built offline, and judged on whether zod and papaparse stay out of every product.",
+  "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
+  "bugs": {
+    "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tanimodori/tampermonkey-scripts.git"
+  },
+  "license": "MIT",
+  "author": "Tanimodori",
+  "type": "module",
+  "scripts": {
+    "build": "npm run typecheck && npm run test:unit && npm run build-only",
+    "build-only": "vite build",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint",
+    "test": "npm run test:unit",
+    "test:unit": "vite build && vitest run",
+    "typecheck": "tsc -b"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
+    "typescript": "~5.9.3",
+    "universal-fetch-type": "workspace:*",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1",
+    "xiv-api-provider": "workspace:*",
+    "xiv-datamine-provider": "workspace:*",
+    "xiv-garland-provider": "workspace:*"
+  },
+  "optionalDependencies": {
+    "@oxfmt/binding-win32-x64-msvc": "^0.67.0",
+    "@oxlint/binding-win32-x64-msvc": "^1.82.0",
+    "@rolldown/binding-win32-x64-msvc": "~1.2.6",
+    "lightningcss-win32-x64-msvc": "^1.33.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

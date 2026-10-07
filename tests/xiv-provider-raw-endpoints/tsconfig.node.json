@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    /*
+      The Node side: the config that drives the build, and the spec that reads the products back as text.
+      Both need Node's own declarations — `vite.config.ts` for `import.meta.dirname` and `path`, the spec and
+      its `testUtils/` for `node:fs` — so `node` is the only type package in play here too.
+    */
+    "types": ["node"],
+
+    /* tsc -b's incremental state. */
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
+  },
+  "include": ["vite.config.ts", "test/**/*.ts"]
+}

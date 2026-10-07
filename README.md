@@ -27,7 +27,8 @@ JavaScript monorepo for ffxiv and userscripts.
 
 **Test**
 
-- **[xiv-datamine-polyfill-e2e-test](tests/xiv-datamine-polyfill-e2e-test/README.md)**: Consumer-side example project and Vite e2e checks for the provider packages and `xiv-datamine-polyfill`
+- **[xiv-datamine-polyfill-e2e-test](tests/xiv-datamine-polyfill-e2e-test/README.md)**: End-to-end checks that the `xiv-datamine-polyfill` Vite plugin embeds in a real consumer build, and that the artifact is data plus a reader and nothing else
+- **[xiv-provider-raw-endpoints](tests/xiv-provider-raw-endpoints/README.md)**: Black-box measurement that each provider's dist chunking keeps zod and papaparse out of a bundle naming only raw endpoints
 
 **Example**
 

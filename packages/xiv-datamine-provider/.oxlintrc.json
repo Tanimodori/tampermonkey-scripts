@@ -1,0 +1,9 @@
+{
+  "extends": ["../../.oxlintrc.json"],
+  "env": {
+    "es2023": true,
+    "node": true
+  },
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/.rush/**"],
+  "rules": {}
+}

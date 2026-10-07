@@ -17,7 +17,7 @@ export interface Call<Context> {
 ## 调用链
 
 1. 装配：`requestSchema.parse` 校验整份入参，`requestAdaptor` 把它造成 `ApiRequest`。这一段抛出的归 `BAD_INPUT`。
-2. 发出与读取：`transport` 发出请求，body 只读一次。连接失败、body 未到、到的不是 JSON 归 `NETWORK_ERROR`。
+2. 发出与读取：`transport` 发出请求，body 只读一次。连接失败、body 未到、到的不是端点声明的形状（缺省是 JSON）归 `NETWORK_ERROR`。读法由端点上的 `responseReader` 或 `responseBodyReader` 声明，两条都不给就按 JSON 读。
 3. 判定与投影：`responseAdaptor` 判定并交出 `Out`，`responseSchema.parse` 校验它。这一段抛出的归 `BAD_OUTPUT`。
 
 三段按最便宜的失败先付排列，各经 `wrapApiError`。`createCall` 返回的函数抛出的错误都是 `ApiError`，`operation` 与 `request`、`response` 由出栈处补上。

@@ -471,6 +471,11 @@
       "tags": [ "library" ]
     },
     {
+      "packageName": "xiv-datamine-provider",
+      "projectFolder": "packages/xiv-datamine-provider",
+      "tags": [ "library" ]
+    },
+    {
       "packageName": "xiv-datamine-polyfill",
       "projectFolder": "packages/xiv-datamine-polyfill",
       "tags": [ "library" ]

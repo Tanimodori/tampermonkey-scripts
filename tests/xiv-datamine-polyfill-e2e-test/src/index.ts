@@ -1,17 +1,7 @@
-import {
-  createXivApiClient,
-  garlandDocUrl,
-  iconIdFromImageUrl,
-  readRowRaw,
-  sheetRowUrl,
-  siteIconUrl,
-  useSheetTable,
-  type SheetName,
-  type SheetTable,
-  type WebFetcher,
-} from 'xiv-api-provider';
+import { createXivApiClient, garlandDocUrl, iconIdFromImageUrl, readRowRaw, sheetRowUrl, siteIconUrl, type SheetName, type WebFetcher } from 'xiv-api-provider';
 import addon from 'xiv-datamine-polyfill/Addon.csv';
 import itemUICategory from 'xiv-datamine-polyfill/ItemUICategory.csv';
+import { useSheetTable, type SheetTable } from 'xiv-datamine-provider';
 
 /**
  * The example consumer: what a userscript that wants these two sheets actually writes.

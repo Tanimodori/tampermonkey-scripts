@@ -22,7 +22,7 @@ export class ApiError extends Error {
 `ApiErrorCodes` 是一次失败的分类，各值的来源：
 
 - `BAD_INPUT`：装配阶段，`requestSchema.parse` 校验不过，或 `requestAdaptor` 拼不出地址。
-- `NETWORK_ERROR`：发出与读取阶段，连接失败、body 未到、到的不是 JSON。
+- `NETWORK_ERROR`：发出与读取阶段，连接失败、body 未到、到的不是端点声明的形状（缺省是 JSON）。
 - `BAD_OUTPUT`：判定与投影阶段，适配器抛出，解包器收拢的读取错误，或 `responseSchema.parse` 校验不过。
 - `BAD_REQUEST`：信封业务码非零，`useBodyUnpacker` 的缺省判定。
 - `UNAUTHORIZED`：上游 401 或 403。

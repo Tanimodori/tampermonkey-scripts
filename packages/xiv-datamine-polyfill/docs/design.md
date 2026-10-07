@@ -27,13 +27,13 @@
 
 **不做清理**。按"同一张表同一个语种的旧键"删除旧文件看着像整理,实际不安全:一次构建里两个入口用不同规则导同一张表是合法的,删掉的正是另一个入口要用的文件。代价是缓存随配置与上游更新线性增长,而 `node_modules/.cache` 的语义就是可以整个删掉。
 
-取数顺序是 CSV(缓存没过期就用、过期就拉)→ 算 key → 模块(存在就用、不存在就生成)。`loadTable` 交回的 `source` 因此是三态:`module` 是没有解析也没有裁剪,`cache` 是拿缓存的 CSV 重建,`network` 是这次真的取了数。取不到网络时,过期的 CSV 会继续使用并触发 `onWarn`(默认打到 vite 的 logger);没有缓存可退就直接失败,并说明是取数失败而不是"表不存在"——`kind` 为 `not_found` 的 `ProviderError` 原样抛出,因为那是关于数据的事实。显式给定的 `ref` 一律视为固定、不受 `maxAge` 影响:要追新的写法就是不写 `ref`,写了就是"按这个名字取到的东西我不打算再要第二版"。填分支名也成立这条,只是它的后果是这份缓存不再自己更新,内容是否真的固定由那个名字在仓库里指向什么决定。
+取数顺序是 CSV(缓存没过期就用、过期就拉)→ 算 key → 模块(存在就用、不存在就生成)。`loadTable` 交回的 `source` 因此是三态:`module` 是没有解析也没有裁剪,`cache` 是拿缓存的 CSV 重建,`network` 是这次真的取了数。取不到网络时,过期的 CSV 会继续使用并触发 `onWarn`(默认打到 vite 的 logger);没有缓存可退就直接失败,并说明是取数失败而不是"表不存在"——`errorCode` 为 `NOT_FOUND` 的 `ApiError` 原样抛出,因为那是关于数据的事实(`status` 仍是 404)。显式给定的 `ref` 一律视为固定、不受 `maxAge` 影响:要追新的写法就是不写 `ref`,写了就是"按这个名字取到的东西我不打算再要第二版"。填分支名也成立这条,只是它的后果是这份缓存不再自己更新,内容是否真的固定由那个名字在仓库里指向什么决定。
 
 不检测 release 是这个设计的前提而不是省略。查一次"最新 tag 是哪个"要碰 GitHub 的 API,于是每小时 60 次的限额、"release 还没发"的滞后与一个需要缓存的额外事实都进了构建;而 raw 主机本来就按 ref 名服务,`HEAD` 与 `master` 与一个 commit sha 与一个 tag 是同一类参数。要知道数据新到哪一版,固定的 `ref` 才是答案,自动挑 tag 只是把这件事变成构建时的一次猜测。
 
 ## 值的形状
 
-生成的模块就是一份 `SheetRawData`:`{ origin, data }`,`data` 是整张网格——三行表头加数据行,列名照表原样,值全是字符串。这是 `xiv-api-provider` 的形状,不是这个包另造的一份。
+生成的模块就是一份 `SheetRawData`:`{ origin, data }`,`data` 是整张网格——三行表头加数据行,列名照表原样,值全是字符串。这是 `xiv-datamine-provider` 的形状,不是这个包另造的一份。
 
 选这份形状的理由是它可以被序列化:一个模块文件除了 JSON 不该有别的东西,而"能不能读它"是打包之后才发生的事。工具因此在读的一侧——`useSheetTable(raw)` 给出 `columns`、`rows`、`cell(i, col)` 与 `trim(rules)`——本包不带运行时代码进产物,一个导入了表却没用它的入口可以被完全删掉。
 
@@ -48,10 +48,10 @@
 
 ## 测试
 
-包内两份 spec 管的是零件;把它接到 vite 上之后的样子、以及生成的模块能不能被消费方读,归 `tests/xiv-datamine-polyfill-e2e-test`(见 [那个项目的说明](../../../tests/xiv-datamine-polyfill-e2e-test/README.md))。交出去的声明自身是否读得通,在包内的 `typecheck:declarations`(`tsconfig.declarations.json`)里判:`vite build` 生成的 `dist/index.d.ts`、手写的 `client.d.ts`,以及本包类型所依据的 `xiv-api-provider` 那一份声明,一起进这一遍编译。两个包的 `build` 都只有 `vite build`,不做类型检查,所以 `rushx typecheck` 与 `rushx typecheck:declarations` 都是手动跑的。
+包内两份 spec 管的是零件;把它接到 vite 上之后的样子、以及生成的模块能不能被消费方读,归 `tests/xiv-datamine-polyfill-e2e-test`(见 [那个项目的说明](../../../tests/xiv-datamine-polyfill-e2e-test/README.md))。交出去的声明自身是否读得通,在包内的 `typecheck:declarations`(`tsconfig.declarations.json`)里判:`vite build` 生成的 `dist/index.d.ts`、手写的 `client.d.ts`,以及本包类型所依据的 `xiv-datamine-provider` 那一份声明,一起进这一遍编译。本包的 `build` 只有 `vite build`,不做类型检查,所以 `rushx typecheck` 与 `rushx typecheck:declarations` 都是手动跑的。
 
 - `test/options.spec.ts` — specifier 的匹配边界、`node_modules/.cache` 的推导、缓存键对 ref/语种/内容/规则的敏感性,以及对"配置写法等价"的稳定。
-- `test/load.spec.ts` — 冷缓存只发一次请求、暖缓存零请求、改规则用缓存的 CSV 重建、`HEAD` 移动后换文件、`maxAge` 到点重拉、断网用过期缓存并告警、没有缓存就失败。
+- `test/load.spec.ts` — 冷缓存只发一次请求、暖缓存零请求、改规则用缓存的 CSV 重建、`HEAD` 移动后换文件、`maxAge` 到点重拉、断网用过期缓存并告警、没有缓存就失败,以及 404 被归成关于数据的答案而不是取数失败。
 
 ## 当前限制
 

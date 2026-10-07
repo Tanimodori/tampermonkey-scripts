@@ -1,9 +1,10 @@
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { isApiError } from 'api-sdk-framework';
 import type { WebFetcher } from 'universal-fetch-type';
 import { afterAll, describe, expect, it } from 'vitest';
-import { sheetCsvUrl, useSheetTable, type SheetRawData } from 'xiv-api-provider';
+import { NOT_FOUND, sheetCsvUrl, useSheetTable, type SheetRawData } from 'xiv-datamine-provider';
 import { loadTable, type LoadOptions } from '@/load';
 
 /**
@@ -106,6 +107,17 @@ describe('a cold cache', () => {
   it('fails loudly for a sheet the locale does not have', async () => {
     const { fetch } = server({});
     await expect(loadTable('DataCenter', options({ cacheDir: cacheDir(), fetch }))).rejects.toThrow(/DataCenter/);
+  });
+
+  it('reports an absent sheet as a 404 rather than a fetch that failed', async () => {
+    // The 404 is an answer about the data — `chs` has no such sheet — so it reaches the caller as a classified
+    // `ApiError` carrying the status, and not as the generic code an ordinary http failure gets: that is what
+    // lets a caller tell "there is no such table" from "the request could not be done".
+    const { fetch } = server({});
+    const failure = await loadTable('DataCenter', options({ cacheDir: cacheDir(), fetch })).catch((cause: unknown) => cause);
+
+    expect(isApiError(failure)).toBe(true);
+    expect(failure).toMatchObject({ errorCode: NOT_FOUND, response: { status: 404 } });
   });
 });
 

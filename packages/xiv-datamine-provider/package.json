@@ -1,8 +1,8 @@
 {
-  "name": "xiv-datamine-polyfill",
+  "name": "xiv-datamine-provider",
   "version": "0.0.1",
   "private": true,
-  "description": "Turn an import of xiv-datamine-polyfill/<Sheet>.csv into the datamining table itself, fetched and trimmed at build time.",
+  "description": "Online access to the SaintCoinach datamining dumps: one CSV per sheet under a ref and a locale, handed back as the grid the file holds.",
   "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
   "bugs": {
     "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
@@ -15,35 +15,35 @@
   "author": "Tanimodori",
   "type": "module",
   "sideEffects": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./client": {
-      "types": "./client.d.ts"
-    },
     "./package.json": "./package.json"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "vite build",
+    "build": "tsc -b && vite build",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
-    "test": "vitest --passWithNoTests",
     "typecheck": "tsc -b",
-    "typecheck:declarations": "tsc -p tsconfig.declarations.json"
+    "test": "vitest --run --passWithNoTests",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "api-sdk-framework": "workspace:*",
-    "xiv-datamine-provider": "workspace:*"
-  },
-  "peerDependencies": {
-    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
+    "papaparse": "~5.7.0"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.59.1",
     "@types/node": "^22.10.5",
+    "@types/papaparse": "~5.5.2",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",
     "typescript": "~5.9.3",
@@ -57,8 +57,5 @@
     "@oxlint/binding-win32-x64-msvc": "^1.82.0",
     "@rolldown/binding-win32-x64-msvc": "~1.2.6",
     "lightningcss-win32-x64-msvc": "^1.33.0"
-  },
-  "engines": {
-    "node": ">=18"
   }
 }

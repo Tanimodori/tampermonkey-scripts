@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { resolve } from 'path';
+import type { WebFetcher } from 'universal-fetch-type';
 import { defineConfig } from 'vite';
-import type { WebFetcher } from 'xiv-api-provider';
 import { dataminePolyfill } from 'xiv-datamine-polyfill';
 
 /**

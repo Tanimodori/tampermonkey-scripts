@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    /* No DOM: every web global this package names — `fetch`, `Response`, `URL`, `AbortSignal` — is read from
+       `@types/node`, the same flavour `tencent-doc-sdk` and `xiv-api-provider` compile against. Adding DOM
+       would bind a second, browser-shaped declaration over each of those names. The transport seam is
+       `WebFetcher` from `universal-fetch-type`, whose request body is DOM-compatible. */
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    /* `src/` 的相对导入两种写法都接受：实现从 `xiv-api-provider` 的 datamine provider 移过来时，不必逐个
+       去掉 `.ts` 扩展名。`noEmit` 之下这不产生任何输出差异。 */
+    "allowImportingTsExtensions": true,
+
+    /* `@/…` 是 `src/` 下的模块；别名在 vite.config.ts 里为 vite 声明，vitest 与打包走的就是它，
+       `unplugin-dts` 生成声明时也按同一套解析，所以消费方读不到的东西进不了 `dist/`。 */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+
+    /* tsc -b 的增量状态文件。 */
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"]
+}

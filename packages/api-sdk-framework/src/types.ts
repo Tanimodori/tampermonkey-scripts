@@ -1,4 +1,4 @@
-import type { WebFetcher, WebFetcherRequestInit } from 'universal-fetch-type';
+import type { FetcherResponse, WebFetcher, WebFetcherRequestInit } from 'universal-fetch-type';
 
 /**
  * 这套写法的全部类型声明。这一块不引用校验库，也没有运行时代码；`ApiError` 层在 `error.ts`，`createCall` 在
@@ -37,12 +37,29 @@ export type RequestAdaptor<Context, In, Req> = (context: Context, input: In) => 
 /** 把到达的响应造成调用方所要的 `Out`，判定成败、读哪一段都在这里。 */
 export type ResponseAdaptor<Context, Out, Res> = (context: Context, response: Res) => Out;
 
-/** endpoint 的形状：`operation` 与适配器必填，两个校验槽可缺省。 */
+/**
+ * 把原生响应读成一次 `ApiResponse`：状态、头字段与 body 一起定下。`createCall` 的缺省读法只留状态与头字段，
+ * body 走 `raw.json()`；读文本、读字节或别的形状的端点在这里整段换掉。
+ */
+export type ResponseReader<Context, Res> = (context: Context, response: FetcherResponse) => Promise<Res> | Res;
+
+/**
+ * 只换 body 的读法：状态与头字段仍由 `createCall` 从原生响应取。答复不是 JSON 的端点写这一条，比
+ * `ResponseReader` 少写两行。
+ */
+export type ResponseBodyReader<Context> = (context: Context, response: FetcherResponse) => Promise<unknown> | unknown;
+
+/** endpoint 的形状：`operation` 与适配器必填，两个校验槽与两条读法可缺省。 */
 export interface Endpoint<Context, In, Out> {
   readonly operation: string;
 
   readonly requestSchema?: RequestSchema<In>;
   readonly responseSchema?: ResponseSchema<Out>;
+
+  /** 原生响应到 `ApiResponse` 的读法；给了这一条，`responseBodyReader` 不再参与。 */
+  readonly responseReader?: ResponseReader<Context, ApiResponse>;
+  /** 只换 body 的读法；缺省 `raw.json()`。 */
+  readonly responseBodyReader?: ResponseBodyReader<Context>;
 
   readonly requestAdaptor: RequestAdaptor<Context, In, ApiRequest>;
   readonly responseAdaptor: ResponseAdaptor<Context, Out, ApiResponse>;

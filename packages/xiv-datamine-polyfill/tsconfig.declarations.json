@@ -6,9 +6,9 @@
       bundling pass, and the hand-written wildcard `client.d.ts` that `exports` names as `./client`. Neither
       belongs to the program over `src/`: a generated file enters no compile at all, and `client.d.ts` is named
       by `tsconfig.app.json` as part of the package's public surface, which lib checking then skips like any
-      other `.d.ts`. The reference inside that declaration resolves through `xiv-api-provider`'s own `exports`,
-      so this is where a consumer-facing type going missing gets noticed — and that resolution pulls the
-      provider's emitted declaration into the same program, which is why it needs no compile of its own: lib
+      other `.d.ts`. The reference inside that declaration resolves through `xiv-datamine-provider`'s own
+      `exports`, so this is where a consumer-facing type going missing gets noticed — and that resolution pulls
+      the provider's emitted declaration into the same program, which is why it needs no compile of its own: lib
       checking here reads both packages' shipped artifacts.
     */
     "skipLibCheck": false

@@ -1,4 +1,5 @@
-import { DEFAULT_REF, createDatamineClient, fetchSheetCsv, isProviderError, parseSheetCsv, useSheetTable, type SheetRawData } from 'xiv-api-provider';
+import { isApiError } from 'api-sdk-framework';
+import { DEFAULT_REF, NOT_FOUND, createDatamineClient, fetchSheetCsv, parseSheetCsv, useSheetTable, type SheetRawData } from 'xiv-datamine-provider';
 import { ageOf, contentHash, csvPath, hoursSince, modulePath, readText, writeText } from './cache.ts';
 import { cacheKey, DEFAULT_LOCALE, DEFAULT_MAX_AGE_MS, rulesFor, type DataminePolyfillOptions, type SheetRules, type TableIdentity } from './options.ts';
 
@@ -49,8 +50,11 @@ const csvOf = async (sheet: string, ref: string, options: LoadOptions, warn: (me
     return { csv, fetched: true };
   } catch (cause) {
     // "This locale has no such sheet" is an answer about the data, not a fetch that could not be done, so it
-    // is passed through as itself instead of being softened into a stale cache.
-    if (isProviderError(cause) && cause.kind === 'not_found') throw cause;
+    // is passed through as itself instead of being softened into a stale cache. The provider names that answer
+    // under its own code — the framework's table holds only the generic families — and still carries `status:
+    // 404`; the code is the judgement, the status the HTTP statement of the same fact, kept as a second reading
+    // so a 404 that somehow lost the code is still not mistaken for a fetch that could be retried.
+    if (isApiError(cause) && (cause.errorCode === NOT_FOUND || cause.response?.status === 404)) throw cause;
     if (cached === null || age === null)
       throw new Error(`xiv-datamine-polyfill: could not read ${sheet}.csv at ${ref} and nothing is cached — ${asMessage(cause)}`, { cause });
     warn(`${sheet}.csv at ${ref} could not be refreshed (${asMessage(cause)}); using the cached copy from ${hoursSince(age)}`);
@@ -126,4 +130,4 @@ const build = async (sheet: string, locale: string, rules: SheetRules, options: 
   return { file, sheet, ref, locale, raw, source: fetched ? 'network' : 'cache', warnings };
 };
 
-const asMessage = (cause: unknown): string => (isProviderError(cause) ? `${cause.kind}: ${cause.message}` : String(cause));
+const asMessage = (cause: unknown): string => (isApiError(cause) ? `${cause.errorCode}: ${cause.message}` : String(cause));

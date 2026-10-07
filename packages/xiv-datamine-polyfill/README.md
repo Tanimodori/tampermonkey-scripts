@@ -2,7 +2,7 @@
 
 把 `xiv-datamine-polyfill/<Sheet>.csv` 变成一个 vite 的 import:构建时从解包仓库取那张表、按你声明的规则裁剪、写成 `node_modules/.cache` 里的一个模块,resolve 时把那个模块交回打包器。数据因此在**下游构建时**取,而不是在这个包发版时取。
 
-在线取数与 CSV 解析本身在另一个包:`xiv-api-provider`(见 [datamine provider 的文档](../xiv-api-provider/docs/providers/datamine.md))。这个包只做"把表固化进产物"这一件事,不提供查询 helper。插件怎么接进 vite、缓存与规则为什么这么设计,见 [插件的设计](docs/design.md)。
+在线取数与 CSV 解析本身在另一个包:`xiv-datamine-provider`(见 [那个包的说明](../xiv-datamine-provider/README.md))。这个包只做"把表固化进产物"这一件事,不提供查询 helper。插件怎么接进 vite、缓存与规则为什么这么设计,见 [插件的设计](docs/design.md)。
 
 ## 接入
 
@@ -33,7 +33,7 @@ export default defineConfig({
 等价的写法是 tsconfig 里的一项:`"types": ["node", "xiv-datamine-polyfill/client"]`。两种写法指向同一个文件,那份声明对 `xiv-datamine-polyfill/<任意表名>.csv` 都生效。
 
 ```ts
-import { useSheetTable } from 'xiv-api-provider';
+import { useSheetTable } from 'xiv-datamine-provider';
 import itemUICategory from 'xiv-datamine-polyfill/ItemUICategory.csv';
 
 const ui = useSheetTable(itemUICategory);
@@ -55,7 +55,7 @@ ui.rowCount;
 
 ## 取值
 
-导入的是 `SheetRawData`:`origin` 是 `<Sheet>.csv@<ref>`,`data` 是整张网格——三行表头加数据行,格子全是字符串,列名照文件原样(首列 `#`,匿名列是空串)。读要用 `xiv-api-provider` 的 `useSheetTable`:它给出 `columns` / `types` / `rows` / `row(i)` / `column(…)` / `cell(i, …)` / `trim(rules)`,行一律按位置。值的含义(`'True'`、`'-1'`、`'60101'`)与"把一行变成对象"那一步都由调用方自己做。
+导入的是 `SheetRawData`:`origin` 是 `<Sheet>.csv@<ref>`,`data` 是整张网格——三行表头加数据行,格子全是字符串,列名照文件原样(首列 `#`,匿名列是空串)。读要用 `xiv-datamine-provider` 的 `useSheetTable`:它给出 `columns` / `types` / `rows` / `row(i)` / `column(…)` / `cell(i, …)` / `trim(rules)`,行一律按位置。值的含义(`'True'`、`'-1'`、`'60101'`)与"把一行变成对象"那一步都由调用方自己做。
 
 ## 缓存与离线
 

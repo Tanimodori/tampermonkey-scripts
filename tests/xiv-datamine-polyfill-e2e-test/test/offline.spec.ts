@@ -62,12 +62,19 @@ describe.skipIf(live)('the stub-fed build', () => {
 /**
  * The artifact's composition: what naming a raw endpoint and no verified one leaves in the bundle.
  *
- * The package's build partitions `dist/` along its two heavyweight dependencies (`codeSplitting` groups):
- * `schema.js` carries zod, `parse.js` carries papaparse, and each wall imports only downward (`schema` →
- * `core`, `parse` → `constants`), never back. This consumer names raw endpoints and `useSheetTable`, which
- * touch neither wall, so its bundler deletes both chunks — and zod and papaparse with them — wholesale
- * instead of having to prove the schema initializers dead. Flatten the package back into one file and zod
- * comes along silently, which is the failure this check exists to catch: weight, not a broken import.
+ * `xiv-api-provider`'s build partitions `dist/` along its two heavyweight dependencies (`codeSplitting`
+ * groups): `schema.js` carries zod, `parse.js` carries papaparse, and each wall imports only downward
+ * (`schema` → `core`, `parse` → `constants`), never back. This consumer names that package's raw endpoints and
+ * no verified one, so its bundler deletes the `schema.js` chunk — and zod with it — wholesale instead of
+ * having to prove the schema initializers dead. Flatten the package back into one file and zod comes along
+ * silently, which is the failure this check exists to catch: weight, not a broken import.
+ *
+ * papaparse is the one library that does ride along, and it arrives from the other direction: the grids are
+ * read through `xiv-datamine-provider`, whose single-file bundle imports papaparse at module scope for
+ * `parseSheetCsv`. `useSheetTable` never calls the parser — the plugin parsed the CSVs at build time — but the
+ * import sits at the top of that module, and papaparse loads through a UMD wrapper whose top-level assignment
+ * a bundler cannot drop, so naming anything at all in that package brings the library with it. The negative
+ * checks below therefore name zod alone; papaparse's absence is not a property of this artifact.
  *
  * `treeshake.moduleSideEffects` is not a substitute: it only decides whether an unused whole module may be
  * removed, while a module's statements count as side-effect-free only while none of its exports are used. A

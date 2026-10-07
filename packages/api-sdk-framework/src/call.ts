@@ -24,15 +24,17 @@ export function createCall<Context>(options: CallOptions = {}): Call<Context> {
       throw wrapApiError(cause, { errorCode: ApiErrorCodes.BAD_INPUT, operation });
     }
 
-    // 发出与读取同段，body 只读一次；到的不是 JSON、接缝拒收地址，都算收不到可读的答复。
+    // 发出与读取同段，body 只读一次；到的不是端点声明的形状、接缝拒收地址，都算收不到可读的答复。
     let response: ApiResponse;
     try {
       const raw = await transport(request.url, request.init);
-      response = {
-        status: raw.status,
-        headers: Object.fromEntries(raw.headers),
-        body: await raw.json(),
-      };
+      // 读法由端点声明：`responseReader` 管整份答复，`responseBodyReader` 只换 body，两条都不给就按 JSON 读。
+      if (endpoint.responseReader !== undefined) {
+        response = await endpoint.responseReader(context, raw);
+      } else {
+        const body = endpoint.responseBodyReader === undefined ? await raw.json() : await endpoint.responseBodyReader(context, raw);
+        response = { status: raw.status, headers: Object.fromEntries(raw.headers), body };
+      }
     } catch (cause) {
       throw wrapApiError(cause, { errorCode: ApiErrorCodes.NETWORK_ERROR, operation, request });
     }

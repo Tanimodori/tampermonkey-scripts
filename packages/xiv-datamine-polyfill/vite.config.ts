@@ -40,10 +40,12 @@ export default defineConfig({
       formats: ['es'],
     },
     rolldownOptions: {
-      // The provider is a real dependency that a build resolves for itself — inlining it would put a second
-      // copy of the fetch and parse code inside the plugin, and the cache is the provider's to own. `vite` is
-      // the peer this plugin plugs into.
-      external: (id) => nodeBuiltins.has(id) || /^xiv-api-provider(\/|$)/.test(id) || /^vite(\/|$)/.test(id),
+      // The providers are real dependencies that a build resolves for itself — inlining them would put a second
+      // copy of the fetch and parse code inside the plugin, and the cache is the datamine provider's to own.
+      // `api-sdk-framework` is external for the same reason `ApiError` is the failure type a caller branches on:
+      // a second copy inside this bundle would break `instanceof` against the caller's own import. `vite` is the
+      // peer this plugin plugs into.
+      external: (id) => nodeBuiltins.has(id) || /^xiv-datamine-provider(\/|$)/.test(id) || /^api-sdk-framework(\/|$)/.test(id) || /^vite(\/|$)/.test(id),
       output: { entryFileNames: '[name].js' },
     },
   },

@@ -9,7 +9,7 @@ import type { ApiErrorCode, ApiRequest, ApiResponse } from '@/types';
 export const ApiErrorCodes = {
   /** 入参校验不过，或地址拼不出来。 */
   BAD_INPUT: 'BAD_INPUT',
-  /** 无法收到上游的响应：连接失败、body 未到、到的不是 JSON。 */
+  /** 无法收到上游的响应：连接失败、body 未到、到的不是端点声明的形状（缺省是 JSON）。 */
   NETWORK_ERROR: 'NETWORK_ERROR',
   /** 上游 5xx。 */
   SERVER_ERROR: 'SERVER_ERROR',

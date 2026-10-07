@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 import type { WebFetcher } from 'universal-fetch-type';
-import type { SheetRawData, TrimRules } from 'xiv-api-provider';
+import type { SheetRawData, TrimRules } from 'xiv-datamine-provider';
 import { contentHash } from './cache.ts';
 
 /**

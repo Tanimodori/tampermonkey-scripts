@@ -1,5 +1,5 @@
-import { jwtHeaderSchema, jwtPayloadSchema } from '@/endpoints/schema';
-import type { JwtHeader, JwtPayload } from '@/endpoints/schema';
+import { jwtHeaderSchema, jwtPayloadSchema } from './schema';
+import type { JwtHeader, JwtPayload } from './schema';
 
 /**
  * 从一枚访问令牌里读时限与身份，给一个必须知道凭据什么时候不能用的调用方。

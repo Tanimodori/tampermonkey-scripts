@@ -1,7 +1,7 @@
 import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID, TEST_CREDENTIAL } from '@test/testUtils/fixtures';
 import { getRecordsAnswer, getSheetAnswer, tokenAnswer, userInfoAnswer, writtenRecordsAnswer } from '@test/testUtils/mockUpstream';
 import { describe, expect, it } from 'vitest';
-import { createTDocClient } from '@/client';
+import { createTDocClient } from '@/client/client';
 import { accessToken, addRecords, deleteRecords, endpoints, getRecords, getSheetList, refreshToken, updateRecords, userinfo } from '@/endpoints';
 import { createCredentialStore } from '@/token/store';
 

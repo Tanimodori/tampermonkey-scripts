@@ -8,7 +8,7 @@ Garland Tools 国服镜像 `https://www.garlandtools.cn` 的在线访问层，�
 
 ## 与来源的差异
 
-模块划分照搬来源（`endpoints.ts`、`guards.ts`、`types/schema.ts`、`raw.ts`、`verified.ts`、`client.ts`），调用链从 `xiv-api-provider` 内部的 `createCall` 换成了 `api-sdk-framework` 的。下面这些差异都是换框架带来的，不是行为变化。
+包内按层分目录：`src/client/` 是传输、失败类型、运行时判定、地址常数与两个域共用的传输辅助，`src/endpoints/doc/` 与 `src/endpoints/search/` 是镜像的两个域各一套（`index.ts` 是本域的 URL 构造、`raw.ts` 是无校验装配、`schema.ts` 是本域的 zod 定义、`verified.ts` 是带校验装配），`src/types/sdk.ts` 是调用链的契约。调用链从 `xiv-api-provider` 内部的 `createCall` 换成了 `api-sdk-framework` 的。下面这些差异都是换框架带来的，不是行为变化。
 
 - 失败统一是框架的 `ApiError`，本包不再有 `ProviderError`，也没有它的 `kind` 分类。调用方按 `errorCode` 分流。
 - 非 2xx 由端点的 `responseAdaptor` 归类，照 `httpErrorCode` 归到框架的错误族，见「失败」。
@@ -25,7 +25,7 @@ Garland Tools 国服镜像 `https://www.garlandtools.cn` 的在线访问层，�
 - 操作：`readItem` / `readAction` / `readStatus` / `garlandSearch`，各自另有带 `Raw` 后缀的无校验装配（`readItemRaw` 等）。
 - 类型面：`GarlandDocKind`、`GarlandItem` / `GarlandAction` / `GarlandStatus` 与各自的 `Response`、`GarlandSearchItem` / `GarlandSearchObj`、`GarlandNameDesc`、`GarlandDocKindUrl`、`GarlandSearchType`、`GarlandSearchQuery`、`GarlandDocInput`、`GarlandRequestLocale`、`GarlandSubLocale`。
 
-`types/schema.ts` 里的 schema 本身不在公开面上。它们是 verified 装配的校验槽，测试也拿它们断言，业务代码只从这里 `import type` 取推断出的形状，`zod` 因此不进核心产物。
+`endpoints/doc/schema.ts` 与 `endpoints/search/schema.ts` 里的 schema 本身不在公开面上。它们是各自那一组 verified 装配的校验槽，测试也拿它们断言，业务代码只从这里 `import type` 取推断出的形状，`zod` 因此不进核心产物。
 
 ## 用法
 
@@ -43,7 +43,7 @@ const item = await garlands.call(readItem, { id: 19890 });
 
 文档的 URL 形如 `/db/doc/{Kind}/{locale}/{schema}/{id}.json`，`Kind` 取 `Item` / `Action` / `Status`，一律首字母大写；镜像解析路径时大小写不敏感，统一拼写是为了不让「两种都对」的分歧把一次真实 404 藏起来。`GARLAND_SCHEMA_VERSION` 记每种文档所在的 schema 段，那是 Garland 自己对每张表的重建计数，与游戏 patch 号无关，三种之间不通用。
 
-文档按顶层 `{ <kind>: { … } }` 负载与子对象里的数字 `id` 判定：`isGarlandDocument` 只到「这是不是一份该种类的文档」，更细的字段由 `Raw` 后缀那份之外的 verified 装配在投影之后按 `types/schema.ts` 校验一次。`tradeable` 在不上市时整个键缺席而不是等于 `0`，所以 `isGarlandTradeable` 判 `=== 1`——缺席即不可交易。
+文档按顶层 `{ <kind>: { … } }` 负载与子对象里的数字 `id` 判定：`isGarlandDocument` 只到「这是不是一份该种类的文档」，更细的字段由 `Raw` 后缀那份之外的 verified 装配在投影之后按 `endpoints/doc/schema.ts` 校验一次。`tradeable` 在不上市时整个键缺席而不是等于 `0`，所以 `isGarlandTradeable` 判 `=== 1`——缺席即不可交易。
 
 ## 检索
 
@@ -64,7 +64,7 @@ const item = await garlands.call(readItem, { id: 19890 });
 
 ## 分块
 
-产物沿 zod 一道墙分块，两份装配正是为此存在。`types/schema.ts` 是包内唯一值导入 `zod` 的地方，`verified.ts` 是唯一值导入它的一侧装配。`vite.config.ts` 的 `external` 是 `['zod', 'api-sdk-framework']`，`rolldownOptions.output.codeSplitting` 把 `types/schema.ts` 与 `verified.ts` 分进 `schema` 块、其余 `src` 分进 `core` 块。只命名 URL 构造函数、运行时判定或 `Raw` 端点的消费者，产物里没有 schema 引擎。`core` 不反向引用 `schema`，方向只有 `schema` → `core` 一条，块可以整块丢掉。
+产物沿 zod 一道墙分块，两份装配正是为此存在。两个域各有自己的一对：`endpoints/<组>/schema.ts` 是那一组值导入 `zod` 的地方，`endpoints/<组>/verified.ts` 是那一组填校验槽的装配。`vite.config.ts` 的 `external` 是 `['zod', 'api-sdk-framework']`，`rolldownOptions.output.codeSplitting` 把两组的 `schema.ts` 与 `verified.ts` 分进 `schema` 块、其余 `src` 分进 `core` 块。只命名 URL 构造函数、运行时判定或 `Raw` 端点的消费者，产物里没有 schema 引擎。`core` 不反向引用 `schema`，方向只有 `schema` → `core` 一条，块可以整块丢掉。
 
 `zod` 与 `api-sdk-framework` 都不内联，由消费者解析——`ApiError` 是调用方分支判断的失败类型，内联一份会破坏它与调用方自己那份的 `instanceof`。
 

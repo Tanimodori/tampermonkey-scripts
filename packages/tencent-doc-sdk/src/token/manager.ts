@@ -1,9 +1,9 @@
 import { ApiError, ApiErrorCodes } from 'api-sdk-framework';
 import type { WebFetcher } from 'universal-fetch-type';
-import { createTDocClient } from '@/client';
+import { createTDocClient } from '@/client/client';
+import { describeBody } from '@/client/error';
 import { endpoints } from '@/endpoints';
-import type { TokenResponse, UserInfo } from '@/endpoints/schema';
-import { describeBody } from '@/error';
+import type { TokenResponse, UserInfo } from '@/endpoints/oauth/schema';
 import type { CredentialRecord, CredentialStore } from './store';
 
 /**

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import * as schemas from '@/endpoints/schema.ts';
 import {
   ALL_EDITIONS,
   createXivApiClient,
@@ -12,7 +13,6 @@ import {
   readRow,
   search,
 } from '@/index.ts';
-import * as schemas from '@/providers/xivapi/types/schema.ts';
 
 /**
  * 对真实服务运行，手动跑：`rushx test:live`。

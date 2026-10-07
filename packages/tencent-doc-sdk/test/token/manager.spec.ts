@@ -2,7 +2,7 @@ import { EXAMPLE_FILE_ID, EXAMPLE_SHEET_ID } from '@test/testUtils/fixtures';
 import { apiOrigin, setupTencentDocsMock } from '@test/testUtils/mockUpstream';
 import { ApiErrorCodes } from 'api-sdk-framework';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createTDocClient } from '@/client';
+import { createTDocClient } from '@/client/client';
 import { endpoints } from '@/endpoints';
 import { createTokenManager } from '@/token/manager';
 import type { TokenManager, TokenManagerOptions } from '@/token/manager';

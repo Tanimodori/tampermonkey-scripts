@@ -1,6 +1,6 @@
 # 校验
 
-schema 全部集中在 `endpoints/schema.ts`：线上契约（响应、信封头、JWT 段）与八个端点的入参都在那里定义，其余模块只从它取值或取类型。
+schema 按它所属的那一层分开放：信封头在 `client/schema.ts`，访问令牌的 JWT 段在 `token/schema.ts`，八个端点的入参与线上契约按端点域分在 `endpoints/oauth/schema.ts`、`endpoints/record/schema.ts`、`endpoints/sheet/schema.ts` 三处。其余模块只从对应的那一处取值或取类型，每个 schema 模块都是它那一组唯一值导入 `zod` 的地方。
 
 ## 入参严格，响应宽松
 

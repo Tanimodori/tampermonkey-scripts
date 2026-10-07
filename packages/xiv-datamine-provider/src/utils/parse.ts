@@ -1,0 +1,88 @@
+/**
+ * The SaintCoinach datamining CSV format, read as data.
+ *
+ * Every file under `ffxiv-datamining-mixed/<locale>/` looks like this:
+ *
+ * ```text
+ * key,0,1,2,3
+ * #,Name,Icon,Order{Minor}
+ * int32,str,Image,byte
+ * 0,"",0,0
+ * 1,"格斗武器",60101,7
+ * ```
+ *
+ * Tokenizing that is `papaparse`'s job — quoted newlines, doubled quotes, CRLF and the BOM are all its
+ * problem rather than ours. What is left here is the part no generic CSV reader can know about: the three
+ * header lines exist, they are all the same width, and they are part of the file. So the parse answer is the
+ * whole grid, header lines included, with nothing interpreted out of it — `@/utils/table.ts` turns that into
+ * something addressable.
+ *
+ * One property of the header still needs saying: names are not stable enough to convert. `Item`'s second line
+ * has empty entries where the sub-columns of an array live, and a brace suffix such as `Order{Minor}` is how
+ * the same column is written as `OrderMinor` in the API. Both spellings are kept exactly as the file has them.
+ */
+import Papa from 'papaparse';
+import { HEADER_LINES } from '@/client/constants';
+
+/** One sheet exactly as its file holds it: every line of the grid, every cell a string. */
+export interface SheetRawData {
+  /** The file this came from, carried so a missing-column error and a built artifact can name their source. */
+  readonly origin: string;
+  /** The grid, header lines included: `data[0]` is the index line, `data[1]` the names, `data[2]` the types. */
+  readonly data: readonly (readonly string[])[];
+}
+
+/**
+ * Read one document into records.
+ *
+ * `skipEmptyLines` keeps a trailing newline from becoming a phantom row and the BOM is dropped; a byte-order
+ * mark, CRLF and quoted newlines are papaparse's problem rather than ours. Rows whose widths differ come back
+ * as they are — nothing here constrains column count, because the header check in `parseSheetCsv` is what
+ * cares about width, and a data row is not required to match it.
+ *
+ * This is papaparse's own behavior and it is deliberately left alone: a malformed file — an unterminated
+ * quote, say — is not rejected here. papaparse reports it in `errors` and returns a grid anyway, folding the
+ * remnant into one field. The only structural thing this package still insists on is the three header lines
+ * below; anything past that is passed through as the tokenizer saw it.
+ */
+const tokenise = (text: string): string[][] => Papa.parse(text, { header: false, skipEmptyLines: true, dynamicTyping: false }).data as string[][];
+
+/**
+ * Parse one sheet's text into the grid it holds.
+ *
+ * The three header lines are validated rather than assumed. If upstream changes the format, producing
+ * plausible-looking garbage silently is far worse than refusing to build, so a mismatch throws here — at the
+ * point the bytes arrive, rather than at whatever later step first reads a name.
+ *
+ * Data rows are not checked. A row whose first cell is not an integer key is still a row: `#` is neither
+ * monotonic nor contiguous, and converting it would be this package deciding what a column means.
+ *
+ * The rejection is a plain `Error` rather than an `ApiError`: nothing was called and no response is involved —
+ * this is the file's own shape, and the caller already holds the bytes it is being told about.
+ */
+export const parseSheetCsv = (csv: string, origin = '<memory>'): SheetRawData => {
+  const records = tokenise(csv);
+
+  if (records.length < HEADER_LINES) {
+    throw new Error(`${origin}: expected at least ${HEADER_LINES} header records, found ${records.length}`);
+  }
+
+  const markerLine = records[0] as string[];
+  const nameLine = records[1] as string[];
+  const typeLine = records[2] as string[];
+
+  if (markerLine[0] !== 'key') {
+    throw new Error(`${origin}: first header line must start with "key", found ${JSON.stringify(markerLine[0])}`);
+  }
+  if (nameLine[0] !== '#') {
+    throw new Error(`${origin}: second header line must name the key column "#", found ${JSON.stringify(nameLine[0])}`);
+  }
+  if (nameLine.length !== typeLine.length || markerLine.length !== nameLine.length) {
+    // All three lines have to describe the same columns. Checking only the last two lets a header whose
+    // index row is longer than its name row through, and every column after the shortfall then reads as
+    // missing rather than misaligned — which is the quiet failure this file exists to avoid.
+    throw new Error(`${origin}: header width mismatch — ${markerLine.length} indices, ${nameLine.length} names, ${typeLine.length} types`);
+  }
+
+  return { origin, data: records };
+};

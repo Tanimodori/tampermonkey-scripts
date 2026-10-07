@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { commonRecordsSchema, sheetListSchema, sheetSchema, tokenResponseSchema, userInfoSchema, writtenRecordsSchema } from '@/endpoints/schema';
+import { tokenResponseSchema, userInfoSchema } from '@/endpoints/oauth/schema';
+import { commonRecordsSchema, writtenRecordsSchema } from '@/endpoints/record/schema';
+import { sheetListSchema, sheetSchema } from '@/endpoints/sheet/schema';
 import {
   deleteRecordsAnswer,
   getRecordsAnswer,

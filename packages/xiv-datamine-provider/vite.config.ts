@@ -55,9 +55,9 @@ export default defineConfig({
         chunkFileNames: '[name].js',
         codeSplitting: {
           groups: [
-            { name: 'parse', test: /src[\\/]parse\.ts$/, priority: 4, includeDependenciesRecursively: false },
-            { name: 'table', test: /src[\\/]table\.ts$/, priority: 3, includeDependenciesRecursively: false },
-            { name: 'constants', test: /src[\\/]constants\.ts$/, priority: 2, includeDependenciesRecursively: false },
+            { name: 'parse', test: /src[\\/]utils[\\/]parse\.ts$/, priority: 4, includeDependenciesRecursively: false },
+            { name: 'table', test: /src[\\/]utils[\\/]table\.ts$/, priority: 3, includeDependenciesRecursively: false },
+            { name: 'constants', test: /src[\\/]client[\\/]constants\.ts$/, priority: 2, includeDependenciesRecursively: false },
             {
               name: 'core',
               test: (id: string) => id.replace(/\\/g, '/').includes('/src/') && !id.endsWith('/src/index.ts'),

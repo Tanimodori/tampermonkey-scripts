@@ -4,7 +4,7 @@ import { apiOrigin, rawRecord } from '@test/testUtils/mockUpstream';
 import { ApiErrorCodes } from 'api-sdk-framework';
 import type { ApiError } from 'api-sdk-framework';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createTDocClient } from '@/client';
+import { createTDocClient } from '@/client/client';
 import { endpoints } from '@/endpoints';
 
 /**

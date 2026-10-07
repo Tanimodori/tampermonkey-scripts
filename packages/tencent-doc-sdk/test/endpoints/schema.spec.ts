@@ -1,17 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import {
-  answerHeaderSchema,
-  cellValuesSchema,
-  commonRecordSchema,
-  commonRecordsSchema,
-  sheetListSchema,
-  sheetSchema,
-  tokenResponseSchema,
-  userInfoSchema,
-  writtenRecordsSchema,
-  jwtHeaderSchema,
-  jwtPayloadSchema,
-} from '@/endpoints/schema';
+import { answerHeaderSchema } from '@/client/schema';
+import { tokenResponseSchema, userInfoSchema } from '@/endpoints/oauth/schema';
+import { cellValuesSchema, commonRecordSchema, commonRecordsSchema, writtenRecordsSchema } from '@/endpoints/record/schema';
+import { sheetListSchema, sheetSchema } from '@/endpoints/sheet/schema';
+import { jwtHeaderSchema, jwtPayloadSchema } from '@/token/schema';
 
 /**
  * 线上契约本身，每个响应类型一段。

@@ -3,7 +3,8 @@ import { resolve } from 'path';
 import dts from 'unplugin-dts/vite';
 import { defineConfig } from 'vitest/config';
 
-const schemaSide = /types[\\/]schema\.ts$|providers[\\/]xivapi[\\/]verified\.ts$/;
+// 端点那一层的一对：`endpoints/schema.ts` 是 zod 唯一被值导入的地方，`endpoints/verified.ts` 是唯一填校验槽的地方。
+const schemaSide = /endpoints[\\/]schema\.ts$|endpoints[\\/]verified\.ts$/;
 
 export default defineConfig({
   plugins: [
@@ -39,12 +40,12 @@ export default defineConfig({
       formats: ['es'],
     },
     rolldownOptions: {
-      // `zod` is value-imported through `providers/<name>/verified.ts` → `types/schema.ts`, so it is in the
+      // `zod` is value-imported through `endpoints/verified.ts` → `endpoints/schema.ts`, so it is in the
       // entry's module graph and must not be inlined: the consumer resolves it. Whether a consumer naming only
       // `Raw` endpoints (or the slotless ones) really avoids it depends on the chunk partition below surviving
       // into `dist/`, and `tests/xiv-datamine-polyfill-e2e-test` measures the result from outside.
       external: ['zod'],
-      // The partition, from the wall outward: `schema` (`types/schema.ts` and `providers/xivapi/verified.ts`)
+      // The partition, from the wall outward: `schema` (`endpoints/schema.ts` and `endpoints/verified.ts`)
       // becomes a chunk of its own, and `core` takes everything left. Dependencies are not captured into a
       // group, which keeps the direction acyclic — `core` imports nothing back — and the wall droppable: a
       // group that swallowed `core` would keep zod alive for every consumer. `allow-extension` is the

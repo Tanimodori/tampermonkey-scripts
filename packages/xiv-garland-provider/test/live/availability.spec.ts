@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { garlandSearchResponseSchema } from '@/endpoints/search/schema';
 import { createGarlandClient, garlandDocUrl, garlandSearch, readAction, readItem, readStatus } from '@/index';
-import { garlandSearchResponseSchema } from '@/types/schema';
 
 /**
  * 对真实镜像运行——`https://www.garlandtools.cn`——手动跑：`rushx test:live`。

@@ -1,14 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import {
-  MAX_PAGE_SIZE,
-  accessTokenInputSchema,
-  addRecordsInputSchema,
-  deleteRecordsInputSchema,
-  getRecordsInputSchema,
-  refreshTokenInputSchema,
-  sheetListInputSchema,
-  updateRecordsInputSchema,
-} from '@/endpoints/schema';
+import { accessTokenInputSchema, refreshTokenInputSchema } from '@/endpoints/oauth/schema';
+import { MAX_PAGE_SIZE, addRecordsInputSchema, deleteRecordsInputSchema, getRecordsInputSchema, updateRecordsInputSchema } from '@/endpoints/record/schema';
+import { sheetListInputSchema } from '@/endpoints/sheet/schema';
 
 /**
  * 站在调用方入参与上游配额之间的那些检查。

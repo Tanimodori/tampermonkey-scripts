@@ -11,15 +11,16 @@
  * 数据的答案，不是请求发不出去，调用方据此分得开两条路。CSV 自己的形状问题（表头不到三行、三行不等宽）是纯
  * 函数抛的 `Error`：那里没有请求，也没有答复。
  */
-export { DATAMINING_REPOSITORY, DEFAULT_LOCALE, DEFAULT_REF, DEFAULT_TIMEOUT_MS, HEADER_LINES } from '@/constants';
-export { NOT_FOUND } from '@/error';
-export { parseSheetCsv } from '@/parse';
-export type { SheetRawData } from '@/parse';
-export { useSheetTable } from '@/table';
-export type { SheetTable, TrimRules } from '@/table';
-export { createDatamineClient } from '@/client';
-export type { DatamineClient, DatamineClientOptions, DatamineEndpoint } from '@/client';
-export { fetchSheetCsv } from '@/raw';
-export type { FetchSheetCsvInput } from '@/raw';
-export { readSheet, sheetCsvUrl } from '@/sheet';
-export type { DatamineOptions } from '@/sheet';
+export { DATAMINING_REPOSITORY, DEFAULT_LOCALE, DEFAULT_REF, DEFAULT_TIMEOUT_MS, HEADER_LINES } from '@/client/constants';
+export { NOT_FOUND } from '@/client/error';
+export { parseSheetCsv } from '@/utils/parse';
+export type { SheetRawData } from '@/utils/parse';
+export { useSheetTable } from '@/utils/table';
+export type { SheetTable, TrimRules } from '@/utils/table';
+export { createDatamineClient } from '@/client/client';
+export type { DatamineClient, DatamineClientOptions } from '@/client/client';
+export type { DatamineEndpoint } from '@/types/sdk';
+export { fetchSheetCsv } from '@/endpoints/raw';
+export type { FetchSheetCsvInput } from '@/endpoints/raw';
+export { readSheet, sheetCsvUrl } from '@/endpoints/index';
+export type { DatamineOptions } from '@/endpoints/index';

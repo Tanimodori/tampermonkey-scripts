@@ -1,6 +1,6 @@
 import { MockAgent, fetch as undiciFetch } from 'undici';
 import type { WebFetcher } from 'universal-fetch-type';
-import type { CommonRecord } from '@/endpoints/schema';
+import type { CommonRecord } from '@/endpoints/record/schema';
 import { EXAMPLE_SHEET_ID } from './fixtures';
 
 /**

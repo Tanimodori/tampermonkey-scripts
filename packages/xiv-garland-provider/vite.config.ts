@@ -3,9 +3,10 @@ import { resolve } from 'path';
 import dts from 'unplugin-dts/vite';
 import { defineConfig } from 'vitest/config';
 
-// `types/schema.ts` 是包内唯一值导入 zod 的地方，`verified.ts` 是唯一值导入它的一侧装配。把两者放进同一块，
-// 只命名 `Raw` 端点（或 URL 构造、运行时判定这类没有校验对的）的消费者，产物里就没有 schema 引擎。
-const schemaSide = /types[\\/]schema\.ts$|[\\/]verified\.ts$/;
+// 两个端点组各有自己的一对：`endpoints/<组>/schema.ts` 是那一组值导入 zod 的地方，`endpoints/<组>/verified.ts`
+// 是那一组填校验槽的装配。把两组的四个文件放进同一块，只命名 `Raw` 端点（或 URL 构造、运行时判定这类没有校验对
+// 的）的消费者，产物里就没有 schema 引擎。
+const schemaSide = /endpoints[\\/][^\\/]+[\\/]schema\.ts$|endpoints[\\/][^\\/]+[\\/]verified\.ts$/;
 
 export default defineConfig({
   plugins: [
@@ -39,16 +40,17 @@ export default defineConfig({
       formats: ['es'],
     },
     rolldownOptions: {
-      // `zod` is value-imported through `verified.ts` → `types/schema.ts`, so it is in the entry's module
+      // `zod` is value-imported through each group's `verified.ts` → `schema.ts`, so it is in the entry's module
       // graph and must not be inlined: the consumer resolves it. `api-sdk-framework` is the same kind of
       // dependency for the same reason — `ApiError` is the failure type a caller branches on, so a second copy
       // inside this bundle would break `instanceof` against the caller's own import.
       external: ['zod', 'api-sdk-framework'],
-      // The partition, from the wall outward: `schema` (`types/schema.ts` and `verified.ts`) becomes a chunk of
-      // its own, and `core` takes everything left. Dependencies are not captured into a group, which keeps the
-      // direction acyclic — `core` imports nothing back — and the wall droppable: a group that swallowed `core`
-      // would keep zod alive for every consumer. `allow-extension` is the entry-signature setting
-      // `includeDependenciesRecursively: false` requires; priorities just order the capture of overlapping tests.
+      // The partition, from the wall outward: `schema` (both groups' `schema.ts` and `verified.ts`) becomes a
+      // chunk of its own, and `core` takes everything left. Dependencies are not captured into a group, which
+      // keeps the direction acyclic — `core` imports nothing back — and the wall droppable: a group that
+      // swallowed `core` would keep zod alive for every consumer. `allow-extension` is the entry-signature
+      // setting `includeDependenciesRecursively: false` requires; priorities just order the capture of
+      // overlapping tests.
       preserveEntrySignatures: 'allow-extension',
       // Declaration generation is most of this build and always will be; the timing check reads that as a
       // warning, and a warning nobody intends to fix is a warning people learn to ignore.

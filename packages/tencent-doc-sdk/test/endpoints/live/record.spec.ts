@@ -2,8 +2,8 @@ import { allRecords, appendMarker, api, deleteRecords, live, markerRecordIds, pa
 import type { LiveMarker } from '@test/testUtils/liveDocument';
 import { describe, expect, it } from 'vitest';
 import { endpoints } from '@/endpoints';
-import { cellValuesSchema } from '@/endpoints/schema';
-import type { CommonRecord } from '@/endpoints/schema';
+import { cellValuesSchema } from '@/endpoints/record/schema';
+import type { CommonRecord } from '@/endpoints/record/schema';
 /**
  * @module-tag live
  */

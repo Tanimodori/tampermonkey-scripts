@@ -37,7 +37,7 @@ export default defineConfig({
       // on, so a second copy inside this bundle would break `instanceof` against the caller's own import.
       // The transport type is a type and nothing else, so there is no second package for the bundle to carry.
       //
-      // `pupa` is deliberately NOT added here. It interpolates the path templates in `src/path.ts`, which is
+      // `pupa` is deliberately NOT added here. It interpolates the path templates in `src/utils/path.ts`, which is
       // build-time arithmetic on strings: nothing about it has to be shared with a consumer, so the two
       // reasons that keep `zod` external do not apply, and `package.json` lists it under `devDependencies`
       // to say the same thing. Bundling it keeps one runtime dependency and leaves nothing for a consumer's

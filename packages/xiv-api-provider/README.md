@@ -28,7 +28,7 @@ xivapi 从这里出,用不到的那几个由调用方的打包器删掉:包声�
 
 ## 校验与测试
 
-每个读取是一个 endpoint 对象,分两份装配:`raw.ts` 只写 `operation`、响应体读取方式与适配器,`verified.ts` 展开 raw 的声明再补 `responseSchema`。默认名归带校验的那份(`readRow`),无校验的那一份带 `Raw` 后缀(`readRowRaw`);没有同构 schema 的操作不配对,保持本名(`readAsset`)。运行时判定先用 `guards.ts` 里的手写谓词,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `shape`。schema 只在 `providers/xivapi/types/schema.ts`,是包内值导入 zod 的唯一地方,传入参数不做本地校验。
+源码按层分目录。每个读取是一个 endpoint 对象,声明与 URL 构造在 `src/endpoints/index.ts`,分两份装配:`src/endpoints/raw.ts` 只写 `operation`、响应体读取方式与适配器,`src/endpoints/verified.ts` 展开 raw 的声明再补 `responseSchema`。默认名归带校验的那份(`readRow`),无校验的那一份带 `Raw` 后缀(`readRowRaw`);没有同构 schema 的操作不配对,保持本名(`readAsset`)。运行时判定先用 `src/client/guards.ts` 里的手写谓词,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `shape`。schema 只在 `src/endpoints/schema.ts`,是包内值导入 zod 的唯一地方,传入参数不做本地校验。
 
 zod 与 `universal-fetch-type` 记在 `devDependencies`:这些包都是私有的、只经 `workspace:*` 被消费,而 pnpm 会把 `devDependencies` 一样链进本包的 `node_modules`,所以从 `xiv-api-provider` 的声明出发,声明链(zod 与 `→ universal-fetch-type → @apollo/utils.fetcher`)照旧解析得到,消费方不需要在任何一处声明它们。选择 verified 装配的一方得到运行时校验,只命名 raw 的一方的产物里没有 schema 引擎;真要对外发布某个包时,这两个落位要改,否则外部读者解析不到那个名字。取舍见 [zod 与校验](docs/providers/README.md#zod-与校验)。
 
@@ -38,7 +38,7 @@ rushx test:live         # 真实打两端,需 XIV_LIVE=1,仅手动
 rushx test:drift        # OpenAPI 漂移报告,同样仅手动
 ```
 
-活体测试有两道闸:`{ tags: ['live'] }` 与 `describe.skipIf(!live)`。只有标签挡不住网络请求——不带 `--tags-filter` 时 vitest 认为所有测试都匹配。`test/providers/*/` 与 `src/providers/*/` 一一对应。
+活体测试有两道闸:`{ tags: ['live'] }` 与 `describe.skipIf(!live)`。只有标签挡不住网络请求——不带 `--tags-filter` 时 vitest 认为所有测试都匹配。离线测试目录跟着 `src/` 的层一一对应:`test/endpoints/` 与 `test/utils/`。
 
 交出去的声明是构建的产物,包自己不判它。是否读得通有两处可看:[xiv-datamine-polyfill 的 `typecheck:declarations`](../xiv-datamine-polyfill/docs/design.md#测试) 以 `skipLibCheck: false` 编译,读到的声明含本包这一份与它引用的 zod,那一遍手动跑,不在 `rush build` 里;[xiv-datamine-polyfill-e2e-test](../../tests/xiv-datamine-polyfill-e2e-test/README.md) 经 `package.json#exports` 导入,判消费方读不读得到、类型喂不喂得进调用,它随 `rush build` 进 CI 门禁。两个包的 `build` 都只有 `vite build`,源码层面的类型检查归各自的 `rushx typecheck`。
 

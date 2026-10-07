@@ -32,9 +32,9 @@
 
 ## 客户端
 
-`createXivApiClient(edition, { fetch, language, timeoutMs })` 只读,持有 edition 与 language,读取经 `client.call(endpoint, input)` 执行。每个操作有两份装配:默认名 `listSheets` / `readRow` / `readRows` / `search` / `listVersions` 是 verified 侧,投影之后按 `types/schema.ts` 的 schema 校验一次;`Raw` 后缀的那份不写校验槽。`readAsset` 读字节,没有同构 schema,不配对,保持本名。`language` 一次性注入到每个需要语言的读取,显式传入的优先。
+`createXivApiClient(edition, { fetch, language, timeoutMs })` 只读,持有 edition 与 language,读取经 `client.call(endpoint, input)` 执行;装配在 `src/client/client.ts`,端点声明在 `src/endpoints/`。每个操作有两份装配:默认名 `listSheets` / `readRow` / `readRows` / `search` / `listVersions` 是 verified 侧,投影之后按 `src/endpoints/schema.ts` 的 schema 校验一次;`Raw` 后缀的那份不写校验槽。`readAsset` 读字节,没有同构 schema,不配对,保持本名。`language` 一次性注入到每个需要语言的读取,显式传入的优先。
 
-响应先由 `guards.ts` 的手写谓词确认落在预期信封里。失败统一抛 `ProviderError`,带 `kind`(`http` / `network` / `timeout` / `shape` / `unsupported` / `input`)、`provider`、`url`、`operation`、`status`、`apiCode`。两侧都回答 `{code, message}`,所以 `apiCode` 直接来自服务端;zod 的落位与两份装配的取舍见 [zod 与校验](README.md#zod-与校验)。
+响应先由 `src/client/guards.ts` 的手写谓词确认落在预期信封里。失败统一抛 `ProviderError`,带 `kind`(`http` / `network` / `timeout` / `shape` / `unsupported` / `input`)、`provider`、`url`、`operation`、`status`、`apiCode`。两侧都回答 `{code, message}`,所以 `apiCode` 直接来自服务端;zod 的落位与两份装配的取舍见 [zod 与校验](README.md#zod-与校验)。
 
 ## 检索
 
@@ -44,7 +44,7 @@
 
 ## 类型来源与活体测试
 
-字段类型取自 `GET /api/openapi.json`(OpenAPI 3.1,`info.title` 为 boilmaster),文档页是 Scalar。zod 定义在 `types/schema.ts`,是类型别名与 verified 装配校验槽的来源;运行时的信封判定在 `guards.ts`。
+字段类型取自 `GET /api/openapi.json`(OpenAPI 3.1,`info.title` 为 boilmaster),文档页是 Scalar。zod 定义在 `src/endpoints/schema.ts`,是类型别名与 verified 装配校验槽的来源;运行时的信封判定在 `src/client/guards.ts`。
 
 `test/live/availability.spec.ts` 分三组。第一组对每个端点、每个 edition 各发一次真实请求,只问"能不能用信封回答"。第二组逐条测上面那张能力表:表数量差、`chs` 这个 token 在两服的命运、`/version` 在国服是零正文 404、`/asset` 谁遵守 `format`、`/asset/map` 在国服整个路由不存在、检索命中取决于 `language`。第三组记录已经死去与只剩旧路径的主机:`cafemaker.wakingsands.com` 的 530、`xivapi.com` 那套应用自己的 404 正文、以及 `beta.xivapi.com/api/1/…` 仍在服务 v2 正文这一事实。
 

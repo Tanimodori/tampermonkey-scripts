@@ -4,7 +4,7 @@
 
 - [xivapi](xivapi.md) —— 结构化游戏数据,两个 edition:国际站 boilmaster 与国服 cafemaker v2。
 
-两个 edition 的路径、参数与成功信封一致,所以它们是一个带 edition 参数的客户端,而不是两个 provider——差异只是能力上的,逐条列在 [xivapi：能力差异](xivapi.md#能力差异)。国服镜像 `https://www.garlandtools.cn` 是另一回事:没有公开契约、没有版本协商,按种类返回形状各不相同的文档,那一路已拆成独立包 [`xiv-garland-provider`](../../../xiv-garland-provider/README.md),本包不含它。与消费方共有的只有调用链、传输与错误类型:xivapi 经 `client.call(endpoint, input)` 执行自己的端点,失败一律抛 `ProviderError`,注入 `fetch` 是唯一的测试缝隙,类型是本仓 `universal-fetch-type` 的 `WebFetcher`,与 `tencent-doc-sdk` 的 transport 同一档。
+两个 edition 的路径、参数与成功信封一致,所以它们是一个带 edition 参数的客户端,而不是两个 provider——差异只是能力上的,逐条列在 [xivapi：能力差异](xivapi.md#能力差异)。国服镜像 `https://www.garlandtools.cn` 是另一回事:没有公开契约、没有版本协商,按种类返回形状各不相同的文档,那一路已拆成独立包 [`xiv-garland-provider`](../../../xiv-garland-provider/README.md),本包不含它。包内按层分目录:`src/endpoints/` 是端点声明与 URL 构造,`src/client/` 是传输、失败类型、运行时判定与 edition 描述符,`src/utils/` 是纯工具,`src/types/sdk.ts` 是调用链的契约。xivapi 经 `client.call(endpoint, input)` 执行自己的端点,失败一律抛 `ProviderError`,注入 `fetch` 是唯一的测试缝隙,类型是本仓 `universal-fetch-type` 的 `WebFetcher`,与 `tencent-doc-sdk` 的 transport 同一档。
 
 ## 入口
 
@@ -17,7 +17,7 @@
 
 ## zod 与校验
 
-schema 只在 `providers/xivapi/types/schema.ts`,是包内值导入 zod 的唯一地方,业务代码与类型面引用它只用 `import type`。每个操作有两份装配:raw 只写 `operation`、响应体读取方式与适配器,verified 展开 raw 的声明再补 `responseSchema`,默认名归 verified,无校验的那一份带 `Raw` 后缀。适配器先用 `guards.ts` 里的手写 `typeof` 谓词判定响应,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `shape`。没有同构 schema 的操作不配对,保持本名(`readAsset`)。传入参数一律不做本地校验,错误的 sheet 名自有 API 的 404 回答,自己先校验只会把服务端的答案换成本地的猜测。
+schema 只在 `src/endpoints/schema.ts`,是包内值导入 zod 的唯一地方,业务代码与类型面引用它只用 `import type`。每个操作有两份装配:raw(`src/endpoints/raw.ts`)只写 `operation`、响应体读取方式与适配器,verified(`src/endpoints/verified.ts`)展开 raw 的声明再补 `responseSchema`,默认名归 verified,无校验的那一份带 `Raw` 后缀。适配器先用 `src/client/guards.ts` 里的手写 `typeof` 谓词判定响应,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `shape`。没有同构 schema 的操作不配对,保持本名(`readAsset`)。传入参数一律不做本地校验,错误的 sheet 名自有 API 的 404 回答,自己先校验只会把服务端的答案换成本地的猜测。
 
 zod 记在 `devDependencies`:本包私有、只经 `workspace:*` 被消费,pnpm 会把 `devDependencies` 一样链进本包的 `node_modules`,所以声明里对 zod 的引用(`z.infer` 展开出的类型与槽类型)照旧解析得到。对外发布时 zod 的落位要改,按 [api-sdk-design-example 的校验与 zod](../../../../tests/api-sdk-design-example/docs/validation.md) 改 optional peer,是不把 zod 作为运行时依赖承诺出去的做法。
 
@@ -29,7 +29,7 @@ zod 记在 `devDependencies`:本包私有、只经 `workspace:*` 被消费,pnpm 
 
 ## 测试缝隙
 
-客户端接受注入的 `fetch`,这是唯一的测试缝隙:离线测试喂手写的小响应体,活体测试喂真实的 `fetch`,走的是同一段代码。离线测试目录与 `src/providers/` 一一对应,活体测试在 `test/live/`,两道闸见 [xivapi：类型来源与活体测试](xivapi.md#类型来源与活体测试)。
+客户端接受注入的 `fetch`,这是唯一的测试缝隙:离线测试喂手写的小响应体,活体测试喂真实的 `fetch`,走的是同一段代码。离线测试目录按 `src/` 的层一一对应(`test/endpoints/`、`test/utils/`),活体测试在 `test/live/`,两道闸见 [xivapi：类型来源与活体测试](xivapi.md#类型来源与活体测试)。
 
 ## 当前限制
 

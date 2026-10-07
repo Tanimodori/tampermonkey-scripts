@@ -1,6 +1,6 @@
-import { createTDocClient } from '@/client';
-import type { TDocClient } from '@/client';
-import type { CommonRecord } from '@/endpoints/schema';
+import { createTDocClient } from '@/client/client';
+import type { TDocClient } from '@/client/client';
+import type { CommonRecord } from '@/endpoints/record/schema';
 import { createTokenManager } from '@/token/manager';
 import type { TokenManager } from '@/token/manager';
 import { createCredentialStore } from '@/token/store';

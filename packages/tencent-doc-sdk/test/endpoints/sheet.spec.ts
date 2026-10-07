@@ -4,7 +4,7 @@ import { apiOrigin, sheet, sheetWithDocumentedSpelling } from '@test/testUtils/m
 import { ApiErrorCodes } from 'api-sdk-framework';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { endpoints } from '@/endpoints';
-import type { Sheet } from '@/endpoints/schema';
+import type { Sheet } from '@/endpoints/sheet/schema';
 
 /**
  * 子表列表对着 mocked 上游：这次调用往线上放什么、回来什么、失败长什么样。同样的调用打真实文档是 `./live/sheet.spec.ts`。

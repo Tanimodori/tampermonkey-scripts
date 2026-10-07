@@ -1,8 +1,8 @@
 import { afterAll } from 'vitest';
-import { createTDocClient } from '@/client';
-import type { TDocClient } from '@/client';
+import { createTDocClient } from '@/client/client';
+import type { TDocClient } from '@/client/client';
 import { endpoints } from '@/endpoints';
-import type { CommonRecord, CommonRecords } from '@/endpoints/schema';
+import type { CommonRecord, CommonRecords } from '@/endpoints/record/schema';
 import { createTokenManager } from '@/token/manager';
 import type { TokenManager } from '@/token/manager';
 import { createCredentialStore } from '@/token/store';

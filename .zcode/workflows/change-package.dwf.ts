@@ -24,7 +24,7 @@ args:
     description: 每个包允许改到什么程度，例如把 tencent-doc-sdk 设为 internal。取值 none（不许改动本包任何文件，含单元测试，只跑门禁确认现状）/ internal（可改内部实现、内部函数与依赖边，对外导出的名字与签名不许变）/ external（对外接口签名也可改）。未列出的包按默认——本次新建的包为 external，请求里点名的包为 internal，只因依赖被牵连进来的包为 none。
   contents:
     type: json
-    description: 按包名给出该包提问里【需求内容】或【上游修改内容】一节的正文，用来把需求裁到只有本包相关的那一段。未给出的包，请求里点名的用 args.requirement 全文，被牵连的下游包用上游各包的改动清单。
+    description: 按包名给出该包提问里【具体需求】一节的正文，用来把需求裁到只有本包相关的那一段。未给出的包，请求里点名的那种用 args.requirement 全文，被牵连的下游包用上游各包的改动清单；纯验证的包那一节是守卫规则，不看这个参数。
 */
 interface PkgMeta {
   /** 包名，例如 tencent-doc-sdk。 */
@@ -264,30 +264,71 @@ function clip(text: string, max: number): string {
 }
 
 /**
- * 三种范围各自的任务说明，只给其中一种。
+ * 本包被授权改到什么程度，一句话。
  *
- * 子代理只需要知道自己这一种该做什么；把另两种的规则也塞过去，只会让它读一堆与己无关的约束。
- * none / internal / external 是调用方给的授权，不是建议：none 会被脚本按文件集比对查出越界。
+ * 范围是调用方给的授权，不是建议：none 会被脚本按文件集与 diff 指纹比对查出越界。这一行只说"允许改哪里"，
+ * 不说"为什么要改"——后者归【具体需求】那一节。两者此前写在同一句里（"internal（下游包）：你的上游修改了
+ * 对外接口或行为…"），于是范围一栏被读成"上游改过"，连上游一个都没动的需求包也被写成了下游包。
  */
-function taskLines(scope: Scope): string[] {
+function scopeLine(scope: Scope): string {
+  if (scope === "none") return "无（纯验证）。不许改动本包任何文件，含单元测试；只跑门禁确认现状。";
+  if (scope === "internal") return "内部接口与测试。可改内部实现、内部函数、依赖边与单元测试；对外导出的名字与签名不许变。";
+  return "内部与外部接口与测试。必要时连对外接口与签名也可以改。";
+}
+
+/**
+ * 本仓库内、本次改动范围内的上游依赖，以及它们各自有没有真的动过。
+ *
+ * 独立成一行，因为它和授权范围是两件事：需求包的范围是 internal，上游却可能一个都没动；被牵连进来的下游包
+ * 范围是 none，上游反而确实改过。按包算出来的这个事实比从范围反推的那句话可靠。
+ */
+async function upstreamLines(pkg: PkgMeta, all: PkgMeta[], affectedSet: string[]): Promise<string[]> {
+  const upstream = pkg.deps.filter((d) => affectedSet.includes(d));
+  if (upstream.length === 0) return ["你的上游依赖更改情况为：无——本次没有本仓库内的依赖包被改动。"];
+  const lines = ["你的上游依赖更改情况为："];
+  for (const dep of upstream) {
+    const depPkg = all.find((p) => p.name === dep);
+    if (depPkg === undefined) continue;
+    const depChanged = await changedFilesIn(depPkg.dir);
+    lines.push(
+      depChanged.length === 0
+        ? `- ${dep}：没有产生改动（本轮只是被验证过）。`
+        : `- ${dep}：改动落在 ${depChanged.slice(0, 10).join("、")}${depChanged.length > 10 ? " 等" : ""}。`,
+    );
+  }
+  return lines;
+}
+
+/**
+ * 【具体需求】那一节：本包在本次改动里的角色决定写哪一种。
+ *
+ * 纯验证（none，无论调用方有没有把本包点名为需求包）没有需求内容，只有守卫规则；下游包写"配合上游修改"，
+ * 需求包写"本包是核心"，内容取自 args.requirement 全文或该包的 contents。
+ */
+function demandLines(pkg: PkgMeta, scope: Scope, isSeed: boolean, upstream: string[], requirement: string, supplied: string | null): string[] {
   if (scope === "none") {
     return [
-      "none（守卫）：本包不需要改代码——上游的改动没有要求本包适配。不要修改本包任何文件，单元测试也不要动。",
-      "跑通【其他】里列出的门禁，确认本包在现状下全部通过。若本包其实必须跟着改、或者现状就不通过，说明哪里、为什么，并升级；不要自己动手改。",
+      "无。本包本次不改代码——上游的改动没有要求本包适配。",
+      // 门禁本身在【你的任务】那一行已经说了，这里只说这一种范围特有的那条：不许自己动手。
+      "若本包其实必须跟着改、或者现状就不通过，说明哪里、为什么，并升级；不要自己动手改。",
     ];
   }
-  if (scope === "internal") {
+  if (!isSeed) {
+    const who = upstream.length > 0 ? `本包依赖的 ${upstream.join("、")}` : "本包的上游";
     return [
-      "internal（下游包）：你的上游修改了对外接口或行为，参考下文的【上游修改内容】适配本包。",
-      "允许修改内部接口、内部实现、依赖边与单元测试；不允许修改本包的对外接口（已导出的名字及其签名）。",
-      "跑通【其他】里列出的门禁。若需求要你改的恰好是对外接口、而这里不允许，就升级说明这个冲突，不要沉默地绕过。",
+      `${who} 在本次改动范围内，把本包适配到它们带来的接口/行为变化上，然后跑通门禁。`,
+      "具体改了什么以工作区为准：直接读上面【你的任务】里列出的那些文件，或看它们相对 HEAD 的差异。",
     ];
   }
-  return [
-    "external（重构重点）：你是本次重构的重点，参考下文的【需求内容】完成属于本包的那部分。",
-    "必要时允许修改单元测试与对外接口。",
-    "跑通【其他】里列出的门禁。",
-  ];
+  const lines = ["本包是本次修改的核心，完成以下目标中属于本包的那部分。", ""];
+  if (supplied !== null) {
+    lines.push(supplied);
+  } else {
+    lines.push(requirement);
+    lines.push("");
+    lines.push(`上面是需求全文，你只做其中属于 ${pkg.dir} 的那部分，只改动本包的文件。`);
+  }
+  return lines;
 }
 
 /**
@@ -569,45 +610,26 @@ for (const name of affected) {
     // 还会让后面每一轮的提问看起来仍是"初始提示词"，与上一轮的答复对不上。后续轮次只递这一轮要修的东西。
     const lines: string[] = [];
     if (round === 1) {
-      // 四节：本轮任务概要 / 你的任务 / 需求内容或上游修改内容 / 其他。每一节只写这个子代理这一轮
-      // 真正需要的东西：三种范围只写它那一种，内容一节只写它那一段。这既解决"指令过多"，也让提问
-      // 随现状变化（内容一节与【其他】里的现状都取自当前工作区）。
-      lines.push("【本轮任务概要】");
+      // 三节：你的任务 / 具体需求 / 其他。每一节只写这个子代理这一轮真正需要的东西：授权范围与上游事实各占
+      // 一行、互不推导——此前它们挤在同一句里（"internal（下游包）：你的上游修改了对外接口或行为…"），范围
+      // 一栏被读成"上游改过"，上游一个都没动的需求包也拿到了下游包的说明书。需求那一节按本包在本次改动里的
+      // 角色选一种。
+      //
+      // 首行不再单列【本轮任务概要】：范围与包名就在下面两行里，角色由【具体需求】自己那一句点明，
+      // 再列一遍只是把同一件事说两次。重试轮没有这三节，那一边的轮次与范围标记留在【门禁仍未通过】之前。
+      lines.push("【你的任务】");
+      lines.push(`你负责的包是：${name}（${pkg.dir}）${newSeeds.includes(name) ? "，本次新建" : ""}。`);
+      lines.push(`你允许修改的范围是：${scopeLine(scope)}`);
+      lines.push(...(await upstreamLines(pkg, all, affectedSet)));
+      if (scope !== "none") lines.push("完成下面【具体需求】里属于本包的那部分内容。");
       lines.push(
-        `${pkg.dir}｜范围 ${scope}｜${isSeed ? "需求包" : "下游包"}${newSeeds.includes(name) ? "｜本次新建" : ""}`,
+        scope === "none"
+          ? "同时保持门禁通过：跑通【其他】里列出的那几条，确认本包在现状下全部通过。"
+          : "同时保持门禁通过：【其他】里列出的那几条，每轮都由你自己在本包目录下跑通再交回。",
       );
       lines.push("");
-      lines.push("【你的任务】");
-      lines.push(...taskLines(scope));
-      lines.push("");
-      const supplied = givenContent(name);
-      lines.push(isSeed ? "【需求内容】" : "【上游修改内容】");
-      if (supplied !== null) {
-        lines.push(supplied);
-      } else if (isSeed) {
-        lines.push(requirement);
-        lines.push("");
-        lines.push(`上面是需求全文，你只做其中属于 ${pkg.dir} 的那部分，只改动本包的文件。`);
-      } else {
-        // 摘要行必须与下面的逐条事实一致：none 的守卫包里，上游可能压根没有改动，
-        // 写成"刚改过"就会和下一行的"没有产生改动"自相矛盾。
-        lines.push(
-          scope === "none"
-            ? `本包依赖的 ${upstreamAffected.join("、")} 在本次改动范围内（本包被判为不需要适配，见【你的任务】）。`
-            : `本包依赖的 ${upstreamAffected.join("、")} 刚改过，本包要适配的就是它们带来的接口/行为变化。`,
-        );
-        for (const dep of upstreamAffected) {
-          const depPkg = all.find((p) => p.name === dep);
-          if (depPkg === undefined) continue;
-          const depChanged = await changedFilesIn(depPkg.dir);
-          lines.push(
-            depChanged.length === 0
-              ? `- ${dep}：没有产生改动（本轮只是被验证过）。`
-              : `- ${dep}：改动落在 ${depChanged.slice(0, 10).join("、")}${depChanged.length > 10 ? " 等" : ""}。`,
-          );
-        }
-        lines.push("具体改了什么以工作区为准：直接读上面这些文件，或看它们相对 HEAD 的差异。");
-      }
+      lines.push("【具体需求】");
+      lines.push(...demandLines(pkg, scope, isSeed, upstreamAffected, requirement, givenContent(name)));
       lines.push("");
       lines.push("【其他】");
       // 点名本轮判定用的那几条门禁，而不是笼统的"test"。包自己的 test 脚本可能包含 live 段
@@ -620,7 +642,6 @@ for (const name of affected) {
       lines.push(`- ${await stateLine(pkg)}`);
       lines.push("- 报告：说清改了什么、依据是什么、你实际跑了哪几条门禁命令、结果如何；空回复会让本包被记为未完成。");
     } else {
-      lines.push("【本轮任务概要】");
       lines.push(`${pkg.dir}｜第 ${round} 轮｜范围 ${scope}｜任务与第一轮相同`);
       lines.push("");
       lines.push("【门禁仍未通过】");

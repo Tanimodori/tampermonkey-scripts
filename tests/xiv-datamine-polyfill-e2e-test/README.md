@@ -1,12 +1,12 @@
-# 三个包的示例消费方
+# 四个包的示例消费方
 
-这个项目不产出可发布的东西,它从包外检查 `packages/xiv-api-provider`、`packages/xiv-datamine-polyfill` 与 `packages/xiv-datamine-provider` 交出去的形状。独立成项目是因为这类检查不能用被检查包自己的配置:包内测试经 `@/` 直接引源码,而这里每一个导入都要经过目标包的 `package.json#exports`。
+这个项目不产出可发布的东西,它从包外检查 `packages/xiv-api-provider`、`packages/xiv-garland-provider`、`packages/xiv-datamine-polyfill` 与 `packages/xiv-datamine-provider` 交出去的形状。独立成项目是因为这类检查不能用被检查包自己的配置:包内测试经 `@/` 直接引源码,而这里每一个导入都要经过目标包的 `package.json#exports`。
 
 本项目自己就是一个消费者:`src/` 是消费方的代码,`vite.config.ts` 是它的构建配置,`test/` 读构建出来的产物。端到端不是"某个测试去驱动一次构建",而是这个项目真的被构建、真的被读回来。
 
 ## 构成
 
-- `src/index.ts` —— 数据的消费方。两张 `.csv` 导入在构建期被解析成网格,业务接口把 `universalis-zh-data`、`xivanalysis-zh` 真会做的那几步读出来:按 `#` 建索引的分类表、把表内 icon id 换成 `<img src>` 再换回来、取 `Addon.Text`、给一个物品拼出两个外链。网格本身用 `xiv-datamine-provider` 的 `useSheetTable` 读成可寻址的表,xivapi/garlands 侧的名字(`createXivApiClient`、`sheetRowUrl`、`garlandDocUrl` 等)仍从 `xiv-api-provider` 来。另外导出 raw 侧的 `fetchRowName`(`createXivApiClient` 加 `readRowRaw`),作为产物组成检查的量具。`getData()` 把读到的一切作为纯数据返回,断言不在这里。
+- `src/index.ts` —— 数据的消费方。两张 `.csv` 导入在构建期被解析成网格,业务接口把 `universalis-zh-data`、`xivanalysis-zh` 真会做的那几步读出来:按 `#` 建索引的分类表、把表内 icon id 换成 `<img src>` 再换回来、取 `Addon.Text`、给一个物品拼出两个外链。网格本身用 `xiv-datamine-provider` 的 `useSheetTable` 读成可寻址的表,xivapi 侧的名字(`createXivApiClient`、`sheetRowUrl`、`iconIdFromImageUrl`、`siteIconUrl` 等)从 `xiv-api-provider` 来,garland 文档地址 `garlandDocUrl` 从 `xiv-garland-provider` 来。另外导出 raw 侧的 `fetchRowName`(`createXivApiClient` 加 `readRowRaw`),作为产物组成检查的量具。`getData()` 把读到的一切作为纯数据返回,断言不在这里。
 - `vite.config.ts` —— 插件调用方,取数规则写在这里。`XIV_LIVE` 未设时,取数由文件里的 stub `fetch` 回答(两张几行的小表,其中一行空名、一行带标记,分别喂 `dropEmptyIn` 与 `onlyRowKeys`);设为 `1` 时撤掉 stub 并令 `maxAge: 0`,同一段目标代码对 `raw.githubusercontent.com` 的 `HEAD` 再走一遍。规则对齐真实消费方:`ItemUICategory` 保留它们保留的三列,`Addon` 只要两个 key,一张几十 MB 的表在产物里剩两行。
 - `test/` —— e2e。`offline.spec.ts` 与 `online.spec.ts` 各自读回 `dist/index.js` 的 `getData()`:前者逐格比对桩数据并检查产物的组成(命名了 raw 端点、没有命名 verified 的产物里不得有 schema 引擎;只命名 `useSheetTable` 的产物里不得有 papaparse),后者只断言真表才有的性质。`testUtils/invariants.ts` 是两个模式共用的那一组。`XIV_LIVE` 决定用哪套期望值,`describe.skipIf` 保证不会拿一种模式的产物去判另一种。
 

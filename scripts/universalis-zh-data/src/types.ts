@@ -18,69 +18,7 @@ export interface ItemCategory {
   ParentCategoryName: string;
 }
 
-// Garland API types
-export interface GarlandSearchItem {
-  id: number;
-  type: string;
-  obj: {
-    i: number;
-    n: string;
-    c: number;
-    j?: number | null;
-    t: number;
-    l: number;
-    r?: number;
-    g?: number;
-  };
-}
-
-export interface NameDescObject {
-  name: string;
-  description: string;
-}
-
-/**
- * garland 的 item 文档。`category` 是 ItemUICategory 的 id（与 xivapi 逐条核对过），而 ItemSearchCategory 的 id
- * 文档里根本没有。文档另带一个未在此声明的 `patchCategory`：实测它是 garland 自己的索引分组（值域 0…17，同一个
- * `category=63` 会给出 5 或 17），不是搜索分类的 id，所以有意不写进这个类型。整条取数路径见 `index.ts` 的
- * `getItemCategory`。
- */
-export interface GarlandItem {
-  name: string;
-  description: string;
-  jobCategories: string;
-  id: number;
-  en: NameDescObject;
-  ja: NameDescObject;
-  fr: NameDescObject;
-  de: NameDescObject;
-  patch: number;
-  category: number;
-  price: number;
-  ilvl: number;
-  dyecount: number;
-  tradeable?: number;
-  sell_price: number;
-  rarity: number;
-  stackSize: number;
-  repair: number;
-  equip: number;
-  repair_item: number;
-  glamourous: number;
-  slot: number;
-  elvl: number;
-  jobs: number;
-  models: string[];
-  attr: Record<string, number>;
-  icon: number;
-  vendors: number[];
-  upgrades: number[];
-}
-
-export interface GarlandItemResponse {
-  item: GarlandItem;
-  partials: GarlandSearchItem[];
-}
+// Garland 的形状（GarlandSearchItem / GarlandItem 等）现在从 xiv-garland-provider 取，本文件不再重复声明。
 
 // XIVAPI types
 export interface XIVAPIPagination {

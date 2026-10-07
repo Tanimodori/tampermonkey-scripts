@@ -2,7 +2,7 @@
   "name": "xiv-datamine-polyfill-e2e-test",
   "version": "0.0.1",
   "private": true,
-  "description": "The example consumer of xiv-datamine-polyfill, xiv-datamine-provider and xiv-api-provider: target code that reads two generated sheets, the vite config that hooks the plugin up to it, and the end-to-end specs that judge the built artifact.",
+  "description": "The example consumer of xiv-datamine-polyfill, xiv-datamine-provider, xiv-api-provider and xiv-garland-provider: target code that reads two generated sheets, the vite config that hooks the plugin up to it, and the end-to-end specs that judge the built artifact.",
   "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
   "bugs": {
     "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
@@ -36,7 +36,8 @@
     "vitest": "^5.0.1",
     "xiv-api-provider": "workspace:*",
     "xiv-datamine-polyfill": "workspace:*",
-    "xiv-datamine-provider": "workspace:*"
+    "xiv-datamine-provider": "workspace:*",
+    "xiv-garland-provider": "workspace:*"
   },
   "optionalDependencies": {
     "@oxfmt/binding-win32-x64-msvc": "^0.67.0",

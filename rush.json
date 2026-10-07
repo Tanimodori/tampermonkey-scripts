@@ -481,6 +481,11 @@
       "tags": [ "library" ]
     },
     {
+      "packageName": "xiv-garland-provider",
+      "projectFolder": "packages/xiv-garland-provider",
+      "tags": [ "library" ]
+    },
+    {
       "packageName": "universal-fetch-type",
       "projectFolder": "packages/universal-fetch-type",
       "tags": [ "library" ]

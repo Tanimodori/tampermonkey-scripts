@@ -4,6 +4,8 @@
 
 数据源可用性已用**直连探测**确认(见文末《Stage A 探测结论》):国服 xivapi 可用且返回简中,故 garlands 降级为“仅检索”、`constants.ts` 四表可删、`xiv-datamine-polyfill` 不再需要。构建期发现并修复了 `csv-parse` 的 Node `Buffer` 泄漏(否则浏览器加载即崩,见《构建期修复》)。**仍待用户在浏览器确认的唯一一项**:xivanalysis 现网真实请求主机/路径(判断现有 `*.xivapi.com` 判别是否已失效)。
 
+上面这段是 **Stage C 为止**的状态:Stage D/E 推翻了「响应翻译 + `xiv-api-provider`」这一整套(见文末),Stage F 又把回归的 garlands 检索交给新包 `xiv-garland-provider`——本包今天已不 import `xiv-api-provider` 里的任何东西。
+
 ## 备份的迁移前产物
 
 | 文件                    | 字节  | sha256                                                             |
@@ -162,7 +164,7 @@ Stage B 后 garlands 只剩 `translate/search.ts` 的按名检索(timeline/icon)
 - `clients.ts`:移除 `garland` 客户端与 `createGarlandClient` import。
 - `vite.config.ts` `@connect`:去掉 `www.garlandtools.cn`(保留 xivapi 各主机)。
 - 删除探测脚手架 `probe.ts`(旁路版曾用于对照)。
-- `xiv-api-provider` 的 garland provider **不动**(`universalis-zh-data` 仍用)。
+- `xiv-api-provider` 的 garland provider **不动**(`universalis-zh-data` 仍用;该 provider 后来拆成 `xiv-garland-provider`,见《Stage F》)。
 
 **构建期修复:`papaparse` 泄漏(与旧 `csv-parse` 同源)**:provider 的 `dist/index.js` 顶层 `import Papa from "papaparse"`(datamine/`parseSheetCsv` 那条路),本包不命名这些导出,但 rolldown 仍把整份打平的 provider dist 并进 IIFE,把约 45 kB 的 Papa 塞进产物。修复:`vite.config.ts` 把 `papaparse` 别名到 `src/shims/papaparse.ts`(调用即抛的浏览器安全空壳);别名后 rolldown 连带把整条 datamine 路径摇掉,产物 56.6 kB → **31.5 kB**,`grep papaparse`/`Papa`/`delimiter` 全 0。(旧的 `csv-parse/sync` 别名与 `shims/csv-parse-sync.ts` 已随 provider 换用 papaparse 而废弃移除。)
 
@@ -207,3 +209,14 @@ D-2 之后浏览器多轮实测暴露两个问题并促成此版:
 **依赖/元数据**:`@grant` = `GM_xmlhttpRequest` + `unsafeWindow`;`@connect` = `www.garlandtools.cn`(仅 garlands 兜底要;CN 读全走原生 fetch,靠其 `ACAO:*`)。不 import `xiv-api-provider`(无 papaparse/桶泄漏)。产物 **18.06 kB**(grep:garlands search.php=1、xivapi `/api/search`=0、papaparse=0、`技能：`=0)。`tsc -b` / oxlint / oxfmt / `rushx build` 全绿。
 
 **用户实测(末轮)**:buff/团辅经 garlands 兜底转中、`counts` 升到 90+、`[xiv-warn]` 清空、无报错。**待**:确认多职业稳定后 bump 版本 + 提交(工作树含 Stage A–E 全部改动;浏览器控制台 dump 已 `.gitignore`,结论均并入本文)。回退:各阶段产物在 `.migration-backup/`。
+
+## Stage F:garlands 检索交给 xiv-garland-provider
+
+Stage E 请回的 garlands 兜底是手写的:自己的 `search.php` 地址常数、自己的 `GarlandHit` 形状。本轮把这一部分换成新拆出的 `xiv-garland-provider`(garland provider 从 `xiv-api-provider` 拆出的新家,`universalis-zh-data` 也用它),行为逐条不变:
+
+- **检索**:`garlands.call(garlandSearchRaw, { text, lang: garlandLangFor(text) })`。待查串是英文标签,`garlandLangFor` 因此给 `en`,与改造前写死的 `lang=en` 一致。
+- **命中**:编号取 `garlandHitId`(`obj.i` 那个数字,不是 JSON 里字符串的 `id`),种类取 `garlandHitKind`;仍只接受精确同名(`obj.n` 小写等于待查串),本包读不了文档的种类跳过。
+- **传输**:注入 `createGarlandClient({ fetch: (url, init) => gmFetch(url, init?.headers) })`,仍是 `GM.xmlHttpRequest` 代发(`search.php` 无 ACAO);`vite.config.ts` 的 `grant` / `connect` 未动。接缝上的 `signal` 有意不转发,理由写在 `hooks/fetch.ts`。
+- **之后不变**:命中经国服 xivapi 单行读简中名(原生 `pageFetch`)、`memorize` 保证同串只查一次(含"查不到")、写回 `store` 与 `known`。
+
+**依赖**:`package.json` 去掉 `xiv-api-provider`(自 D-2 起已无任何 src 引用,`grep` 可核实),`dependencies` 加 `xiv-garland-provider`。新增 `test/garland.spec.ts` 用假的 GM 与假的原生 fetch 钉住上面几条,不出网。

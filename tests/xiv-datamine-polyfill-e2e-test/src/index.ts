@@ -1,7 +1,8 @@
-import { createXivApiClient, garlandDocUrl, iconIdFromImageUrl, readRowRaw, sheetRowUrl, siteIconUrl, type SheetName, type WebFetcher } from 'xiv-api-provider';
+import { createXivApiClient, iconIdFromImageUrl, readRowRaw, sheetRowUrl, siteIconUrl, type SheetName, type WebFetcher } from 'xiv-api-provider';
 import addon from 'xiv-datamine-polyfill/Addon.csv';
 import itemUICategory from 'xiv-datamine-polyfill/ItemUICategory.csv';
 import { useSheetTable, type SheetTable } from 'xiv-datamine-provider';
+import { garlandDocUrl } from 'xiv-garland-provider';
 
 /**
  * The example consumer: what a userscript that wants these two sheets actually writes.
@@ -14,8 +15,9 @@ import { useSheetTable, type SheetTable } from 'xiv-datamine-provider';
  * The two `.csv` imports are answered by the plugin in `vite.config.ts`, which is what makes this file a
  * build's target code rather than a test's fixture: the grids are already trimmed, and `useSheetTable` is
  * the same reading a caller with a hand-copied table would do. The rest of what a userscript reaches for —
- * the icon arithmetic, the link builders — comes out of the one entry, so a consumer importing a handful of
- * names is a fact about the example rather than a probe written to hold a type check open.
+ * the xivapi row URL and icon arithmetic from `xiv-api-provider`, the garland document URL from
+ * `xiv-garland-provider` — comes out of those packages' entries, so a consumer importing a handful of names
+ * is a fact about the example rather than a probe written to hold a type check open.
  */
 
 /** The host `siteIconUrl` puts the root-relative icon path against; the same one the two userscripts use. */

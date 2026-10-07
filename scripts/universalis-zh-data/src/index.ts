@@ -1,15 +1,8 @@
-import { injectFetch } from './hooks';
+import { createGarlandClient, garlandHitId, garlandIconUrl, garlandSearchRaw, isGarlandTradeable, readItemRaw } from 'xiv-garland-provider';
+import type { GarlandItem, GarlandSearchItem } from 'xiv-garland-provider';
+import { injectFetch, origFetch } from './hooks';
 import { SearchCategory, UICategory } from './ItemCategory';
-import type {
-  GarlandItem,
-  GarlandItemResponse,
-  GarlandSearchItem,
-  ItemCategory,
-  Package,
-  PackageInjector,
-  XIVAPIItemResponse,
-  XIVAPIItemResult,
-} from './types';
+import type { ItemCategory, Package, PackageInjector, XIVAPIItemResponse, XIVAPIItemResult } from './types';
 
 const isCafeMakerPackage = (pkg: Package) => {
   const url = new URL(pkg.url);
@@ -94,16 +87,24 @@ const getItemCategory = (UICategoryId: number): ItemCategory => {
   return category;
 };
 
+/**
+ * garland 取数与地址一律走 xiv-garland-provider，本包不再自己拼 URL、也不再自己声明镜像的形状。
+ *
+ * 端点的两份装配里取 `Raw` 后缀那份：本包只用得到镜像自己交回的 JSON，不需要在调用点上再校验一次，产物里因此
+ * 不含 zod（verified 装配才会值导入它）。`fetch` 传拦截前的原生那份，garland 的请求不必先穿过本包自己装的
+ * hook（那条 hook 只改写 cafemaker 的响应，白走一趟只会多一次 clone 与 json 解析）。
+ */
+const garlands = createGarlandClient({ fetch: origFetch });
+
 const getGarlandItem = async (itemId: number): Promise<GarlandItem> => {
-  const GARLAND_API_ITEM_ENDPOINT = `https://www.garlandtools.cn/db/doc/item/chs/3/${itemId}.json`;
-  const response = await fetch(GARLAND_API_ITEM_ENDPOINT);
-  const json: GarlandItemResponse = await response.json();
-  return json.item;
+  const response = await garlands.call(readItemRaw, { id: itemId });
+  return response.item;
 };
 
 const searchGarlandItem = async (item: GarlandSearchItem): Promise<XIVAPIItemResult | null> => {
+  // 命中里的 id 是 JSON 字符串，真编号在 obj.i；l / r 在新包的类型里是 unknown，按 typeof 收窄。
   const result: XIVAPIItemResult = {
-    ID: item.id,
+    ID: garlandHitId(item),
     Icon: '',
     ItemKind: {
       Name: '',
@@ -112,23 +113,25 @@ const searchGarlandItem = async (item: GarlandSearchItem): Promise<XIVAPIItemRes
       ID: -1,
       Name: '',
     },
-    LevelItem: item.obj.l,
+    LevelItem: typeof item.obj.l === 'number' ? item.obj.l : 0,
     Name: item.obj.n,
-    Rarity: item.obj.r ?? 0,
+    Rarity: typeof item.obj.r === 'number' ? item.obj.r : 0,
   };
 
   try {
-    const itemDetail = await getGarlandItem(item.id);
-    if (itemDetail.tradeable !== 1) {
+    const itemDetail = await getGarlandItem(garlandHitId(item));
+    if (!isGarlandTradeable(itemDetail)) {
       return null;
     }
 
     // set fields
     result.Icon = getIconUrl(itemDetail.icon);
-    result.Rarity = itemDetail.rarity;
+    if (typeof itemDetail.rarity === 'number') {
+      result.Rarity = itemDetail.rarity;
+    }
 
-    // category mapping
-    const category = getItemCategory(itemDetail.category);
+    // category mapping：文档里没有分类时沿用 -1 这个「未知」哨兵值，与 UICategory 里查不到同一条路径。
+    const category = getItemCategory(itemDetail.category ?? -1);
     result.ItemKind.Name = category.UICategoryName;
     result.ItemSearchCategory.ID = category.SearchCategory;
     result.ItemSearchCategory.Name = category.SearchCategoryName;
@@ -140,16 +143,8 @@ const searchGarlandItem = async (item: GarlandSearchItem): Promise<XIVAPIItemRes
 };
 
 const searchGarland = async (searchString: string) => {
-  const newParams = new URLSearchParams({
-    text: searchString,
-    lang: 'chs',
-    type: 'item',
-  });
-
-  const GARLAND_API_SEARCH_ENDPOINT = 'https://www.garlandtools.cn/api/search.php';
-
-  const response = await fetch(`${GARLAND_API_SEARCH_ENDPOINT}?${newParams.toString()}`);
-  const data: GarlandSearchItem[] = await response.json();
+  // 检索语义（text / lang=chs / type=item）由新包的 garlandSearchUrl 表达，与改造前逐字一致。
+  const data = await garlands.call(garlandSearchRaw, { text: searchString, lang: 'chs', type: 'item' });
 
   const result = await Promise.all(data.map(async (item) => await searchGarlandItem(item)));
 
@@ -202,7 +197,7 @@ const injectItemImage = () => {
       // https://universalis.app/market/46246
       const id = parseInt(document.location.pathname.split('/').pop() || '0');
       const itemDetail = await getGarlandItem(id);
-      iconUrl = `https://www.garlandtools.cn/files/icons/item/${itemDetail.icon}.png`;
+      iconUrl = garlandIconUrl('item', itemDetail.icon).href;
     };
 
     const check = async () => {

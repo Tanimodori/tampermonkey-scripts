@@ -24,6 +24,10 @@
     "typecheck": "tsc -b",
     "test": "vitest --passWithNoTests"
   },
+  "dependencies": {
+    "api-sdk-framework": "workspace:*",
+    "xiv-garland-provider": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^22.10.5",
     "oxfmt": "^0.67.0",

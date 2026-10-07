@@ -1,8 +1,8 @@
 {
-  "name": "xivanalysis-zh",
-  "version": "0.0.5",
+  "name": "xiv-garland-provider",
+  "version": "0.0.1",
   "private": true,
-  "description": "Fill in the missing Chinese translations for xivanalysis.",
+  "description": "Online access to the Garland Tools Chinese mirror (garlandtools.cn): per-kind documents by id, the search endpoint and icon URLs.",
   "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
   "bugs": {
     "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
@@ -14,26 +14,41 @@
   "license": "MIT",
   "author": "Tanimodori",
   "type": "module",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -b && vite build",
-    "dev": "vite",
-    "preview": "vite preview",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
     "typecheck": "tsc -b",
-    "test": "vitest --passWithNoTests"
+    "test": "vitest --run --passWithNoTests",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "xiv-garland-provider": "workspace:*"
+    "api-sdk-framework": "workspace:*",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.59.1",
     "@types/node": "^22.10.5",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",
     "typescript": "~5.9.3",
+    "universal-fetch-type": "workspace:*",
+    "unplugin-dts": "^1.1.1",
     "vite": "^8.3.0",
-    "vite-plugin-userscript-metadata": "workspace:*",
     "vitest": "^5.0.1"
   },
   "optionalDependencies": {

@@ -6,7 +6,7 @@
  * 不改判。
  */
 
-export type Provider = 'xivapi' | 'garlands';
+export type Provider = 'xivapi';
 
 /** 一次读取可能失败在哪一层：装配归 `input`，发出归 `network`/`timeout`，答复归 `http`/`shape`，发请求前就判掉的拒绝归 `unsupported`。 */
 export type ProviderErrorKind = 'http' | 'network' | 'timeout' | 'shape' | 'unsupported' | 'input';

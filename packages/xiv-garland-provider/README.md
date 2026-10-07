@@ -1,6 +1,6 @@
 # xiv-garland-provider
 
-Garland Tools 国服镜像 `https://www.garlandtools.cn` 的在线访问层，供本仓库的中文本地化 userscript（`universalis-zh-data`、`xivanalysis-zh`）共用。它从 `xiv-api-provider` 的 garlands provider 拆出，那个 provider 的源码仍在原处，本包是那一部分的独立新家；它是 xivapi 那套机制不适用的证明——没有 edition 可填、没有版本可读、没有共享信封可判。
+Garland Tools 国服镜像 `https://www.garlandtools.cn` 的在线访问层，供本仓库的中文本地化 userscript（`universalis-zh-data`、`xivanalysis-zh`）共用。它从 `xiv-api-provider` 的 garlands provider 拆出，原处那一支已删除，本包是这一部分的独立新家；它是 xivapi 那套机制不适用的证明——没有 edition 可填、没有版本可读、没有共享信封可判。
 
 镜像按种类存放文档，另有一个检索端点与一批渲染好的图标。这个包不认识任何游戏表：它回答「给我这个编号的这份文档」「用这个词检索」，交回的就是镜像自己的 JSON。URL 构造、运行时判定、客户端与四个操作各自的两份装配都在这里。
 

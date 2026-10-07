@@ -1,42 +1,40 @@
 # xiv-api-provider
 
-FFXIV 数据源的在线访问层,供本仓库的中文本地化 userscript(`universalis-zh-data`、`xivanalysis-zh`)共用。两个来源各封成一个 provider,不共享数据模型、也不互相回退。
+FFXIV 数据源的在线访问层。本包只在线读取一个来源:
 
 - `xivapi` —— 结构化游戏数据,国际站 boilmaster 与国服 cafemaker v2 两个 edition。
-- `garlands` —— `https://www.garlandtools.cn`,简中名称与描述目前真正的来源。
 
-分界与入口的选择见 [docs/providers](docs/providers/README.md);两个 provider 各自的设计见 [xivapi](docs/providers/xivapi.md)、[garlands](docs/providers/garlands.md)。
+国服镜像 `https://www.garlandtools.cn`(简中名称与描述目前真正的来源)不在这里,它已整支拆成独立包 [`xiv-garland-provider`](../xiv-garland-provider/README.md)。
+
+分界与入口的选择见 [docs/providers](docs/providers/README.md);provider 的设计见 [xivapi](docs/providers/xivapi.md)。
 
 构建期把某张表固化进产物的做法在另一个包:`xiv-datamine-polyfill` 提供一个 vite 插件,把 `xiv-datamine-polyfill/<Sheet>.csv` 变成生成好的模块,取数与解析用的函数来自 `xiv-datamine-provider`。
 
 ## 用法
 
-一个默认入口,导出面按 provider 分组:
+一个默认入口,导出面按共用与 xivapi 分组:
 
 ```ts
-import { createGarlandClient, createXivApiClient, readItem, readRow } from 'xiv-api-provider';
+import { createXivApiClient, readRow } from 'xiv-api-provider';
 import { origFetch } from './hooks';
 
 const xivapi = createXivApiClient('chinese-server', { language: 'chs', fetch: origFetch });
 const row = await xivapi.call(readRow, { sheet: 'Action', row: 16554, query: { fields: ['Name'] } });
-
-const garlands = createGarlandClient({ fetch: origFetch });
-const item = await garlands.call(readItem, { id: 19890 });
 ```
 
-两个 provider 都从这里出,用不到的那几个由调用方的打包器删掉:包声明了 `sideEffects: false`,产物又沿 zod 一道墙分块,没被牵动的块连同它背着的重依赖整块不进产物——只命名 `Raw` 端点(或 `readAsset` 这类没有校验对的)的产物里没有 schema 引擎。
+xivapi 从这里出,用不到的那几个由调用方的打包器删掉:包声明了 `sideEffects: false`,产物又沿 zod 一道墙分块,没被牵动的块连同它背着的重依赖整块不进产物——只命名 `Raw` 端点(或 `readAsset` 这类没有校验对的)的产物里没有 schema 引擎。
 
 `fetch` 的类型是本仓 `universal-fetch-type` 的 `WebFetcher`——与 `tencent-doc-sdk` 的 transport 同一档,一个 fetcher 可以同时喂两边。默认取全局 `fetch`,所以 Node 侧不传也能跑。必须显式注入的情况:userscript 自己拦截了 `window.fetch`,出站请求要走拦截前的原生 `fetch`,否则会自顶穿过自己的 hook。`origFetch` 直接传即可,不必包一层——这一档要买的就是这件事,理由见 [universal-fetch-type](../universal-fetch-type/README.md)。
 
 ## 校验与测试
 
-每个读取是一个 endpoint 对象,分两份装配:`raw.ts` 只写 `operation`、响应体读取方式与适配器,`verified.ts` 展开 raw 的声明再补 `responseSchema`。默认名归带校验的那份(`readRow`),无校验的那一份带 `Raw` 后缀(`readRowRaw`);没有同构 schema 的操作不配对,保持本名(`readAsset`)。运行时判定先用各 provider `guards.ts` 里的手写谓词,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `shape`。schema 只在 `providers/<name>/types/schema.ts`,是包内值导入 zod 的唯一地方,传入参数不做本地校验。
+每个读取是一个 endpoint 对象,分两份装配:`raw.ts` 只写 `operation`、响应体读取方式与适配器,`verified.ts` 展开 raw 的声明再补 `responseSchema`。默认名归带校验的那份(`readRow`),无校验的那一份带 `Raw` 后缀(`readRowRaw`);没有同构 schema 的操作不配对,保持本名(`readAsset`)。运行时判定先用 `guards.ts` 里的手写谓词,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `shape`。schema 只在 `providers/xivapi/types/schema.ts`,是包内值导入 zod 的唯一地方,传入参数不做本地校验。
 
 zod 与 `universal-fetch-type` 记在 `devDependencies`:这些包都是私有的、只经 `workspace:*` 被消费,而 pnpm 会把 `devDependencies` 一样链进本包的 `node_modules`,所以从 `xiv-api-provider` 的声明出发,声明链(zod 与 `→ universal-fetch-type → @apollo/utils.fetcher`)照旧解析得到,消费方不需要在任何一处声明它们。选择 verified 装配的一方得到运行时校验,只命名 raw 的一方的产物里没有 schema 引擎;真要对外发布某个包时,这两个落位要改,否则外部读者解析不到那个名字。取舍见 [zod 与校验](docs/providers/README.md#zod-与校验)。
 
 ```bash
 rushx test              # 离线,CI 门禁
-rushx test:live         # 真实打两端 + Garland,需 XIV_LIVE=1,仅手动
+rushx test:live         # 真实打两端,需 XIV_LIVE=1,仅手动
 rushx test:drift        # OpenAPI 漂移报告,同样仅手动
 ```
 

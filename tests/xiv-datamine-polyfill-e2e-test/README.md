@@ -21,7 +21,7 @@
 
 缓存按模式分开:`node_modules/.cache/xiv-datamine-polyfill-e2e-test`(离线)与同级的 `…-e2e-test-live`(活体)。共用一个目录时,一次活体运行会把真表留在离线构建读的缓存里,`test:offline` 就不再是它声称的那次确定性构建。stub 会打印它被问到的路径,所以第二次离线构建打印 0 行就是"缓存命中、零请求"的现场证据。
 
-暖缓存零请求、`HEAD` 移动换文件、断网沿用过期副本这些行为的断言在包自己的测试里,见 [xiv-datamine-polyfill 的设计说明](../../packages/xiv-datamine-polyfill/docs/design.md);`xiv-api-provider` 两个数据源的活体测试见 [xiv-api-provider 的说明](../../packages/xiv-api-provider/README.md)。这里不重复。
+暖缓存零请求、`HEAD` 移动换文件、断网沿用过期副本这些行为的断言在包自己的测试里,见 [xiv-datamine-polyfill 的设计说明](../../packages/xiv-datamine-polyfill/docs/design.md);`xiv-api-provider` 的活体测试见 [xiv-api-provider 的说明](../../packages/xiv-api-provider/README.md)。这里不重复。
 
 ## 通配声明怎么进来
 

@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import dts from 'unplugin-dts/vite';
 import { defineConfig } from 'vitest/config';
 
-const schemaSide = /types[\\/]schema\.ts$|providers[\\/](xivapi|garlands)[\\/]verified\.ts$/;
+const schemaSide = /types[\\/]schema\.ts$|providers[\\/]xivapi[\\/]verified\.ts$/;
 
 export default defineConfig({
   plugins: [
@@ -44,7 +44,7 @@ export default defineConfig({
       // `Raw` endpoints (or the slotless ones) really avoids it depends on the chunk partition below surviving
       // into `dist/`, and `tests/xiv-datamine-polyfill-e2e-test` measures the result from outside.
       external: ['zod'],
-      // The partition, from the wall outward: `schema` (the two `types/schema.ts` and the two `verified.ts`)
+      // The partition, from the wall outward: `schema` (`types/schema.ts` and `providers/xivapi/verified.ts`)
       // becomes a chunk of its own, and `core` takes everything left. Dependencies are not captured into a
       // group, which keeps the direction acyclic — `core` imports nothing back — and the wall droppable: a
       // group that swallowed `core` would keep zod alive for every consumer. `allow-extension` is the

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ALL_EDITIONS, EDITIONS, garlandDocUrl, type Edition } from '@/index.ts';
+import { ALL_EDITIONS, EDITIONS, type Edition } from '@/index.ts';
 
 /**
  * Drift detection, run by hand: `rushx test:drift`.
@@ -79,19 +79,5 @@ describe.skipIf(process.env.XIV_LIVE !== '1')('openapi drift', { tags: ['live'] 
     expect(document.paths?.['/asset']).toBeUndefined();
     // If this ever fails, `readAsset` has to stop offering the Chinese server, not gain a fallback.
     expect(response.ok, 'the undeclared /asset endpoint stopped answering').toBe(true);
-  });
-
-  it('confirms the garland addresses this package hard-codes still resolve', async () => {
-    for (const [kind, id] of [
-      ['item', 19890],
-      ['action', 16554],
-      ['status', 1892],
-    ] as const) {
-      const url = garlandDocUrl(kind, id);
-      const response = await fetch(url, { signal: AbortSignal.timeout(30_000) });
-      expect(response.status, url.toString()).toBe(200);
-      // The whole reason `@grant none` works against this host.
-      expect(response.headers.get('access-control-allow-origin'), `CORS gone on ${url}`).toBe('*');
-    }
   });
 });

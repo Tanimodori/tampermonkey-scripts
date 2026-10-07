@@ -13,7 +13,7 @@ JavaScript monorepo for ffxiv and userscripts.
 **Libraries**
 
 - **[api-sdk-framework](packages/api-sdk-framework/README.md)**: Shared call/endpoint framework behind the repo's API SDKs
-- **[xiv-api-provider](packages/xiv-api-provider/README.md)**: API SDK for xivapi and Garland Tools
+- **[xiv-api-provider](packages/xiv-api-provider/README.md)**: API SDK for xivapi in its international and Chinese server editions
 - **[xiv-garland-provider](packages/xiv-garland-provider/README.md)**: API SDK for the Garland Tools Chinese mirror, split out of xiv-api-provider and built on api-sdk-framework
 - **[xiv-datamine-provider](packages/xiv-datamine-provider/README.md)**: Online access to the SaintCoinach datamining dumps
 - **[xiv-datamine-polyfill](packages/xiv-datamine-polyfill/README.md)**: Vite plugin turning a datamining sheet import into a build-time generated module

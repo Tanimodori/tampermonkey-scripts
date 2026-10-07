@@ -5,7 +5,7 @@ import type { IconField } from '@/providers/xivapi/types/schema.ts';
  *
  * They are not interchangeable, and mixing them is how a userscript ends up showing a broken image:
  *
- * - a **sheet icon id**, e.g. `20705` — what `ItemUICategory.Icon` and `GarlandItem.icon` carry
+ * - a **sheet icon id**, e.g. `20705` — what `ItemUICategory.Icon` carries
  * - a **game texture path**, e.g. `ui/icon/020000/020705.tex` — what the v2 API's `Icon.path` carries,
  *   and the only thing `/asset` accepts
  * - a **site icon URL**, e.g. `/i/020000/020705.png` — what universalis.app and xivanalysis expect in an

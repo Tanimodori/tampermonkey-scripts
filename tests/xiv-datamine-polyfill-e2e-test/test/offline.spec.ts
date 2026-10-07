@@ -64,12 +64,11 @@ describe.skipIf(live)('the stub-fed build', () => {
  * the bundle.
  *
  * Both heavyweight libraries ride on a wall that a bundler can only drop whole. `xiv-api-provider`'s build
- * partitions `dist/` along its two heavyweight dependencies (`codeSplitting` groups): `schema.js` carries zod,
- * `parse.js` carries papaparse, and each wall imports only downward (`schema` → `core`, `parse` → `constants`),
- * never back. This consumer names that package's raw endpoints and no verified one, so its bundler deletes the
- * `schema.js` chunk — and zod with it — wholesale instead of having to prove the schema initializers dead.
- * Flatten the package back into one file and zod comes along silently, which is the failure this check exists
- * to catch: weight, not a broken import.
+ * partitions `dist/` along its one heavyweight dependency (`codeSplitting` groups): `schema.js` carries zod and
+ * imports only downward (`schema` → `core`), never back. This consumer names that package's raw endpoints and no
+ * verified one, so its bundler deletes the `schema.js` chunk — and zod with it — wholesale instead of having to
+ * prove the schema initializers dead. Flatten the package back into one file and zod comes along silently, which
+ * is the failure this check exists to catch: weight, not a broken import.
  *
  * papaparse arrives from the other direction — the grids are read through `xiv-datamine-provider` — and that
  * package is partitioned the same way: `parse.js` is the only module that names papaparse, and `table.js`,

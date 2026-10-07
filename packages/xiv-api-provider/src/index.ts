@@ -1,10 +1,9 @@
 /**
- * 包的全部公开面，一个入口：三个来源是什么，以及如何在线读取它们。
+ * 包的全部公开面，一个入口：两个来源是什么，以及如何在线读取它们。
  *
- * 下面按 provider 分组，是有意的——三者不共享数据模型、也不互相回退，共有的只有调用链、传输与 `ProviderError`。
+ * 下面按 provider 分组，是有意的——两者不共享数据模型、也不互相回退，共有的只有调用链、传输与 `ProviderError`。
  * 一个调用方最终装进产物的是哪几个，由它的打包器决定：`sideEffects: false` 说没被命名的导出可以删，只命名
- * `Raw` 端点（以及没有校验对的 `readAsset` / `fetchSheetCsv`）的产物里没有 schema 引擎，`parseSheetCsv` 与
- * `readSheet` 是通往 `papaparse` 的唯一两条路。
+ * `Raw` 端点（以及没有校验对的 `readAsset`）的产物里没有 schema 引擎。
  *
  * 一次读取是一个端点对象，由 client 的 `call` 执行；schema 住在它们描述的形状旁边
  * （`providers/<name>/types/schema.ts`），填进 verified 端点的响应槽，业务代码只以 `import type` 引用它们，
@@ -120,20 +119,3 @@ export type {
   GarlandStatusResponse,
   GarlandSubLocale,
 } from '@/providers/garlands/types/schema.ts';
-
-// datamine：SaintCoinach 解包数据集，一张表一个 CSV 文件，交回文件持有的网格。
-export { HEADER_LINES } from '@/providers/datamine/constants.ts';
-export { parseSheetCsv } from '@/providers/datamine/parse.ts';
-export type { SheetRawData } from '@/providers/datamine/parse.ts';
-
-export { useSheetTable } from '@/providers/datamine/table.ts';
-export type { SheetTable, TrimRules } from '@/providers/datamine/table.ts';
-
-export { createDatamineClient } from '@/providers/datamine/client.ts';
-export type { DatamineClient, DatamineClientOptions, DatamineEndpoint } from '@/providers/datamine/client.ts';
-
-export { fetchSheetCsv } from '@/providers/datamine/raw.ts';
-export type { FetchSheetCsvInput } from '@/providers/datamine/raw.ts';
-
-export { DATAMINING_REPOSITORY, DEFAULT_LOCALE, DEFAULT_REF, DEFAULT_TIMEOUT_MS, readSheet, sheetCsvUrl } from '@/providers/datamine/sheet.ts';
-export type { DatamineOptions } from '@/providers/datamine/sheet.ts';

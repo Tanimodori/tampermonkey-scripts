@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   ALL_EDITIONS,
-  createDatamineClient,
   createGarlandClient,
   createXivApiClient,
   EDITIONS,
-  fetchSheetCsv,
   garlandSearch,
   isApiErrorResponse,
   isProviderError,
@@ -16,10 +14,8 @@ import {
   readAsset,
   readItem,
   readRow,
-  readSheet,
   readStatus,
   search,
-  useSheetTable,
 } from '@/index.ts';
 import * as garlandSchemas from '@/providers/garlands/types/schema.ts';
 import * as schemas from '@/providers/xivapi/types/schema.ts';
@@ -216,33 +212,5 @@ describe.skipIf(!live)('garland mirror', { tags: ['live'] }, () => {
   it('allows any origin', async () => {
     const response = await fetch('https://www.garlandtools.cn/db/doc/Item/chs/3/19890.json');
     expect(response.headers.get('access-control-allow-origin')).toBe('*');
-  });
-});
-
-describe.skipIf(!live)('datamining dumps', { tags: ['live'] }, () => {
-  it('reads a sheet from the branch head as the grid the file holds', async () => {
-    const raw = await readSheet('ActionCategory');
-    expect(raw.origin).toBe('ActionCategory.csv@HEAD');
-    const sheet = useSheetTable(raw);
-    expect(sheet.columns).toContain('#');
-    expect(sheet.columns).toContain('Name');
-    expect(sheet.rowCount).toBeGreaterThan(0);
-    // 一张表的形状契约：每一行每列一格，每格都是字符串。
-    expect(sheet.rows.every((row) => row.length === sheet.columns.length)).toBe(true);
-    expect(sheet.rows.every((row) => row.every((cell) => typeof cell === 'string'))).toBe(true);
-  });
-
-  it('answers a sheet the tree does not carry as a 404 rather than an empty grid', async () => {
-    // `DataCenter` 根本不在树里：这张表在现代 EXD 里改了名，有些语种从没拿到过旧文件。调用方得能把这件事
-    // 与"请求失败了"分开。
-    await expect(createDatamineClient().call(fetchSheetCsv, { sheet: 'DataCenter' })).rejects.toMatchObject({ kind: 'not_found', status: 404 });
-  });
-
-  it('serves Chinese text for the chs locale', async () => {
-    const sheet = useSheetTable(await readSheet('ItemUICategory'));
-    expect(sheet.cell(1, 'Name')).toBeTruthy();
-    // 大括号是文件自己的拼法，也是唯一解得开的拼法。
-    expect(sheet.cell(1, 'Order{Minor}')).toBeDefined();
-    expect(sheet.cell(1, 'OrderMinor')).toBeUndefined();
   });
 });

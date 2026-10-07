@@ -18,14 +18,13 @@ export default defineConfig({
       insertTypesEntry: false,
     }),
   ],
-  // The package is a library other packages import, so `dist/` is partitioned along the two heavyweight,
-  // un-shakeable dependencies rather than emitted as one flat bundle or one file per source module — the
-  // `codeSplitting` groups below. The zod wall and the papaparse wall become chunks of their own, so a
-  // consumer that names neither verified endpoints nor `readSheet`/`parseSheetCsv` drops them, and whatever
-  // else only they reached, wholesale instead of asking a bundler to prove the schema initializers dead. The
-  // `@/…` alias is resolved here and disappears from the output; the declarations come out of the same pass
-  // and for the same reason — `unplugin-dts` resolves `paths` while generating them, so an alias a consumer
-  // cannot read never reaches `dist/`.
+  // The package is a library other packages import, so `dist/` is partitioned along the one heavyweight,
+  // un-shakeable dependency rather than emitted as one flat bundle or one file per source module — the
+  // `codeSplitting` groups below. The zod wall becomes a chunk of its own, so a consumer that names no
+  // verified endpoint drops it, and whatever else only it reached, wholesale instead of asking a bundler to
+  // prove the schema initializers dead. The `@/…` alias is resolved here and disappears from the output; the
+  // declarations come out of the same pass and for the same reason — `unplugin-dts` resolves `paths` while
+  // generating them, so an alias a consumer cannot read never reaches `dist/`.
   build: {
     outDir: resolve(import.meta.dirname, 'dist'),
     emptyOutDir: true,
@@ -40,23 +39,17 @@ export default defineConfig({
       formats: ['es'],
     },
     rolldownOptions: {
-      // `papaparse` is imported by the shipped code and is not inlined: the consumer resolves it, which is also
-      // how it ends up in a browser bundle at all. The regex form matters — a bare string in `external` would
-      // match the specifier written here only.
-      //
       // `zod` is value-imported through `providers/<name>/verified.ts` → `types/schema.ts`, so it is in the
-      // entry's module graph and must not be inlined either. Whether a consumer naming only `Raw` endpoints
-      // (or the slotless ones) really avoids it depends on the chunk partition below surviving into `dist/`,
-      // and `tests/xiv-datamine-polyfill-e2e-test` measures the result from outside.
-      external: ['zod', /^papaparse(\/|$)/],
-      // The partition, from the walls outward: `schema` (the two `types/schema.ts` and the two `verified.ts`),
-      // `parse` (`datamine/parse.ts`, the papaparse caller) and `constants` (`datamine/constants.ts`, the
-      // `HEADER_LINES` leaf both `parse` and `table` reach without touching either wall) become chunks of
-      // their own; `datamine` takes the rest of that provider, `core` everything left. Dependencies are not
-      // captured into a group, which keeps the direction acyclic — `core` imports nothing back — and the
-      // walls droppable: a group that swallowed `core` would keep zod or papaparse alive for every consumer.
-      // `allow-extension` is the entry-signature setting `includeDependenciesRecursively: false` requires;
-      // priorities just order the capture of overlapping tests.
+      // entry's module graph and must not be inlined: the consumer resolves it. Whether a consumer naming only
+      // `Raw` endpoints (or the slotless ones) really avoids it depends on the chunk partition below surviving
+      // into `dist/`, and `tests/xiv-datamine-polyfill-e2e-test` measures the result from outside.
+      external: ['zod'],
+      // The partition, from the wall outward: `schema` (the two `types/schema.ts` and the two `verified.ts`)
+      // becomes a chunk of its own, and `core` takes everything left. Dependencies are not captured into a
+      // group, which keeps the direction acyclic — `core` imports nothing back — and the wall droppable: a
+      // group that swallowed `core` would keep zod alive for every consumer. `allow-extension` is the
+      // entry-signature setting `includeDependenciesRecursively: false` requires; priorities just order the
+      // capture of overlapping tests.
       preserveEntrySignatures: 'allow-extension',
       // Declaration generation is most of this build and always will be; the timing check reads that as a
       // warning, and a warning nobody intends to fix is a warning people learn to ignore.
@@ -67,9 +60,6 @@ export default defineConfig({
         codeSplitting: {
           groups: [
             { name: 'schema', test: schemaSide, priority: 5, includeDependenciesRecursively: false },
-            { name: 'parse', test: /providers[\\/]datamine[\\/]parse\.ts$/, priority: 4, includeDependenciesRecursively: false },
-            { name: 'constants', test: /providers[\\/]datamine[\\/]constants\.ts$/, priority: 3, includeDependenciesRecursively: false },
-            { name: 'datamine', test: /providers[\\/]datamine[\\/]/, priority: 2, includeDependenciesRecursively: false },
             {
               name: 'core',
               test: (id: string) => id.replace(/\\/g, '/').includes('/src/') && !id.endsWith('/src/index.ts'),

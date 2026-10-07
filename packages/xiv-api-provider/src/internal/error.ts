@@ -6,10 +6,10 @@
  * 不改判。
  */
 
-export type Provider = 'xivapi' | 'garlands' | 'datamine';
+export type Provider = 'xivapi' | 'garlands';
 
-/** `not_found` 是唯一一个算答案而不是失败的 kind：一条 `404` 说数据不在这里。 */
-export type ProviderErrorKind = 'http' | 'not_found' | 'network' | 'timeout' | 'shape' | 'unsupported' | 'input';
+/** 一次读取可能失败在哪一层：装配归 `input`，发出归 `network`/`timeout`，答复归 `http`/`shape`，发请求前就判掉的拒绝归 `unsupported`。 */
+export type ProviderErrorKind = 'http' | 'network' | 'timeout' | 'shape' | 'unsupported' | 'input';
 
 /** 抛出处能供给的全部字段；`url` 与 `operation` 通常由调用链补上。 */
 export interface ProviderErrorInit {

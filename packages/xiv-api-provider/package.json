@@ -2,7 +2,7 @@
   "name": "xiv-api-provider",
   "version": "0.0.1",
   "private": true,
-  "description": "Online access to the FFXIV data sources the Chinese-localizing userscripts read: xivapi in two editions, the Garland Tools mirror, and the datamining CSV dumps.",
+  "description": "Online access to the FFXIV data sources the Chinese-localizing userscripts read: xivapi in two editions and the Garland Tools mirror.",
   "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
   "bugs": {
     "url": "https://github.com/Tanimodori/tampermonkey-scripts/issues"
@@ -44,16 +44,12 @@
     "unplugin-dts": "^1.1.1",
     "vite": "^8.3.0",
     "vitest": "^5.0.1",
-    "zod": "^4.6.5",
-    "@types/papaparse": "~5.5.2"
+    "zod": "^4.6.5"
   },
   "optionalDependencies": {
     "@oxfmt/binding-win32-x64-msvc": "^0.67.0",
     "@oxlint/binding-win32-x64-msvc": "^1.82.0",
     "@rolldown/binding-win32-x64-msvc": "~1.2.6",
     "lightningcss-win32-x64-msvc": "^1.33.0"
-  },
-  "dependencies": {
-    "papaparse": "~5.7.0"
   }
 }

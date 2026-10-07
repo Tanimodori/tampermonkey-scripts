@@ -310,10 +310,6 @@ importers:
         version: 1.33.0
 
   ../../packages/xiv-api-provider:
-    dependencies:
-      papaparse:
-        specifier: ~5.7.0
-        version: 5.7.0
     devDependencies:
       '@microsoft/api-extractor':
         specifier: ^7.59.1
@@ -321,9 +317,6 @@ importers:
       '@types/node':
         specifier: ^22.10.5
         version: 22.19.3
-      '@types/papaparse':
-        specifier: ~5.5.2
-        version: 5.5.2
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0

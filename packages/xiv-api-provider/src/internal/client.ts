@@ -17,11 +17,6 @@ export interface CallConfig {
   readonly timeoutMs: number;
   /** 从非 OK 响应体里取 `{code, message}`，服务端发这个形状的时候。 */
   readonly readError?: (body: unknown) => { code: number; message: string } | undefined;
-  /**
-   * 非 OK 的归类，先于默认的 `http` 处理，给那些状态码不只是"请求失败"的 provider——datamine 的取表路径上的
-   * `404` 是关于数据的答案。
-   */
-  readonly failure?: (response: ApiResponse, text: string, context: { readonly request: ApiRequest; readonly input: unknown }) => ProviderError | undefined;
 }
 
 /**
@@ -97,8 +92,6 @@ export const createCall =
 
     // 非 OK 在端点自己读这份响应之前归类。
     if (!raw.ok) {
-      const custom = config.failure?.(response, text, { request, input });
-      if (custom !== undefined) throw wrapProviderError(custom, { provider: config.provider, kind: custom.kind, operation, url: request.url });
       const structured = config.readError?.(body);
       throw new ProviderError({
         kind: 'http',

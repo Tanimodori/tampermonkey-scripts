@@ -6,12 +6,12 @@
 
 ## 能力差异
 
-- `language`:国际站 `en`/`ja`/`de`/`fr`,`chs` 与 `zh` 都被拒;国服额外接受 `chs`,且省略参数即返回中文。`zh`/`cn` 在两侧都不是合法 token。两种 400 的措辞不同义,`languageRejectionKind` 把 `Failed to deserialize`(token 不在格式枚举里)与 `unsupported language`(合法变体、该 edition 不带)分开,否则一个数据可用性缺陷会伪装成拼写错误。
-- `version`:国际站是 16 位十六进制(`541c0c12e07da325`),国服是 16 位游戏时间戳(`2026071600010000`)。形态不同类,所以按 edition 各有一条 `versionPattern` 断言,而不是用一条正则。
-- `GET /version`:国际站有(40 余条),国服 404 且响应体为空。这条必须在发请求之前由 `hasVersionList` 判掉:其他端点的 404 带 `{code, message}`,这一条什么都没有,失败后读不出原因。`listVersions` 端点因此抛 `UNSUPPORTED` 而不是返回空数组——空数组会被读成"没有历史版本"。
+- `language`:国际站 `en`/`ja`/`de`/`fr`,`chs` 与 `zh` 都被拒;国服只接受 `chs`(省略参数即返回中文),`en`/`ja`/`de`/`fr` 在那边得到同一种 400。两侧互补,不是一方多几个 token。`zh`/`cn` 在两侧都不是合法 token。两种 400 的措辞不同义,`languageRejectionKind` 把 `Failed to deserialize`(token 不在格式枚举里)与 `unsupported language`(合法变体、该 edition 不带)分开,否则一个数据可用性缺陷会伪装成拼写错误。
+- `version`:国际站是 16 位十六进制(`541c0c12e07da325`),国服是 `<8 位日期>-<hex>` 的发布键(`20260929-0264d14`)。形态不同类,所以按 edition 各有一条 `versionPattern` 断言,而不是用一条正则。
+- `GET /version`:两侧都有。国服镜像曾经没有(零正文 404),2026-10 起与 `GET /versions` 一起被声明并回答;信封比国际站多 `key`/`published_at`/`update` 几个字段,`versions[].key` 与 `names` 仍同形。
 - `GET /asset` 的 `format`:只有国际站遵守。国服请求 png 会返回 `image/webp`,所以内容类型从响应读,`readAsset` 把 `contentType` 与字节一起返回。国际站反过来要求 `format` 必填,且不做同族转换:源文件已是 png 时,`png`/`webp`/`jpg` 三种都得到 400 `png cannot be converted to …`;`.tex` 源则按所请求的格式返回。
-- `GET /asset/map/{territory}/{index}`:国际站有这条路由(缺源文件时按 `{code, message}` 回答),国服整个路由不存在,回的是无正文结构的纯文本 `404 page not found`。
-- `GET /search` 的命中取决于 `language` 而不是 edition:国服省略 `language` 即按 `chs` 处理,一条英文子句在那边因此返回空数组。同一件事在 [检索](#检索) 一处描述。
+- `GET /asset/map/{territory}/{index}`:两侧都有这条路由,差别在回答什么。国际站缺源文件时回 404 `{code, message}`;国服镜像没有合成地图,对任何 territory 都回 400 `{code, message}`——同一种 JSON 信封、不同的状态码,所以"路由不存在"与"文件不存在"分得开。国服曾经整条路由不存在(纯文本 `404 page not found`)。
+- `GET /search` 的命中取决于 `language` 而不是 edition:国际站有 `en` 列,英文子句在那边有命中;国服只服务 `chs`,同一条子句在那边(显式 `chs` 或省略参数)返回空数组。同一件事在 [检索](#检索) 一处描述。
 - 表数量:国际站 7912 张,国服 1198 张。裁剪部署,所需表两侧都在。
 - CORS:两个 edition 都回答 `access-control-allow-origin: *`,`@grant none` 的脚本因此能直接跨源请求,不必用 `GM_xmlhttpRequest`。这一条会静默失效,所以写在活体断言里。
 
@@ -40,15 +40,15 @@
 
 `/api/search` 的 `query` 是自己的语法,不是搜索框。裸词在两侧都不是合法输入:`Potion` 得到 400 `Char at:`,`火` 得到 400 `AlphaNumeric at:`;要写成 `字段~"值"` 或 `字段="值"` 这样的子句。
 
-命中只发生在拉丁文本上:`Name="Potion"` 配 `language=en` 在国服也返回结果,两侧给出同一批 `row_id`,而 `Name~"药"`、`Name="治疗药"` 一律返回空数组,与 `language` 取 `chs` 还是 `en` 无关。子句里的值是跟"所请求语言的那个字段"比的,所以同一个 `Name="Potion"` 配上国服的默认语言 `chs` 返回空数组——那是"`Name` 等于 Potion 的中文行不存在"这个正确答案,不是索引坏了。按中文名找东西不能指望这个端点,这也是简中文本实际来自 [xiv-garland-provider](../../../xiv-garland-provider/README.md) 的原因之一。空数组同时是合法答案与最容易被误读成"没有这个东西"的答案。
+命中只发生在拉丁文本上:`Name="Potion"` 配 `language=en` 在国际站返回结果,而 `Name~"药"`、`Name="治疗药"` 一律返回空数组。子句里的值是跟"所请求语言的那个字段"比的,国服只服务 `chs`,所以同一个 `Name="Potion"` 在那边(显式 `chs` 或省略参数)返回空数组——那是"`Name` 等于 Potion 的中文行不存在"这个正确答案,不是索引坏了。按中文名找东西不能指望这个端点,这也是简中文本实际来自 [xiv-garland-provider](../../../xiv-garland-provider/README.md) 的原因之一。空数组同时是合法答案与最容易被误读成"没有这个东西"的答案。
 
 ## 类型来源与活体测试
 
 字段类型取自 `GET /api/openapi.json`(OpenAPI 3.1,`info.title` 为 boilmaster),文档页是 Scalar。zod 定义在 `src/endpoints/schema.ts`,是类型别名与 verified 装配校验槽的来源;运行时的信封判定在 `src/client/guards.ts`。
 
-`test/live/availability.spec.ts` 分三组。第一组对每个端点、每个 edition 各发一次真实请求,只问"能不能用信封回答"。第二组逐条测上面那张能力表:表数量差、`chs` 这个 token 在两服的命运、`/version` 在国服是零正文 404、`/asset` 谁遵守 `format`、`/asset/map` 在国服整个路由不存在、检索命中取决于 `language`。第三组记录已经死去与只剩旧路径的主机:`cafemaker.wakingsands.com` 的 530、`xivapi.com` 那套应用自己的 404 正文、以及 `beta.xivapi.com/api/1/…` 仍在服务 v2 正文这一事实。
+`test/live/availability.spec.ts` 分三组。第一组对每个端点、每个 edition 各发一次真实请求,只问"能不能用信封回答"。第二组逐条测上面那张能力表:表数量差、`chs` 与 `en` 在两服的互补命运、`/version` 两侧都有、`/asset` 谁遵守 `format`、`/asset/map` 两侧的状态码差、检索命中取决于 `language`。第三组记录已经死去与只剩旧路径的主机:`cafemaker.wakingsands.com` 的 530、`xivapi.com` 那套应用自己的 404 正文、以及 `beta.xivapi.com/api/1/…` 仍在服务 v2 正文这一事实。
 
-`test/live/drift.spec.ts` 抓两侧 OpenAPI 与本包代码里那份路径表做结构 diff:本包要用的操作消失就让这次运行失败,文档里多出来的操作只记录。国服的 OpenAPI 只声明 4 个操作(国际站 7 个)且不声明 `/asset`,而 `/asset` 实测可用——"未声明但可用"单独盯一条,该端点哪天真被移除会在这里暴露。
+`test/live/drift.spec.ts` 抓两侧 OpenAPI 与本包代码里那份路径表做结构 diff:本包要用的操作消失就让这次运行失败,文档里多出来的操作只记录。两侧的文档都声明了本包要用的 6 个操作;国服镜像 2026-10 之前只声明 4 个且不含 `/version` 与 `/asset`,而 `/asset` 实测可用,当时"未声明但可用"单独盯一条,该情形已随镜像补全声明而消失。
 
 ## 当前限制
 

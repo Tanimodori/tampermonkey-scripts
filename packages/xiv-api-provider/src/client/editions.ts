@@ -4,10 +4,10 @@ export type Edition = 'international' | 'chinese-server';
 /**
  * Language tokens the game data format defines.
  *
- * `chs` is Simplified Chinese and exists only on the Chinese server; the global client has no column for
- * it and answers `invalid or unsupported language "chs"`. `zh` and `cn` are not tokens at all on either
- * side. Both editions do serve `en`/`ja`/`de`/`fr`, so the split between editions is not a language
- * split — it is a data-availability split.
+ * The two editions split on this, and the split is asymmetric: the global client serves `en`/`ja`/`de`/`fr`
+ * and answers `invalid or unsupported language "chs"` for the Chinese token, while the Chinese mirror serves
+ * `chs` alone and refuses each of the other four the same way. `zh` and `cn` are not tokens at all on either
+ * side, so the split is a data-availability split rather than a language one.
  */
 export type LanguageToken = 'en' | 'ja' | 'de' | 'fr' | 'chs';
 
@@ -20,17 +20,8 @@ export interface EditionDescriptor {
   /** What the API returns when no `language` parameter is sent. */
   readonly defaultLanguage: LanguageToken;
   /**
-   * Whether `GET /version` exists.
-   *
-   * This is the one difference a caller has to branch on *before* sending a request, because the Chinese
-   * server answers that path with a 404 carrying **no body at all** — unlike every other error, which is
-   * the JSON `{code, message}` shape. There is no reason to read out of the failure, so asking is wrong
-   * rather than merely unanswered.
-   */
-  readonly hasVersionList: boolean;
-  /**
    * Shape of the `version` field, which differs in kind rather than in value: an opaque 16-hex-digit id
-   * internationally, a 16-digit game timestamp (`2026071600010000`) on the Chinese server.
+   * internationally, an `<8-digit date>-<hex>` release key (`20260929-0264d14`) on the Chinese mirror.
    */
   readonly versionPattern: RegExp;
 }
@@ -40,7 +31,6 @@ export const INTERNATIONAL: EditionDescriptor = {
   service: 'boilmaster',
   apiBase: 'https://v2.xivapi.com/api',
   defaultLanguage: 'en',
-  hasVersionList: true,
   versionPattern: /^[0-9a-f]{16}$/,
 };
 
@@ -52,10 +42,9 @@ export const CHINESE_SERVER: EditionDescriptor = {
   // `docs/providers/xivapi.md`.
   apiBase: 'https://xivapi-v2.xivcdn.com/api',
   // Omitting `language` already yields Chinese here, which is why the Chinese server answers an
-  // international-shaped request correctly by accident.
+  // international-shaped request correctly by accident. It is also the only token the mirror serves.
   defaultLanguage: 'chs',
-  hasVersionList: false,
-  versionPattern: /^\d{16}$/,
+  versionPattern: /^\d{8}-[0-9a-f]+$/,
 };
 
 export const EDITIONS: Record<Edition, EditionDescriptor> = {
@@ -68,7 +57,7 @@ export const ALL_EDITIONS: readonly Edition[] = ['international', 'chinese-serve
 /** The languages each edition was verified to serve. */
 export const EDITION_LANGUAGES: Record<Edition, readonly LanguageToken[]> = {
   international: ['en', 'ja', 'de', 'fr'],
-  'chinese-server': ['chs', 'en', 'ja', 'de', 'fr'],
+  'chinese-server': ['chs'],
 };
 
 /** Whether `language` is served by `descriptor`, so a caller can fail before sending a request. */

@@ -28,7 +28,7 @@ xivapi 从这里出,用不到的那几个由调用方的打包器删掉:包声�
 
 ## 失败
 
-一次往返交给 [`api-sdk-framework`](../api-sdk-framework/README.md) 的 `createCall`,失败统一是它的 `ApiError`——本包没有自己的调用链,也没有自己的错误类。catch 处按 `error.errorCode` 分流:装配失败是 `BAD_INPUT`,收不到可读的答复(连接失败、2xx 空体或非 JSON)是 `NETWORK_ERROR`,超时是 `TIMEOUT`,投影或投影之后的校验不过(`shape` 那一类)是 `BAD_OUTPUT`。非 2xx 的族由端点在 `responseAdaptor` 里归:401/403 归 `UNAUTHORIZED`、429 归 `RATE_LIMIT`、5xx 归 `SERVER_ERROR`、其余(含 404)归 `BAD_REQUEST`;归族之后 `status` 仍留在 `error.response.status` 上,服务端那句 `{code, message}` 仍留在 `error.response.body` 上,既是失败消息、也能按状态码分流。本包只多一个自己的码 `UNSUPPORTED`:这个 edition 没有这条路由,发请求之前就判掉,不是上游对某次请求的回答。
+一次往返交给 [`api-sdk-framework`](../api-sdk-framework/README.md) 的 `createCall`,失败统一是它的 `ApiError`——本包没有自己的调用链,也没有自己的错误类。catch 处按 `error.errorCode` 分流:装配失败是 `BAD_INPUT`,收不到可读的答复(连接失败、2xx 空体或非 JSON)是 `NETWORK_ERROR`,超时是 `TIMEOUT`,投影或投影之后的校验不过(`shape` 那一类)是 `BAD_OUTPUT`。非 2xx 的族由端点在 `responseAdaptor` 里归:401/403 归 `UNAUTHORIZED`、429 归 `RATE_LIMIT`、5xx 归 `SERVER_ERROR`、其余(含 404)归 `BAD_REQUEST`;归族之后 `status` 仍留在 `error.response.status` 上,服务端那句 `{code, message}` 仍留在 `error.response.body` 上,既是失败消息、也能按状态码分流。
 
 时限由 `createXivApiClient` 的 `timeoutMs` 选项定下(缺省 10 秒),转成框架的 `CallOptions.timeoutMs`,由框架按次计时并 abort。
 
@@ -52,6 +52,6 @@ rushx test:drift        # OpenAPI 漂移报告,同样仅手动
 
 ## 已知问题
 
-两个 edition 的能力差别(国服表更少、`/version` 与 `/asset/map` 没有、检索命中取决于 `language`)逐条列在 [xivapi：能力差异](docs/providers/xivapi.md#能力差异),并由 `rushx test:live` 的第二组断言逐条测。这些差异不改变 xivapi 客户端的端点集合:端点照发请求,服务端怎么答由测试记录。
+两个 edition 的能力差别(国服表更少、语言只有 `chs`、`/asset` 不遵守 `format`、`/asset/map` 的状态码不同、检索命中取决于 `language`)逐条列在 [xivapi：能力差异](docs/providers/xivapi.md#能力差异),并由 `rushx test:live` 的第二组断言逐条测。这些差异不改变 xivapi 客户端的端点集合:端点照发请求,服务端怎么答由测试记录。
 
 `cafemaker.wakingsands.com`(国服镜像的 v1 检索服务)实测 530 `error code: 1016`,那个信封在这个包里也不再建模,详见 [xivapi：当前限制](docs/providers/xivapi.md#当前限制)。

@@ -2,24 +2,13 @@ import { ApiErrorCodes } from 'api-sdk-framework';
 import type { ApiErrorCode } from '@/types/sdk.ts';
 
 /**
- * 这个 provider 自己的失败词汇，以及非 2xx 的归族。
+ * 这个 provider 的失败词汇，以及非 2xx 的归族。
  *
- * 失败统一是 `api-sdk-framework` 的 `ApiError`，本包没有自己的错误类。框架的 `ApiErrorCodes` 覆盖了大部分来路：
+ * 失败统一是 `api-sdk-framework` 的 `ApiError`，本包没有自己的错误类。框架的 `ApiErrorCodes` 覆盖了全部来路：
  * 装配失败归 `BAD_INPUT`、收不到答复归 `NETWORK_ERROR`、超时归 `TIMEOUT`、投影或校验不过归 `BAD_OUTPUT`，非 2xx
  * 则由端点在 `responseAdaptor` 里按这里的表归族。换框架前这些是 `ProviderError` 的 `kind`（`input` / `network` /
  * `timeout` / `shape` / `http`），一一对应，只是名字换成了 `errorCode`。
- *
- * 有一条不是框架通用族的一员：「这个 edition 根本没有这条路由」在发请求之前就判掉了，它不是上游对这次请求的回答，
- * 而是一个能力事实。它因此有自己的码，且只由本包抛出。
  */
-
-/**
- * 「这个 edition 没有这条路由」：由 `listVersions` 在装配阶段抛出，那时还没有发出任何请求。
- *
- * 国服对 `/version` 回的是零正文的 404，读不出原因，所以这一条是发请求之前就成立的能力判断，而不是一次失败答复的
- * 归类；`UNSUPPORTED` 与「上游答了 4xx」因此必须分得开。
- */
-export const UNSUPPORTED: ApiErrorCode = 'UNSUPPORTED';
 
 /**
  * 非 2xx 答复按框架的错误族归一个码：401/403 归 `UNAUTHORIZED`，429 归 `RATE_LIMIT`，5xx 归 `SERVER_ERROR`，

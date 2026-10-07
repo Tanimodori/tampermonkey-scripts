@@ -89,7 +89,7 @@ export type VersionInfo = z.infer<typeof versionInfoSchema>;
 export const versionsResponseSchema = z.looseObject({ versions: z.array(versionInfoSchema) });
 export type VersionsResponse = z.infer<typeof versionsResponseSchema>;
 
-/** The error body, one shape on both editions. See the `hasVersionList` note for the exception. */
+/** The error body, one shape on both editions. */
 export const apiErrorSchema = z.looseObject({ code: z.number(), message: z.string() });
 export type ApiErrorResponse = z.infer<typeof apiErrorSchema>;
 

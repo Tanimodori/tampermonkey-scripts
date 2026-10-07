@@ -30,7 +30,6 @@ import {
   sheetRowsUrl,
   sheetRowUrl,
   supportsLanguage,
-  UNSUPPORTED,
   versionsUrl,
   type SheetName,
   type WebFetcherRequestInit,
@@ -96,23 +95,25 @@ describe('edition descriptors', () => {
     }
   });
 
-  it('record the one difference a caller must branch on before sending', () => {
-    expect(EDITIONS.international.hasVersionList).toBe(true);
-    expect(EDITIONS['chinese-server'].hasVersionList).toBe(false);
+  it('serve a version list on both editions', () => {
+    // 国服镜像曾经没有 `GET /version`（零正文 404）；2026-10 起它与 `GET /versions` 一起被声明并回答。
     expect(versionsUrl('international')).toBeInstanceOf(URL);
-    expect(versionsUrl('chinese-server')).toBeNull();
+    expect(versionsUrl('chinese-server')).toBeInstanceOf(URL);
   });
 
   it('distinguish the two data-version formats', () => {
     expect(VERSION).toMatch(EDITIONS.international.versionPattern);
-    expect('2026071600010000').toMatch(EDITIONS['chinese-server'].versionPattern);
+    expect('20260929-0264d14').toMatch(EDITIONS['chinese-server'].versionPattern);
     expect(VERSION).not.toMatch(EDITIONS['chinese-server'].versionPattern);
+    expect('20260929-0264d14').not.toMatch(EDITIONS.international.versionPattern);
   });
 
   it('know which language tokens each edition serves', () => {
+    // 两侧互补：国际站四个、国服镜像一个，只有 `chs` 在前者被拒。
     expect(supportsLanguage('international', 'chs')).toBe(false);
+    expect(supportsLanguage('international', 'en')).toBe(true);
     expect(supportsLanguage('chinese-server', 'chs')).toBe(true);
-    expect(supportsLanguage('chinese-server', 'en')).toBe(true);
+    expect(supportsLanguage('chinese-server', 'en')).toBe(false);
   });
 
   it('tell apart the two reasons a language was refused', () => {
@@ -253,14 +254,12 @@ describe('client', () => {
     expect(error.operation).toBe('readRow');
   });
 
-  it('refuses to ask an edition with no version list, without sending anything', async () => {
-    const { fetch, requests } = transport(rowsBody(1));
-    const error = await failureOf(createXivApiClient('chinese-server', { fetch }), listVersions, {});
-    // 发请求之前就判掉的能力事实，走本包自己的码，不是上游对某次请求的归类。
-    expect(error.errorCode).toBe(UNSUPPORTED);
-    expect(error.message).toContain('serves no version list');
-    expect(error.message).toContain('https://xivapi-v2.xivcdn.com/api/version');
-    expect(requests).toHaveLength(0);
+  it('asks either edition for its version list, sending the request', async () => {
+    const body = { versions: [{ key: '20260929-0264d14', names: ['latest'] }] };
+    const { fetch, requests } = transport(body);
+    const listed = await createXivApiClient('chinese-server', { fetch }).call(listVersions, {});
+    expect(listed).toEqual(body);
+    expect(requests.map((url) => url.href)).toEqual(['https://xivapi-v2.xivcdn.com/api/version']);
   });
 
   it('classifies a transport failure as network', async () => {

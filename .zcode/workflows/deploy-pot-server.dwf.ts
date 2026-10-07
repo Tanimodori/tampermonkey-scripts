@@ -751,6 +751,16 @@ function changeSummary(before: EndState | null, post: PostState): string {
   return `${changes.join("、")}（运行镜像 ${short(preRun)} → ${short(post.runImg)}）${contentSuffix}${swapSuffix}`;
 }
 
+/** 一端的运行实例是否被重建：运行镜像换了，或容器 ID 换了。 */
+function instanceRebuilt(before: EndState | null, post: PostState): boolean {
+  if (before === null) return false;
+  const bc = contParts(before.cont === "" ? "none" : before.cont);
+  const ac = contParts(post.cont === "" ? "none" : post.cont);
+  const hasBefore = bc.id !== "" && bc.id !== "none";
+  const hasAfter = ac.id !== "" && ac.id !== "none";
+  return (before.runImg !== "" && post.runImg !== "" && before.runImg !== post.runImg) || (hasBefore && hasAfter && bc.id !== ac.id);
+}
+
 /** 生成一段检查清单（markdown 列表）。 */
 function checkLines(v: TargetVerify): string[] {
   return v.checks.map((c) => {
@@ -1879,10 +1889,21 @@ if (!packOk) {
   const localChange =
     localRun === null ? "本地未部署" : `本地：${changeSummary(localState, localRun.post)}`;
   const remoteChange = `远程：${changeSummary(remoteState, remoteRun.post)}`;
+  // 标识是否与部署前相同必须逐端比对，不能写死：两端此前跑的是同一提交时才相同。
+  const stampSameAll =
+    (localRun === null || (localState !== null && localState.current === expectedStamp)) &&
+    (remoteRun === null || (remoteState !== null && remoteState.current === expectedStamp));
+  const unchangedParts = [
+    ...(layersSameAll ? [`${IMG_SAME}；${DIST_SAME}`] : []),
+    ...(stampSameAll ? [`构建标识 ${expectedStamp} 与部署前相同（两端此前跑的就是同一提交）`] : []),
+  ];
   conclusion =
     contentLead + "\n" +
     `- 变了什么（均指应用容器；其余服务容器未动）：\n    - ${localChange}\n    - ${remoteChange}\n` +
-    `- 没变什么：构建标识 ${expectedStamp} 与部署前相同（两端此前跑的就是同一提交）；${layersSameAll ? `${IMG_SAME}；${DIST_SAME}。` : "详见『本次实际变化』。"}\n` +
+    `${stampSameAll ? "" : `    - 构建标识：${stampChangeNote()}\n`}` +
+    `- 没变什么：${
+      unchangedParts.length === 0 ? "两端都换了运行实例与内容，没有可比对的未变项；详见『本次实际变化』。" : `${unchangedParts.join("；")}。`
+    }\n` +
     `- 说明：${purposeNote}\n` +
     `- 验证：${totalChecks} 项（本地 ${localCount} + 远程 ${remoteCount} + 公网 ${publicCount}）：通过 ${passTotal} 项${naText}、失败 ${failTotal} 项${conditionalNote}。` +
     `部署对象：构建标识 ${expectedStamp}，已部署到${deployedTo}。` +
@@ -2137,6 +2158,15 @@ if (remoteRun !== null) {
   changeSection.push(`- 远程：未部署（${remoteFailed ? "见 findings" : remoteSkipReason === "" ? "见未覆盖" : remoteSkipReason}）。`, "");
 }
 
+/** 本次两端的运行实例与内容各自变没变，供报告正文引用（与结论同源，不写死）。 */
+function instanceVerdict(): string {
+  const sides = [
+    ...(localRun === null ? [] : [`本地${instanceRebuilt(localState, localRun.post) ? "被重建" : "未被重建"}`]),
+    ...(remoteRun === null ? [] : [`远程${instanceRebuilt(remoteState, remoteRun.post) ? "被重建" : "未被重建"}`]),
+  ];
+  return sides.length === 0 ? "两端都未部署，实例与内容都无可比对" : `${sides.join("、")}；${layersSameAll ? "内容未变" : "内容有变化"}`;
+}
+
 const reportText = [
   "# occult-pot-server 部署报告",
   "",
@@ -2152,7 +2182,7 @@ const reportText = [
   `- 构建标识含义：形如 \`v<包版本> (<10 位提交短哈希>)\`——包版本 + 构建该 dist 时 \`unplugin-info\` 注入的提交短哈希（取那一刻的仓库 HEAD）；\`/healthz\` 的 \`version\` 即此值。dist 的编译溯源（注意：本节“编译”指出 dist 文件，与打包 zip 是两个动作）：${provenanceNote}${stampDetail}${gitNote}${headNote}`,
   `- 部署前版本：本地 ${localState === null ? "—（未检查）" : localState.current}；远程 ${remoteState === null ? "—（未检查）" : remoteState.current}`,
   `- 部署后版本：${expectedStamp === "" ? "（构建未完成，无产物）" : expectedStamp}（= 本次打包产物的标识；该 dist 的内容按标识与工作区状态推断为上面那个提交 + 列出的包内未提交改动，本次未核对产物内是否确实含该改动）`,
-  `- 标识变化：${stampChangeNote()}。标识只随「包版本 + 打包时提交」变化，它相同或不同都不足以单独说明这次部署做了什么——两个问题各有自己的判据：是否重建了运行实例，看『本次实际变化』里镜像 ID 与容器 ID 的前后对比；内容与配置是否真的变了，看容器内 dist sha256、镜像层摘要与镜像配置摘要的前后对比。本次的结论是「实例被重建、内容未变」，即前一组变了、后一组没变。`,
+  `- 标识变化：${stampChangeNote()}。标识只随「包版本 + 打包时提交」变化，它相同或不同都不足以单独说明这次部署做了什么——两个问题各有自己的判据：是否重建了运行实例，看『本次实际变化』里镜像 ID 与容器 ID 的前后对比；内容与配置是否真的变了，看容器内 dist sha256、镜像层摘要与镜像配置摘要的前后对比。本次：${instanceVerdict()}。`,
   `- 同一份 dist 文件（\`index.js\`）的四处副本 sha256（四处的 sha256 这里一次列全，便于对照）：包内 \`${postSha === "" ? "（未取到）" : postSha}\`；打包产物解包后（deploy/server/packages/occult-pot-server/dist/index.js）\`${expectedSha === "" ? "（未取到）" : expectedSha}\`；本地容器内 \`${localRun === null ? "（未部署）" : localRun.post.sha === "" ? "（未取到）" : localRun.post.sha}\`；远程容器内 \`${remoteRun === null ? "（未部署）" : remoteRun.post.sha === "" ? "（未取到）" : remoteRun.post.sha}\`。zip 落点 \`${ZIP_REL}\`（相对仓库根；rush deploy 的 --create-archive 相对 target-folder 解析，因此 ../ 指向 deploy 目录），共 ${zipNames.length} 个条目：${zipNames.join("、")}；按文件名模式筛检凭据类文件（*.env/secret/token/password/credential/local）无命中（仅按文件名，未做文件内容扫描，也不读取 .env* 内容）。`,
   "",
   probeNote,

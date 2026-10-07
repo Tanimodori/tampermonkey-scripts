@@ -9,11 +9,11 @@
  * verified 端点的响应槽，业务代码只以 `import type` 引用它们，运行时检查是 `@/client/guards.ts` 里的手写谓词。
  *
  * 调用链的契约与失败类型都来自 `api-sdk-framework`，这里不转出错误值：调用方自己 `import { ApiError, isApiError }
- * from 'api-sdk-framework'`——转出会多一份实例，`instanceof` 就不认调用方手里那个 `ApiError` 了。本包只补一个
- * 自己的码（`UNSUPPORTED`）与框架契约的类型面。
+ * from 'api-sdk-framework'`——转出会多一份实例，`instanceof` 就不认调用方手里那个 `ApiError` 了。本包只补框架契约
+ * 的类型面。
  */
 
-// 共用：memo、图标换算、调用链的契约，以及 xivapi 自己那个错误码。
+// 共用：memo、图标换算与调用链的契约。
 export { createMemo } from '@/utils/cache.ts';
 export type { Memo, MemoOptions } from '@/utils/cache.ts';
 
@@ -28,7 +28,6 @@ export {
   texturePathWithoutExtension,
 } from '@/utils/icon.ts';
 
-export { UNSUPPORTED } from '@/client/error.ts';
 export type { ApiErrorCode, ApiRequest, ApiResponse, Endpoint, RequestAdaptor, RequestSchema, ResponseAdaptor, ResponseSchema } from '@/types/sdk.ts';
 export type { Fetcher, FetcherHeaders, FetcherRequestInit, FetcherResponse, WebFetcher, WebFetcherRequestInit } from 'universal-fetch-type';
 

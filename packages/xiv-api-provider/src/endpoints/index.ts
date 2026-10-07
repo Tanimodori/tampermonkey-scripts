@@ -55,13 +55,8 @@ const at = (edition: Edition, pathname: string): URL => new URL(`${EDITIONS[edit
 
 export const listSheetsUrl = (edition: Edition): URL => at(edition, '/sheet');
 
-/**
- * `null` where the edition has no version list at all.
- *
- * Returned rather than throwing so a caller can branch before it sends anything: the Chinese server's 404
- * for this path has an empty body, so there is no reason to read out of the failure.
- */
-export const versionsUrl = (edition: Edition): URL | null => (EDITIONS[edition].hasVersionList ? at(edition, '/version') : null);
+/** `GET /version`, which both editions serve. */
+export const versionsUrl = (edition: Edition): URL => at(edition, '/version');
 
 export const sheetRowsUrl = (edition: Edition, sheet: string, query: SheetRowsQuery = {}): URL => {
   const url = at(edition, `/sheet/${encodeURIComponent(sheet)}`);

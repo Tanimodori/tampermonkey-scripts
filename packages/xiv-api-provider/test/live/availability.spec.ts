@@ -7,12 +7,12 @@ import {
   EDITIONS,
   isApiErrorResponse,
   isSheetResponse,
+  languageRejectionKind,
   listSheets,
   listVersions,
   readAsset,
   readRow,
   search,
-  UNSUPPORTED,
 } from '@/index.ts';
 
 /**
@@ -95,27 +95,41 @@ describe.skipIf(!live)('edition capabilities', { tags: ['live'] }, () => {
     console.info(`sheets: international ${intl.sheets.length}, chinese-server ${cn.sheets.length}`);
   });
 
-  it('answers a Chinese-language query on the mirror and refuses that token internationally', async () => {
+  it('serves `chs` on the mirror and refuses that token internationally', async () => {
     // `chs` 是只有国服认的真 token，这也是国服顺带答对国际站形状请求的原因：在那边省掉 `language` 本来
     // 就出中文。
     const chineseName = await chinese().call(readRow, { sheet: 'Item', row: 1, query: { language: 'chs', fields: ['Name'] } });
-    const englishName = await chinese().call(readRow, { sheet: 'Item', row: 1, query: { language: 'en', fields: ['Name'] } });
     expect(typeof chineseName.fields.Name).toBe('string');
-    expect(chineseName.fields.Name).not.toBe(englishName.fields.Name);
 
     const error = await international()
       .call(readRow, { sheet: 'Item', row: 1, query: { language: 'chs' } })
       .catch((caught: unknown) => caught);
     expect(isApiError(error) && error.errorCode).toBe(ApiErrorCodes.BAD_REQUEST);
     expect(isApiError(error) && error.response?.status).toBe(400);
+    expect(isApiError(error) && languageRejectionKind(error.message)).toBe('unsupported-for-edition');
   });
 
-  it('has no version list on the mirror, and says so before sending', async () => {
-    // 那里的 404 带着空 body，这正是这条是能力检查、而不是解析失败请求的原因。
-    await expect(chinese().call(listVersions, {})).rejects.toMatchObject({ errorCode: UNSUPPORTED });
-    const response = await fetch(`${EDITIONS['chinese-server'].apiBase}/version`);
-    expect(response.status).toBe(404);
-    expect(await response.text()).toBe('');
+  it('serves only `chs` on the mirror, refusing the four tokens the global client carries', async () => {
+    // 与上一条互补：国服镜像只留了 `chs`，`en`/`ja`/`de`/`fr` 在那边得到国际站拒 `chs` 的那种 400。这正是
+    // `EDITION_LANGUAGES` 记下的能力事实，所以逐 token 打一遍。
+    for (const language of ['en', 'ja', 'de', 'fr'] as const) {
+      const error = await chinese()
+        .call(readRow, { sheet: 'Item', row: 1, query: { language } })
+        .catch((caught: unknown) => caught);
+      expect(isApiError(error) && error.response?.status, language).toBe(400);
+      expect(isApiError(error) && languageRejectionKind(error.message), language).toBe('unsupported-for-edition');
+    }
+    const defaulted = await chinese().call(readRow, { sheet: 'Item', row: 1, query: { fields: ['Name'] } });
+    expect(typeof defaulted.fields.Name).toBe('string');
+  });
+
+  it('has a version list on the mirror too, in its own envelope', async () => {
+    // 国服镜像曾经对 `/version` 回零正文 404；现在它与 `/versions` 一起被声明并回答。信封比国际站多
+    // `key`/`published_at`/`update` 几个字段，`versions[].key` 与 `names` 仍与国际站同形。
+    const listed = await chinese().call(listVersions, {});
+    expect(listed.versions.length).toBeGreaterThan(0);
+    expect(listed.versions.at(-1)?.names.length).toBeGreaterThan(0);
+    expect(schemas.versionsResponseSchema.safeParse(listed).success).toBe(true);
   });
 
   it('renders an asset on both, and ignores `format` only on the mirror', async () => {
@@ -129,25 +143,24 @@ describe.skipIf(!live)('edition capabilities', { tags: ['live'] }, () => {
     expect(askedPng.bytes.byteLength).toBeGreaterThan(0);
   });
 
-  it('has no composed-map asset on the mirror', async () => {
-    // 源纹理缺失时，国际站给这条路由回它自己的 JSON 404；国服回纯文本 404，那是路由不存在，而不是文件
-    // 不存在。
+  it('answers the composed-map route on both, with a JSON error on the mirror', async () => {
+    // 国服镜像曾经整条路由不存在（纯文本 404）；现在它声明并回答这条路由，只是没有合成地图，对任何
+    // territory 都回 400 `{code, message}`——与国际站同形态、不同含义的 404 因此分得开。
     const internationalResponse = await fetch(`${EDITIONS.international.apiBase}/asset/map/81/1?format=png`);
     const chineseResponse = await fetch(`${EDITIONS['chinese-server'].apiBase}/asset/map/81/1?format=png`);
-    expect([internationalResponse.status, chineseResponse.status]).toEqual([404, 404]);
+    expect([internationalResponse.status, chineseResponse.status]).toEqual([404, 400]);
     expect(schemas.apiErrorSchema.safeParse(await internationalResponse.json()).success).toBe(true);
-    expect((await chineseResponse.text()).trim()).not.toMatch(/"code"/);
+    expect(schemas.apiErrorSchema.safeParse(await chineseResponse.json()).success).toBe(true);
   });
 
-  it('matches a Latin clause on both editions, and on neither under chs', async () => {
-    // 子句比拼的是"所请求语言的那个字段"里的名字。国服的默认语言是 `chs`，所以不带 `language` 发去的英文
-    // 子句在那边回空列表——那是没人想问的问题的正确答案，也是搜索框必须把它文本的语言一起发出去的原因。
+  it('matches a Latin clause only where that language is served', async () => {
+    // 子句比拼的是"所请求语言的那个字段"里的名字。国际站有 `en` 列，英文子句在那边有命中；国服镜像只服务
+    // `chs`，同一条子句在那边（显式 `chs` 或省略参数）回空列表——那是"没有这个名字的中文行"这个正确答案，
+    // 也是搜索框必须把文本语言与 edition 一起考虑的原因。
     const clause = { query: 'Name="Potion"', sheets: ['Item'] as const, limit: 2, fields: ['Name'] };
     const international = await createXivApiClient('international').call(search, clause);
-    const mirrorInEnglish = await createXivApiClient('chinese-server').call(search, { ...clause, language: 'en' });
     const mirrorInChinese = await createXivApiClient('chinese-server').call(search, { ...clause, language: 'chs' });
 
-    expect(international.results.map((hit) => hit.row_id)).toEqual(mirrorInEnglish.results.map((hit) => hit.row_id));
     expect(international.results.length).toBeGreaterThan(0);
     expect(mirrorInChinese.results).toEqual([]);
     expect(schemas.searchResponseSchema.safeParse(mirrorInChinese).success).toBe(true);

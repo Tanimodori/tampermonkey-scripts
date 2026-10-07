@@ -10,7 +10,7 @@
 
 一个默认入口 `xiv-api-provider`,即 `src/index.ts`:文件只做挑选与命名再导出,不写逻辑,按共用与 xivapi 分组。xivapi 从这里出,用不到的那几个由调用方的打包器删掉——包声明 `sideEffects: false`,产物又沿 zod 一道墙分块,没被牵动的块连同它背着的重依赖整块不进产物;只命名 `Raw` 端点(或 `readAsset` 这类没有校验对的)的产物里没有 schema 引擎。
 
-- 共用 —— `createMemo`、图标 id 与路径换算、调用链的契约类型(`Endpoint`、适配器、`ApiRequest` / `ApiResponse`)、本包自己的错误码 `UNSUPPORTED`。调用链(`createCall`)、契约类型与失败类型 `ApiError` 都来自 `api-sdk-framework`,本包不再自己造一份错误类,也不把它转出——转出会多一份实例,`instanceof` 就不认调用方手里那个。
+- 共用 —— `createMemo`、图标 id 与路径换算、调用链的契约类型(`Endpoint`、适配器、`ApiRequest` / `ApiResponse`)。调用链(`createCall`)、契约类型与失败类型 `ApiError` 都来自 `api-sdk-framework`,本包不再自己造一份错误类,也不把它转出——转出会多一份实例,`instanceof` 就不认调用方手里那个。
 - xivapi —— edition 描述符、URL 构造、信封判定、每个操作的两份装配与客户端。
 
 要把离线数据固化进产物,用另一个包 `xiv-datamine-polyfill`,它调 `xiv-datamine-provider` 的函数在构建期生成模块。

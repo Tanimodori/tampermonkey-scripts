@@ -1,6 +1,4 @@
-import { ApiError } from 'api-sdk-framework';
-import { EDITIONS, type LanguageToken } from '@/client/editions.ts';
-import { UNSUPPORTED } from '@/client/error.ts';
+import { type LanguageToken } from '@/client/editions.ts';
 import { isRowResponse, isSearchResponse, isSheetList, isSheetResponse, isVersionsResponse } from '@/client/guards.ts';
 import { ACCEPT_JSON, ensureOk, readJsonBody } from '@/client/http.ts';
 import type { XivApiEndpoint } from '@/types/sdk.ts';
@@ -123,19 +121,7 @@ export const searchRaw: XivApiEndpoint<SearchQuery, SearchResponse> = {
 export const listVersionsRaw: XivApiEndpoint<Record<string, never>, VersionsResponse> = {
   operation: 'listVersions',
   responseBodyReader: (_client, response) => readJsonBody(response),
-  requestAdaptor: (client) => {
-    const url = versionsUrl(client.edition);
-    if (url === null) {
-      // 发请求之前就判掉：国服对这个路径回的是零正文的 404，没有理由从失败里读原因，而尝试还有要失去的东西。
-      // 这不是上游对某次请求的回答，所以走本包自己的码而不是错误族；地址写在消息里，因为这时还没有请求可挂。
-      const descriptor = EDITIONS[client.edition];
-      throw new ApiError({
-        errorCode: UNSUPPORTED,
-        message: `${descriptor.apiBase}/version: the ${descriptor.service} edition serves no version list; read the data version off a row response instead`,
-      });
-    }
-    return { url: url.href, init: { headers: ACCEPT_JSON } };
-  },
+  requestAdaptor: (client) => ({ url: versionsUrl(client.edition).href, init: { headers: ACCEPT_JSON } }),
   responseAdaptor: (_client, response) => {
     ensureOk(response);
     if (!isVersionsResponse(response.body)) throw new Error('unexpected response shape');

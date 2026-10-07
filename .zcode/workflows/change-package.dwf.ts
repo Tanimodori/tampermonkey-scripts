@@ -1,6 +1,7 @@
 /* zcode-workflow
 description: 按需求修改一个或多个包，逐个包（含受影响的上下游包）跑通 format/lint/typecheck/test/build
   门禁，失败则把报错喂回给修改者重试。包名在本仓库还不存在时，先建骨架、登记 rush.json 并 rush update 接入，再进入同一套循环。
+  新包的落位由 args.newPackageFolders 按包名给出的工作区相对路径决定，tags 与骨架参照的同类项目从那个目录推出；没给路径就直接拒绝，不默认 packages/。
 whenToUse: 在 rush monorepo 中按需求改动某个或某几个包（含尚未存在、需要新建的包），并需要连带处理其受影响的下游包、逐包验证门禁是否通过时。
 args:
   maxRounds:
@@ -11,6 +12,9 @@ args:
     type: json
     description: 要修改的包名数组，例如 ["tencent-doc-sdk"]。含本仓库还没有的新包时，会先为它建骨架并登记。
     required: true
+  newPackageFolders:
+    type: json
+    description: '按包名给出该新建包的工作区相对目录，例如 {"my-test-pkg": "tests/my-test-pkg"}。请求里有本仓库还不存在的包名时必填（只给需要新建的那几个即可）：新包没有既存目录可推断归属，而目录给错不会被任何门禁发现——骨架与目录无关，五条门禁照样全绿，错位只会在很久以后被人看见——所以这里不设默认值，缺了就直接拒绝并说明。'
   preferOfflineTests:
     type: boolean
     description: 是否只跑离线测试（test:unit / test:offline / test:run），避免 live 测试依赖环境变量与网络。默认 true。
@@ -78,8 +82,13 @@ type Scope = "none" | "internal" | "external";
 // 将来调整它们不会让已完成的子代理结果失效。
 const GATE_SCRIPTS = ["format:check", "lint", "typecheck", "test", "build"];
 const OUTPUT_LIMIT = 120000;
-// 新包的目录归属：本仓库的库放 packages/，其余按 tests/ 处理。
-const LIBRARY_ROOT = "packages";
+// 新包的目录归属不在这里：由调用方按包名给出（args.newPackageFolders），脚本只把它拆出根目录，
+// 用来定 tags 与挑选骨架参照的同类项目。
+//
+// rush.json 的 allowedProjectTags 是 userscript / library / service / test，其中三个与目录一一对应；
+// service 推不出来（本仓库只对 packages/occult-pot-server 用），所以这张表只用于给出建议值，权威是
+// 同一目录下既存条目在 rush.json 里写的 tags。
+const TAGS_BY_ROOT: Record<string, string> = { packages: "library", tests: "test", scripts: "userscript" };
 
 // 累积器在辅助函数之前声明：构建上游的那一段也要往这三个里写。
 const findings: Finding[] = [];
@@ -480,6 +489,34 @@ if (requirement === "") {
 // 要新建的：请求里出现、但 rush 还没登记的包。要更改的：请求里其余（已登记）的包，
 // 以及它们的全部（间接）下游——依赖边同时看 dependencies / devDependencies / peerDependencies。
 const newSeeds = requested.filter((n) => !registered.has(n));
+
+// 新包的目录由调用方按包名给出（工作区相对路径，args.newPackageFolders），不设默认值。这类错位没有
+// 门禁能发现：骨架与目录无关，五条门禁在一个放错位置的包里照样全绿，等有人看出来时它已经被当作本仓库
+// 的既有结构了。所以这里宁可拒绝并说清怎么传，也不给一个「大概是 packages/」的兜底——兜底会把一次
+// 显式的调用悄悄变成一次静默的错误。
+const foldersRaw = args.newPackageFolders;
+function newPackageFolder(name: string): string {
+  if (typeof foldersRaw === "object" && foldersRaw !== null) {
+    const given = (foldersRaw as Record<string, unknown>)[name];
+    if (typeof given === "string" && given.trim() !== "") {
+      return given.trim().replace(/\\/g, "/").replace(/^\.\//, "").replace(/\/+$/, "");
+    }
+  }
+  return "";
+}
+const foldersMissing = newSeeds.filter((n) => newPackageFolder(n) === "");
+if (foldersMissing.length > 0) {
+  const example = foldersMissing[0];
+  return {
+    conclusion:
+      `新建包缺少目录：${foldersMissing.join("、")}。新包在本仓库没有既存目录可推断归属，请用 args.newPackageFolders ` +
+      `按包名给出它的工作区相对目录后重跑，例如 {"${example}": "tests/${example}"}（测试项目）或 ` +
+      `{"${example}": "packages/${example}"}（库包）。`,
+    findings,
+    verified,
+    notCovered: ["全部——新建包没有给出目录，未落任何改动"],
+  } satisfies WorkflowReport;
+}
 let all = all0;
 let seeds = requested.filter((n) => registered.has(n));
 let affectedSet = transitiveDependents(all, seeds);
@@ -506,26 +543,40 @@ if (prereqs.length > 0) {
 if (newSeeds.length > 0) {
   phase("创建需要新建的包");
   for (const name of newSeeds) {
+    const dir = newPackageFolder(name);
+    const root = dir.includes("/") ? dir.slice(0, dir.indexOf("/")) : dir;
+    // 同类项目 = 同一根目录下的既存项目。骨架、tags、登记位置都该照它们，而不是照 packages/ 下的库包：
+    // 一个 tests/ 下的测试项目与库包的 package.json、tsconfig 与 tags 都不一样。
+    const siblings = all.filter((p) => p.dir.startsWith(`${root}/`) && p.dir !== dir).map((p) => p.dir);
+    const tagHint = TAGS_BY_ROOT[root];
     const builder = agent(
       `新包搭建者-${name}`,
-      `你是这个 rush monorepo 的工程师，正在为本仓库新增一个库包。本轮只搭骨架，不实现业务逻辑、不写测试内容：` +
-        `对齐同类库包（packages/tencent-doc-sdk、packages/xiv-api-provider）的 package.json、tsconfig.json、` +
-        `tsconfig.app.json、tsconfig.node.json、vite.config.ts 与 .oxlintrc.json，脚本至少包含 ` +
-        `${GATE_SCRIPTS.join(" / ")}；并在仓库根 rush.json 的 projects 数组里登记该包（projectFolder 用 ` +
-        `${LIBRARY_ROOT}/${name}，tags 与同类库包一致）。package.json 按需求声明依赖，本仓库内的包用 workspace:*。` +
+      `你是这个 rush monorepo 的工程师，正在为本仓库新增一个项目。目录已经定好，就是 ${dir}（工作区相对路径），` +
+        `不要挪到别的目录。本轮只搭骨架，不实现业务逻辑、不写测试内容：` +
+        `对齐同一个根目录下既存项目的 package.json、tsconfig.json、tsconfig.app.json、tsconfig.node.json、` +
+        `vite.config.ts 与 .oxlintrc.json` +
+        (siblings.length > 0
+          ? `（本仓库 ${root}/ 下已有：${siblings.slice(0, 3).join("、")}）`
+          : `（本仓库 ${root}/ 下还没有别的项目，按需求判断这类项目该是什么形状）`) +
+        `，脚本至少包含 ${GATE_SCRIPTS.join(" / ")}；并在仓库根 rush.json 的 projects 数组里登记该包，` +
+        `projectFolder 用 ${dir}，tags 用 ` +
+        (tagHint === undefined
+          ? `该根目录下既存条目写的那些（读 rush.json 里同目录的既有条目定）`
+          : `["${tagHint}"]（本仓库 ${root}/ 下的既存条目写的就是它；若它们并不一致、而本包明显属于另一类，照同类项目取并说明理由）`) +
+        `。package.json 按需求声明依赖，本仓库内的包用 workspace:*。` +
         `如果某项无法确定，如实说明并升级，不要绕过。`,
     );
     const summary = await builder.ask(
       `新增包：${name}\n` +
-        `目录：${LIBRARY_ROOT}/${name}\n\n` +
+        `目录：${dir}\n\n` +
         `需求背景：${requirement}\n\n` +
         `完成后报告：新建与修改了哪些文件、rush.json 的登记项、以及 package.json 的依赖与脚本。`,
     );
     report({ pkg: name, role: "新建包", round: 0, ok: true, failed: "" }, "gates");
     findings.push({
-      where: `${LIBRARY_ROOT}/${name}`,
+      where: dir,
       what: summary,
-      evidence: "按同类库包建立骨架，并在 rush.json 的 projects 里登记",
+      evidence: `按 ${root}/ 下既存项目的骨架建立，并在 rush.json 的 projects 里登记为 ${dir}`,
       status: "unconfirmed",
       severity: "medium",
     });

@@ -1,17 +1,16 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { live, loadArtifact } from './testUtils/artifact.js';
-import { expectSharedShape } from './testUtils/invariants.js';
+import { expectPluginEmbedded } from './testUtils/invariants.js';
 
 /**
  * The offline leg: the build `vite.config.ts` fed from its stub, read back out of `dist/index.js`.
  *
- * Two things are checked about the data at once. The shared properties, because a stub is only a useful
- * fixture while the same assertions hold against it — and the stub's exact grid, which is what says the
- * offline build is the one this leg claims to be: real data reaching this artifact means the cache directory
- * was shared with a live run, and the deterministic build the README promises would have quietly stopped
- * being deterministic. A third check, at the end of the file, is about the artifact's composition rather than
- * its data.
+ * Two things are checked. The embedding both legs hold to, because a stub is a useful fixture only while the
+ * shared assertions hold against it — and the stub's exact grid, which is what says this build is the one the
+ * leg claims to be: real data reaching it means the cache directory was shared with a live run, and the
+ * deterministic build would have quietly stopped being deterministic. A third check, at the end of the file,
+ * is about the artifact's composition rather than its data.
  *
  * Nothing here counts requests: the stub logs the paths it is asked for, so a warm offline build printing zero
  * lines is the evidence, and it belongs to the build rather than to this file.
@@ -22,8 +21,8 @@ import { expectSharedShape } from './testUtils/invariants.js';
 const artifact = await loadArtifact();
 
 describe.skipIf(live)('the stub-fed build', () => {
-  it('holds the shape a consumer relies on', () => {
-    expectSharedShape(artifact.getData());
+  it('embeds both sheets through the plugin', () => {
+    expectPluginEmbedded(artifact.getData());
   });
 
   it('carries exactly the rows the rules were written against', () => {
@@ -36,6 +35,7 @@ describe.skipIf(live)('the stub-fed build', () => {
       ['1', '格斗武器', '60101'],
       ['2', '单手剑', '60102'],
     ]);
+    expect(itemUICategory.keys, 'the placeholder row dropEmptyIn should have removed').not.toContain('0');
 
     // `onlyRowKeys: ['699','700']` is why the markup row is absent rather than trimmed down to nothing.
     expect(addon.rowCount).toBe(2);
@@ -43,63 +43,44 @@ describe.skipIf(live)('the stub-fed build', () => {
       ['699', '即时'],
       ['700', '> '],
     ]);
-  });
-
-  it('reads the sheet through the example’s own APIs', () => {
-    const { categoryTable, icons } = artifact.getData().reads;
-
-    expect(categoryTable).toEqual({
-      '1': { name: '格斗武器', icon: '60101' },
-      '2': { name: '单手剑', icon: '60102' },
-    });
-    expect(icons).toEqual([
-      { key: '1', iconId: '60101', src: 'https://img2.finalfantasyxiv.com/i/060000/060101.png', backToId: 60101 },
-      { key: '2', iconId: '60102', src: 'https://img2.finalfantasyxiv.com/i/060000/060102.png', backToId: 60102 },
-    ]);
+    expect(addon.keys, 'a row onlyRowKeys never named').not.toContain('999');
   });
 });
 
 /**
- * The artifact's composition: what naming a raw endpoint, no verified one, and only `useSheetTable` leaves in
- * the bundle.
+ * The artifact's composition: what baking data in and naming only `useSheetTable` leaves in the bundle.
  *
- * Both heavyweight libraries ride on a wall that a bundler can only drop whole. `xiv-api-provider`'s build
- * partitions `dist/` along its one heavyweight dependency (`codeSplitting` groups): `schema.js` carries zod and
- * imports only downward (`schema` → `core`), never back. This consumer names that package's raw endpoints and no
- * verified one, so its bundler deletes the `schema.js` chunk — and zod with it — wholesale instead of having to
- * prove the schema initializers dead. Flatten the package back into one file and zod comes along silently, which
- * is the failure this check exists to catch: weight, not a broken import.
+ * The positive control comes first, and it is the plugin's own output rather than any reader: the generated
+ * module holds `origin` and the stub's cells as literals, so a build that never reached `resolveId` cannot
+ * contain them. `useSheetTable` then says the reader really is here — the data is data, and reading it is the
+ * provider's code, which is exactly the split this project exists to keep.
  *
- * papaparse arrives from the other direction — the grids are read through `xiv-datamine-provider` — and that
- * package is partitioned the same way: `parse.js` is the only module that names papaparse, and `table.js`,
- * where `useSheetTable` lives, value-imports `constants.js` alone. So a build that names `useSheetTable` and
- * nothing else never reaches the `parse.js` chunk, and the library goes the way of `schema.js`. That partition
- * is what makes papaparse's absence testable here rather than a matter of luck: while the package was one
- * file, the parser import sat at the top of the very module `useSheetTable` was defined in, and papaparse
- * loads through a UMD wrapper whose top-level assignment a bundler may not drop, so naming anything at all in
- * that package brought the library along. The chunk is the droppable unit; a single file is not.
- *
- * `treeshake.moduleSideEffects` is not a substitute: it only decides whether an unused whole module may be
- * removed, while a module's statements count as side-effect-free only while none of its exports are used. A
- * flat artifact defines a used export, so its schema initializers — and zod — stay whatever the consumer
- * sets; `moduleSideEffects: false` and a per-package rule were measured against this bundle and changed
- * nothing. See <https://rolldown.rs/in-depth/dead-code-elimination#marking-entire-modules-as-side-effect-free>.
+ * The negative half is the plugin's code staying on the build side. `node:fs`, `node:path` and `node:crypto`
+ * are what `load.ts` and `cache.ts` run on, `nothing is cached` is a message one of them raises, and
+ * `dataminePolyfill` / `loadTable` / `sheetFromSpecifier` / `resolveId` are its identifiers; a bundle that
+ * carries any of them has dragged the fetcher and its cache into a browser artifact. papaparse is the other
+ * direction: the sheets are read through `xiv-datamine-provider`, and that package keeps its parser in its own
+ * module (`parse.js`) while `useSheetTable` lives in `table.js`, so naming only the reader never reaches the
+ * library. `require_papaparse_min` is the identifier rolldown gives papaparse's CJS wrapper
+ * (`var require_papaparse_min = __commonJSMin(…)`); the bare word, `csv-parse` included, is checked as well,
+ * because a bundle really carrying the library is the failure and the string is absent whether the check is
+ * narrow or wide.
  */
 describe.skipIf(live)('the bundle', () => {
-  it('carries neither a schema engine nor a CSV parser, which is what naming only the used entries buys', () => {
+  it('is the baked data and the reader, with none of the build-time machinery', () => {
     const bundle = readFileSync(new URL('../dist/index.js', import.meta.url), 'utf8');
 
-    // Positive control first: the probe and the raw endpoint really are in the artifact, so a build that
-    // resolved nothing cannot pass the negative checks below.
-    expect(bundle).toContain('fetchRowName');
-    expect(bundle).toContain('readRowRaw');
-    // `_zod` is the property zod hangs every instance off, and `rowResultSchema` is the schema module's own
-    // constant. Comments that say the word "zod" are expected — the raw modules' own comments do; code is not.
-    expect(bundle).not.toContain('_zod');
-    expect(bundle).not.toContain('rowResultSchema');
-    // `require_papaparse_min` is the identifier rolldown gives papaparse's CJS wrapper
-    // (`var require_papaparse_min = __commonJSMin(…)`), so only a bundle that really pulled the library in
-    // has it. The bare word is not evidence: the retained comments of `parse.js` say "papaparse" in prose.
-    expect(bundle).not.toContain('require_papaparse_min');
+    expect(bundle, 'the plugin never resolved the sheet: no inlined provenance').toContain('ItemUICategory.csv@HEAD');
+    expect(bundle, 'the plugin never resolved the sheet: no inlined stub cell').toContain('格斗武器');
+    expect(bundle, 'the reader was not bundled, so nothing read the inlined data').toContain('useSheetTable');
+
+    for (const specifier of ['node:fs', 'node:path', 'node:crypto'])
+      expect(bundle, `the build-side specifier ${specifier} leaked into the artifact`).not.toContain(specifier);
+    expect(bundle, 'a message only the loader raises').not.toContain('nothing is cached');
+
+    for (const name of ['dataminePolyfill', 'loadTable', 'sheetFromSpecifier', 'resolveId'])
+      expect(bundle, `the plugin's own identifier ${name} leaked into the artifact`).not.toContain(name);
+    for (const parser of ['papaparse', 'require_papaparse_min', 'csv-parse'])
+      expect(bundle, `the CSV parser ${parser} was dragged into the artifact`).not.toContain(parser);
   });
 });

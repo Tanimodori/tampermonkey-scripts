@@ -1,6 +1,7 @@
 /* zcode-workflow
 description: 按需求修改一个或多个包，逐个包（含受影响的上下游包）跑通 format/lint/typecheck/test/build
-  门禁，失败则把报错喂回给修改者重试。包名在本仓库还不存在时，先建骨架、登记 rush.json 并 rush update 接入，再进入同一套循环。
+  门禁，失败则把报错喂回给修改者重试；范围是 none 的包不派子代理，由工作流自己跑门禁，只有门禁没过才把子代理叫起来查明原因。
+  包名在本仓库还不存在时，先建骨架、登记 rush.json 并 rush update 接入，再进入同一套循环。
   新包的落位由 args.newPackageFolders 按包名给出的工作区相对路径决定，tags 与骨架参照的同类项目从那个目录推出；没给路径就直接拒绝，不默认 packages/。
 whenToUse: 在 rush monorepo 中按需求改动某个或某几个包（含尚未存在、需要新建的包），并需要连带处理其受影响的下游包、逐包验证门禁是否通过时。
 args:
@@ -25,7 +26,7 @@ args:
     required: true
   scopes:
     type: json
-    description: 每个包允许改到什么程度，例如把 tencent-doc-sdk 设为 internal。取值 none（不许改动本包任何文件，含单元测试，只跑门禁确认现状）/ internal（可改内部实现、内部函数与依赖边，对外导出的名字与签名不许变）/ external（对外接口签名也可改）。未列出的包按默认——本次新建的包为 external，请求里点名的包为 internal，只因依赖被牵连进来的包为 none。
+    description: 每个包允许改到什么程度，例如把 tencent-doc-sdk 设为 internal。取值 none（不许改动本包任何文件，含单元测试；门禁由工作流自己跑，全通过就到此为止，只有没过才把子代理叫起来查明原因）/ internal（可改内部实现、内部函数与依赖边，对外导出的名字与签名不许变）/ external（对外接口签名也可改）。未列出的包按默认——本次新建的包为 external，请求里点名的包为 internal，只因依赖被牵连进来的包为 none。
   contents:
     type: json
     description: 按包名给出该包提问里【具体需求】一节的正文，用来把需求裁到只有本包相关的那一段。未给出的包，请求里点名的那种用 args.requirement 全文，被牵连的下游包用上游各包的改动清单；纯验证的包那一节是守卫规则，不看这个参数。
@@ -267,9 +268,80 @@ async function diffOf(dir: string): Promise<string> {
   }
 }
 
+/**
+ * none 范围是"一个文件都不许动"。文件列表看得到新增，差异文本看得到已脏文件的内容变化，
+ * 两者一起比对，越界就是可判定的（所以标 verified，而不是靠子代理自述）。
+ *
+ * 两处调用：工作流自己跑完门禁、确认通过之后（此时没有任何子代理碰过本包），以及子代理跑完之后。
+ */
+async function checkNoneUntouched(pkg: PkgMeta, changedBefore: string[], diffBefore: string): Promise<void> {
+  const changedAfter = await changedFilesIn(pkg.dir);
+  const diffAfter = await diffOf(pkg.dir);
+  const added = changedAfter.filter((p) => !changedBefore.includes(p));
+  if (added.length === 0 && diffAfter === diffBefore) return;
+  findings.push({
+    where: pkg.dir,
+    what:
+      `范围是 none（不许改动本包），但本包之后发生了变化：` +
+      (added.length > 0 ? `多出 ${added.length} 个未提交文件（${added.slice(0, 8).join("、")}）` : "") +
+      (diffAfter !== diffBefore ? `${added.length > 0 ? "，" : ""}已有文件的内容也变了` : ""),
+    evidence: `改动前 ${changedBefore.length} 个文件；改动后 ${changedAfter.length} 个文件（git status 按 ${pkg.dir}/ 过滤），差异文本${diffAfter === diffBefore ? "未变" : "已变"}`,
+    status: "verified",
+    severity: "high",
+  });
+}
+
 /** 报告正文里的单条截断：产物 markdown 有 256KB 上限，而 finding 的 what 是子代理的整段报告。 */
 function clip(text: string, max: number): string {
   return text.length <= max ? text : `${text.slice(0, max)}…（已截断，全文 ${text.length} 字）`;
+}
+
+/**
+ * 子代理的人设。none 范围那一支不能带"跑不通就自己改到通"——那句与"一个文件都不许改"的守卫直接冲突，
+ * 而这一支本来就是在门禁没过之后才被叫起来的。
+ */
+function workerPersona(pkg: PkgMeta, scope: Scope, isSeed: boolean): string {
+  if (scope === "none") {
+    return (
+      `你是这个 rush monorepo 的工程师，只诊断 ${pkg.dir} 这个包，不改动它的任何文件。` +
+      `工作流已经在本包目录下跑过一遍门禁，没过（失败项与原始输出见提问里的【门禁未通过】）。` +
+      `查明失败出在哪一处、为什么——是上游改动带来的、环境或既有问题，还是本包确实需要跟着改——并说清该怎么处理。` +
+      `范围是 none：本包一个文件都不许改，包括单元测试、配置与断言；判断要改本包或改上游时，说明理由并升级，` +
+      `不要绕过检查或伪造结果。` +
+      `每一轮都必须给出产出说明（结论是什么、依据是什么、你实际跑了哪些命令、结果如何）；空回复会让本包被记为未完成。`
+    );
+  }
+  return (
+    `你是这个 rush monorepo 的工程师，只修改 ${pkg.dir} 目录下的代码。` +
+    `门禁由你自己在这个包目录里跑：交回来之前必须亲自跑通，` +
+    `跑不通就自己改到通——每一轮都该是你自己跑门禁、自己修，而不是等我告诉你哪一条挂了。` +
+    `工作流会在你交回之后再跑一遍作为确认。` +
+    `如需自动格式化，可在该包目录下运行 node ../../common/scripts/install-run-rushx.js format。` +
+    `每一轮都必须给出产出说明（改了什么、依据是什么、你实际跑了哪些门禁命令、结果如何）；空回复会让本包被记为未完成。` +
+    (isSeed
+      ? `如果某个门禁在你的能力范围内无法通过，如实说明并升级，不要绕过检查或伪造结果。`
+      : `如果本包其实不需要改动，明确说明「无需改动」，不要为改而改。`)
+  );
+}
+
+/**
+ * 门禁最终没通过时那条 finding 的正文。
+ *
+ * none 范围与其余包问的不是同一件事：其余包问"需求有没有落地"，none 范围只问"为什么没过"——它一个文件
+ * 都不许改，所以没有"多试几轮"的余地，第一轮重跑出的输出与预跑相同就说明再问也不会变。子代理的结论是
+ * 这次调用的全部产出（none 范围的诊断尤其如此），所以一并写进来，而不是只留下门禁的原始报错。
+ */
+function failureWhat(scope: Scope, lastEmpty: boolean, stalled: boolean, lastSummary: string): string {
+  const why = lastEmpty
+    ? scope === "none"
+      ? `${maxRounds} 轮都没有提交产出说明（子代理每一轮都回复为空），门禁没过而失败原因无人查明`
+      : `${maxRounds} 轮都没有提交产出说明（子代理每一轮都回复为空），没有任何证据表明需求已在本包落地`
+    : stalled
+      ? scope === "none"
+        ? "门禁未通过：子代理查明后重跑仍是同一段输出（范围 none 不许改动本包，再试也不会变）"
+        : "门禁未通过，且失败输出与上一轮逐字相同——本轮已无进展，提前停止重试"
+      : `${maxRounds} 轮内未跑通门禁`;
+  return lastSummary === "" ? why : `${why}。子代理的说明：${clip(lastSummary, 600)}`;
 }
 
 /**
@@ -280,7 +352,7 @@ function clip(text: string, max: number): string {
  * 对外接口或行为…"），于是范围一栏被读成"上游改过"，连上游一个都没动的需求包也被写成了下游包。
  */
 function scopeLine(scope: Scope): string {
-  if (scope === "none") return "无（纯验证）。不许改动本包任何文件，含单元测试；只跑门禁确认现状。";
+  if (scope === "none") return "无（纯验证）。不许改动本包任何文件，含单元测试、配置与断言——本包只做诊断与验证。";
   if (scope === "internal") return "内部接口与测试。可改内部实现、内部函数、依赖边与单元测试；对外导出的名字与签名不许变。";
   return "内部与外部接口与测试。必要时连对外接口与签名也可以改。";
 }
@@ -318,8 +390,11 @@ function demandLines(pkg: PkgMeta, scope: Scope, isSeed: boolean, upstream: stri
   if (scope === "none") {
     return [
       "无。本包本次不改代码——上游的改动没有要求本包适配。",
-      // 门禁本身在【你的任务】那一行已经说了，这里只说这一种范围特有的那条：不许自己动手。
-      "若本包其实必须跟着改、或者现状就不通过，说明哪里、为什么，并升级；不要自己动手改。",
+      // 门禁本身在【你的任务】那一行已经说了，这里只说这一种范围特有的那条：不许自己动手，只查原因。
+      // 这一支只在门禁没过时才会走到（门禁一过就没有子代理），所以失败是既成事实，不是假设。
+      "本包的门禁已经跑过一遍且没过，原始输出见上面的【门禁未通过】。查明失败出在哪一处、为什么——" +
+        "是上游改动带来的、环境或既有问题，还是本包确实需要跟着改——并说清该怎么处理；" +
+        "范围是 none，不要自己动手改，判断要改本包或上游时说明理由并升级。",
     ];
   }
   if (!isSeed) {
@@ -637,25 +712,53 @@ for (const name of affected) {
   const scope = scopeOf(name, isSeed, newSeeds.includes(name));
   const changedBefore = await changedFilesIn(pkg.dir);
   const diffBefore = await diffOf(pkg.dir);
+  // 纯验证包（none）的角色不是"下游"：它不该有任何改动，只有门禁结论。
+  const role = scope === "none" ? "纯验证" : isSeed ? "需求包" : "下游包";
+  let gateScripts = resolveGateScripts(pkg, preferOfflineTests);
+
+  // none 范围预期不改代码：门禁由工作流自己在本包目录下跑一遍就够了——起一个只会跑这几条脚本的子代理
+  // 是白花的会话，它跑完也只会回一句"无需改动"。只有门禁没过，才把子代理叫起来，那时它要做的是查明原因。
+  let feedback = "";
+  let failedScript = "";
+  if (scope === "none") {
+    if (gateScripts.length === 0) {
+      findings.push({
+        where: pkg.dir,
+        what: "本包没有可跑的门禁脚本（format:check / lint / typecheck / test / build 一个都没有），无法确认现状",
+        evidence: "package.json 的 scripts 里没有上述任何一项",
+        status: "unconfirmed",
+        severity: "medium",
+      });
+      continue;
+    }
+    const preflight = await runPackageGate(pkg, preferOfflineTests);
+    report({ pkg: name, role, round: 0, ok: preflight.ok, failed: preflight.failed ?? "" }, "gates");
+    if (preflight.ok) {
+      verifiedDirs.add(pkg.dir);
+      findings.push({
+        where: pkg.dir,
+        what: "本包本次不改代码：现状下门禁全部通过",
+        evidence: `范围 none；由工作流直接在 ${pkg.dir} 依次跑 ${gateScripts.join(" / ")} 全部通过（未派子代理）`,
+        status: "verified",
+        severity: "low",
+      });
+      verified.push(`${pkg.dir}（范围 none）: ${gateScripts.join(" / ")} 通过（工作流直接执行）`);
+      await checkNoneUntouched(pkg, changedBefore, diffBefore);
+      continue;
+    }
+    feedback = preflight.output;
+    failedScript = preflight.failed ?? "";
+  }
 
   const worker = agent(
-    `包修改者-${name}`,
-    `你是这个 rush monorepo 的工程师，只修改 ${pkg.dir} 目录下的代码。` +
-      `门禁由你自己在这个包目录里跑：交回来之前必须亲自跑通，` +
-      `跑不通就自己改到通——每一轮都该是你自己跑门禁、自己修，而不是等我告诉你哪一条挂了。` +
-      `工作流会在你交回之后再跑一遍作为确认。` +
-      `如需自动格式化，可在该包目录下运行 node ../../common/scripts/install-run-rushx.js format。` +
-      `每一轮都必须给出产出说明（改了什么、依据是什么、你实际跑了哪些门禁命令、结果如何）；空回复会让本包被记为未完成。` +
-      (isSeed
-        ? `如果某个门禁在你的能力范围内无法通过，如实说明并升级，不要绕过检查或伪造结果。`
-        : `如果本包其实不需要改动，明确说明「无需改动」，不要为改而改。`),
+    scope === "none" ? `包诊断者-${name}` : `包修改者-${name}`,
+    workerPersona(pkg, scope, isSeed),
   );
 
-  let feedback = "";
   let stalled = false;
   let lastEmpty = false;
+  let lastSummary = "";
   let passed = false;
-  let gateScripts = resolveGateScripts(pkg, preferOfflineTests);
   for (let round = 1; round <= maxRounds; round += 1) {
     // 需求只随第一轮发出：同一个子代理跨轮保留上下文，每轮重发整段需求除了多花 token，
     // 还会让后面每一轮的提问看起来仍是"初始提示词"，与上一轮的答复对不上。后续轮次只递这一轮要修的东西。
@@ -664,7 +767,7 @@ for (const name of affected) {
       // 三节：你的任务 / 具体需求 / 其他。每一节只写这个子代理这一轮真正需要的东西：授权范围与上游事实各占
       // 一行、互不推导——此前它们挤在同一句里（"internal（下游包）：你的上游修改了对外接口或行为…"），范围
       // 一栏被读成"上游改过"，上游一个都没动的需求包也拿到了下游包的说明书。需求那一节按本包在本次改动里的
-      // 角色选一种。
+      // 角色选一种。none 范围还会多一节【门禁未通过】：它只在门禁没过时被叫起来，报错本身就是它的任务输入。
       //
       // 首行不再单列【本轮任务概要】：范围与包名就在下面两行里，角色由【具体需求】自己那一句点明，
       // 再列一遍只是把同一件事说两次。重试轮没有这三节，那一边的轮次与范围标记留在【门禁仍未通过】之前。
@@ -675,12 +778,18 @@ for (const name of affected) {
       if (scope !== "none") lines.push("完成下面【具体需求】里属于本包的那部分内容。");
       lines.push(
         scope === "none"
-          ? "同时保持门禁通过：跑通【其他】里列出的那几条，确认本包在现状下全部通过。"
+          ? `本包的门禁已由工作流在本包目录下跑过一遍：${failedScript} 未通过，原始输出见下面的【门禁未通过】。`
           : "同时保持门禁通过：【其他】里列出的那几条，每轮都由你自己在本包目录下跑通再交回。",
       );
       lines.push("");
       lines.push("【具体需求】");
       lines.push(...demandLines(pkg, scope, isSeed, upstreamAffected, requirement, givenContent(name)));
+      if (scope === "none") {
+        // 原始报错跟着提问一起发过去：子代理要判的是"为什么没过"，没有报错就只能猜。
+        lines.push("");
+        lines.push("【门禁未通过】");
+        lines.push(feedback);
+      }
       lines.push("");
       lines.push("【其他】");
       // 点名本轮判定用的那几条门禁，而不是笼统的"test"。包自己的 test 脚本可能包含 live 段
@@ -689,9 +798,13 @@ for (const name of affected) {
         `- 门禁：${gateScripts.join(" / ")}。都在本包目录下用 ` +
           `node ../../common/scripts/install-run-rushx.js <脚本名> 跑；含 live 标签的测试不在本次判定内，不要跑。`,
       );
-      lines.push("- 门禁失败必须真修：不许关规则、改配置、删测试或放宽断言让它变绿。");
+      lines.push(
+        scope === "none"
+          ? "- 不许改动本包任何文件（含配置、测试与断言）来让门禁变绿；门禁没过就如实说明原因并升级。"
+          : "- 门禁失败必须真修：不许关规则、改配置、删测试或放宽断言让它变绿。",
+      );
       lines.push(`- ${await stateLine(pkg)}`);
-      lines.push("- 报告：说清改了什么、依据是什么、你实际跑了哪几条门禁命令、结果如何；空回复会让本包被记为未完成。");
+      lines.push("- 报告：说清你做了什么、依据是什么、你实际跑了哪几条门禁命令、结果如何；空回复会让本包被记为未完成。");
     } else {
       lines.push(`${pkg.dir}｜第 ${round} 轮｜范围 ${scope}｜任务与第一轮相同`);
       lines.push("");
@@ -725,23 +838,18 @@ for (const name of affected) {
     // 而需求一个字都没落地。空结果只能当失败重试，并把这件事记进结果表。
     if (summary.trim() === "") {
       lastEmpty = true;
-      feedback = "你上一轮没有给出任何产出说明（回复为空），无法判断你是否做了改动。请在本包内完成改动，并在结束时说明：改了哪些文件、依据是什么、你实际运行过哪些检查、结果如何；若判断本包无需改动，也要明确说明理由。";
-      report({ pkg: name, role: isSeed ? "需求包" : "下游包", round, ok: false, failed: "未提交产出说明" }, "gates");
+      feedback =
+        scope === "none"
+          ? "你上一轮没有给出任何产出说明（回复为空），无法判断你查了什么。请说明：门禁为什么没过、依据是什么、你实际运行过哪些命令、结果如何；范围是 none，不要改动本包任何文件。"
+          : "你上一轮没有给出任何产出说明（回复为空），无法判断你是否做了改动。请在本包内完成改动，并在结束时说明：改了哪些文件、依据是什么、你实际运行过哪些检查、结果如何；若判断本包无需改动，也要明确说明理由。";
+      report({ pkg: name, role, round, ok: false, failed: "未提交产出说明" }, "gates");
       continue;
     }
     lastEmpty = false;
+    lastSummary = summary;
 
     const outcome = await runPackageGate(pkg, preferOfflineTests);
-    report(
-      {
-        pkg: name,
-        role: isSeed ? "需求包" : "下游包",
-        round,
-        ok: outcome.ok,
-        failed: outcome.failed ?? "",
-      },
-      "gates",
-    );
+    report({ pkg: name, role, round, ok: outcome.ok, failed: outcome.failed ?? "" }, "gates");
     if (outcome.ok) {
       verifiedDirs.add(pkg.dir);
       findings.push({
@@ -757,7 +865,8 @@ for (const name of affected) {
     }
     // 门禁输出与上一轮逐字相同，就是这一轮没有任何进展（上一轮曾这样把同一段报错连问四轮）。
     // 再问下去只是重复计费，所以就此收手，把"未通过"如实记下，而不是把轮次耗满。
-    if (round > 1 && outcome.output === feedback) {
+    // none 范围第一轮就可以这样收手：它一个文件都不许改，重跑出的输出与预跑相同即说明再问也不会变。
+    if ((scope === "none" || round > 1) && outcome.output === feedback) {
       stalled = true;
       feedback = outcome.output;
       break;
@@ -767,11 +876,7 @@ for (const name of affected) {
   if (!passed) {
     findings.push({
       where: pkg.dir,
-      what: lastEmpty
-        ? `${maxRounds} 轮都没有提交产出说明（子代理每一轮都回复为空），没有任何证据表明需求已在本包落地`
-        : stalled
-          ? "门禁未通过，且失败输出与上一轮逐字相同——本轮已无进展，提前停止重试"
-          : `${maxRounds} 轮内未跑通门禁`,
+      what: failureWhat(scope, lastEmpty, stalled, lastSummary),
       evidence: lastEmpty ? "每一轮 ask 的返回值 trim 之后都是空字符串" : feedback.slice(0, 2000),
       status: "unconfirmed",
       severity: "high",
@@ -781,23 +886,7 @@ for (const name of affected) {
 
   // none 范围是"一个文件都不许动"。文件列表看得到新增，差异文本看得到已脏文件的内容变化，
   // 两者一起比对，越界就是可判定的（所以标 verified，而不是靠子代理自述）。
-  if (scope === "none") {
-    const changedAfter = await changedFilesIn(pkg.dir);
-    const diffAfter = await diffOf(pkg.dir);
-    const added = changedAfter.filter((p) => !changedBefore.includes(p));
-    if (added.length > 0 || diffAfter !== diffBefore) {
-      findings.push({
-        where: pkg.dir,
-        what:
-          `范围是 none（不许改动本包），但本包之后发生了变化：` +
-          (added.length > 0 ? `多出 ${added.length} 个未提交文件（${added.slice(0, 8).join("、")}）` : "") +
-          (diffAfter !== diffBefore ? `${added.length > 0 ? "，" : ""}已有文件的内容也变了` : ""),
-        evidence: `改动前 ${changedBefore.length} 个文件；改动后 ${changedAfter.length} 个文件（git status 按 ${pkg.dir}/ 过滤），差异文本${diffAfter === diffBefore ? "未变" : "已变"}`,
-        status: "verified",
-        severity: "high",
-      });
-    }
-  }
+  if (scope === "none") await checkNoneUntouched(pkg, changedBefore, diffBefore);
 }
 
 // 新包的骨架自己能过全部五道门禁（入口写成 `export {}` 也过得了 tsc，`--passWithNoTests` 让空测试也绿），
@@ -834,6 +923,9 @@ if (prereqs.length > 0) {
 notCovered.push("未做行为正确性的人工判断：门禁通过不等于需求实现完全无误");
 notCovered.push(
   "internal / external 只写进了给子代理的规则，脚本没有自动核验：只自动查了 none 范围有没有被越界",
+);
+notCovered.push(
+  "范围 none 的包由工作流直接跑门禁：门禁一过就收尾，没有子代理介入，这些包只有门禁结论，没有人看过它们的实现",
 );
 if (unknownSeeds.length > 0) {
   notCovered.push(`以下包名未被识别、也未建成，予以忽略：${unknownSeeds.join("、")}`);

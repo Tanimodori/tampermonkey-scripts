@@ -78,4 +78,12 @@ export default defineConfig({
       '@': resolve(import.meta.dirname, 'src'),
     },
   },
+  test: {
+    // Declaring a tag is required: an undeclared one is an error rather than a silently ignored typo.
+    //
+    // The tag is only half of the gate. `matchesTags` reads `true` for every test when no filter is
+    // passed, so a default `vitest --run` would still reach the network — what keeps it off is
+    // `describe.skipIf(!live)` in the spec files themselves, keyed on `XIV_LIVE`.
+    tags: [{ name: 'live', description: 'Reaches the real garlandtools.cn mirror; runs under test:live only.', timeout: 60_000 }],
+  },
 });

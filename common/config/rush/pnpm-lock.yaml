@@ -429,6 +429,9 @@ importers:
       '@types/papaparse':
         specifier: ~5.5.2
         version: 5.5.2
+      cross-env:
+        specifier: ^10.1.0
+        version: 10.1.0
       oxfmt:
         specifier: ^0.67.0
         version: 0.67.0
@@ -479,6 +482,9 @@ importers:
       '@types/node':
         specifier: ^22.10.5
         version: 22.19.3
+      cross-env:
+        specifier: ^10.1.0
+        version: 10.1.0
       oxfmt:
         specifier: ^0.67.0
         version: 0.67.0

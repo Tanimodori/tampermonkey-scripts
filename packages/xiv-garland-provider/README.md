@@ -79,9 +79,11 @@ node ../../common/scripts/install-run-rushx.js format:check
 node ../../common/scripts/install-run-rushx.js lint
 node ../../common/scripts/install-run-rushx.js typecheck
 node ../../common/scripts/install-run-rushx.js test
+node ../../common/scripts/install-run-rushx.js test:live
 node ../../common/scripts/install-run-rushx.js build
 ```
 
 - `build` 是 `tsc -b` 后 `vite build`，产出 `dist/`。
 - `test` 是 vitest，离线，注入假的 `fetch`，不会碰到真实镜像。
+- `test:live` 是 vitest，走真实镜像，仅手动跑，不在门禁里。
 - `typecheck` 是 `tsc -b`；`lint` 与 `format:check` 是 oxlint 与 oxfmt 的检查，`format` 写回格式。

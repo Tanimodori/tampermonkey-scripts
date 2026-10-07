@@ -34,6 +34,7 @@
     "lint": "oxlint",
     "typecheck": "tsc -b",
     "test": "vitest --run --passWithNoTests",
+    "test:live": "cross-env XIV_LIVE=1 vitest run --tags-filter=live",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -44,6 +45,7 @@
     "@microsoft/api-extractor": "^7.59.1",
     "@types/node": "^22.10.5",
     "@types/papaparse": "~5.5.2",
+    "cross-env": "^10.1.0",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",
     "typescript": "~5.9.3",

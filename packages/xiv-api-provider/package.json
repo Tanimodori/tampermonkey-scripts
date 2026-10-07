@@ -32,6 +32,9 @@
     "test:live": "cross-env XIV_LIVE=1 vitest run --tags-filter=live",
     "test:drift": "cross-env XIV_LIVE=1 vitest run test/live"
   },
+  "dependencies": {
+    "api-sdk-framework": "workspace:*"
+  },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.59.1",
     "@types/node": "^22.10.5",

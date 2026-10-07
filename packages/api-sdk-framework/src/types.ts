@@ -61,6 +61,9 @@ export interface Endpoint<Context, In, Out> {
   /** 只换 body 的读法；缺省 `raw.json()`。 */
   readonly responseBodyReader?: ResponseBodyReader<Context>;
 
+  /** 该端点自己的时限，优先于 `CallOptions.timeoutMs`。 */
+  readonly timeoutMs?: number | undefined;
+
   readonly requestAdaptor: RequestAdaptor<Context, In, ApiRequest>;
   readonly responseAdaptor: ResponseAdaptor<Context, Out, ApiResponse>;
 }
@@ -69,6 +72,8 @@ export interface Endpoint<Context, In, Out> {
 export interface CallOptions {
   /** 唯一一条接缝，不给就走 `globalThis.fetch`。 */
   readonly transport?: WebFetcher | undefined;
+  /** 这条 call 的默认时限；端点上的 `timeoutMs` 优先。 */
+  readonly timeoutMs?: number | undefined;
 }
 
 /** 把 endpoint 的描述做成真实的往返；`context` 由调用方给出，流经两个适配器。 */

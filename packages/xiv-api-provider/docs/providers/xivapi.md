@@ -8,7 +8,7 @@
 
 - `language`:国际站 `en`/`ja`/`de`/`fr`,`chs` 与 `zh` 都被拒;国服额外接受 `chs`,且省略参数即返回中文。`zh`/`cn` 在两侧都不是合法 token。两种 400 的措辞不同义,`languageRejectionKind` 把 `Failed to deserialize`(token 不在格式枚举里)与 `unsupported language`(合法变体、该 edition 不带)分开,否则一个数据可用性缺陷会伪装成拼写错误。
 - `version`:国际站是 16 位十六进制(`541c0c12e07da325`),国服是 16 位游戏时间戳(`2026071600010000`)。形态不同类,所以按 edition 各有一条 `versionPattern` 断言,而不是用一条正则。
-- `GET /version`:国际站有(40 余条),国服 404 且响应体为空。这条必须在发请求之前由 `hasVersionList` 判掉:其他端点的 404 带 `{code, message}`,这一条什么都没有,失败后读不出原因。`listVersions` 端点因此抛 `unsupported` 而不是返回空数组——空数组会被读成"没有历史版本"。
+- `GET /version`:国际站有(40 余条),国服 404 且响应体为空。这条必须在发请求之前由 `hasVersionList` 判掉:其他端点的 404 带 `{code, message}`,这一条什么都没有,失败后读不出原因。`listVersions` 端点因此抛 `UNSUPPORTED` 而不是返回空数组——空数组会被读成"没有历史版本"。
 - `GET /asset` 的 `format`:只有国际站遵守。国服请求 png 会返回 `image/webp`,所以内容类型从响应读,`readAsset` 把 `contentType` 与字节一起返回。国际站反过来要求 `format` 必填,且不做同族转换:源文件已是 png 时,`png`/`webp`/`jpg` 三种都得到 400 `png cannot be converted to …`;`.tex` 源则按所请求的格式返回。
 - `GET /asset/map/{territory}/{index}`:国际站有这条路由(缺源文件时按 `{code, message}` 回答),国服整个路由不存在,回的是无正文结构的纯文本 `404 page not found`。
 - `GET /search` 的命中取决于 `language` 而不是 edition:国服省略 `language` 即按 `chs` 处理,一条英文子句在那边因此返回空数组。同一件事在 [检索](#检索) 一处描述。
@@ -32,9 +32,9 @@
 
 ## 客户端
 
-`createXivApiClient(edition, { fetch, language, timeoutMs })` 只读,持有 edition 与 language,读取经 `client.call(endpoint, input)` 执行;装配在 `src/client/client.ts`,端点声明在 `src/endpoints/`。每个操作有两份装配:默认名 `listSheets` / `readRow` / `readRows` / `search` / `listVersions` 是 verified 侧,投影之后按 `src/endpoints/schema.ts` 的 schema 校验一次;`Raw` 后缀的那份不写校验槽。`readAsset` 读字节,没有同构 schema,不配对,保持本名。`language` 一次性注入到每个需要语言的读取,显式传入的优先。
+`createXivApiClient(edition, { fetch, language, timeoutMs })` 只读,持有 edition 与 language,读取经 `client.call(endpoint, input)` 执行;装配在 `src/client/client.ts`,端点声明在 `src/endpoints/`。一次往返交给 `api-sdk-framework` 的 `createCall`,时限由 `timeoutMs`(缺省 10 秒)转成框架的 `CallOptions.timeoutMs`,由框架按次计时并 abort。每个操作有两份装配:默认名 `listSheets` / `readRow` / `readRows` / `search` / `listVersions` 是 verified 侧,投影之后按 `src/endpoints/schema.ts` 的 schema 校验一次;`Raw` 后缀的那份不写校验槽。`readAsset` 按字节读,没有同构 schema,不配对,保持本名。`language` 一次性注入到每个需要语言的读取,显式传入的优先。
 
-响应先由 `src/client/guards.ts` 的手写谓词确认落在预期信封里。失败统一抛 `ProviderError`,带 `kind`(`http` / `network` / `timeout` / `shape` / `unsupported` / `input`)、`provider`、`url`、`operation`、`status`、`apiCode`。两侧都回答 `{code, message}`,所以 `apiCode` 直接来自服务端;zod 的落位与两份装配的取舍见 [zod 与校验](README.md#zod-与校验)。
+响应先由 `src/client/guards.ts` 的手写谓词确认落在预期信封里。失败统一抛框架的 `ApiError`,按 `errorCode` 分流:装配失败 `BAD_INPUT`、收不到可读答复(连接失败、2xx 空体或非 JSON)`NETWORK_ERROR`、超时 `TIMEOUT`、投影或投影之后的校验不过 `BAD_OUTPUT`。非 2xx 由端点在 `responseAdaptor` 里归族(401/403 `UNAUTHORIZED`、429 `RATE_LIMIT`、5xx `SERVER_ERROR`、其余含 404 `BAD_REQUEST`),`status` 留在 `error.response.status` 上。两侧都回答 `{code, message}`,所以服务端那句 message 就是 `error.message`、服务端的 `code` 跟着答复体留在 `error.response.body.code` 上。换框架带来的差异与对照(旧的 `kind` / `provider` / `url` / `apiCode`)见 [包 README 的失败一节](../../README.md#失败);zod 的落位与两份装配的取舍见 [zod 与校验](README.md#zod-与校验)。
 
 ## 检索
 

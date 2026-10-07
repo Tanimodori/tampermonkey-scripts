@@ -1,3 +1,5 @@
+import { ApiErrorCodes, isApiError } from 'api-sdk-framework';
+import type { ApiError } from 'api-sdk-framework';
 import { describe, expect, it, vi } from 'vitest';
 // zod 定义住在端点那一层；verified 侧在运行时按它们解析，这些测试也用它校验*返回*的 body。
 import * as schemas from '@/endpoints/schema.ts';
@@ -9,7 +11,6 @@ import {
   EDITION_LANGUAGES,
   EDITIONS,
   isKnownSheet,
-  isProviderError,
   knownSheetNames,
   languageRejectionKind,
   listSheets,
@@ -18,6 +19,7 @@ import {
   listVersions,
   listVersionsRaw,
   openApiUrl,
+  readAsset,
   readRow,
   readRowRaw,
   readRows,
@@ -28,8 +30,11 @@ import {
   sheetRowsUrl,
   sheetRowUrl,
   supportsLanguage,
+  UNSUPPORTED,
   versionsUrl,
   type SheetName,
+  type WebFetcherRequestInit,
+  type XivApiClient,
   type XivApiEndpoint,
 } from '@/index.ts';
 
@@ -38,6 +43,11 @@ import {
  *
  * 在测的只有**形状**。示例里的名字与值是占位符，刻意的：一条测试如果要断言 19890 号物品叫某个名字，
  * 钉住的就是游戏内容而不是 API 契约，每个内容补丁都会把它弄坏。结构对上的 body 就当来自对的地方。
+ *
+ * 失败那一侧看的是 `ApiError`：调用链与失败类型都来自 `api-sdk-framework`，这个包没有自己的一套。非 2xx 由端点
+ * 的 `responseAdaptor` 归族，状态仍留在 `error.response.status` 上、服务端的 `{code, message}` 仍留在
+ * `error.response.body` 上；读不成 JSON 的 2xx 与空体归 `NETWORK_ERROR`；投影之后 schema 不过归 `BAD_OUTPUT`；
+ * 时限由框架管，超时归 `TIMEOUT`。
  */
 
 const SCHEMA_TAG = 'exdschema@2:rev:0000000000000000000000000000000000000000';
@@ -55,17 +65,26 @@ const rowsBody = (count = 2) => ({
   rows: Array.from({ length: count }, (_unused, index) => ({ row_id: index + 1, fields: { Name: `name-${index + 1}` } })),
 });
 
-/** 每个请求都回同一份罐头 body，并记录被问到的地址。 */
+/** 每个请求都回同一份罐头 body，并记录被问到的地址与发送参数。 */
 const transport = (body: unknown, status = 200) => {
   const requests: URL[] = [];
-  const fetchImpl = vi.fn(async (url: string) => {
+  const inits: (WebFetcherRequestInit | undefined)[] = [];
+  const fetchImpl = vi.fn(async (url: string, init?: WebFetcherRequestInit) => {
     requests.push(new URL(url));
+    inits.push(init);
     return new Response(typeof body === 'string' ? body : JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
   });
-  return { fetch: fetchImpl, requests };
+  return { fetch: fetchImpl, requests, inits };
 };
 
 const api = (body: unknown, status = 200) => createXivApiClient('international', { fetch: transport(body, status).fetch });
+
+/** 一次调用的失败，断言它确实是 `ApiError`；没失败也抛。 */
+const failureOf = async <In, Out>(client: XivApiClient, endpoint: XivApiEndpoint<In, Out>, input: In): Promise<ApiError> => {
+  const failure = await client.call(endpoint, input).catch((cause: unknown) => cause);
+  if (!isApiError(failure)) throw new Error(`expected an ApiError, got ${String(failure)}`);
+  return failure;
+};
 
 describe('edition descriptors', () => {
   it('name where each service lives and what it defaults to', () => {
@@ -191,27 +210,43 @@ describe('client', () => {
     expect(requests.map((url) => url.searchParams.get('language'))).toEqual(['chs', 'en']);
   });
 
-  it('surfaces the API message and status on an http failure, and names the operation', async () => {
-    const error = await api({ code: 404, message: 'not found: the Excel sheet "Nope" could not be found' }, 404)
-      .call(readRow, { sheet: 'Nope' as SheetName, row: 1 })
-      .catch((caught: unknown) => caught);
-    expect(isProviderError(error)).toBe(true);
-    if (!isProviderError(error)) return;
-    expect(error.kind).toBe('http');
-    expect(error.status).toBe(404);
-    expect(error.apiCode).toBe(404);
+  it('surfaces the API message and status on a failure, and names the operation', async () => {
+    const error = await failureOf(api({ code: 404, message: 'not found: the Excel sheet "Nope" could not be found' }, 404), readRow, {
+      sheet: 'Nope' as SheetName,
+      row: 1,
+    });
+    expect(error.errorCode).toBe(ApiErrorCodes.BAD_REQUEST);
+    expect(error.response?.status).toBe(404);
+    // 服务端那句 message 就是失败消息，服务端的 code 跟着答复体一起留在错误的 `response` 上。
+    expect(error.message).toBe('not found: the Excel sheet "Nope" could not be found');
+    expect(error.response?.body).toEqual({ code: 404, message: 'not found: the Excel sheet "Nope" could not be found' });
     expect(error.operation).toBe('readRow');
-    expect(error.url).toContain('/sheet/Nope/1');
-    expect(error.message).toContain('could not be found');
+    expect(error.request?.url).toContain('/sheet/Nope/1');
+  });
+
+  it('classifies a non-2xx by its family and keeps the status on the error', async () => {
+    const families = [
+      { status: 400, errorCode: ApiErrorCodes.BAD_REQUEST },
+      { status: 401, errorCode: ApiErrorCodes.UNAUTHORIZED },
+      { status: 403, errorCode: ApiErrorCodes.UNAUTHORIZED },
+      { status: 404, errorCode: ApiErrorCodes.BAD_REQUEST },
+      { status: 429, errorCode: ApiErrorCodes.RATE_LIMIT },
+      { status: 500, errorCode: ApiErrorCodes.SERVER_ERROR },
+      { status: 503, errorCode: ApiErrorCodes.SERVER_ERROR },
+    ] as const;
+
+    for (const { status, errorCode } of families) {
+      const error = await failureOf(api({ code: status, message: `server says ${status}` }, status), readRow, { sheet: 'Item', row: 1 });
+      expect(error.errorCode, `HTTP ${status}`).toBe(errorCode);
+      // 归族之后状态仍在：调用方既能按族分流，也能按状态码分流。
+      expect(error.response?.status, `HTTP ${status}`).toBe(status);
+      expect(error.message, `HTTP ${status}`).toBe(`server says ${status}`);
+    }
   });
 
   it('rejects a body that is not the envelope it claimed to be', async () => {
-    const error = await api({ schema: SCHEMA_TAG, version: VERSION, row_id: 'not-a-number', fields: {} })
-      .call(readRow, { sheet: 'Item', row: 1 })
-      .catch((caught: unknown) => caught);
-    expect(isProviderError(error)).toBe(true);
-    if (!isProviderError(error)) return;
-    expect(error.kind).toBe('shape');
+    const error = await failureOf(api({ schema: SCHEMA_TAG, version: VERSION, row_id: 'not-a-number', fields: {} }), readRow, { sheet: 'Item', row: 1 });
+    expect(error.errorCode).toBe(ApiErrorCodes.BAD_OUTPUT);
     // 运行时 guard 点的是 operation，不是出错的字段路径。逐字段的问题报告是 zod 的事，verified 端点
     // 就是拿这些同样的 body 去跑的——见下面的两装配一节。
     expect(error.message).toContain('unexpected response shape');
@@ -220,12 +255,11 @@ describe('client', () => {
 
   it('refuses to ask an edition with no version list, without sending anything', async () => {
     const { fetch, requests } = transport(rowsBody(1));
-    const error = await createXivApiClient('chinese-server', { fetch })
-      .call(listVersions, {})
-      .catch((caught: unknown) => caught);
-    expect(isProviderError(error)).toBe(true);
-    if (!isProviderError(error)) return;
-    expect(error.kind).toBe('unsupported');
+    const error = await failureOf(createXivApiClient('chinese-server', { fetch }), listVersions, {});
+    // 发请求之前就判掉的能力事实，走本包自己的码，不是上游对某次请求的归类。
+    expect(error.errorCode).toBe(UNSUPPORTED);
+    expect(error.message).toContain('serves no version list');
+    expect(error.message).toContain('https://xivapi-v2.xivcdn.com/api/version');
     expect(requests).toHaveLength(0);
   });
 
@@ -235,11 +269,15 @@ describe('client', () => {
         throw new TypeError('down');
       }),
     });
-    const error = await client.call(readRow, { sheet: 'Item', row: 1 }).catch((caught: unknown) => caught);
-    expect(isProviderError(error)).toBe(true);
-    if (!isProviderError(error)) return;
-    expect(error.kind).toBe('network');
+    const error = await failureOf(client, readRow, { sheet: 'Item', row: 1 });
+    expect(error.errorCode).toBe(ApiErrorCodes.NETWORK_ERROR);
     expect(error.cause).toBeInstanceOf(TypeError);
+  });
+
+  it('classifies an empty 200 body and a non-JSON 200 body as read failures', async () => {
+    // 2xx 上的空体与非 JSON 不是一份答复；读法（`readJsonBody`）在这里抛，框架的读取段归 `NETWORK_ERROR`。
+    expect((await failureOf(api('', 200), readRow, { sheet: 'Item', row: 1 })).errorCode).toBe(ApiErrorCodes.NETWORK_ERROR);
+    expect((await failureOf(api('not json at all', 200), readRow, { sheet: 'Item', row: 1 })).errorCode).toBe(ApiErrorCodes.NETWORK_ERROR);
   });
 
   it('classifies an assembly failure as `input`, which no built-in endpoint can produce', async () => {
@@ -247,7 +285,6 @@ describe('client', () => {
     // 而不是留给以后去发现它坏了。
     const reject: XivApiEndpoint<{ n: number }, { ok: true }> = {
       operation: 'reject',
-      read: 'json',
       requestSchema: {
         parse: () => {
           throw new Error('not a valid input');
@@ -256,25 +293,49 @@ describe('client', () => {
       requestAdaptor: () => ({ url: 'https://example.com/', init: {} }),
       responseAdaptor: () => ({ ok: true }),
     };
-    const error = await api(rowBody())
-      .call(reject, { n: 1 })
-      .catch((caught: unknown) => caught);
-    expect(isProviderError(error)).toBe(true);
-    if (!isProviderError(error)) return;
-    expect(error.kind).toBe('input');
+    const error = await failureOf(api(rowBody()), reject, { n: 1 });
+    expect(error.errorCode).toBe(ApiErrorCodes.BAD_INPUT);
     expect(error.operation).toBe('reject');
     expect(error.message).toContain('not a valid input');
   });
 
-  it('tolerates a non-JSON error body, which is what a blocked origin sends', async () => {
-    const error = await api('error code: 1016', 530)
-      .call(readRow, { sheet: 'Item', row: 1 })
-      .catch((caught: unknown) => caught);
-    expect(isProviderError(error)).toBe(true);
-    if (!isProviderError(error)) return;
-    expect(error.kind).toBe('http');
-    expect(error.apiCode).toBeNull();
-    expect(error.message).toContain('1016');
+  it('classifies a non-JSON error body by its status, not by the read failure', async () => {
+    // 真正拦住请求的那一层（源站、CDN）常拿纯文本回答；那种答复的读取不该把 `SERVER_ERROR` 说成
+    // `NETWORK_ERROR`，而上游那句话仍要当失败消息报出来。
+    const error = await failureOf(api('error code: 1016', 530), readRow, { sheet: 'Item', row: 1 });
+    expect(error.errorCode).toBe(ApiErrorCodes.SERVER_ERROR);
+    expect(error.response?.status).toBe(530);
+    expect(error.message).toBe('error code: 1016');
+  });
+
+  it('turns a call that outlives its timeout into `TIMEOUT`', async () => {
+    // 时限交给框架的 `CallOptions.timeoutMs`；这次传输故意不认 `signal`，框架在读完答复后再看一次时限。
+    const client = createXivApiClient('international', {
+      timeoutMs: 5,
+      fetch: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        return new Response(JSON.stringify(rowBody()), { status: 200, headers: { 'content-type': 'application/json' } });
+      },
+    });
+    const error = await failureOf(client, readRow, { sheet: 'Item', row: 1 });
+    expect(error.errorCode).toBe(ApiErrorCodes.TIMEOUT);
+    expect(error.operation).toBe('readRow');
+  });
+
+  it('hands the timeout to the framework, which puts it on the transport as an abort signal', async () => {
+    const fake = transport(rowBody());
+    await createXivApiClient('international', { fetch: fake.fetch, timeoutMs: 1234 }).call(readRow, { sheet: 'Item', row: 1 });
+    expect(fake.inits[0]?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('reads an asset as bytes, and takes the content type from the answer', async () => {
+    const client = createXivApiClient('chinese-server', {
+      fetch: async () => new Response(new Uint8Array([1, 2, 3]), { status: 200, headers: { 'content-type': 'image/webp' } }),
+    });
+    const asset = await client.call(readAsset, { path: 'ui/icon/003000/003554.tex', format: 'png' });
+    expect(Array.from(asset.bytes)).toEqual([1, 2, 3]);
+    // 要 png 可能得到 webp：内容类型只能从响应读，不能从请求想当然。
+    expect(asset.contentType).toBe('image/webp');
   });
 
   it('keeps a sheet list ordered and hands back the envelope', async () => {
@@ -299,10 +360,8 @@ describe('raw and verified assemblies', () => {
     const raw = await api(tolerated).call(readRowsRaw, { sheet: 'Item' });
     expect(raw.rows).toHaveLength(2);
 
-    const error = await api(tolerated)
-      .call(readRows, { sheet: 'Item' })
-      .catch((caught: unknown) => caught);
-    expect(isProviderError(error) && error.kind).toBe('shape');
+    const error = await failureOf(api(tolerated), readRows, { sheet: 'Item' });
+    expect(error.errorCode).toBe(ApiErrorCodes.BAD_OUTPUT);
   });
 
   it('refuse a subrow id the guard ignores but the schema does not', async () => {
@@ -310,10 +369,8 @@ describe('raw and verified assemblies', () => {
     const raw = await api(tolerated).call(readRowRaw, { sheet: 'Item', row: 1 });
     expect(raw.row_id).toBe(1);
 
-    const error = await api(tolerated)
-      .call(readRow, { sheet: 'Item', row: 1 })
-      .catch((caught: unknown) => caught);
-    expect(isProviderError(error) && error.kind).toBe('shape');
+    const error = await failureOf(api(tolerated), readRow, { sheet: 'Item', row: 1 });
+    expect(error.errorCode).toBe(ApiErrorCodes.BAD_OUTPUT);
   });
 
   it('refuse a sheet list entry the guard lets through, on the verified side only', async () => {
@@ -321,10 +378,8 @@ describe('raw and verified assemblies', () => {
     const raw = await api(tolerated).call(listSheetsRaw, {});
     expect(raw.sheets).toHaveLength(2);
 
-    const error = await api(tolerated)
-      .call(listSheets, {})
-      .catch((caught: unknown) => caught);
-    expect(isProviderError(error) && error.kind).toBe('shape');
+    const error = await failureOf(api(tolerated), listSheets, {});
+    expect(error.errorCode).toBe(ApiErrorCodes.BAD_OUTPUT);
   });
 
   it('carry the search envelope through both assemblies unchanged', async () => {

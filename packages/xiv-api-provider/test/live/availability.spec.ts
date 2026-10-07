@@ -1,3 +1,4 @@
+import { ApiErrorCodes, isApiError } from 'api-sdk-framework';
 import { describe, expect, it } from 'vitest';
 import * as schemas from '@/endpoints/schema.ts';
 import {
@@ -5,13 +6,13 @@ import {
   createXivApiClient,
   EDITIONS,
   isApiErrorResponse,
-  isProviderError,
   isSheetResponse,
   listSheets,
   listVersions,
   readAsset,
   readRow,
   search,
+  UNSUPPORTED,
 } from '@/index.ts';
 
 /**
@@ -105,13 +106,13 @@ describe.skipIf(!live)('edition capabilities', { tags: ['live'] }, () => {
     const error = await international()
       .call(readRow, { sheet: 'Item', row: 1, query: { language: 'chs' } })
       .catch((caught: unknown) => caught);
-    expect(isProviderError(error) && error.kind).toBe('http');
-    expect(isProviderError(error) && error.status).toBe(400);
+    expect(isApiError(error) && error.errorCode).toBe(ApiErrorCodes.BAD_REQUEST);
+    expect(isApiError(error) && error.response?.status).toBe(400);
   });
 
   it('has no version list on the mirror, and says so before sending', async () => {
     // 那里的 404 带着空 body，这正是这条是能力检查、而不是解析失败请求的原因。
-    await expect(chinese().call(listVersions, {})).rejects.toMatchObject({ kind: 'unsupported' });
+    await expect(chinese().call(listVersions, {})).rejects.toMatchObject({ errorCode: UNSUPPORTED });
     const response = await fetch(`${EDITIONS['chinese-server'].apiBase}/version`);
     expect(response.status).toBe(404);
     expect(await response.text()).toBe('');

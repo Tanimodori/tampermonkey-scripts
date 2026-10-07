@@ -6,6 +6,8 @@
 export interface CallOptions {
   /** 唯一一条接缝，不给就走 `globalThis.fetch`。 */
   readonly transport?: WebFetcher | undefined;
+  /** 这条 call 的默认时限；端点上的 `timeoutMs` 优先。 */
+  readonly timeoutMs?: number | undefined;
 }
 
 export interface Call<Context> {
@@ -22,8 +24,13 @@ export interface Call<Context> {
 
 三段按最便宜的失败先付排列，各经 `wrapApiError`。`createCall` 返回的函数抛出的错误都是 `ApiError`，`operation` 与 `request`、`response` 由出栈处补上。
 
+## 时限
+
+时限由 `CallOptions.timeoutMs` 或端点上的 `timeoutMs` 定下，端点优先；两处都不给就不设时限。计时从进入 call 起、到 call 退出止，装配、发出与读取、判定与投影三段都在内。
+
+到点后这次调用的 `signal` 被 abort，call 在下一个检查点抛 `ApiError`，`errorCode` 为 `TIMEOUT`，`operation` 与 `request` 一并带上。`signal` 随 `init` 交给 `transport`，真实 `fetch` 收下后会自己中止这次往返。
+
 ## 边界
 
 - 一次调用只有一次往返，不重试、不翻页、不聚合。
-- 超时不设，怎么等归 `transport` 管。
 - 失败的处理由调用方在 `call` 外面决定。

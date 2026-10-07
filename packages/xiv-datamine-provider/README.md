@@ -28,11 +28,11 @@ ui.rowCount;
 
 `readSheet` 交回的是一份纯数据(整张网格,含三行表头),`useSheetTable` 才是有寻址能力的那个对象。行一律按位置寻址:`#` 既不递增也不连续,退役的行留下空洞,所以按 `#` 查要自己 `new Map([...ui.rows].map((r) => [r[0], r]))`。`trim(rules)` 按列名、`#` 的值或某列是否为空选一部分出来,交回的还是数据。值的含义(`'True'`、`'-1'`、`'60101'`)与"把一行变成一个对象"那一步都由调用方自己做,这个包不转换也不改名。
 
-不传 `ref` 时取分支头 `HEAD` 的那份文件;要复现同一次构建就写死一个 ref(tag、分支名或 commit sha 都可)。`locale` 默认简体中文 `chs`。`fetch` 的类型是本仓 `universal-fetch-type` 的 `WebFetcher`,默认取全局 `fetch`,所以 Node 侧不传也能跑;userscript 自己拦截了 `window.fetch` 时传拦截前的那份 `origFetch`,不必包一层。一次传输的时限默认 30 秒——这里的表能到 19 MB,等得比 API provider 久。
+不传 `ref` 时取分支头 `HEAD` 的那份文件;要复现同一次构建就写死一个 ref(tag、分支名或 commit sha 都可)。`locale` 默认简体中文 `chs`。`fetch` 的类型是本仓 `universal-fetch-type` 的 `WebFetcher`,默认取全局 `fetch`,所以 Node 侧不传也能跑;userscript 自己拦截了 `window.fetch` 时传拦截前的那份 `origFetch`,不必包一层。整次调用的时限默认 30 秒——时限由 `api-sdk-framework` 施加,从进入 `call` 起算到退出止,覆盖装配、传输与读答复,不只是那次传输;这里的表能到 19 MB,等得比 API provider 久。要改时限就传 `timeoutMs`。
 
 ## 失败
 
-失败统一是 `api-sdk-framework` 的 `ApiError`(这个包是框架的消费方,没有自己的错误类)。其中一条走自己的码:一张表在一个语种里不存在时,`errorCode` 是 `NOT_FOUND`,并且带着 `response.status === 404`——那是关于数据的答案,不是请求发不出去,调用方据此分得开两条路。其余非 2xx 由框架的错误族归一个码(401/403、429、5xx,剩下的是 `BAD_REQUEST`),`status` 仍留在错误的 `response.status` 上,所以既能按族分流也能按状态码分流。以 200 发来的空体不是一张空表,是一份没有读成 CSV 的答复,归 `BAD_OUTPUT`。
+失败统一是 `api-sdk-framework` 的 `ApiError`(这个包是框架的消费方,没有自己的错误类)。其中一条走自己的码:一张表在一个语种里不存在时,`errorCode` 是 `NOT_FOUND`,并且带着 `response.status === 404`——那是关于数据的答案,不是请求发不出去,调用方据此分得开两条路。其余非 2xx 由框架的错误族归一个码(401/403、429、5xx,剩下的是 `BAD_REQUEST`),`status` 仍留在错误的 `response.status` 上,所以既能按族分流也能按状态码分流。整次调用超过时限则由框架抛 `TIMEOUT`。以 200 发来的空体不是一张空表,是一份没有读成 CSV 的答复,归 `BAD_OUTPUT`。
 
 CSV 自己的形状问题——表头不到三行、三行不等宽——是纯函数抛的 `Error`:那里没有请求,也没有答复。表头校验发生在字节进入调用方网格的路上,上游改了格式就在这里响,而不是到某处读列名时才炸。数据行不校验:首格不是整数 key 的行也还是行。
 

@@ -85,10 +85,13 @@ describe('fetching', () => {
     ]);
   });
 
-  it('gives the request a deadline, since a sheet runs to 19 MB', async () => {
+  it('gives the call a deadline, since a sheet runs to 19 MB', async () => {
+    // 时限现在由框架施加：`createCall` 造一个 `AbortController`，把它给的 `signal` 挂到这次传输的 init 上，
+    // 从进入 call 起算、到 call 退出止。client 只把默认时限（或这里给的 1234ms）交给框架。
     const fake = transport({ [HEAD_URL]: { body: CSV } });
     await createDatamineClient({ fetch: fake.fetch, timeoutMs: 1234 }).call(fetchSheetCsv, { sheet: 'ItemUICategory' });
     expect(fake.inits[0]?.signal).toBeInstanceOf(AbortSignal);
+    expect(fake.inits[0]?.signal?.aborted).toBe(false);
   });
 
   it('rejects a body that is not the format at the point it arrives', async () => {

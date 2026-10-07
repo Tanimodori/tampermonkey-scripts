@@ -26,11 +26,19 @@ xivapi 从这里出,用不到的那几个由调用方的打包器删掉:包声�
 
 `fetch` 的类型是本仓 `universal-fetch-type` 的 `WebFetcher`——与 `tencent-doc-sdk` 的 transport 同一档,一个 fetcher 可以同时喂两边。默认取全局 `fetch`,所以 Node 侧不传也能跑。必须显式注入的情况:userscript 自己拦截了 `window.fetch`,出站请求要走拦截前的原生 `fetch`,否则会自顶穿过自己的 hook。`origFetch` 直接传即可,不必包一层——这一档要买的就是这件事,理由见 [universal-fetch-type](../universal-fetch-type/README.md)。
 
+## 失败
+
+一次往返交给 [`api-sdk-framework`](../api-sdk-framework/README.md) 的 `createCall`,失败统一是它的 `ApiError`——本包没有自己的调用链,也没有自己的错误类。catch 处按 `error.errorCode` 分流:装配失败是 `BAD_INPUT`,收不到可读的答复(连接失败、2xx 空体或非 JSON)是 `NETWORK_ERROR`,超时是 `TIMEOUT`,投影或投影之后的校验不过(`shape` 那一类)是 `BAD_OUTPUT`。非 2xx 的族由端点在 `responseAdaptor` 里归:401/403 归 `UNAUTHORIZED`、429 归 `RATE_LIMIT`、5xx 归 `SERVER_ERROR`、其余(含 404)归 `BAD_REQUEST`;归族之后 `status` 仍留在 `error.response.status` 上,服务端那句 `{code, message}` 仍留在 `error.response.body` 上,既是失败消息、也能按状态码分流。本包只多一个自己的码 `UNSUPPORTED`:这个 edition 没有这条路由,发请求之前就判掉,不是上游对某次请求的回答。
+
+时限由 `createXivApiClient` 的 `timeoutMs` 选项定下(缺省 10 秒),转成框架的 `CallOptions.timeoutMs`,由框架按次计时并 abort。
+
 ## 校验与测试
 
-源码按层分目录。每个读取是一个 endpoint 对象,声明与 URL 构造在 `src/endpoints/index.ts`,分两份装配:`src/endpoints/raw.ts` 只写 `operation`、响应体读取方式与适配器,`src/endpoints/verified.ts` 展开 raw 的声明再补 `responseSchema`。默认名归带校验的那份(`readRow`),无校验的那一份带 `Raw` 后缀(`readRowRaw`);没有同构 schema 的操作不配对,保持本名(`readAsset`)。运行时判定先用 `src/client/guards.ts` 里的手写谓词,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `shape`。schema 只在 `src/endpoints/schema.ts`,是包内值导入 zod 的唯一地方,传入参数不做本地校验。
+源码按层分目录。每个读取是一个 endpoint 对象,声明与 URL 构造在 `src/endpoints/index.ts`,分两份装配:`src/endpoints/raw.ts` 只写 `operation`、body 读法与适配器,`src/endpoints/verified.ts` 展开 raw 的声明再补 `responseSchema`。默认名归带校验的那份(`readRow`),无校验的那一份带 `Raw` 后缀(`readRowRaw`);没有同构 schema 的操作不配对,保持本名(`readAsset`)。body 读法用框架的 `responseBodyReader` 表达,JSON 端点共用 `src/client/http.ts` 的 `readJsonBody`(非 2xx 上的 JSON 解析宽容、2xx 空体与非 JSON 抛错),`readAsset` 按字节读。运行时判定先用 `src/client/guards.ts` 里的手写谓词,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `BAD_OUTPUT`。schema 只在 `src/endpoints/schema.ts`,是包内值导入 zod 的唯一地方,传入参数不做本地校验。
 
 zod 与 `universal-fetch-type` 记在 `devDependencies`:这些包都是私有的、只经 `workspace:*` 被消费,而 pnpm 会把 `devDependencies` 一样链进本包的 `node_modules`,所以从 `xiv-api-provider` 的声明出发,声明链(zod 与 `→ universal-fetch-type → @apollo/utils.fetcher`)照旧解析得到,消费方不需要在任何一处声明它们。选择 verified 装配的一方得到运行时校验,只命名 raw 的一方的产物里没有 schema 引擎;真要对外发布某个包时,这两个落位要改,否则外部读者解析不到那个名字。取舍见 [zod 与校验](docs/providers/README.md#zod-与校验)。
+
+`api-sdk-framework` 不同:它是运行期依赖,记在 `dependencies`,产物里也不内联(`external`),由消费方解析——`ApiError` 是调用方分支判断的失败类型,内联一份会破坏它与调用方自己那份的 `instanceof`。
 
 ```bash
 rushx test              # 离线,CI 门禁
@@ -40,7 +48,7 @@ rushx test:drift        # OpenAPI 漂移报告,同样仅手动
 
 活体测试有两道闸:`{ tags: ['live'] }` 与 `describe.skipIf(!live)`。只有标签挡不住网络请求——不带 `--tags-filter` 时 vitest 认为所有测试都匹配。离线测试目录跟着 `src/` 的层一一对应:`test/endpoints/` 与 `test/utils/`。
 
-交出去的声明是构建的产物,包自己不判它。是否读得通有两处可看:[xiv-datamine-polyfill 的 `typecheck:declarations`](../xiv-datamine-polyfill/docs/design.md#测试) 以 `skipLibCheck: false` 编译,读到的声明含本包这一份与它引用的 zod,那一遍手动跑,不在 `rush build` 里;[xiv-datamine-polyfill-e2e-test](../../tests/xiv-datamine-polyfill-e2e-test/README.md) 经 `package.json#exports` 导入,判消费方读不读得到、类型喂不喂得进调用,它随 `rush build` 进 CI 门禁。两个包的 `build` 都只有 `vite build`,源码层面的类型检查归各自的 `rushx typecheck`。
+交出去的声明是构建的产物,包自己不判它。是否读得通有两处可看:[xiv-datamine-polyfill 的 `typecheck:declarations`](../xiv-datamine-polyfill/docs/design.md#测试) 以 `skipLibCheck: false` 编译,读到的声明含本包这一份、它引用的 zod 与 `api-sdk-framework`,那一遍手动跑,不在 `rush build` 里;[xiv-datamine-polyfill-e2e-test](../../tests/xiv-datamine-polyfill-e2e-test/README.md) 经 `package.json#exports` 导入,判消费方读不读得到、类型喂不喂得进调用,它随 `rush build` 进 CI 门禁。两个包的 `build` 都只有 `vite build`,源码层面的类型检查归各自的 `rushx typecheck`。
 
 ## 已知问题
 

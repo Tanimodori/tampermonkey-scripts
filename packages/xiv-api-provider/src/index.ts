@@ -7,9 +7,13 @@
  *
  * 一次读取是一个端点对象，由 client 的 `call` 执行；schema 住在端点那一层（`@/endpoints/schema.ts`），填进
  * verified 端点的响应槽，业务代码只以 `import type` 引用它们，运行时检查是 `@/client/guards.ts` 里的手写谓词。
+ *
+ * 调用链的契约与失败类型都来自 `api-sdk-framework`，这里不转出错误值：调用方自己 `import { ApiError, isApiError }
+ * from 'api-sdk-framework'`——转出会多一份实例，`instanceof` 就不认调用方手里那个 `ApiError` 了。本包只补一个
+ * 自己的码（`UNSUPPORTED`）与框架契约的类型面。
  */
 
-// 共用：memo、图标换算、调用链的契约，以及 xivapi 抛的错误。
+// 共用：memo、图标换算、调用链的契约，以及 xivapi 自己那个错误码。
 export { createMemo } from '@/utils/cache.ts';
 export type { Memo, MemoOptions } from '@/utils/cache.ts';
 
@@ -24,9 +28,8 @@ export {
   texturePathWithoutExtension,
 } from '@/utils/icon.ts';
 
-export { isProviderError, ProviderError } from '@/client/error.ts';
-export type { Provider, ProviderErrorKind } from '@/client/error.ts';
-export type { ApiRequest, ApiResponse, BodyRead, Endpoint, RequestAdaptor, RequestSchema, ResponseAdaptor, ResponseSchema } from '@/types/sdk.ts';
+export { UNSUPPORTED } from '@/client/error.ts';
+export type { ApiErrorCode, ApiRequest, ApiResponse, Endpoint, RequestAdaptor, RequestSchema, ResponseAdaptor, ResponseSchema } from '@/types/sdk.ts';
 export type { Fetcher, FetcherHeaders, FetcherRequestInit, FetcherResponse, WebFetcher, WebFetcherRequestInit } from 'universal-fetch-type';
 
 // xivapi：结构化游戏数据 API，两个 edition。

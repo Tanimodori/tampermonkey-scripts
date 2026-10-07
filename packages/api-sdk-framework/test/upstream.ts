@@ -51,3 +51,14 @@ export function upstreamUnreachable(cause: unknown) {
     throw cause;
   });
 }
+
+/** 迟迟不答的那一次：收下 `signal`，到点 abort 时像真实 `fetch` 一样拒收。 */
+export function upstreamHanging() {
+  return vi.fn(
+    (_url: string, init?: WebFetcherRequestInit): Promise<Response> =>
+      new Promise<Response>((_resolve, reject) => {
+        const signal = init?.signal as AbortSignal | undefined;
+        signal?.addEventListener('abort', () => reject(new Error('the operation was aborted')));
+      }),
+  );
+}

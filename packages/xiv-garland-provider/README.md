@@ -12,7 +12,7 @@ Garland Tools 国服镜像 `https://www.garlandtools.cn` 的在线访问层，�
 
 - 失败统一是框架的 `ApiError`，本包不再有 `ProviderError`，也没有它的 `kind` 分类。调用方按 `errorCode` 分流。
 - 非 2xx 由端点的 `responseAdaptor` 归类，照 `httpErrorCode` 归到框架的错误族，见「失败」。
-- 超时由 client 包一层 transport 实现（`AbortSignal.timeout`，缺省 `10_000` 毫秒），框架的 `createCall` 本身不带时限。
+- 时限由 `createGarlandClient` 的 `timeoutMs` 选项定下（缺省 `10_000` 毫秒），转成框架的 `CallOptions.timeoutMs`，由框架按次计时并 abort。它覆盖从进入 call 到 call 退出的整次调用，而不只是那次传输；到点后归 `TIMEOUT`。
 - 入参不做本地校验，与来源一致：端点的 `requestSchema` 槽一个都没写。
 
 ## 公开面
@@ -57,6 +57,7 @@ const item = await garlands.call(readItem, { id: 19890 });
 
 - 非 2xx 按状态族归类。`401` / `403` 是 `UNAUTHORIZED`，`429` 是 `RATE_LIMIT`，`5xx` 是 `SERVER_ERROR`，其余（含 `404`）是 `BAD_REQUEST`。归族之后 `status` 仍留在 `error.response.status` 上，所以既能按族分流，也能按状态码分流。
 - 2xx 上读不成 JSON 的答复是 `NETWORK_ERROR`，空体与 HTML 都算，对应来源 `readBody` 的 `shape` 一类。
+- 一次调用超过时限是 `TIMEOUT`，时限由框架按次计时，覆盖整次调用。
 - 手写谓词或 schema 判不过投影后的文档是 `BAD_OUTPUT`。
 - 地址拼不出来是 `BAD_INPUT`，框架在装配段归类。入参本身不校验。
 

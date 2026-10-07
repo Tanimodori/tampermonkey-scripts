@@ -66,6 +66,7 @@ describe('ApiErrorCodes', () => {
     expect(ApiErrorCodes).toEqual({
       BAD_INPUT: 'BAD_INPUT',
       NETWORK_ERROR: 'NETWORK_ERROR',
+      TIMEOUT: 'TIMEOUT',
       SERVER_ERROR: 'SERVER_ERROR',
       RATE_LIMIT: 'RATE_LIMIT',
       BAD_REQUEST: 'BAD_REQUEST',

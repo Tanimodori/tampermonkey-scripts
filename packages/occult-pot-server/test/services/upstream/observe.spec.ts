@@ -229,6 +229,7 @@ describe("translating the library's verdict", () => {
       BAD_REQUEST: 'ERR_UPSTREAM_BAD_REQUEST',
       SERVER_ERROR: 'ERR_UPSTREAM_FAILED',
       NETWORK_ERROR: 'ERR_UPSTREAM_FAILED',
+      TIMEOUT: 'ERR_UPSTREAM_FAILED',
       BAD_OUTPUT: 'ERR_UPSTREAM_FAILED',
       BAD_INPUT: 'ERR_CONFIG_INVALID',
     };

@@ -17,7 +17,7 @@ import {
   readStatus,
   readStatusRaw,
 } from '@/index';
-import type { GarlandEndpoint, GarlandSearchItem } from '@/index';
+import type { GarlandClient, GarlandEndpoint, GarlandSearchItem } from '@/index';
 
 /**
  * 读取那一半：一台镜像从被问到被答完的每一种回答。一切都经注入的假 fetch 走，真实服务只有端到端的活件会碰。
@@ -72,13 +72,14 @@ const json = (payload: unknown, status = 200): Fake => transport(JSON.stringify(
 const clientFor = (payload: unknown) => createGarlandClient({ fetch: json(payload).fetch });
 
 /** 一次调用的失败，断言它确实是 `ApiError`；没失败也抛。 */
-const failureOf = async <In, Out>(fake: Fake, endpoint: GarlandEndpoint<In, Out>, input: In): Promise<ApiError> => {
-  const failure = await createGarlandClient({ fetch: fake.fetch })
-    .call(endpoint, input)
-    .catch((cause: unknown) => cause);
+const failureOfClient = async <In, Out>(client: GarlandClient, endpoint: GarlandEndpoint<In, Out>, input: In): Promise<ApiError> => {
+  const failure = await client.call(endpoint, input).catch((cause: unknown) => cause);
   if (!isApiError(failure)) throw new Error(`expected an ApiError, got ${String(failure)}`);
   return failure;
 };
+
+const failureOf = <In, Out>(fake: Fake, endpoint: GarlandEndpoint<In, Out>, input: In): Promise<ApiError> =>
+  failureOfClient(createGarlandClient({ fetch: fake.fetch }), endpoint, input);
 
 describe('documents', () => {
   it('reads the requested locale from the top level, not from a `chs` sub-object', async () => {
@@ -202,10 +203,25 @@ describe('failures', () => {
     expect(error.errorCode).toBe(ApiErrorCodes.NETWORK_ERROR);
     expect(error.operation).toBe('garlandSearch');
   });
+
+  it('turns a call that outlives its timeout into `TIMEOUT`', async () => {
+    // 时限交给框架的 `CallOptions.timeoutMs`；这次传输故意不认 `signal`，框架在答复到后再看一次时限，所以超时覆盖
+    // 整次调用而不只是那次传输。
+    const client = createGarlandClient({
+      timeoutMs: 5,
+      fetch: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        return new Response(JSON.stringify(itemDocument), { status: 200, headers: { 'content-type': 'application/json' } });
+      },
+    });
+    const error = await failureOfClient(client, readItem, { id: 19890 });
+    expect(error.errorCode).toBe(ApiErrorCodes.TIMEOUT);
+    expect(error.operation).toBe('readItem');
+  });
 });
 
 describe('transport', () => {
-  it('puts a timeout on the transport, which the framework itself does not', async () => {
+  it('hands the timeout to the framework, which puts it on the transport as an abort signal', async () => {
     const fake = json(hits);
     await createGarlandClient({ fetch: fake.fetch, timeoutMs: 1234 }).call(garlandSearchRaw, { text: 'x' });
     expect(fake.inits[0]?.signal).toBeInstanceOf(AbortSignal);

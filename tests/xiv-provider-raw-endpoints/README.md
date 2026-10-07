@@ -33,7 +33,7 @@
 ## 依赖取舍
 
 - **不声明 `zod` 与 `papaparse`。** 它们不在这道门的正向侧：本项目只经三个 provider 的 `package.json#exports` 导入。它们也不进 `vite.config.ts` 的 `external`——external 会让它们变成产物顶部的 import 说明符，负向断言反而看不见。于是墙一破，它们就被真的解析、打包进产物，`papaparse_min` / `_zod` / schema 常数名随之出现，断言挂掉。（实测：两个包虽不被本项目声明，却能从 provider 自己的 `node_modules` 解析到——`xiv-api-provider` 把 zod 记在 devDependencies、`xiv-datamine-provider` 把 papaparse 记在 dependencies，pnpm 都链进了各自的 `node_modules`，所以破墙的表现是「产物里混进来」，不是「构建解析不到」。探针验证过。）
-- **`api-sdk-framework` 不入 `package.json`，在本地 `vite.config.ts` 里 external 掉。** garland 与 datamine 的 client 层会值导入它（`createCall` / `ApiError`），两个 provider 自己也都把它 external。这里同样 external 还有第二个理由：两个 entry 都到得了它，内联会变成跨 entry 共享模块，rolldown 会把它提成一个第四块，`dist/` 就不再正好是本项目要读的三个产物。既然不解析，也就不需要安装，因此不声明。（注：xiv-api-provider 的 `dist/` 自己把 `api-sdk-framework` 的代码内联进了 `core.js`，并不外部导入它；这条只为 garland 与 datamine 而写。）
+- **`api-sdk-framework` 不入 `package.json`，在本地 `vite.config.ts` 里 external 掉。** garland 与 datamine 的 client 层会值导入它（`createCall` / `ApiError`），两个 provider 自己也都把它 external。这里同样 external 还有第二个理由：两个 entry 都到得了它，内联会变成跨 entry 共享模块，rolldown 会把它提成一个第四块，`dist/` 就不再正好是本项目要读的三个产物。既然不解析，也就不需要安装，因此不声明。（注：三个 provider 的 `dist/` 现在都不内联 `api-sdk-framework`，一律 external、由消费方解析。）
 - **声明三个 provider 与 `universal-fetch-type`。** entry 里写了 `WebFetcher`，所以类型侧要可达；三个 provider 是 workspace 依赖，都写 `workspace:*`。
 
 ## 刻意不测什么

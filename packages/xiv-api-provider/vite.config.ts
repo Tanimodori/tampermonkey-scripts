@@ -44,7 +44,10 @@ export default defineConfig({
       // entry's module graph and must not be inlined: the consumer resolves it. Whether a consumer naming only
       // `Raw` endpoints (or the slotless ones) really avoids it depends on the chunk partition below surviving
       // into `dist/`, and `tests/xiv-datamine-polyfill-e2e-test` measures the result from outside.
-      external: ['zod'],
+      // `api-sdk-framework` is the same kind of dependency for the same reason — `ApiError` is the failure type
+      // a caller branches on, so a second copy inside this bundle would break `instanceof` against the
+      // caller's own import.
+      external: ['zod', 'api-sdk-framework'],
       // The partition, from the wall outward: `schema` (`endpoints/schema.ts` and `endpoints/verified.ts`)
       // becomes a chunk of its own, and `core` takes everything left. Dependencies are not captured into a
       // group, which keeps the direction acyclic — `core` imports nothing back — and the wall droppable: a

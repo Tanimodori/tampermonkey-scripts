@@ -1,84 +1,37 @@
+import { ApiErrorCodes } from 'api-sdk-framework';
+import type { ApiErrorCode } from '@/types/sdk.ts';
+
 /**
- * 这个包只抛一种失败，以及把抛出处不知道的信息补上的包装。
+ * 这个 provider 自己的失败词汇，以及非 2xx 的归族。
  *
- * 一次调用只抛 `ProviderError`。抛出处写下它理解的——kind、消息、收到的状态码——地址与 `operation` 由调用链补
- * 上，于是从响应适配器里抛出的失败也点得名是哪次读取。已经是 `ProviderError` 的原样保留：包装只填空着的字段，
- * 不改判。
+ * 失败统一是 `api-sdk-framework` 的 `ApiError`，本包没有自己的错误类。框架的 `ApiErrorCodes` 覆盖了大部分来路：
+ * 装配失败归 `BAD_INPUT`、收不到答复归 `NETWORK_ERROR`、超时归 `TIMEOUT`、投影或校验不过归 `BAD_OUTPUT`，非 2xx
+ * 则由端点在 `responseAdaptor` 里按这里的表归族。换框架前这些是 `ProviderError` 的 `kind`（`input` / `network` /
+ * `timeout` / `shape` / `http`），一一对应，只是名字换成了 `errorCode`。
+ *
+ * 有一条不是框架通用族的一员：「这个 edition 根本没有这条路由」在发请求之前就判掉了，它不是上游对这次请求的回答，
+ * 而是一个能力事实。它因此有自己的码，且只由本包抛出。
  */
-
-export type Provider = 'xivapi';
-
-/** 一次读取可能失败在哪一层：装配归 `input`，发出归 `network`/`timeout`，答复归 `http`/`shape`，发请求前就判掉的拒绝归 `unsupported`。 */
-export type ProviderErrorKind = 'http' | 'network' | 'timeout' | 'shape' | 'unsupported' | 'input';
-
-/** 抛出处能供给的全部字段；`url` 与 `operation` 通常由调用链补上。 */
-export interface ProviderErrorInit {
-  readonly kind: ProviderErrorKind;
-  readonly provider: Provider;
-  readonly message: string;
-  readonly url?: string | null;
-  readonly operation?: string | null;
-  readonly status?: number | null;
-  readonly apiCode?: number | null;
-  readonly cause?: unknown;
-}
-
-export class ProviderError extends Error {
-  readonly kind: ProviderErrorKind;
-  readonly provider: Provider;
-  /** 请求地址；抛出处不知道时由调用链补上。 */
-  url: string | null;
-  /** endpoint 的 `operation`；由调用链补上。 */
-  operation: string | null;
-  /** 收到过的 HTTP 状态码。 */
-  readonly status: number | null;
-  /** 服务端发来的 JSON 错误体里的 `code`。 */
-  readonly apiCode: number | null;
-  /**
-   * 声明而不是传给 `super`：两参数的 `Error` 构造函数是 ES2022，而本包以 ES2020 为目标，
-   * 让产物在 userscript 能跑的地方都跑得起来。
-   */
-  readonly cause?: unknown;
-
-  constructor(init: ProviderErrorInit) {
-    super(init.message);
-    this.name = 'ProviderError';
-    this.kind = init.kind;
-    this.provider = init.provider;
-    this.url = init.url ?? null;
-    this.operation = init.operation ?? null;
-    this.status = init.status ?? null;
-    this.apiCode = init.apiCode ?? null;
-    this.cause = init.cause;
-  }
-}
-
-export const isProviderError = (error: unknown): error is ProviderError => error instanceof ProviderError;
 
 /**
- * 还不是 `ProviderError` 的按这份 init 新建，原错误留在 `cause`；已经是 `ProviderError` 的只补它空着的字段
- * （`??=`），保留抛出处下的判断。
+ * 「这个 edition 没有这条路由」：由 `listVersions` 在装配阶段抛出，那时还没有发出任何请求。
+ *
+ * 国服对 `/version` 回的是零正文的 404，读不出原因，所以这一条是发请求之前就成立的能力判断，而不是一次失败答复的
+ * 归类；`UNSUPPORTED` 与「上游答了 4xx」因此必须分得开。
  */
-export const wrapProviderError = (
-  cause: unknown,
-  init: {
-    readonly kind: ProviderErrorKind;
-    readonly provider: Provider;
-    readonly url?: string | null;
-    readonly operation?: string | null;
-    readonly message?: string;
-    readonly status?: number | null;
-    readonly apiCode?: number | null;
-  },
-): ProviderError => {
-  if (isProviderError(cause)) {
-    cause.url ??= init.url ?? null;
-    cause.operation ??= init.operation ?? null;
-    return cause;
-  }
-  return new ProviderError({
-    ...init,
-    message: init.message ?? (cause instanceof Error ? cause.message : String(cause)),
-    cause,
-  });
+export const UNSUPPORTED: ApiErrorCode = 'UNSUPPORTED';
+
+/**
+ * 非 2xx 答复按框架的错误族归一个码：401/403 归 `UNAUTHORIZED`，429 归 `RATE_LIMIT`，5xx 归 `SERVER_ERROR`，
+ * 其余（含 404）归 `BAD_REQUEST`。
+ *
+ * 框架的 `createCall` 自己不判状态码，端点的 `responseAdaptor` 是唯一同时看得到状态与答复的地方，归类因此由
+ * `@/client/http.ts` 的 `ensureOk` 在每个端点的 raw 装配里调用。归族之后 `status` 仍留在错误的 `response.status`
+ * 上，调用方既能按族分流，也能按状态码分流。
+ */
+export const httpErrorCode = (status: number): ApiErrorCode => {
+  if (status === 401 || status === 403) return ApiErrorCodes.UNAUTHORIZED;
+  if (status === 429) return ApiErrorCodes.RATE_LIMIT;
+  if (status >= 500) return ApiErrorCodes.SERVER_ERROR;
+  return ApiErrorCodes.BAD_REQUEST;
 };

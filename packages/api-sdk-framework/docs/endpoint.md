@@ -24,6 +24,8 @@ export interface Endpoint<Context, In, Out> {
   readonly responseReader?: ResponseReader<Context, ApiResponse>;
   /** 只换 body 的读法；缺省 `raw.json()` */
   readonly responseBodyReader?: ResponseBodyReader<Context>;
+  /** 该端点自己的时限，优先于 `CallOptions.timeoutMs` */
+  readonly timeoutMs?: number;
   /** 参数适配器，把入参造成要发的请求 */
   readonly requestAdaptor: RequestAdaptor<Context, In, ApiRequest>;
   /** 返回值适配器，把到达的响应造成调用方所要的 `Out` */
@@ -33,6 +35,7 @@ export interface Endpoint<Context, In, Out> {
 
 - `requestAdaptor` 拼出 `ApiRequest`，地址、动词、头字段与凭据都在那里。
 - `responseAdaptor` 判定成败并读出所要的那一段，`verifyResponseCode` 与 `useBodyUnpacker` 是为此准备的通用件。
+- `timeoutMs` 是端点自己的时限，优先于 `CallOptions.timeoutMs`；到点后这次调用抛 `TIMEOUT`。
 - 两个校验槽只要求 `parse` 契约，不引入校验库；schema 与它描述的形状住在一起。
 
 ## 读法

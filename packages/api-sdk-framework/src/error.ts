@@ -11,6 +11,8 @@ export const ApiErrorCodes = {
   BAD_INPUT: 'BAD_INPUT',
   /** 无法收到上游的响应：连接失败、body 未到、到的不是端点声明的形状（缺省是 JSON）。 */
   NETWORK_ERROR: 'NETWORK_ERROR',
+  /** 一次调用超过了时限。 */
+  TIMEOUT: 'TIMEOUT',
   /** 上游 5xx。 */
   SERVER_ERROR: 'SERVER_ERROR',
   /** 上游在限流：429。 */

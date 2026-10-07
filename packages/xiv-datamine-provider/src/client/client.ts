@@ -6,11 +6,13 @@ import type { DatamineEndpoint } from '@/types/sdk';
 /**
  * SaintCoinach 解包数据集的在线访问：一张表一个文件、一语种一份 CSV。
  *
- * client 持有传输接缝——包括一张表那么大的 body 需要的更长时限——并执行 `@/endpoints/raw.ts` 里的端点。这个
- * provider 不认识任何一张表：列的含义交给调用方，404 在这里是正常答案，因为有些语种就是不带某张表。
+ * client 持有传输接缝，并执行 `@/endpoints/raw.ts` 里的端点。这个 provider 不认识任何一张表：列的含义交给调用
+ * 方，404 在这里是正常答案，因为有些语种就是不带某张表。
  *
- * 一次往返交给框架的 `createCall`，失败因此统一是 `ApiError`，这个 client 加在上面的只有框架不知道的两件事：
- * 给传输一条时限，以及把这一次的入参交给适配器——`@/endpoints/raw.ts` 的 404 归类要写出"哪张表"。
+ * 一次往返交给框架的 `createCall`，失败因此统一是 `ApiError`，时限也由框架的 `CallOptions.timeoutMs` 施加——
+ * 从进入 call 起算到 call 退出止，覆盖整次调用而不只是那次传输。这个 client 加在上面的只有框架不知道的两件事：
+ * 把默认时限交给框架（这里的表能到 19 MB，等得比 API provider 久），以及把这一次的入参交给适配器——
+ * `@/endpoints/raw.ts` 的 404 归类要写出"哪张表"。
  */
 
 export interface DatamineClientOptions {
@@ -19,6 +21,7 @@ export interface DatamineClientOptions {
    * 的实现，那是 `fetch` 自己不做的。
    */
   readonly fetch?: WebFetcher;
+  /** 整次调用的时限；默认 `DEFAULT_TIMEOUT_MS`。由框架施加，从进入 `call` 起算到退出止。 */
   readonly timeoutMs?: number;
 }
 
@@ -43,14 +46,12 @@ const withInput = (client: DatamineClient, input: unknown): CallContext => ({ ca
 /** 这一次调用的入参；只有 `call` 造的那些上下文上有它。不在包的公开面上：`@/index.ts` 不转出这个名字。 */
 export const inputOf = (context: DatamineClient): unknown => (context as Partial<CallContext>).input;
 
-/** 给一次往返加一条时限。这条传输要搬的表能到 19 MB，所以等得比 API provider 久。 */
-const withTimeout =
-  (transport: WebFetcher, timeoutMs: number): WebFetcher =>
-  (url, init) =>
-    transport(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
-
 export const createDatamineClient = (options: DatamineClientOptions = {}): DatamineClient => {
-  const call = createCall<DatamineClient>({ transport: withTimeout(options.fetch ?? globalThis.fetch, options.timeoutMs ?? DEFAULT_TIMEOUT_MS) });
+  // 时限交给框架：它管整次调用（装配、传输、读答复），而不是只在那次传输外面挂一条。
+  const call = createCall<DatamineClient>({
+    transport: options.fetch ?? globalThis.fetch,
+    timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+  });
 
   const client: DatamineClient = {
     call: <In, Out>(endpoint: DatamineEndpoint<In, Out>, input: In) => call(withInput(client, input), endpoint, input),

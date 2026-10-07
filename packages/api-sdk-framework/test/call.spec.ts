@@ -2,11 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { ApiError, ApiErrorCodes, createCall, useBodyUnpacker, verifyResponseCode } from '@/index';
 import type { ApiRequest, ApiResponse, Endpoint, RequestSchema, ResponseSchema } from '@/index';
 import { BASE_URL, OK_BODY, PAYLOAD, TOKEN } from './fixtures';
-import { upstreamNotJson, upstreamOk, upstreamStatus, upstreamUnreachable } from './upstream';
+import { upstreamHanging, upstreamNotJson, upstreamOk, upstreamStatus, upstreamUnreachable } from './upstream';
 
 /**
  * 调用链的三段：装配归 BAD_INPUT，发出与读取归 NETWORK_ERROR，判定与投影归 BAD_OUTPUT；已是 ApiError 的原样上抛。
- * 上游只由 `upstream.ts` 的自定义 fetch 扮演，作为 `transport` 递给 `createCall`。
+ * 时限由 `CallOptions.timeoutMs` 或端点上的 `timeoutMs` 定下，到点抛 TIMEOUT。上游只由 `upstream.ts` 的自定义
+ * fetch 扮演，作为 `transport` 递给 `createCall`。
  */
 
 /** 一次调用用的上下文：适配器从这里取地址与凭据。 */
@@ -212,5 +213,102 @@ describe('createCall', () => {
         { limit: 100 },
       ),
     ).rejects.toThrow(expect.objectContaining({ errorCode: ApiErrorCodes.UNAUTHORIZED, message: 'HTTP 401' }));
+  });
+});
+
+describe('createCall 的时限', () => {
+  it('不传 timeoutMs：transport 收到的 init 不带 signal', async () => {
+    const transport = upstreamOk();
+    const call = createCall<TestContext>({ transport });
+
+    await call(context, endpoint(), { limit: 100 });
+
+    expect(transport.mock.calls[0]?.[1]).not.toHaveProperty('signal');
+  });
+
+  it('传了 timeoutMs：init 上原有字段保留，signal 是 AbortSignal', async () => {
+    const transport = upstreamOk();
+    const call = createCall<TestContext>({ transport, timeoutMs: 1_000 });
+
+    await call(context, endpoint(), { limit: 100 });
+
+    const init = transport.mock.calls[0]?.[1];
+    expect(init?.headers).toEqual({ Authorization: `Bearer ${TOKEN}` });
+    expect(init?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('transport 迟迟不答：到点抛 TIMEOUT，不看接缝抛了什么', async () => {
+    vi.useFakeTimers();
+    try {
+      const transport = upstreamHanging();
+      const call = createCall<TestContext>({ transport, timeoutMs: 500 });
+      const attempt = call(context, endpoint(), { limit: 100 });
+      const rejected = expect(attempt).rejects.toThrow(
+        expect.objectContaining({
+          errorCode: ApiErrorCodes.TIMEOUT,
+          operation: 'listMessages',
+          request: expect.objectContaining({ url: MESSAGE_URL }),
+        }),
+      );
+
+      await vi.advanceTimersByTimeAsync(500);
+
+      await rejected;
+      await expect(attempt).rejects.toBeInstanceOf(ApiError);
+      expect(transport).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('端点的 timeoutMs 覆盖 CallOptions 的', async () => {
+    vi.useFakeTimers();
+    try {
+      const transport = upstreamHanging();
+      const call = createCall<TestContext>({ transport, timeoutMs: 500 });
+      const attempt = call(context, endpoint({ timeoutMs: 10_000 }), { limit: 100 });
+      const rejected = expect(attempt).rejects.toThrow(expect.objectContaining({ errorCode: ApiErrorCodes.TIMEOUT }));
+
+      // CallOptions 的 500ms 到了，端点自己的 10s 还没到，这一次调用不该被中止。
+      await vi.advanceTimersByTimeAsync(500);
+      expect(transport.mock.calls[0]?.[1]?.signal?.aborted).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(9_500);
+
+      await rejected;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('时限也覆盖非 transport 的等待段：读答复拖过时限也归 TIMEOUT', async () => {
+    vi.useFakeTimers();
+    try {
+      const transport = upstreamOk();
+      const call = createCall<TestContext>({ transport, timeoutMs: 500 });
+      const read = (): Promise<unknown> => new Promise((resolve) => setTimeout(() => resolve(OK_BODY), 1_000));
+      const attempt = call(context, endpoint({ responseBodyReader: read }), { limit: 100 });
+      const rejected = expect(attempt).rejects.toThrow(expect.objectContaining({ errorCode: ApiErrorCodes.TIMEOUT, operation: 'listMessages' }));
+
+      await vi.advanceTimersByTimeAsync(1_000);
+
+      await rejected;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('调用退出后计时器已清掉', async () => {
+    vi.useFakeTimers();
+    try {
+      const transport = upstreamOk();
+      const call = createCall<TestContext>({ transport, timeoutMs: 1_000 });
+
+      await call(context, endpoint(), { limit: 100 });
+
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

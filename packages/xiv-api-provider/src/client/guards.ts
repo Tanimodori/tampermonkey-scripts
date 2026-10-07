@@ -3,7 +3,7 @@ import type { ApiErrorResponse, Fields, IconField, RowResult, SheetName } from '
 /**
  * xivapi 的运行时的形状检查——手写，看得到的地方没有 zod。
  *
- * 两份装配都用这些谓词判定响应：端点的响应适配器先过它们再投影，不过就是 `shape`。zod 不在这里跑；
+ * 两份装配都用这些谓词判定响应：端点的响应适配器先过它们再投影，不过就是 `BAD_OUTPUT`。zod 不在这里跑；
  * verified 端点会额外把投影按 `@/endpoints/schema.ts` 的 schema 解析一次，测试也拿它们校验返回的 body。传入参数
  * 一概不校验——错误的 sheet 名自有 API 的 404 回答，自己先校验只会把服务端的答案换成本地的猜测。
  */

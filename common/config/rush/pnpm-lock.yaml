@@ -310,6 +310,10 @@ importers:
         version: 1.33.0
 
   ../../packages/xiv-api-provider:
+    dependencies:
+      api-sdk-framework:
+        specifier: workspace:*
+        version: link:../api-sdk-framework
     devDependencies:
       '@microsoft/api-extractor':
         specifier: ^7.59.1

@@ -14,7 +14,7 @@ import { fetchSheetCsv } from './raw';
  * 参与：`raw.githubusercontent.com` 直接按 ref 名服务，于是没有限流、也没有 release 打 tag 的滞后。404 在这
  * 里是正常答案，有些语种就是不带某张表。
  *
- * 地址那几项常数在 `@/client/constants.ts`，因为 `@/client/client.ts`（时限）与 `./raw.ts`（失败消息）也要用它们。
+ * 地址那几项常数在 `@/client/constants.ts`，因为 `@/client/client.ts`（默认时限）与 `./raw.ts`（失败消息）也要用它们。
  */
 
 export interface DatamineOptions {

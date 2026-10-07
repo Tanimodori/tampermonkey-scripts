@@ -4,22 +4,24 @@
 
 - [xivapi](xivapi.md) —— 结构化游戏数据,两个 edition:国际站 boilmaster 与国服 cafemaker v2。
 
-两个 edition 的路径、参数与成功信封一致,所以它们是一个带 edition 参数的客户端,而不是两个 provider——差异只是能力上的,逐条列在 [xivapi：能力差异](xivapi.md#能力差异)。国服镜像 `https://www.garlandtools.cn` 是另一回事:没有公开契约、没有版本协商,按种类返回形状各不相同的文档,那一路已拆成独立包 [`xiv-garland-provider`](../../../xiv-garland-provider/README.md),本包不含它。包内按层分目录:`src/endpoints/` 是端点声明与 URL 构造,`src/client/` 是传输、失败类型、运行时判定与 edition 描述符,`src/utils/` 是纯工具,`src/types/sdk.ts` 是调用链的契约。xivapi 经 `client.call(endpoint, input)` 执行自己的端点,失败一律抛 `ProviderError`,注入 `fetch` 是唯一的测试缝隙,类型是本仓 `universal-fetch-type` 的 `WebFetcher`,与 `tencent-doc-sdk` 的 transport 同一档。
+两个 edition 的路径、参数与成功信封一致,所以它们是一个带 edition 参数的客户端,而不是两个 provider——差异只是能力上的,逐条列在 [xivapi：能力差异](xivapi.md#能力差异)。国服镜像 `https://www.garlandtools.cn` 是另一回事:没有公开契约、没有版本协商,按种类返回形状各不相同的文档,那一路已拆成独立包 [`xiv-garland-provider`](../../../xiv-garland-provider/README.md),本包不含它。包内按层分目录:`src/endpoints/` 是端点声明与 URL 构造,`src/client/` 是传输辅助、失败词汇、运行时判定与 edition 描述符,`src/utils/` 是纯工具,`src/types/sdk.ts` 是调用链的契约(从框架转出)。xivapi 经 `client.call(endpoint, input)` 执行自己的端点,一次往返与失败类型都由 [`api-sdk-framework`](../../../api-sdk-framework/README.md) 提供,失败一律抛它的 `ApiError`,注入 `fetch` 是唯一的测试缝隙,类型是本仓 `universal-fetch-type` 的 `WebFetcher`,与 `tencent-doc-sdk` 的 transport 同一档。
 
 ## 入口
 
 一个默认入口 `xiv-api-provider`,即 `src/index.ts`:文件只做挑选与命名再导出,不写逻辑,按共用与 xivapi 分组。xivapi 从这里出,用不到的那几个由调用方的打包器删掉——包声明 `sideEffects: false`,产物又沿 zod 一道墙分块,没被牵动的块连同它背着的重依赖整块不进产物;只命名 `Raw` 端点(或 `readAsset` 这类没有校验对的)的产物里没有 schema 引擎。
 
-- 共用 —— `createMemo`、图标 id 与路径换算、调用链的契约类型(`Endpoint`、适配器、`ApiRequest` / `ApiResponse`)、`ProviderError` / `isProviderError`。catch 处一定要用它们,实现只有一份。
+- 共用 —— `createMemo`、图标 id 与路径换算、调用链的契约类型(`Endpoint`、适配器、`ApiRequest` / `ApiResponse`)、本包自己的错误码 `UNSUPPORTED`。调用链(`createCall`)、契约类型与失败类型 `ApiError` 都来自 `api-sdk-framework`,本包不再自己造一份错误类,也不把它转出——转出会多一份实例,`instanceof` 就不认调用方手里那个。
 - xivapi —— edition 描述符、URL 构造、信封判定、每个操作的两份装配与客户端。
 
 要把离线数据固化进产物,用另一个包 `xiv-datamine-polyfill`,它调 `xiv-datamine-provider` 的函数在构建期生成模块。
 
 ## zod 与校验
 
-schema 只在 `src/endpoints/schema.ts`,是包内值导入 zod 的唯一地方,业务代码与类型面引用它只用 `import type`。每个操作有两份装配:raw(`src/endpoints/raw.ts`)只写 `operation`、响应体读取方式与适配器,verified(`src/endpoints/verified.ts`)展开 raw 的声明再补 `responseSchema`,默认名归 verified,无校验的那一份带 `Raw` 后缀。适配器先用 `src/client/guards.ts` 里的手写 `typeof` 谓词判定响应,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `shape`。没有同构 schema 的操作不配对,保持本名(`readAsset`)。传入参数一律不做本地校验,错误的 sheet 名自有 API 的 404 回答,自己先校验只会把服务端的答案换成本地的猜测。
+schema 只在 `src/endpoints/schema.ts`,是包内值导入 zod 的唯一地方,业务代码与类型面引用它只用 `import type`。每个操作有两份装配:raw(`src/endpoints/raw.ts`)只写 `operation`、body 读法与适配器,verified(`src/endpoints/verified.ts`)展开 raw 的声明再补 `responseSchema`,默认名归 verified,无校验的那一份带 `Raw` 后缀。body 读法用框架的 `responseBodyReader` 表达:JSON 端点共用 `src/client/http.ts` 的 `readJsonBody`,字节端点(`readAsset`)自己读。适配器先用 `src/client/guards.ts` 里的手写 `typeof` 谓词判定响应,verified 侧再对投影输出跑一次 `schema.parse`,不过归 `BAD_OUTPUT`。没有同构 schema 的操作不配对,保持本名(`readAsset`)。传入参数一律不做本地校验,错误的 sheet 名自有 API 的 404 回答,自己先校验只会把服务端的答案换成本地的猜测。
 
 zod 记在 `devDependencies`:本包私有、只经 `workspace:*` 被消费,pnpm 会把 `devDependencies` 一样链进本包的 `node_modules`,所以声明里对 zod 的引用(`z.infer` 展开出的类型与槽类型)照旧解析得到。对外发布时 zod 的落位要改,按 [api-sdk-design-example 的校验与 zod](../../../../tests/api-sdk-design-example/docs/validation.md) 改 optional peer,是不把 zod 作为运行时依赖承诺出去的做法。
+
+`api-sdk-framework` 不同:它是运行期依赖,记在 `dependencies`,产物里也不内联(`external`),由消费方解析——`ApiError` 是调用方分支判断的失败类型,内联一份会破坏它与调用方自己那份的 `instanceof`。
 
 只命名 raw 的一方不得携带 schema 引擎,[e2e 测试](../../../../tests/xiv-datamine-polyfill-e2e-test/README.md) 从包外检查这一性质;产物侧的分离方式:
 

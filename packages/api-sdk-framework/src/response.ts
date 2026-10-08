@@ -2,22 +2,39 @@ import { ApiError, ApiErrorCodes, wrapApiError } from '@/error';
 import type { ApiResponse, BodyUnpacker, BodyUnpackerOptions } from '@/types';
 
 /**
- * response 切面：答复的通用读取。`verifyResponseCode` 只看 HTTP 状态码，`useBodyUnpacker` 读信封里的 code、msg
- * 与 data；更细的答复契约由下游自行实现 `BodyUnpacker`。
+ * response 切面：答复的通用读取。`verifyResponseCode` 只看 HTTP 状态码，把非 2xx 全部归入错误码；`useBodyUnpacker`
+ * 读信封里的 code、msg 与 data；更细的答复契约由下游自行实现 `BodyUnpacker`。
  */
 
-/** HTTP 状态码的通用校验：401/403 归 `UNAUTHORIZED`，429 归 `RATE_LIMIT`，5xx 归 `SERVER_ERROR`；其余状态静默通过。 */
+/** 失败消息：正文是对象且 `msg`/`message` 是非空字符串时用它，否则按状态码措辞。 */
+const failureMessageOf = (body: unknown, status: number): string => {
+  if (typeof body === 'object' && body !== null) {
+    const { msg, message } = body as { msg?: unknown; message?: unknown };
+    if (typeof msg === 'string' && msg !== '') return msg;
+    if (typeof message === 'string' && message !== '') return message;
+  }
+  return `HTTP ${status}`;
+};
+
+/**
+ * HTTP 状态码的通用校验：2xx 静默通过；401/403 归 `UNAUTHORIZED`，404 归 `ENDPOINT_NOT_FOUND`，429 归 `RATE_LIMIT`，
+ * >=500 归 `SERVER_ERROR`，其余非 2xx（400/422 等）归 `BAD_REQUEST`。消息取正文里的 `msg` 或 `message`，取不到
+ * 才是 `HTTP ${status}`。
+ */
 export function verifyResponseCode(response: ApiResponse): void {
-  const { status } = response;
-  if (status === 401 || status === 403) {
-    throw new ApiError({ errorCode: ApiErrorCodes.UNAUTHORIZED, message: `HTTP ${status}`, response });
-  }
-  if (status === 429) {
-    throw new ApiError({ errorCode: ApiErrorCodes.RATE_LIMIT, message: `HTTP ${status}`, response });
-  }
-  if (status >= 500) {
-    throw new ApiError({ errorCode: ApiErrorCodes.SERVER_ERROR, message: `HTTP ${status}`, response });
-  }
+  const { status, body } = response;
+  if (status >= 200 && status < 300) return;
+  const errorCode =
+    status === 401 || status === 403
+      ? ApiErrorCodes.UNAUTHORIZED
+      : status === 404
+        ? ApiErrorCodes.ENDPOINT_NOT_FOUND
+        : status === 429
+          ? ApiErrorCodes.RATE_LIMIT
+          : status >= 500
+            ? ApiErrorCodes.SERVER_ERROR
+            : ApiErrorCodes.BAD_REQUEST;
+  throw new ApiError({ errorCode, message: failureMessageOf(body, status), response });
 }
 
 /** 一次读取的规则：字符串是 body 的属性名，函数收下 body。 */

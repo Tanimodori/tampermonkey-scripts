@@ -7,12 +7,12 @@ import type { DatamineEndpoint } from '@/types/sdk';
  * SaintCoinach 解包数据集的在线访问：一张表一个文件、一语种一份 CSV。
  *
  * client 持有传输接缝，并执行 `@/endpoints/raw.ts` 里的端点。这个 provider 不认识任何一张表：列的含义交给调用
- * 方，404 在这里是正常答案，因为有些语种就是不带某张表。
+ * 方；一张表在一个语种里不存在时，答复是 404，由框架归 `ENDPOINT_NOT_FOUND`，调用方据此把它与请求失败分开。
  *
  * 一次往返交给框架的 `createCall`，失败因此统一是 `ApiError`，时限也由框架的 `CallOptions.timeoutMs` 施加——
  * 从进入 call 起算到 call 退出止，覆盖整次调用而不只是那次传输。这个 client 加在上面的只有框架不知道的两件事：
  * 把默认时限交给框架（这里的表能到 19 MB，等得比 API provider 久），以及把这一次的入参交给适配器——
- * `@/endpoints/raw.ts` 的 404 归类要写出"哪张表"。
+ * `@/endpoints/raw.ts` 的失败消息要写出"哪张表"。
  */
 
 export interface DatamineClientOptions {

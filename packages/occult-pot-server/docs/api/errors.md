@@ -74,7 +74,7 @@
 - HTTP：400
 - `message`：
   - `Tencent Docs rejected the request (ret=${ret}, msg=${msg})` 参数类业务码
-  - `Tencent Docs request failed (ret=${ret})` 其它非零 `ret`
+  - `Tencent Docs request failed (ret=${ret}, msg=${msg})` 其它非零 `ret`
 - 出错原因：读表或写表时，腾讯文档以参数类业务码（`ret` 在 400000–499999）或其它非零 `ret` 拒绝这次调用。
 
 ### 上游凭据不可用
@@ -82,7 +82,7 @@
 - `code`：`ERR_UPSTREAM_AUTH_FAILED`
 - HTTP：503
 - `message`：
-  - `Tencent Docs returned HTTP ${status} for ${operation}` 上游回 401 或 403
+  - `Tencent Docs returned HTTP ${status} for ${operation} (ret=${ret}, msg=${msg})` 上游回 401 或 403
   - `Tencent Docs rejected the credential (ret=${ret}, msg=${msg})` 凭据类业务码
   - `Tencent Docs refused to refresh the access token (body: ${body})` 刷新凭据被拒
 - 出错原因：腾讯文档回 401 或 403，或返回凭据类业务码 `10007`、`10302`、`10303`、`10313`、`37019`，或刷新凭据时被拒。
@@ -99,12 +99,12 @@
 - `code`：`ERR_UPSTREAM_FAILED`
 - HTTP：502
 - `message`：
-  - `Tencent Docs returned HTTP ${status} for ${operation}` 上游 5xx
+  - `Tencent Docs returned HTTP ${status} for ${operation} (ret=${ret}, msg=${msg})` 上游 5xx，或 404——地址上没东西（`OPS_DOCS_API_BASE` 指错、路由变了，或中间一层挡住了），两条契约都这么判
   - `Request to ${url} failed` 连不上、超时，或正文不是 JSON
   - `Unexpected response from Tencent Docs for ${operation} (status=${status}, body=${body})` 回答里没有可读的业务码
   - `Tencent Docs answered ${operation} with a shape that cannot be read (${issues}; body: ${body})` 有业务码，但回答的形状与该端点的类型不符
   - `Tencent Docs user info carried no openID (body: ${body})` 用户信息里没有 `openID`
-- 出错原因：上游 5xx、连不上、超时、读不出的正文（不是 JSON）、读不出业务码的信封、字段形状不符、用户信息里没有 `openID`。任何一种都直接返回失败，服务端不再重发，见 [与腾讯文档通讯](upstream/README.md)。
+- 出错原因：上游 5xx、404（地址不对）、连不上、超时、读不出的正文（不是 JSON）、读不出业务码的信封、字段形状不符、用户信息里没有 `openID`。任何一种都直接返回失败，服务端不再重发，见 [与腾讯文档通讯](upstream/README.md)。
 
 ### 配置不可用
 

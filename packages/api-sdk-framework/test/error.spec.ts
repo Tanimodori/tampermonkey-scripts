@@ -71,6 +71,7 @@ describe('ApiErrorCodes', () => {
       RATE_LIMIT: 'RATE_LIMIT',
       BAD_REQUEST: 'BAD_REQUEST',
       UNAUTHORIZED: 'UNAUTHORIZED',
+      ENDPOINT_NOT_FOUND: 'ENDPOINT_NOT_FOUND',
       BAD_OUTPUT: 'BAD_OUTPUT',
     });
   });

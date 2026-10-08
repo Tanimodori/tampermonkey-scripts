@@ -5,7 +5,7 @@
  * `createCall` / `Endpoint` / `ApiError` / `ApiErrorCodes`，包内没有自己的一套调用链与错误类。失败统一是
  * `ApiError`；`zod` 只在两个端点组的 `schema.ts` 里值导入，业务代码与类型面一律 `import type`。
  *
- * 这个文件只做挑选与再导出，不写逻辑。包内按层分：`@/client/` 是传输、失败、运行时判定、地址常数与传输辅助，
+ * 这个文件只做挑选与再导出，不写逻辑。包内按层分：`@/client/` 是传输、运行时判定、地址常数与传输辅助，
  * `@/endpoints/doc/` 与 `@/endpoints/search/` 是镜像的两个域各一套，`@/types/sdk.ts` 是调用链的契约。
  */
 

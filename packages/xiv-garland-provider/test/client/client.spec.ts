@@ -22,8 +22,9 @@ import type { GarlandClient, GarlandEndpoint, GarlandSearchItem } from '@/index'
 /**
  * 读取那一半：一台镜像从被问到被答完的每一种回答。一切都经注入的假 fetch 走，真实服务只有端到端的活件会碰。
  *
- * 判定看的是 `ApiError`：这个包是 `api-sdk-framework` 的消费方，失败只有这一种。非 2xx 由端点归族，状态仍留在
- * `error.response.status` 上；读不成 JSON 的答复归 `NETWORK_ERROR`；投影之后 schema 不过归 `BAD_OUTPUT`。
+ * 判定看的是 `ApiError`：这个包是 `api-sdk-framework` 的消费方，失败只有这一种。非 2xx 由端点在 `responseAdaptor`
+ * 里交给框架的 `verifyResponseCode` 归族，状态仍留在 `error.response.status` 上；读不成 JSON 的答复归
+ * `NETWORK_ERROR`；投影之后 schema 不过归 `BAD_OUTPUT`。
  */
 
 const itemDocument = {
@@ -166,7 +167,7 @@ describe('failures', () => {
     { status: 500, errorCode: ApiErrorCodes.SERVER_ERROR },
     { status: 503, errorCode: ApiErrorCodes.SERVER_ERROR },
     { status: 400, errorCode: ApiErrorCodes.BAD_REQUEST },
-    { status: 404, errorCode: ApiErrorCodes.BAD_REQUEST },
+    { status: 404, errorCode: ApiErrorCodes.ENDPOINT_NOT_FOUND },
   ] as const;
 
   it('classifies a non-2xx by its family and keeps the status on the error', async () => {

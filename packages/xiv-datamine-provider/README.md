@@ -8,12 +8,11 @@
 
 ## 公开面
 
-一个默认入口,`package.json#exports` 只列它一项。导出按四块分:
+一个默认入口,`package.json#exports` 只列它一项。导出按三块分:
 
 - 数据形状:`SheetRawData` 是一张表文件原样的网格(三行表头在内、每格都是字符串),`parseSheetCsv` 把 CSV 文本读成它,`useSheetTable` 再把它读成可寻址的 `SheetTable`(配 `TrimRules`)。
 - 在线访问:`sheetCsvUrl` 拼地址,`fetchSheetCsv` 是那个取文件的端点,`createDatamineClient` 装配执行它的 client,`readSheet` 把取与解析合成一次调用。
 - 常数:`HEADER_LINES`,以及上游仓库、默认 ref、默认语种与默认时限。
-- 失败词汇:`NOT_FOUND`。
 
 ## 在线取数
 
@@ -32,7 +31,7 @@ ui.rowCount;
 
 ## 失败
 
-失败统一是 `api-sdk-framework` 的 `ApiError`(这个包是框架的消费方,没有自己的错误类)。其中一条走自己的码:一张表在一个语种里不存在时,`errorCode` 是 `NOT_FOUND`,并且带着 `response.status === 404`——那是关于数据的答案,不是请求发不出去,调用方据此分得开两条路。其余非 2xx 由框架的错误族归一个码(401/403、429、5xx,剩下的是 `BAD_REQUEST`),`status` 仍留在错误的 `response.status` 上,所以既能按族分流也能按状态码分流。整次调用超过时限则由框架抛 `TIMEOUT`。以 200 发来的空体不是一张空表,是一份没有读成 CSV 的答复,归 `BAD_OUTPUT`。
+失败统一是 `api-sdk-framework` 的 `ApiError`(这个包是框架的消费方,没有自己的错误类)。非 2xx 由框架的 `verifyResponseCode` 归族:404 归 `ENDPOINT_NOT_FOUND`,401/403 归 `UNAUTHORIZED`,429 归 `RATE_LIMIT`,5xx 归 `SERVER_ERROR`,其余(400/422 等)归 `BAD_REQUEST`;`status` 仍留在错误的 `response.status` 上,所以既能按族分流也能按状态码分流。错误码虽然来自框架,失败消息却是这个包那句带坐标的:一张表在一个语种里不存在时是 `<sheet>: no <locale> sheet at <ref>`(入参省略的语种与 ref 回落到默认值),其余非 2xx 是 `<sheet>.csv failed: HTTP <status>`。一次构建读很多张表,诊断里因此点得出是哪一张——那是关于数据的答案,不是请求发不出去,调用方据此分得开两条路。整次调用超过时限则由框架抛 `TIMEOUT`。以 200 发来的空体不是一张空表,是一份没有读成 CSV 的答复,归 `BAD_OUTPUT`。
 
 CSV 自己的形状问题——表头不到三行、三行不等宽——是纯函数抛的 `Error`:那里没有请求,也没有答复。表头校验发生在字节进入调用方网格的路上,上游改了格式就在这里响,而不是到某处读列名时才炸。数据行不校验:首格不是整数 key 的行也还是行。
 

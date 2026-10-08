@@ -11,8 +11,9 @@ import { fetchSheetCsv } from './raw';
  * 字符串——列的含义留给调用方，这正是拆分的意义：可用的表是上游的（几千张），不是这个包的。
  *
  * 默认 ref 是分支头，构建因此读到当下的数据，而不必先问任何人"最新 release 是哪个"。GitHub 的 API 完全不
- * 参与：`raw.githubusercontent.com` 直接按 ref 名服务，于是没有限流、也没有 release 打 tag 的滞后。404 在这
- * 里是正常答案，有些语种就是不带某张表。
+ * 参与：`raw.githubusercontent.com` 直接按 ref 名服务，于是没有限流、也没有 release 打 tag 的滞后。一张表在一个
+ * 语种里不存在时答复是 404，由框架归 `ENDPOINT_NOT_FOUND`，失败消息则带着表、语种与 ref——那是关于数据的答案而不是请求
+ * 失败。
  *
  * 地址那几项常数在 `@/client/constants.ts`，因为 `@/client/client.ts`（默认时限）与 `./raw.ts`（失败消息）也要用它们。
  */

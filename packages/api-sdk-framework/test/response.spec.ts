@@ -11,8 +11,12 @@ const responseOf = (status: number, body: unknown): ApiResponse => ({ status, he
 
 describe('verifyResponseCode', () => {
   it.each<[number, string]>([
+    [400, ApiErrorCodes.BAD_REQUEST],
+    [422, ApiErrorCodes.BAD_REQUEST],
+    [302, ApiErrorCodes.BAD_REQUEST],
     [401, ApiErrorCodes.UNAUTHORIZED],
     [403, ApiErrorCodes.UNAUTHORIZED],
+    [404, ApiErrorCodes.ENDPOINT_NOT_FOUND],
     [429, ApiErrorCodes.RATE_LIMIT],
     [500, ApiErrorCodes.SERVER_ERROR],
     [503, ApiErrorCodes.SERVER_ERROR],
@@ -21,8 +25,26 @@ describe('verifyResponseCode', () => {
     expect(() => verifyResponseCode(response)).toThrow(expect.objectContaining({ errorCode, message: `HTTP ${status}`, response }));
   });
 
-  it.each([200, 204, 400, 404])('HTTP %i 静默通过', (status) => {
+  it.each([200, 204, 299])('HTTP %i 静默通过', (status) => {
     expect(() => verifyResponseCode(responseOf(status, {}))).not.toThrow();
+  });
+
+  it('失败消息取正文里的 msg', () => {
+    expect(() => verifyResponseCode(responseOf(404, { msg: 'route not found' }))).toThrow(
+      expect.objectContaining({ errorCode: ApiErrorCodes.ENDPOINT_NOT_FOUND, message: 'route not found' }),
+    );
+  });
+
+  it('msg 不是非空字符串时改用 message', () => {
+    expect(() => verifyResponseCode(responseOf(400, { msg: '', message: 'bad payload' }))).toThrow(
+      expect.objectContaining({ errorCode: ApiErrorCodes.BAD_REQUEST, message: 'bad payload' }),
+    );
+  });
+
+  it('正文里取不到那句话时按状态码措辞', () => {
+    expect(() => verifyResponseCode(responseOf(400, { msg: 42 }))).toThrow(expect.objectContaining({ message: 'HTTP 400' }));
+    expect(() => verifyResponseCode(responseOf(404, 'not found'))).toThrow(expect.objectContaining({ message: 'HTTP 404' }));
+    expect(() => verifyResponseCode(responseOf(500, null))).toThrow(expect.objectContaining({ message: 'HTTP 500' }));
   });
 
   it('抛出的是 ApiError', () => {

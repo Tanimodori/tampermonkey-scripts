@@ -9,8 +9,8 @@ import type { XivApiEndpoint } from '@/types/sdk.ts';
  * 一次往返的执行者是 `api-sdk-framework` 的 `createCall`，失败因此统一是框架的 `ApiError`，本包不再有自己的一套
  * 调用链与错误类。换框架前这条链自己做三件事，现在各有归处：装配失败、收不到答复、超时与投影失败由框架按
  * `BAD_INPUT` / `NETWORK_ERROR` / `TIMEOUT` / `BAD_OUTPUT` 归类；非 2xx 的归族搬进端点的 `responseAdaptor`
- * （`@/client/http.ts` 的 `ensureOk`），因为那是唯一同时看得到状态与答复的地方；时限交给框架的
- * `CallOptions.timeoutMs`，`timeoutMs` 选项转成它。
+ * （`@/client/http.ts` 的 `ensureOk`，它把归族转手给框架的 `verifyResponseCode`），因为那是唯一同时看得到状态与答复的
+ * 地方；时限交给框架的 `CallOptions.timeoutMs`，`timeoutMs` 选项转成它。
  *
  * 一次读取是什么样子归 `@/endpoints/raw.ts` 与 `@/endpoints/verified.ts` 里的端点对象，新增一个不必动这里。
  *

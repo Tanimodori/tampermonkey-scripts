@@ -1,8 +1,7 @@
-import { ApiError, ApiErrorCodes } from 'api-sdk-framework';
+import { ApiError, ApiErrorCodes, isApiError, verifyResponseCode } from 'api-sdk-framework';
 import { inputOf } from '@/client/client';
 import type { DatamineClient } from '@/client/client';
 import { DEFAULT_LOCALE, DEFAULT_REF } from '@/client/constants';
-import { NOT_FOUND, httpErrorCode } from '@/client/error';
 import type { ApiResponse, DatamineEndpoint } from '@/types/sdk';
 import { sheetCsvUrl } from './index';
 
@@ -13,7 +12,8 @@ import { sheetCsvUrl } from './index';
  * 没有 verified 的另一半，端点保持本名。
  *
  * 答复是 CSV 文本而不是 JSON，所以端点用框架的 `responseBodyReader` 换掉缺省的 `raw.json()`；状态与头字段仍由
- * 框架从原生响应取。判定与归类留在 `responseAdaptor` 里：那是唯一同时看得到状态和这一次入参的地方。
+ * 框架从原生响应取。判定与措辞留在 `responseAdaptor` 里：那是唯一同时看得到状态和这一次入参的地方——错误族仍
+ * 由框架的 `verifyResponseCode` 归（404 是它的 `ENDPOINT_NOT_FOUND`），但通用消息 `HTTP <status>` 换成本包那句带坐标的。
  */
 
 export interface FetchSheetCsvInput {
@@ -27,19 +27,24 @@ export interface FetchSheetCsvInput {
 const coordinatesOf = (client: DatamineClient): FetchSheetCsvInput => (inputOf(client) ?? {}) as FetchSheetCsvInput;
 
 /**
- * 收下一份答复：非 2xx 归类，空体按形状失败，其余交出文本。
+ * 收下一份答复：非 2xx 由框架归族、措辞换成本包那句，空体按形状失败，其余交出文本。
  *
- * `404` 走自己的码：「这个语种没这张表」是关于数据的答案，跟「请求发不出去」必须分得开。归类里抛出的错误由
- * 框架的 `call` 补上 `operation` 与 `request`，所以这里只写下状态与消息。
+ * 归族交给框架的 `verifyResponseCode`（404 归 `ENDPOINT_NOT_FOUND`，401/403 归 `UNAUTHORIZED`，429 归 `RATE_LIMIT`，
+ * 5xx 归 `SERVER_ERROR`，其余归 `BAD_REQUEST`），本包只把它的消息换掉——一次构建读很多张表，诊断里点得出"哪张
+ * 表、哪个语种、哪个 ref"才有用。错误码沿用框架给的那个，族因此不随这里的用词漂移。归类里抛出的错误由框架的
+ * `call` 补上 `operation` 与 `request`，所以这里只写下状态与消息。
  */
 const readSheetCsv = (client: DatamineClient, response: ApiResponse): string => {
   const { sheet, ref, locale } = coordinatesOf(client);
 
-  if (response.status === 404) {
-    throw new ApiError({ errorCode: NOT_FOUND, message: `${sheet}: no ${locale ?? DEFAULT_LOCALE} sheet at ${ref ?? DEFAULT_REF}`, response });
-  }
-  if (response.status < 200 || response.status >= 300) {
-    throw new ApiError({ errorCode: httpErrorCode(response.status), message: `${sheet}.csv failed: HTTP ${response.status}`, response });
+  try {
+    verifyResponseCode(response);
+  } catch (cause) {
+    // `verifyResponseCode` 只抛 `ApiError`；万一不是，原样抛出，不替它编一个码。
+    if (!isApiError(cause)) throw cause;
+    const message =
+      response.status === 404 ? `${sheet}: no ${locale ?? DEFAULT_LOCALE} sheet at ${ref ?? DEFAULT_REF}` : `${sheet}.csv failed: HTTP ${response.status}`;
+    throw new ApiError({ errorCode: cause.errorCode, message, response });
   }
 
   const text = response.body as string;

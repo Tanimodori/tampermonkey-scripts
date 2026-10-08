@@ -1,10 +1,10 @@
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { isApiError } from 'api-sdk-framework';
+import { ApiErrorCodes, isApiError } from 'api-sdk-framework';
 import type { WebFetcher } from 'universal-fetch-type';
 import { afterAll, describe, expect, it } from 'vitest';
-import { NOT_FOUND, sheetCsvUrl, useSheetTable, type SheetRawData } from 'xiv-datamine-provider';
+import { sheetCsvUrl, useSheetTable, type SheetRawData } from 'xiv-datamine-provider';
 import { loadTable, type LoadOptions } from '@/load';
 
 /**
@@ -105,8 +105,17 @@ describe('a cold cache', () => {
   });
 
   it('fails loudly for a sheet the locale does not have', async () => {
+    // The failure names the sheet it was about, because upstream's 404 wording carries the table, locale and ref
+    // — which is what keeps one build's many sheets tellable apart. The request it carries points at the same
+    // sheet, and the build stops instead of inventing a table.
     const { fetch } = server({});
-    await expect(loadTable('DataCenter', options({ cacheDir: cacheDir(), fetch }))).rejects.toThrow(/DataCenter/);
+    const pending = loadTable('DataCenter', options({ cacheDir: cacheDir(), fetch }));
+
+    await expect(pending).rejects.toThrow(/DataCenter/);
+
+    const failure = await pending.catch((cause: unknown) => cause);
+    expect(isApiError(failure)).toBe(true);
+    expect(failure).toMatchObject({ request: { url: expect.stringContaining('DataCenter') } });
   });
 
   it('reports an absent sheet as a 404 rather than a fetch that failed', async () => {
@@ -117,7 +126,7 @@ describe('a cold cache', () => {
     const failure = await loadTable('DataCenter', options({ cacheDir: cacheDir(), fetch })).catch((cause: unknown) => cause);
 
     expect(isApiError(failure)).toBe(true);
-    expect(failure).toMatchObject({ errorCode: NOT_FOUND, response: { status: 404 } });
+    expect(failure).toMatchObject({ errorCode: ApiErrorCodes.ENDPOINT_NOT_FOUND, response: { status: 404 } });
   });
 });
 

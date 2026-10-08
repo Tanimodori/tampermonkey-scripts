@@ -8,7 +8,8 @@ import type { AccessTokenInput, RefreshTokenInput, TokenResponse, UserInfo } fro
  *
  * 它们说自己的词汇：`userinfo` 的信封里身份**直接**落在 `data` 下；token 端点答复裸 body、没有信封。两者互不替对方
  * 措辞：被拒的授权也是一份答复，只有调用方知道那意味着「问运维」还是「换个新令牌继续」。这正是裸答契约买到的东西——
- * 判定表对一个没有契约的 body 不下判，写着作废刷新令牌的 `400` 因此能活着交到 `token/manager.ts` 手里。
+ * 判定表对一个没有契约的 body 不下判，写着作废刷新令牌的 `400` 因此能活着交到 `token/manager.ts` 手里。框架的状态族
+ * 同样不适用于这条契约，理由与那道窄判定都在 `@/client/error.ts` 的 `transportVerdict` 上。
  *
  * 三个端点都不带 Open API 要求的三件套头：`userinfo` 通过查询串被问起令牌，两个授权的身份是应用自己的 id 与 secret，
  * 它们声明在入参里而不是当作凭据——secret 续的是一个凭据，它自己不是，也从不进 store。

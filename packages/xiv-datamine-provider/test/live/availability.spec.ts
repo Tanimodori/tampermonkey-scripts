@@ -1,5 +1,6 @@
+import { ApiErrorCodes } from 'api-sdk-framework';
 import { describe, expect, it } from 'vitest';
-import { NOT_FOUND, createDatamineClient, fetchSheetCsv, readSheet, useSheetTable } from '@/index';
+import { createDatamineClient, fetchSheetCsv, readSheet, useSheetTable } from '@/index';
 
 /**
  * 对真实服务运行——`InfSein/ffxiv-datamining-mixed` 的分支头——手动跑：`rushx test:live`。
@@ -26,7 +27,7 @@ describe.skipIf(!live)('datamining dumps', { tags: ['live'] }, () => {
     // `DataCenter` 根本不在树里：这张表在现代 EXD 里改了名，有些语种从没拿到过旧文件。调用方得能把这件事
     // 与"请求失败了"分开。
     await expect(createDatamineClient().call(fetchSheetCsv, { sheet: 'DataCenter' })).rejects.toMatchObject({
-      errorCode: NOT_FOUND,
+      errorCode: ApiErrorCodes.ENDPOINT_NOT_FOUND,
       response: { status: 404 },
     });
   });

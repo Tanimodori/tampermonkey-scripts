@@ -17,10 +17,12 @@ export const ApiErrorCodes = {
   SERVER_ERROR: 'SERVER_ERROR',
   /** 上游在限流：429。 */
   RATE_LIMIT: 'RATE_LIMIT',
-  /** 上游在业务上拒绝了这次请求：信封业务码非零。 */
+  /** 上游在业务上拒绝了这次请求：信封业务码非零，或其余的 4xx（400/422 等）。 */
   BAD_REQUEST: 'BAD_REQUEST',
   /** 上游拒绝这份凭据：401/403。 */
   UNAUTHORIZED: 'UNAUTHORIZED',
+  /** 上游答复 404：要的端点（地址）不存在。 */
+  ENDPOINT_NOT_FOUND: 'ENDPOINT_NOT_FOUND',
   /** 投影失败，或投影之后校验不过；答复读不成所要的形状。 */
   BAD_OUTPUT: 'BAD_OUTPUT',
 } as const;

@@ -8,10 +8,10 @@ Garland Tools 国服镜像 `https://www.garlandtools.cn` 的在线访问层，�
 
 ## 与来源的差异
 
-包内按层分目录：`src/client/` 是传输、失败类型、运行时判定、地址常数与两个域共用的传输辅助，`src/endpoints/doc/` 与 `src/endpoints/search/` 是镜像的两个域各一套（`index.ts` 是本域的 URL 构造、`raw.ts` 是无校验装配、`schema.ts` 是本域的 zod 定义、`verified.ts` 是带校验装配），`src/types/sdk.ts` 是调用链的契约。调用链从 `xiv-api-provider` 内部的 `createCall` 换成了 `api-sdk-framework` 的。下面这些差异都是换框架带来的，不是行为变化。
+包内按层分目录：`src/client/` 是传输、运行时判定、地址常数与两个域共用的传输辅助，`src/endpoints/doc/` 与 `src/endpoints/search/` 是镜像的两个域各一套（`index.ts` 是本域的 URL 构造、`raw.ts` 是无校验装配、`schema.ts` 是本域的 zod 定义、`verified.ts` 是带校验装配），`src/types/sdk.ts` 是调用链的契约。调用链从 `xiv-api-provider` 内部的 `createCall` 换成了 `api-sdk-framework` 的。下面这些差异都是换框架带来的，不是行为变化。
 
 - 失败统一是框架的 `ApiError`，本包不再有 `ProviderError`，也没有它的 `kind` 分类。调用方按 `errorCode` 分流。
-- 非 2xx 由端点的 `responseAdaptor` 归类，照 `httpErrorCode` 归到框架的错误族，见「失败」。
+- 非 2xx 由端点的 `responseAdaptor` 交给框架的 `verifyResponseCode` 归族，见「失败」。
 - 时限由 `createGarlandClient` 的 `timeoutMs` 选项定下（缺省 `10_000` 毫秒），转成框架的 `CallOptions.timeoutMs`，由框架按次计时并 abort。它覆盖从进入 call 到 call 退出的整次调用，而不只是那次传输；到点后归 `TIMEOUT`。
 - 入参不做本地校验，与来源一致：端点的 `requestSchema` 槽一个都没写。
 
@@ -55,13 +55,13 @@ const item = await garlands.call(readItem, { id: 19890 });
 
 一次调用只抛一种失败，`api-sdk-framework` 的 `ApiError`，用 `isApiError` 判型、按 `errorCode` 分流。
 
-- 非 2xx 按状态族归类。`401` / `403` 是 `UNAUTHORIZED`，`429` 是 `RATE_LIMIT`，`5xx` 是 `SERVER_ERROR`，其余（含 `404`）是 `BAD_REQUEST`。归族之后 `status` 仍留在 `error.response.status` 上，所以既能按族分流，也能按状态码分流。
+- 非 2xx 按状态族归类。`401` / `403` 是 `UNAUTHORIZED`，`404` 是 `ENDPOINT_NOT_FOUND`，`429` 是 `RATE_LIMIT`，`5xx` 是 `SERVER_ERROR`，其余（`400` / `422` 等）是 `BAD_REQUEST`。归族之后 `status` 仍留在 `error.response.status` 上，服务端那句话留在 `error.response.body.message` 上、失败消息由框架从正文取，所以既能按族分流，也能按状态码分流。
 - 2xx 上读不成 JSON 的答复是 `NETWORK_ERROR`，空体与 HTML 都算，对应来源 `readBody` 的 `shape` 一类。
 - 一次调用超过时限是 `TIMEOUT`，时限由框架按次计时，覆盖整次调用。
 - 手写谓词或 schema 判不过投影后的文档是 `BAD_OUTPUT`。
 - 地址拼不出来是 `BAD_INPUT`，框架在装配段归类。入参本身不校验。
 
-非 2xx 上的 body 读取是宽容的。真正拦住请求的那一层（源站、CDN）常拿纯文本或 HTML 回答，状态归类写在 `responseAdaptor` 里，一个在读取处抛错的 `JSON.parse` 会把 `SERVER_ERROR` 说成 `NETWORK_ERROR`。
+非 2xx 上的 body 读取是宽容的。真正拦住请求的那一层（源站、CDN）常拿纯文本或 HTML 回答，状态归类由框架的 `verifyResponseCode` 在 `responseAdaptor` 里做，一个在读取处抛错的 `JSON.parse` 会把 `SERVER_ERROR` 说成 `NETWORK_ERROR`。
 
 ## 分块
 

@@ -28,7 +28,7 @@ xivapi 从这里出,用不到的那几个由调用方的打包器删掉:包声�
 
 ## 失败
 
-一次往返交给 [`api-sdk-framework`](../api-sdk-framework/README.md) 的 `createCall`,失败统一是它的 `ApiError`——本包没有自己的调用链,也没有自己的错误类。catch 处按 `error.errorCode` 分流:装配失败是 `BAD_INPUT`,收不到可读的答复(连接失败、2xx 空体或非 JSON)是 `NETWORK_ERROR`,超时是 `TIMEOUT`,投影或投影之后的校验不过(`shape` 那一类)是 `BAD_OUTPUT`。非 2xx 的族由端点在 `responseAdaptor` 里归:401/403 归 `UNAUTHORIZED`、429 归 `RATE_LIMIT`、5xx 归 `SERVER_ERROR`、其余(含 404)归 `BAD_REQUEST`;归族之后 `status` 仍留在 `error.response.status` 上,服务端那句 `{code, message}` 仍留在 `error.response.body` 上,既是失败消息、也能按状态码分流。
+一次往返交给 [`api-sdk-framework`](../api-sdk-framework/README.md) 的 `createCall`,失败统一是它的 `ApiError`——本包没有自己的调用链,也没有自己的错误类。catch 处按 `error.errorCode` 分流:装配失败是 `BAD_INPUT`,收不到可读的答复(连接失败、2xx 空体或非 JSON)是 `NETWORK_ERROR`,超时是 `TIMEOUT`,投影或投影之后的校验不过(`shape` 那一类)是 `BAD_OUTPUT`。非 2xx 由端点在 `responseAdaptor` 里交给 `src/client/http.ts` 的 `ensureOk`,归族本身转手给框架的 `verifyResponseCode`:401/403 归 `UNAUTHORIZED`、404 归 `ENDPOINT_NOT_FOUND`、429 归 `RATE_LIMIT`、5xx 归 `SERVER_ERROR`、其余(400/422 等)归 `BAD_REQUEST`。失败消息分两路:两侧答 `{code, message}` 时由框架从正文取服务端那句;正文不是 JSON(被源站、CDN 挡住时是纯文本)时由 `ensureOk` 取正文头一段。归族之后 `status` 仍留在 `error.response.status` 上,服务端的 `code` 与那句 message 跟着答复体留在 `error.response.body` 上,既能按族分流、也能按状态码分流。
 
 时限由 `createXivApiClient` 的 `timeoutMs` 选项定下(缺省 10 秒),转成框架的 `CallOptions.timeoutMs`,由框架按次计时并 abort。
 

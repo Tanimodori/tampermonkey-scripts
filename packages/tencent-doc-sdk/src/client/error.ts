@@ -1,4 +1,4 @@
-import { ApiError, ApiErrorCodes } from 'api-sdk-framework';
+import { ApiError, ApiErrorCodes, isApiError, verifyResponseCode } from 'api-sdk-framework';
 import type { ApiResponse } from '@/types/sdk';
 import { answerHeaderSchema } from './schema';
 
@@ -8,6 +8,10 @@ import { answerHeaderSchema } from './schema';
  * （框架的 `call`）或这里补上。
  *
  * 判定是「读过的答复查一张表」，不发送、不计时、不重试：每个端点每答一次查一次，怎么处理由调用方决定。
+ *
+ * 两条契约的失败词汇不同，这是它们分开的地方：信封契约在 `transportVerdict` 之后把剩下的非 2xx 交给框架的
+ * `verifyResponseCode` 归族；裸答契约只过 `transportVerdict` 那道窄判定——4xx（`400` 尤其）是它的答复形状，不是失败。
+ * 404 不在「答复形状」里：地址上没东西不是任何一条契约能解释的，两条都判 `ENDPOINT_NOT_FOUND`。
  */
 
 /** 一次答复的信封：传输级判定之后，交给适配器读取的那一份。 */
@@ -31,12 +35,16 @@ const AUTH_RET_CODES = new Set([10007, 10302, 10303, 10313, 37019]);
 const RATE_LIMIT_RET_CODES = new Set([400007]);
 
 /**
- * 传输级判定：429 与限流 ret、5xx、401/403。这些状态压过业务码，两种答复契约都先过这一关——
- * `400010`（服务内部错误）带着 HTTP 500 到达，判在业务范围之前就会把它说成 bad request。
+ * 传输级判定：429 与限流 ret、404、5xx、401/403。这些状态压过业务码，两种答复契约都先过这一关——
+ * `400010`（服务内部错误）带着 HTTP 500 到达，判在业务范围之前就会把它说成 bad request；限流那一支排在 5xx 之前，
+ * 所以 `5xx + ret=400007` 仍是 `RATE_LIMIT`。
+ *
+ * `404` 是「这个地址上没有东西」——路由不对、`apiBase` 指错，或中间一层挡住了——它既不是信封的答复，也不是裸答
+ * 端点的答复，所以两条契约都判它 `ENDPOINT_NOT_FOUND`。信封契约剩下的非 2xx（400/422 等）由框架归族，措辞仍走
+ * 这里同一套后缀。
  */
 function transportVerdict(response: ApiResponse, ret: number | undefined, msg: string | undefined, operation: string): ApiError | undefined {
-  const said = joined([ret === undefined ? undefined : `ret=${ret}`, msg === undefined ? undefined : `msg=${msg}`]);
-  const because = said === '' ? '' : ` (${said})`;
+  const said = upstreamSaid(ret, msg);
 
   if (response.status === 429 || (ret !== undefined && RATE_LIMIT_RET_CODES.has(ret))) {
     return new ApiError({
@@ -48,14 +56,21 @@ function transportVerdict(response: ApiResponse, ret: number | undefined, msg: s
   if (response.status >= 500) {
     return new ApiError({
       errorCode: ApiErrorCodes.SERVER_ERROR,
-      message: `Tencent Docs returned HTTP ${response.status} for ${operation}${because}`,
+      message: `Tencent Docs returned HTTP ${response.status} for ${operation}${becauseOf(ret, msg)}`,
       response,
     });
   }
   if (response.status === 401 || response.status === 403) {
     return new ApiError({
       errorCode: ApiErrorCodes.UNAUTHORIZED,
-      message: `Tencent Docs returned HTTP ${response.status} for ${operation}${because}`,
+      message: `Tencent Docs returned HTTP ${response.status} for ${operation}${becauseOf(ret, msg)}`,
+      response,
+    });
+  }
+  if (response.status === 404) {
+    return new ApiError({
+      errorCode: ApiErrorCodes.ENDPOINT_NOT_FOUND,
+      message: `Tencent Docs returned HTTP 404 for ${operation}${becauseOf(ret, msg)}`,
       response,
     });
   }
@@ -65,12 +80,29 @@ function transportVerdict(response: ApiResponse, ret: number | undefined, msg: s
 /**
  * 信封契约的答复：传输级判定后读信封头，`ret` 读不出即 `BAD_OUTPUT`；通过后交给适配器读段落。
  *
+ * 传输级那一支没判出的非 2xx（400/422 等）交给框架的 `verifyResponseCode` 归族为 `BAD_REQUEST`，但消息换回本库那句：
+ * 点名调用，并带上上游说过的 `ret`/`msg`，不只留在 `response.body` 里。
+ *
  * 读不出 `ret` 的答复与「业务码非零」不同：后者是上游判了失败，前者是这份答复根本不是本库的词汇。
  */
 export function getEnvelope<T = unknown>(response: ApiResponse, operation: string): Envelope<T> {
   const { ret, msg } = headerOf(response.body);
   const failure = transportVerdict(response, ret, msg, operation);
   if (failure !== undefined) throw failure;
+
+  try {
+    verifyResponseCode(response);
+  } catch (cause) {
+    // 框架只说它归哪一族；措辞是本库的，错误码用框架给的那个。
+    if (!isApiError(cause)) throw cause;
+    throw new ApiError({
+      errorCode: cause.errorCode,
+      message: `Tencent Docs returned HTTP ${response.status} for ${operation}${becauseOf(ret, msg)}`,
+      response,
+      cause,
+    });
+  }
+
   if (ret === undefined) {
     const masked = describeBody(response.body);
     throw new ApiError({
@@ -84,9 +116,11 @@ export function getEnvelope<T = unknown>(response: ApiResponse, operation: strin
 }
 
 /**
- * 裸答契约的答复：只过传输级判定，body 原样交回。
+ * 裸答契约的答复：只过 `transportVerdict` 那道窄判定，body 原样交回。
  *
  * 两个 token 端点用自己的一套词汇作答，业务码不是本库能判的——拒绝一枚 token 的答复长什么样，只有它的调用方知道。
+ * 状态也一样，4xx（`400` 尤其）在这条契约下是答复而不是失败；404 不是——地址不对时这份答复根本没到，与信封契约
+ * 一样判 `ENDPOINT_NOT_FOUND`。
  */
 export function getBareAnswer<T = unknown>(response: ApiResponse, operation: string): T {
   const { ret, msg } = headerOf(response.body);
@@ -100,8 +134,7 @@ export function verifyEnvelope(envelope: Envelope): void {
   const { ret, msg, response } = envelope;
   if (ret === 0) return;
 
-  const said = joined([`ret=${ret}`, msg === undefined ? undefined : `msg=${msg}`]);
-  const because = ` (${said})`;
+  const because = becauseOf(ret, msg);
   if (AUTH_RET_CODES.has(ret)) {
     throw new ApiError({ errorCode: ApiErrorCodes.UNAUTHORIZED, message: `Tencent Docs rejected the credential${because}`, response });
   }
@@ -148,4 +181,15 @@ function maskCredentials(body: unknown): unknown {
 /** 拼一段诊断信息，丢掉上游没有给的部分。 */
 function joined(parts: ReadonlyArray<string | undefined>): string {
   return parts.filter((part): part is string => part !== undefined).join(', ');
+}
+
+/** 上游说过的字段；传输级与业务码两处共用同一份，免得措辞分家。 */
+function upstreamSaid(ret: number | undefined, msg: string | undefined): string {
+  return joined([ret === undefined ? undefined : `ret=${ret}`, msg === undefined ? undefined : `msg=${msg}`]);
+}
+
+/** `upstreamSaid` 的括号形态；上游两个都没给就不带括号。 */
+function becauseOf(ret: number | undefined, msg: string | undefined): string {
+  const said = upstreamSaid(ret, msg);
+  return said === '' ? '' : ` (${said})`;
 }

@@ -41,7 +41,7 @@ await writeToWhereverItIsKept(store.get());
 
 - [endpoint](docs/endpoint.md)：端点的构成、适配器与八个端点的入参与线上形状。
 - [client](docs/client.md)：`TDocClientOptions` 与 `TDocClient`、一次调用怎么走、边界在哪。
-- [错误处理](docs/error.md)：`ApiError` 的字段与本库使用的七个错误码。
+- [错误处理](docs/error.md)：`ApiError` 的字段与本库使用的八个错误码。
 - [校验](docs/validation.md)：schema 的文件划分，入参与出参各在哪里被校验。
 - [凭据](docs/credential.md)：store 与 manager 的责任与生命周期。
 

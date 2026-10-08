@@ -43,10 +43,10 @@ import {
  * 在测的只有**形状**。示例里的名字与值是占位符，刻意的：一条测试如果要断言 19890 号物品叫某个名字，
  * 钉住的就是游戏内容而不是 API 契约，每个内容补丁都会把它弄坏。结构对上的 body 就当来自对的地方。
  *
- * 失败那一侧看的是 `ApiError`：调用链与失败类型都来自 `api-sdk-framework`，这个包没有自己的一套。非 2xx 由端点
- * 的 `responseAdaptor` 归族，状态仍留在 `error.response.status` 上、服务端的 `{code, message}` 仍留在
- * `error.response.body` 上；读不成 JSON 的 2xx 与空体归 `NETWORK_ERROR`；投影之后 schema 不过归 `BAD_OUTPUT`；
- * 时限由框架管，超时归 `TIMEOUT`。
+ * 失败那一侧看的是 `ApiError`：调用链与失败类型都来自 `api-sdk-framework`，这个包没有自己的一套。非 2xx 由端点的
+ * `responseAdaptor` 交给 `@/client/http.ts` 的 `ensureOk`，归族仍由框架的 `verifyResponseCode` 做，状态仍留在
+ * `error.response.status` 上、服务端的 `{code, message}` 仍留在 `error.response.body` 上；读不成 JSON 的 2xx 与空体归
+ * `NETWORK_ERROR`；投影之后 schema 不过归 `BAD_OUTPUT`；时限由框架管，超时归 `TIMEOUT`。
  */
 
 const SCHEMA_TAG = 'exdschema@2:rev:0000000000000000000000000000000000000000';
@@ -212,13 +212,14 @@ describe('client', () => {
   });
 
   it('surfaces the API message and status on a failure, and names the operation', async () => {
-    const error = await failureOf(api({ code: 404, message: 'not found: the Excel sheet "Nope" could not be found' }, 404), readRow, {
+    const body = { code: 404, message: 'not found: the Excel sheet "Nope" could not be found' };
+    const error = await failureOf(api(body, 404), readRow, {
       sheet: 'Nope' as SheetName,
       row: 1,
     });
-    expect(error.errorCode).toBe(ApiErrorCodes.BAD_REQUEST);
+    expect(error.errorCode).toBe(ApiErrorCodes.ENDPOINT_NOT_FOUND);
     expect(error.response?.status).toBe(404);
-    // 服务端那句 message 就是失败消息，服务端的 code 跟着答复体一起留在错误的 `response` 上。
+    // 失败消息由框架从正文取，所以正文里那句话就是失败消息；正文整份（含服务端的 code）留在错误的 `response` 上。
     expect(error.message).toBe('not found: the Excel sheet "Nope" could not be found');
     expect(error.response?.body).toEqual({ code: 404, message: 'not found: the Excel sheet "Nope" could not be found' });
     expect(error.operation).toBe('readRow');
@@ -230,7 +231,7 @@ describe('client', () => {
       { status: 400, errorCode: ApiErrorCodes.BAD_REQUEST },
       { status: 401, errorCode: ApiErrorCodes.UNAUTHORIZED },
       { status: 403, errorCode: ApiErrorCodes.UNAUTHORIZED },
-      { status: 404, errorCode: ApiErrorCodes.BAD_REQUEST },
+      { status: 404, errorCode: ApiErrorCodes.ENDPOINT_NOT_FOUND },
       { status: 429, errorCode: ApiErrorCodes.RATE_LIMIT },
       { status: 500, errorCode: ApiErrorCodes.SERVER_ERROR },
       { status: 503, errorCode: ApiErrorCodes.SERVER_ERROR },
@@ -300,11 +301,13 @@ describe('client', () => {
 
   it('classifies a non-JSON error body by its status, not by the read failure', async () => {
     // 真正拦住请求的那一层（源站、CDN）常拿纯文本回答；那种答复的读取不该把 `SERVER_ERROR` 说成
-    // `NETWORK_ERROR`，而上游那句话仍要当失败消息报出来。
+    // `NETWORK_ERROR`，而上游那句原文仍要当失败消息报出来——正文里没有 `{code, message}`，族由状态码定，
+    // 消息由 `ensureOk` 取正文头一段，原文仍留在错误的 `response.body` 上。
     const error = await failureOf(api('error code: 1016', 530), readRow, { sheet: 'Item', row: 1 });
     expect(error.errorCode).toBe(ApiErrorCodes.SERVER_ERROR);
     expect(error.response?.status).toBe(530);
     expect(error.message).toBe('error code: 1016');
+    expect(error.response?.body).toBe('error code: 1016');
   });
 
   it('turns a call that outlives its timeout into `TIMEOUT`', async () => {

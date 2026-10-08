@@ -35,7 +35,7 @@ export const SCENARIOS: readonly Scenario[] = [
       await expect(api.call(endpoint, INPUT)).rejects.toThrow(
         expect.objectContaining({
           errorCode: 'UNAUTHORIZED',
-          message: 'HTTP 401',
+          message: 'unauthorized',
           request: expect.objectContaining({ url: MESSAGE_URL }),
         }),
       );
@@ -50,7 +50,7 @@ export const SCENARIOS: readonly Scenario[] = [
       await expect(api.call(endpoint, INPUT)).rejects.toThrow(
         expect.objectContaining({
           errorCode: 'RATE_LIMIT',
-          message: 'HTTP 429',
+          message: 'too many requests',
           response: expect.objectContaining({ headers: expect.objectContaining({ 'retry-after': '7' }) }),
         }),
       );
@@ -63,7 +63,7 @@ export const SCENARIOS: readonly Scenario[] = [
       await expect(api.call(endpoint, INPUT)).rejects.toThrow(
         expect.objectContaining({
           errorCode: 'SERVER_ERROR',
-          message: 'HTTP 500',
+          message: 'internal',
           response: expect.objectContaining({ status: 500 }),
         }),
       );

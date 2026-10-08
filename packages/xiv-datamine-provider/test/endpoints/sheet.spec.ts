@@ -2,14 +2,15 @@ import { ApiErrorCodes, isApiError } from 'api-sdk-framework';
 import type { ApiError } from 'api-sdk-framework';
 import type { WebFetcher, WebFetcherRequestInit } from 'universal-fetch-type';
 import { describe, expect, it } from 'vitest';
-import { NOT_FOUND, createDatamineClient, fetchSheetCsv, readSheet, sheetCsvUrl } from '@/index';
+import { createDatamineClient, fetchSheetCsv, readSheet, sheetCsvUrl } from '@/index';
 
 /**
  * 取表那一半：一张表的地址从哪来，以及每种回答变成什么。一切都经注入的 fetch 走，真实服务只有端到端的活件会碰。
  *
- * 判定看的是 `ApiError`：这个包是 `api-sdk-framework` 的消费方，失败只有这一种。其中 404 走自己的 `errorCode`，
- * 并且仍然带着 `response.status`——"这个语种没这张表"与"请求发不出去"因此分得开，`xiv-datamine-polyfill` 就是
- * 按这两样之一把它放行的。
+ * 判定看的是 `ApiError`：这个包是 `api-sdk-framework` 的消费方，失败只有这一种。非 2xx 由框架的
+ * `verifyResponseCode` 归族，404 因此是框架的 `ENDPOINT_NOT_FOUND` 而不是这个包自己的码，`response.status` 仍留着 404——
+ * "这个语种没这张表"与"请求发不出去"因此分得开，`xiv-datamine-polyfill` 就是按这两样之一把它放行的。消息则由
+ * 这个包写下：一次构建读很多张表，失败里要点得出是哪一张、哪个语种、哪个 ref。
  */
 
 const CSV = ['key,0', '#,Name', 'int32,str', '1,"格斗武器"'].join('\n');
@@ -102,9 +103,9 @@ describe('fetching', () => {
 });
 
 describe('a 404 is an answer, not a failure', () => {
-  it('gets its own error code and keeps the status', async () => {
+  it('gets the framework family and keeps the status', async () => {
     const failure = await failureOf(transport({}), { sheet: 'DataCenter', locale: 'ja' });
-    expect(failure.errorCode).toBe(NOT_FOUND);
+    expect(failure.errorCode).toBe(ApiErrorCodes.ENDPOINT_NOT_FOUND);
     expect(failure.errorCode).not.toBe(ApiErrorCodes.NETWORK_ERROR);
     expect(failure.response?.status).toBe(404);
   });
@@ -123,13 +124,13 @@ describe('a 404 is an answer, not a failure', () => {
 
   it('is reachable through readSheet the same way', async () => {
     const error = await readSheet('DataCenter', { fetch: transport({}).fetch }).catch((cause: unknown) => cause);
-    expect(isApiError(error) && error.errorCode).toBe(NOT_FOUND);
+    expect(isApiError(error) && error.errorCode).toBe(ApiErrorCodes.ENDPOINT_NOT_FOUND);
   });
 
   it('stays apart from an ordinary http failure', async () => {
     const failure = await failureOf(transport({ [HEAD_URL]: { status: 500, body: 'server error' } }));
     expect(failure.errorCode).toBe(ApiErrorCodes.SERVER_ERROR);
-    expect(failure.errorCode).not.toBe(NOT_FOUND);
+    expect(failure.errorCode).not.toBe(ApiErrorCodes.ENDPOINT_NOT_FOUND);
     expect(failure.response?.status).toBe(500);
     expect(failure.message).toBe('ItemUICategory.csv failed: HTTP 500');
   });

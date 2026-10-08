@@ -24,14 +24,15 @@ export function useBodyUnpacker<T>(options?: BodyUnpackerOptions<T>): BodyUnpack
 
 ## 状态码
 
-`verifyResponseCode` 只看通用 HTTP 状态码。
+`verifyResponseCode` 只看通用 HTTP 状态码，2xx 静默通过，其余全部归入错误码。
 
 - 401 与 403：归 `UNAUTHORIZED`。
+- 404：归 `ENDPOINT_NOT_FOUND`。
 - 429：归 `RATE_LIMIT`。
 - 5xx：归 `SERVER_ERROR`。
-- 其余状态静默通过。
+- 其余非 2xx（400/422 等）：归 `BAD_REQUEST`。
 
-抛出的 `ApiError` 带上完整 `response`，message 为 `HTTP ${status}`。
+抛出的 `ApiError` 带上完整 `response`；message 取正文里的那句话：正文是对象且 `msg` 或 `message` 是非空字符串时用它，否则为 `HTTP ${status}`。
 
 ## body 解包
 

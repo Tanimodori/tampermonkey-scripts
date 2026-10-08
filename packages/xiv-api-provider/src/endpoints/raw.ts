@@ -20,12 +20,13 @@ import type { Fields, ListSheetsResponse, RowResult, SearchResponse, SheetName, 
  * 无校验的装配：`operation`、body 读法与两个适配器，不写校验槽。
  *
  * 类型从 `./schema.ts` 只以 `import type` 取，所以这一份永远到不了 zod；响应侧由 `@/client/guards.ts` 里的手写
- * 谓词判定，那是本包全部的运行时形状检查。读 body 与非 2xx 归族每个 JSON 端点共用，写在 `@/client/http.ts`。
+ * 谓词判定，那是本包全部的运行时形状检查。读 body 与非 2xx 的收尾每个 JSON 端点共用，写在 `@/client/http.ts`。
  *
  * 与来源的差异都是换框架带来的，不是行为变化。失败统一是 `api-sdk-framework` 的 `ApiError`，本包不再有
- * `ProviderError`；手写谓词判不过，由框架归 `BAD_OUTPUT`；非 2xx 由 `ensureOk` 归到框架的错误族，状态仍留在
- * `error.response.status` 上，服务端那句 message 仍是失败消息。`read: 'json' | 'text' | 'bytes'` 那条声明换成框架的
- * `responseBodyReader`：答复是 JSON 的端点写 `readJsonBody`，答复是字节的端点自己读。
+ * `ProviderError`；手写谓词判不过，由框架归 `BAD_OUTPUT`；非 2xx 由 `ensureOk` 收尾，归族仍由框架的
+ * `verifyResponseCode` 做，状态仍留在 `error.response.status` 上，服务端那句 message 由框架从正文取、正文不是 JSON
+ * 时由 `ensureOk` 取正文头一段。`read: 'json' | 'text' | 'bytes'` 那条声明换成框架的 `responseBodyReader`：答复是
+ * JSON 的端点写 `readJsonBody`，答复是字节的端点自己读。
  *
  * 每个名字都带 `Raw` 后缀。`./verified.ts` 展开这些声明并补上校验槽，那些占默认名；同一次读取的两份导出共用
  * 同一批适配器函数。

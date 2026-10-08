@@ -25,10 +25,13 @@ export class ApiError extends Error {
 - `NETWORK_ERROR`：发出与读取阶段，连接失败、body 未到、到的不是端点声明的形状（缺省是 JSON）。
 - `TIMEOUT`：一次调用超过了 `CallOptions.timeoutMs` 或端点上的 `timeoutMs`。
 - `BAD_OUTPUT`：判定与投影阶段，适配器抛出，解包器收拢的读取错误，或 `responseSchema.parse` 校验不过。
-- `BAD_REQUEST`：信封业务码非零，`useBodyUnpacker` 的缺省判定。
+- `BAD_REQUEST`：信封业务码非零，`useBodyUnpacker` 的缺省判定；或上游答复其余非 2xx 状态（400/422 等）。
 - `UNAUTHORIZED`：上游 401 或 403。
+- `ENDPOINT_NOT_FOUND`：上游答复 404，要的端点（地址）不存在。它说的是地址这一层：把资源名编进路径的服务由它表示「没有这个资源」；而把「资源不存在」说在业务码里的服务，那条路走的是 `BAD_REQUEST`。
 - `RATE_LIMIT`：上游 429。
 - `SERVER_ERROR`：上游 5xx。
+
+2xx 之外的每一种状态都由 `verifyResponseCode` 归入上列错误码，不再静默放行。
 
 类型面是 `string`，调用方自建判定时可以使用自己的错误码。
 

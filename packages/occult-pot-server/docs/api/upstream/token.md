@@ -46,7 +46,7 @@
 
 - `ERR_UPSTREAM_AUTH_FAILED`（503）：token 被上游拒绝，或凭据对该文档没有权限。
 - `ERR_CONFIG_INVALID`（500）：配置了 `OPS_DOCS_OPEN_ID` 而上游报告的用户标识与它不一致；回答里没有用户标识时按不一致处理。
-- `ERR_UPSTREAM_FAILED`（502）：上游 5xx、连不上、超时，或回答不是 JSON。
+- `ERR_UPSTREAM_FAILED`（502）：上游 5xx、地址不对（404）、连不上、超时，或回答不是 JSON。
 - `ERR_UPSTREAM_RATE_LIMITED`（503）：被上游限流，响应带 `Retry-After` 头。
 
 ## 刷新 access token
@@ -77,7 +77,7 @@
 ### 可能的报错
 
 - `ERR_UPSTREAM_AUTH_FAILED`（503）：这一端点用 `400` 拒绝授权——那是一段回答而不是传输失败，由调用方解释为凭据不可用；HTTP 401/403 同样归为此码。
-- `ERR_UPSTREAM_FAILED`（502）：上游 5xx、连不上、超时，或回答不是 JSON。
+- `ERR_UPSTREAM_FAILED`（502）：上游 5xx、地址不对（404）、连不上、超时，或回答不是 JSON。
 - `ERR_CONFIG_INVALID`（500）：没有配置 `OPS_DOCS_CLIENT_SECRET` 或 `OPS_DOCS_REFRESH_TOKEN`，无法发起刷新。
 
 ## 当前限制

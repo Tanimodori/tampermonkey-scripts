@@ -6,9 +6,12 @@ import { describeBody, getBareAnswer, getEnvelope, verifyEnvelope } from '@/clie
 /**
  * 判定层：一份答复进，`undefined`（可用的答复）或抛出的 `ApiError` 出；错误带框架的码与上游说过的信息。
  *
- * 这里没有 transport，这正是它的意义——上游的全部词汇由一次对已读答复的查表定下。判定分两步：`getEnvelope` 过传输级失败
- * 再读信封头，`verifyEnvelope` 判业务码；裸答端点只走 `getBareAnswer`。调用方拿这些判定做什么——要不要再试一次——
- * 是它自己的事，这张表从不说。
+ * 这里没有 transport，这正是它的意义——上游的全部词汇由一次对已读答复的查表定下。判定分两步：`getEnvelope` 过传输级
+ * 失败再读信封头，`verifyEnvelope` 判业务码；裸答端点只走 `getBareAnswer`。调用方拿这些判定做什么——要不要再试一次
+ * ——是它自己的事，这张表从不说。
+ *
+ * 两条契约的失败词汇不同：信封契约在传输级判定之后把剩下的非 2xx 交给框架的 `verifyResponseCode` 归族，措辞仍是本库
+ * 那句；裸答契约只认 429/5xx/401/403/404——4xx（`400` 尤其）是它的答复形状，404 不是。
  */
 
 /** 一份已答复的响应，读它的方式与生产路径一致：判定自己读信封头。 */
@@ -78,7 +81,7 @@ const MATRIX: ReadonlyArray<{
   },
   { case: '400 + the endpoint’s own error body', envelope: false, response: answered(400, { error: 'invalid_grant' }), expect: undefined },
   { case: '400 + a `ret` it is not told to read', envelope: false, response: answered(400, { ret: '10007' }), expect: undefined },
-  // 两种契约之上都压得住的状态。
+  // 两种契约之上都压得住的状态；404 也在其中——地址上没东西，两条契约都不把它当答复。
   { case: '429 with no business code', envelope: true, response: answered(429, {}), expect: ApiErrorCodes.RATE_LIMIT },
   { case: '429 with no business code', envelope: false, response: answered(429, {}), expect: ApiErrorCodes.RATE_LIMIT },
   {
@@ -87,9 +90,18 @@ const MATRIX: ReadonlyArray<{
     response: answered(500, { ret: 400010 }),
     expect: ApiErrorCodes.SERVER_ERROR,
   },
+  // 限流 ret 与 HTTP 429 并在一支、排在 5xx 之前，所以 `5xx + ret=400007` 报的是限流而不是 server error。
+  {
+    case: '500 carrying the rate-limit business code, which the rate limit still outranks',
+    envelope: true,
+    response: answered(500, { ret: 400007 }),
+    expect: ApiErrorCodes.RATE_LIMIT,
+  },
   { case: '500', envelope: false, response: answered(500, { ret: 400010 }), expect: ApiErrorCodes.SERVER_ERROR },
   { case: '401', envelope: true, response: answered(401, { ret: 10303 }), expect: ApiErrorCodes.UNAUTHORIZED },
   { case: '403', envelope: false, response: answered(403, { ret: 10303 }), expect: ApiErrorCodes.UNAUTHORIZED },
+  { case: '404, which neither contract reads as an answer', envelope: true, response: answered(404, {}), expect: ApiErrorCodes.ENDPOINT_NOT_FOUND },
+  { case: '404, which neither contract reads as an answer', envelope: false, response: answered(404, {}), expect: ApiErrorCodes.ENDPOINT_NOT_FOUND },
 ];
 
 describe('the envelope × business-code matrix', () => {
@@ -180,6 +192,16 @@ describe('the envelope verdicts', () => {
   it('omits what the upstream did not send from the wording', () => {
     expect(judge(answered(500, undefined), true)?.message).toBe('Tencent Docs returned HTTP 500 for getRecords');
     expect(judge(answered(200, { ret: 400001 }), true)?.message).toBe('Tencent Docs rejected the request (ret=400001)');
+  });
+
+  it('words every refusal in this library’s own terms', () => {
+    // 404 由传输级那一关判、其余非 2xx 归框架判族：两条路的消息都是本库那句，点名调用并带上上游说过的字段。
+    expect(judge(answered(404, { ret: 404001, msg: 'not found' }), true)?.message).toBe(
+      'Tencent Docs returned HTTP 404 for getRecords (ret=404001, msg=not found)',
+    );
+    expect(judge(answered(422, {}), true)?.message).toBe('Tencent Docs returned HTTP 422 for getRecords');
+    // 裸答端点也一样：地址不对时那份答复根本没到，它不该被读成凭据问题。
+    expect(judge(answered(404, {}), false)?.message).toBe('Tencent Docs returned HTTP 404 for refreshToken');
   });
 });
 

@@ -45,4 +45,4 @@ export interface TokenManager {
 - manager 只做异步那一半：问上游，把答复写进给它的 store；`clientSecret` 留在 manager 手里，不进 store，也不进任何返回的记录。
 - 不安排刷新，不判断上游报的 Open-Id 是否与配置一致；配置一个过期令牌意味着下一次调用报 `UNAUTHORIZED`。
 - 两次授权共用一条地址，只差 `grant_type`；这个字面量写在各自的适配器里。
-- 被拒的授权是一份答复而不是 `UNAUTHORIZED`：只有调用方知道「问运维」还是「换新令牌继续」，措辞归它——`fetchToken`/`refreshToken` 会把没有访问令牌的答复说成 `UNAUTHORIZED` 并引用脱敏后的 body。
+- 被拒的授权是一份答复而不是 `UNAUTHORIZED`：只有调用方知道「问运维」还是「换新令牌继续」，措辞归它——`fetchToken`/`refreshToken` 会把没有访问令牌的答复说成 `UNAUTHORIZED` 并引用脱敏后的 body。框架的状态族不适用于这两个端点的裸答契约：上游用 400 答一枚被拒的凭据，那条答复照旧活着交到 manager 手里。404 是例外：地址不对时那份答复根本没到，两条契约都判 `ENDPOINT_NOT_FOUND`。

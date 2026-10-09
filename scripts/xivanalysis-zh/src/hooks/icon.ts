@@ -3,6 +3,7 @@ import { resolve } from '../data/resolve';
 import { onMapGrowth } from '../data/store';
 import type { XivDetector, XivQuery } from '../types/workflow';
 import { isTarget } from '../utils';
+import { whenNodeReady } from './dom';
 
 const IMG_SELECTOR = '[class^="Timeline-module_item"] img, [class*=" Timeline-module_item"] img';
 
@@ -34,7 +35,14 @@ export const detectIcon: XivDetector = (handler) => {
       }
     }
   });
-  observer.observe(document.body, { childList: true, subtree: true });
+  // document-start 时 body 尚未解析出来,observe(null) 会抛错并把整个 IIFE 带走。
+  whenNodeReady(
+    () => document.body,
+    (body) => {
+      observer.observe(body, { childList: true, subtree: true });
+      rescan(); // 补上 body 出现到观察者注册之间可能已经进去的节点
+    },
+  );
 
   let scheduled = false;
   onMapGrowth(() => {

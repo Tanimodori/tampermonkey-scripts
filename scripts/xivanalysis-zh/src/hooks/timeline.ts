@@ -3,6 +3,7 @@ import { resolve } from '../data/resolve';
 import { onMapGrowth } from '../data/store';
 import type { XivDetector, XivQuery } from '../types/workflow';
 import { isTarget } from '../utils';
+import { whenNodeReady } from './dom';
 
 const SELECTOR = '[class^="Timeline-module_content"], [class*=" Timeline-module_content"]';
 
@@ -32,7 +33,14 @@ export const detectTimeline: XivDetector = (handler) => {
       }
     }
   });
-  observer.observe(document.body, { childList: true, subtree: true });
+  // document-start 时 body 尚未解析出来,observe(null) 会抛错并把整个 IIFE 带走。
+  whenNodeReady(
+    () => document.body,
+    (body) => {
+      observer.observe(body, { childList: true, subtree: true });
+      rescan(); // 补上 body 出现到观察者注册之间可能已经进去的节点
+    },
+  );
 
   // 合并表新增条目后重扫现存节点(CN 表可能晚于 DOM 到)。
   let scheduled = false;

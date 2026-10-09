@@ -1,3 +1,4 @@
+import { whenNodeReady } from './hooks/dom';
 import injectedStyle from './styles/index.css?inline';
 
 const incrementAltContainer = (container: HTMLElement, increment: number) => {
@@ -72,7 +73,11 @@ const injectCss = () => {
   const styleSheet = document.createElement('style');
   styleSheet.setAttribute('type', 'text/css');
   styleSheet.innerHTML = injectedStyle;
-  document.head.appendChild(styleSheet);
+  // document-start 时 head 尚未解析出来，直接 append 会抛错并把整个 IIFE 带走（detector 因此从未注册）。
+  whenNodeReady(
+    () => document.head,
+    (head) => head.appendChild(styleSheet),
+  );
 };
 
 export const injectStyle = () => {

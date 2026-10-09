@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { resolve } from 'path';
-import { defineConfig } from 'vite';
 import userscriptMetadata from 'vite-plugin-userscript-metadata';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   build: {
@@ -40,4 +40,8 @@ export default defineConfig({
       injectPackageJson: true,
     }),
   ],
+  test: {
+    // `test/e2e/` 归 playwright，文件名同样是 `*.spec.ts`，不排掉 vitest 会把它当自己的用例跑。
+    exclude: ['test/e2e/**', '**/node_modules/**', '**/dist/**'],
+  },
 });

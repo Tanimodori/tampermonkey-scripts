@@ -22,12 +22,16 @@
     "format:check": "oxfmt --check",
     "lint": "oxlint",
     "typecheck": "tsc -b",
-    "test": "vitest --passWithNoTests"
+    "test": "vitest --passWithNoTests",
+    "test:e2e": "vite build && playwright test --project=injected",
+    "test:e2e:tampermonkey": "vite build && playwright test --project=tampermonkey",
+    "test:e2e:all": "vite build && playwright test"
   },
   "dependencies": {
     "xiv-garland-provider": "workspace:*"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@types/node": "^22.10.5",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.82.0",

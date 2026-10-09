@@ -121,6 +121,12 @@ dist-storybook/
 .cache/
 .heft/
 
+# Playwright: run output and the HTML report. The browser download and the unpacked
+# Tampermonkey live under .cache/ above, which is already ignored.
+test-results/
+playwright-report/
+blob-report/
+
 # Command Code
 .commandcode
 .commandcode/*

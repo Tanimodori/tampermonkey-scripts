@@ -39,7 +39,7 @@ export const CHINESE_SERVER: EditionDescriptor = {
   service: 'cafemaker-v2',
   // From xivanalysis/xivanalysis#2290, which is what upstream itself switched to. The other two addresses that
   // turn up as "the Cafemaker v2 API" answer nothing usable; what this one does and does not serve is in
-  // `docs/providers/xivapi.md`.
+  // `docs/client.md`.
   apiBase: 'https://xivapi-v2.xivcdn.com/api',
   // Omitting `language` already yields Chinese here, which is why the Chinese server answers an
   // international-shaped request correctly by accident. It is also the only token the mirror serves.

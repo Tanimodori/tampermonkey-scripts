@@ -10,8 +10,7 @@ import { EDITIONS, type Edition, type LanguageToken } from '@/client/editions.ts
  *
  * The path this package builds carries no version segment (`/api/sheet/…`): the data version is a query
  * parameter and `GET /version` enumerates them. The older `/api/1/sheet/…` is still answered by
- * `beta.xivapi.com` with the same envelope, and what it serves today is recorded in
- * `docs/providers/xivapi.md`.
+ * `beta.xivapi.com` with the same envelope, and that path is noted in `docs/endpoint.md`.
  */
 
 export interface RowReaderQuery {

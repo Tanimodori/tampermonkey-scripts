@@ -1,45 +1,58 @@
 # tencent-doc-sdk
 
-Tencent Docs Open API 的客户端：一张智能表有哪些子表、其中一张的行，以及两者读起来要用的凭据。
+腾讯文档 Open API 的客户端。它列出文档里的子表、读写其中一张子表的行，并管好这些调用要用的凭据。
 
-它按上游自己的词汇说话——`{ ret, msg, data }` 信封、载荷关键字、官方的响应类型名——到此为止。一次调用就是一个端点一次往返：不翻页、不重试、不把一份答复聚合到另一次调用上。节奏、指标、日志与一次失败对下游意味着什么，都归调用它的人。
+一次调用是一次往返，失败统一是 `ApiError`，上游语义在端点的适配器里翻译。翻页、重试、节流与日志归调用方，本库不替它决定。调用链建在 [`api-sdk-framework`](../api-sdk-framework/README.md) 上。
 
-调用链构建在 `api-sdk-framework` 上：一次往返按装配、发出与投影三段归类，失败只有 `ApiError` 一个类型，错误码取框架 `ApiErrorCodes` 中语义对应的那一个。
+## 能力
+
+- 子表：列出文档里的子表。
+- 记录：查询、新增、更新、删除一张子表的行。
+- 凭据：问一枚访问令牌属于谁，以及用授权码或刷新令牌换新令牌。
 
 ## 用法
 
-一个端点是声明：调用名、入参校验、把入参造成请求的适配器、把答复造成返回值的适配器。`createTDocClient` 把它做成往返。
+`createTDocClient` 收下地址、凭据与文档坐标，造出一个 client。端点按调用名从 `endpoints` 取，`client.call` 把它做成一次往返。
 
 ```ts
-import { createTDocClient, createCredentialStore, createTokenManager, endpoints } from 'tencent-doc-sdk';
+import { createTDocClient, createCredentialStore, endpoints } from 'tencent-doc-sdk';
 
 const store = createCredentialStore({ accessToken: '…', clientId: '…', openId: '…', refreshToken: '…' });
 
 const client = createTDocClient({
   apiBase: 'https://docs.qq.com',
   store,
-  params: { fileId: '300000000$ExAmPlEfIlEiD', sheetId: 'tXXXXXX' }, // 每次记录调用寻址的文档
-  // transport, // 调用走的函数；不给就走 globalThis.fetch
+  // 记录端点默认寻址的文档，调用自带的 params 覆盖它
+  params: { fileId: '300000000$ExAmPlEfIlEiD', sheetId: 'tXXXXXX' },
+  // transport, // 调用走的函数，不给就走 globalThis.fetch
 });
 
-const page = await client.call(endpoints.getRecords, { offset: 0, limit: 100 });
-const written = await client.call(endpoints.addRecords, { records: [{ values: { 名称: [{ text: '甲', type: 'text' }] } }] });
-await client.call(endpoints.deleteRecords, { recordIDs: written.records?.map((row) => row.recordID) ?? [] });
 const sheets = await client.call(endpoints.getSheetList); // 没有自己的入参
+const page = await client.call(endpoints.getRecords, { offset: 0, limit: 100 });
+await client.call(endpoints.addRecords, { records: [{ values: { 名称: [{ text: '甲', type: 'text' }] } }] });
+await client.call(endpoints.updateRecords, { records: [{ recordID: 'rXXXX', values: { 名称: [{ text: '乙', type: 'text' }] } }] });
+await client.call(endpoints.deleteRecords, { recordIDs: page.records?.map((row) => row.recordID) ?? [] });
 ```
 
-凭据由 store 持有、由 manager 改动，两者共用同一份 store：
+`transport` 是唯一一条接缝，类型为仓库共用的 `WebFetcher`。
+
+凭据由 store 持有、由 manager 改动，两者共用同一份 store。manager 管三个说凭据的端点，`clientSecret` 留在 manager 手里，不进 store。
 
 ```ts
-const tokens = createTokenManager({ apiBase, store, transport, clientSecret: '…' });
+import { createTokenManager } from 'tencent-doc-sdk';
 
-const refreshed = await tokens.refreshToken(); // 改动之后的凭据
-await writeToWhereverItIsKept(store.get());
+const tokens = createTokenManager({ apiBase: 'https://docs.qq.com', store, clientSecret: '…' });
+
+await tokens.getUserInfo(); // 问 store 手里这枚访问令牌是谁的
+const refreshed = await tokens.refreshToken(); // 写入 store，并返回现持有的凭据
+await tokens.fetchToken({ code: '…', redirectUri: '…' });
+
+// 凭据的持久化由调用方负责，store.get() 是要写出去的快照，store.set() 是载回来的方式。
 ```
 
 ## 文档
 
-- [endpoint](docs/endpoint.md)：端点的构成、适配器与八个端点的入参与线上形状。
+- [endpoint](docs/endpoint.md)：端点契约与八个端点的入参、请求与答复。
 - [client](docs/client.md)：`TDocClientOptions` 与 `TDocClient`、一次调用怎么走、边界在哪。
 - [错误处理](docs/error.md)：`ApiError` 的字段与本库使用的八个错误码。
 - [校验](docs/validation.md)：schema 的文件划分，入参与出参各在哪里被校验。
@@ -48,6 +61,7 @@ await writeToWhereverItIsKept(store.get());
 ## 运行
 
 - `rushx build`：产出 `dist/`。
-- `rushx test:unit`：vitest，对着 `test/testUtils/mockUpstream.ts` 的假文档；测试只讲协议，重构 `src/` 不动它们。
-- `rushx test:live`：vitest，对着真实文档；读 `OPS_ENV_PATH` 点名的环境文件，未配置时整组跳过。
-- `rushx lint` / `rushx format`：oxlint 与 oxfmt；`rushx typecheck`：`tsc -b`。
+- `rushx test:unit`：vitest，对着 `test/testUtils/mockUpstream.ts` 的假文档，测试只讲协议，重构 `src/` 不动它们。
+- `rushx test:live`：vitest，对着真实文档，读 `OPS_ENV_PATH` 点名的环境文件，未配置时整组跳过。
+- `rushx lint` / `rushx format`：oxlint 与 oxfmt。
+- `rushx typecheck`：`tsc -b`。

@@ -9,6 +9,7 @@ JavaScript monorepo for ffxiv and userscripts.
 - **[universalis-zh-data](scripts/universalis-zh-data/README.md)**: Universalis Chinese data redirection script
 - **[xivanalysis-zh](scripts/xivanalysis-zh/README.md)**: Display actions and status of xivanalysis report in Chinese
 - **[feishu-download](scripts/feishu-download/README.md)**: Download audio and image resources from Feishu pages
+- **[get-usage-data](scripts/get-usage-data/README.md)**: Save usage data from LLM platform pages as JSON files
 
 **Libraries**
 

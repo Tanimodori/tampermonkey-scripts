@@ -449,6 +449,11 @@
       "projectFolder": "scripts/feishu-download",
       "tags": [ "userscript" ]
     },
+    {
+      "packageName": "get-usage-data",
+      "projectFolder": "scripts/get-usage-data",
+      "tags": [ "userscript" ]
+    },
     // shared libraries
     {
       "packageName": "api-sdk-framework",

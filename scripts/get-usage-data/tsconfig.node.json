@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    /* 构建配置与测试跑在 Node 侧，这里补上 node 类型；其余选项随 app 继承。 */
+    "types": ["node"],
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
+  },
+  /* 测试也在这一份里查：它 import src 下的模块，`~icons/*` 等环境声明得跟着进来。 */
+  "include": ["vite.config.ts", "test/**/*.ts", "src/types/**/*.d.ts"]
+}

@@ -1,0 +1,59 @@
+/* 整块样式跑在 shadow root 里，页面改不到，也不用担心撞上页面的选择器。 */
+:host {
+  position: fixed;
+  z-index: 2147483647;
+  display: block;
+}
+
+.button {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid rgb(0 0 0 / 10%);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
+  color: #9a9a9a;
+  cursor: grab;
+  /* 触摸拖动要自己接管，否则会先被页面滚动吃掉。 */
+  touch-action: none;
+  user-select: none;
+  transition:
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.button:hover {
+  box-shadow: 0 4px 12px rgb(0 0 0 / 26%);
+}
+
+.button:active {
+  cursor: grabbing;
+}
+
+.button svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.button[data-state="waiting"] svg {
+  animation: get-usage-data-spin 1s linear infinite;
+}
+
+.button[data-state="ready"] {
+  color: #4d6bfe;
+}
+
+.button[data-state="done"] {
+  color: #2ba471;
+}
+
+@keyframes get-usage-data-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}

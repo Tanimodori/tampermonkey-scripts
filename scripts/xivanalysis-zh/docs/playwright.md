@@ -1,6 +1,6 @@
 # 用 Playwright 测用户脚本
 
-本仓的用户脚本一直只靠 vitest 测：直接 import 源码，从不过打包器，也从不进浏览器。`scripts/xivanalysis-zh` 是第一个补上浏览器侧 e2e 的包，两条路线都落在 `scripts/xivanalysis-zh/test/e2e/`，运行方式与文件分工见[那里的 README](../../scripts/xivanalysis-zh/test/e2e/README.md)。
+本仓的用户脚本一直只靠 vitest 测：直接 import 源码，从不过打包器，也从不进浏览器。`scripts/xivanalysis-zh` 是第一个补上浏览器侧 e2e 的包，两条路线都落在 `scripts/xivanalysis-zh/test/e2e/`，运行方式与文件分工见[那里的 README](../test/e2e/README.md)。
 
 这份文档写的是这两条路线本身：各自做了什么、执行路径长什么样、以及踩到的坑。坑点部分都是实测结论，不是推断；写"实测"的地方有具体现象，写"推断"的地方会注明。
 
@@ -8,13 +8,13 @@
 
 分界线是**谁提供用户脚本运行时**。
 
-| | 路线一：注入 | 路线二：真 Tampermonkey |
-| --- | --- | --- |
-| 运行时 | 测试自己（`addInitScript` + 手写 `GM` / `unsafeWindow`） | Tampermonkey 扩展 |
-| 判什么 | 脚本自己的逻辑 | 管理器的语义（`@match`、注入） |
-| 出网 | 全程 `page.route`，不出网 | 需要下载扩展；脚本自身请求仍走 `page.route` |
-| 耗时 | 约 5 秒 | 约 29 秒 |
-| 可进 CI | 可以 | 建议单独一条，要网络 |
+|         | 路线一：注入                                             | 路线二：真 Tampermonkey                     |
+| ------- | -------------------------------------------------------- | ------------------------------------------- |
+| 运行时  | 测试自己（`addInitScript` + 手写 `GM` / `unsafeWindow`） | Tampermonkey 扩展                           |
+| 判什么  | 脚本自己的逻辑                                           | 管理器的语义（`@match`、注入）              |
+| 出网    | 全程 `page.route`，不出网                                | 需要下载扩展；脚本自身请求仍走 `page.route` |
+| 耗时    | 约 5 秒                                                  | 约 29 秒                                    |
+| 可进 CI | 可以                                                     | 建议单独一条，要网络                        |
 
 两者不是替代关系。路线一覆盖脚本的全部逻辑而且确定、快，但它替测试做了两件本该由管理器做的事——决定 `@match` 生不生效、决定脚本进不进得来。路线二补的就是这两件。
 
@@ -63,7 +63,7 @@ page.goto('https://xivanalysis.com/')      ← 由 page.route 回答，是夹具
 
 ```ts
 const cnUrl = new URL(cnSheet[0]);
-expect(cnUrl.searchParams.get('fields')).toBe('Name,Icon');   // 而不是比 'fields=Name,Icon'
+expect(cnUrl.searchParams.get('fields')).toBe('Name,Icon'); // 而不是比 'fields=Name,Icon'
 ```
 
 **5. 夹具页要摆够"不该动"的节点。** 判"改对了"很容易漏掉"改多了"。夹具页里有一个 `grid-column-start: -3` 的单元格（第 3 列是玩家名，脚本明确跳过）和一个含中日韩文字的单元格（`isTarget` 会因 CJK 判非目标），两条各一个用例钉住。
@@ -119,8 +119,7 @@ Use browserType.launchPersistentContext() instead.
 **5. 「允许用户脚本」这个开关是硬门槛，而且失败是静默的。** Chrome 138+ 起每个扩展详情页有它自己的开关，不开时 `chrome.userScripts` 是 `undefined`，脚本装了也不执行、不报错。它落在 WebUI 的 open shadow root 里，但 Playwright 的选择器默认穿透 shadow DOM，所以 `page.locator('#allow-user-scripts').click()` 直接可用。等价的不点 UI 的写法是：
 
 ```ts
-await page.evaluate((id) => chrome.developerPrivate.updateExtensionConfiguration(
-  { extensionId: id, userScriptsAccess: true }), extensionId);
+await page.evaluate((id) => chrome.developerPrivate.updateExtensionConfiguration({ extensionId: id, userScriptsAccess: true }), extensionId);
 ```
 
 开关状态写在 profile 的 `Secure Preferences` → `extensions.settings.<id>.user_scripts_enabled`，跨重启保留。
@@ -141,13 +140,13 @@ await page.evaluate((id) => chrome.developerPrivate.updateExtensionConfiguration
 
 ## 两条路线各自测不到什么
 
-| | 路线一 | 路线二 |
-| --- | --- | --- |
-| 脚本自身的逻辑（取表改写、兜底改写、样式、漏翻上报） | 全覆盖 | 只覆盖取表与样式 |
-| garland 兜底（`GM_xmlhttpRequest`） | 覆盖（GM 是假的） | 够不着（GM 由扩展后台发） |
-| `@match` 是否生效 | 测不到 | 覆盖 |
-| 脚本能否被真管理器装上 | 测不到 | 覆盖 |
-| 隔离世界 / 沙箱语义 | 测不到（注入在主世界） | 覆盖 |
+|                                                      | 路线一                 | 路线二                    |
+| ---------------------------------------------------- | ---------------------- | ------------------------- |
+| 脚本自身的逻辑（取表改写、兜底改写、样式、漏翻上报） | 全覆盖                 | 只覆盖取表与样式          |
+| garland 兜底（`GM_xmlhttpRequest`）                  | 覆盖（GM 是假的）      | 够不着（GM 由扩展后台发） |
+| `@match` 是否生效                                    | 测不到                 | 覆盖                      |
+| 脚本能否被真管理器装上                               | 测不到                 | 覆盖                      |
+| 隔离世界 / 沙箱语义                                  | 测不到（注入在主世界） | 覆盖                      |
 
 路线一能覆盖脚本逻辑，是因为本仓多数脚本是 `@grant none`，而 `@grant none` 的脚本本来就跑在页面主世界；`addInitScript` 也在主世界、也在页面任何脚本之前执行，与 Tampermonkey 实际做的事基本一致，不是模拟。真正丢掉的只有两样：`@match` 路由（测试里直接导航到目标 URL 即可）与 `@run-at` 时机（`document-start` 用 `context.addInitScript`，`document-idle` 用 `page.addScriptTag`）。
 
@@ -156,7 +155,13 @@ await page.evaluate((id) => chrome.developerPrivate.updateExtensionConfiguration
 `@playwright/test` 与 vitest 的默认文件匹配都是 `*.spec.ts`。把 `test/e2e/*.spec.ts` 放进包目录之后，`rushx test`（vitest）会把它当成自己的用例去跑，报一堆解析错误。修法是在该包 `vite.config.ts` 的 `test` 段排掉，并把 `defineConfig` 的来源从 `vite` 换成 `vitest/config`：
 
 ```ts
-test: { exclude: ['test/e2e/**', '**/node_modules/**', '**/dist/**'] }
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    exclude: ['test/e2e/**', '**/node_modules/**', '**/dist/**'],
+  },
+});
 ```
 
 `scripts/xivanalysis-zh` 已经这么做了。其余四个用户脚本包（`feishu-download`、`universalis-zh-data`、`tenhou-pairi-koki-display`、`fflogs-scripts`）加 e2e 时要照做。

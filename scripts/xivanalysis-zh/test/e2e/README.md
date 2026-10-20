@@ -7,6 +7,8 @@
 - `injected.spec.ts` —— 测试自己用 `addInitScript` 在 document-start 把 `dist/index.js` 注入页面主世界，并假扮 `GM` 与 `unsafeWindow`。GM 的答复由 `page.route` 回答，全程不出网。
 - `tampermonkey.spec.ts` —— 真 Tampermonkey（从 Chrome 应用店下 CRX、解包、`--load-extension`），脚本走它自己的安装流程装进去，Chrome 138+ 那个「允许用户脚本」的开关由测试翻开。
 
+两条路线本身的执行路径与踩到的坑见 [docs/playwright.md](../../docs/playwright.md)。
+
 ## 为什么是这两组
 
 `@grant none` 的脚本跑在页面主世界，而 `addInitScript` 也在主世界、也在页面任何脚本之前执行——它和 Tampermonkey 实际做的事基本一致，不是模拟。所以注入组能覆盖脚本自己的全部逻辑，而且离线、确定、几秒跑完。

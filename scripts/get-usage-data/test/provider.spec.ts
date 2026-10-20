@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { clinepass } from '@/providers/clinepass';
 import { commandcode } from '@/providers/commandcode';
 import { deepseek } from '@/providers/deepseek';
+import { qodercn } from '@/providers/qodercn';
 import { isOnPage, providerOn } from '@/providers/types';
 
 const url = (raw: string): URL => new URL(raw);
@@ -58,11 +59,12 @@ describe('clinepass provider', () => {
   });
 
   it('按页面路径挑出对应服务商', () => {
-    const providers = [deepseek, clinepass, commandcode];
+    const providers = [deepseek, clinepass, commandcode, qodercn];
 
     expect(providerOn(providers, '/usage')?.id).toBe('deepseek');
     expect(providerOn(providers, '/dashboard/usage')?.id).toBe('clinepass');
     expect(providerOn(providers, '/zh/Tanimodori/settings/usage')?.id).toBe('commandcode');
+    expect(providerOn(providers, '/account/usage')?.id).toBe('qodercn');
     expect(providerOn(providers, '/dashboard')).toBeUndefined();
   });
 });
@@ -87,5 +89,38 @@ describe('commandcode provider', () => {
     expect(isOnPage(commandcode, '/zh/Tanimodori/settings')).toBe(false);
     expect(isOnPage(commandcode, '/zh/Tanimodori/settings/usage/detail')).toBe(false);
     expect(isOnPage(commandcode, '/usage')).toBe(false);
+  });
+});
+
+describe('qodercn provider', () => {
+  it('收下积分趋势与调用明细', () => {
+    expect(
+      qodercn.matchesRequest(
+        url(
+          'https://qoder.cn/api/v1/me/cost-center/credits/daily-trend?userId=01a0b730-b6ee-7460-bb05-deaf83be306c&startTime=1791907200000&endTime=1792511999999&groupBy=all',
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      qodercn.matchesRequest(
+        url(
+          'https://qoder.cn/api/v1/me/usages/big_model_credits/histories?page=1&page_size=100&start_time=1791907200000&end_time=1792511999999&order_by=begin_at&order=-1',
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it('放行其它端点与别的域名', () => {
+    expect(qodercn.matchesRequest(url('https://qoder.cn/api/v1/me/usages'))).toBe(false);
+    expect(qodercn.matchesRequest(url('https://qoder.cn/api/v1/me/usages/big_model_credits'))).toBe(false);
+    expect(qodercn.matchesRequest(url('https://qoder.cn/api/v1/me/usages/big_model_credits/histories/detail'))).toBe(false);
+    expect(qodercn.matchesRequest(url('https://api.qoder.cn/api/v1/me/cost-center/credits/daily-trend'))).toBe(false);
+  });
+
+  it('显示页面是 /account/usage', () => {
+    expect(isOnPage(qodercn, '/account/usage')).toBe(true);
+    expect(isOnPage(qodercn, '/account/usage/')).toBe(true);
+    expect(isOnPage(qodercn, '/account')).toBe(false);
+    expect(isOnPage(qodercn, '/account/usage/detail')).toBe(false);
   });
 });

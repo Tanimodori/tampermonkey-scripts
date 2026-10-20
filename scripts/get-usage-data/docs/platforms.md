@@ -20,3 +20,8 @@ get-usage-data 在下列平台的用量页显示按钮，并旁听页面发往�
 - 拦截接口：`GET https://api.commandcode.ai/internal/usage/by-model`
 
 用户名随账号不同，脚本按路径的其余各段匹配，不限定具体账号。
+
+## QoderCN
+
+- 显示页面：<https://qoder.cn/account/usage>
+- 拦截接口：`GET https://qoder.cn/api/v1/me/cost-center/credits/daily-trend` 与 `GET https://qoder.cn/api/v1/me/usages/big_model_credits/histories`

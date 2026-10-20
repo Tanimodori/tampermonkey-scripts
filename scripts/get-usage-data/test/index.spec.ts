@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const USAGE = 'https://platform.deepseek.com/api/v0/usage/by_api_key/cost?start=1789660800&end=1792252800&tz=28800';
 const CLINE_USAGE = 'https://api.cline.bot/api/v1/users/usr-01M3VA9F850XGCF73AASJZVM9X/usages/daily?startDate=2026-10-01&endDate=2026-10-31';
 const COMMANDCODE_USAGE = 'https://api.commandcode.ai/internal/usage/by-model';
+const QODER_USAGE =
+  'https://qoder.cn/api/v1/me/cost-center/credits/daily-trend?userId=01a0b730-b6ee-7460-bb05-deaf83be306c&startTime=1791907200000&endTime=1792511999999&groupBy=all';
 const originalFetch = window.fetch;
 
 interface Loaded {
@@ -98,6 +100,25 @@ describe('入口装配', () => {
     expect(JSON.parse(await blob!.text())).toEqual([
       {
         requestUrl: COMMANDCODE_USAGE,
+        responseTime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/),
+        data: { total: 5 },
+      },
+    ]);
+  });
+
+  it('在 QoderCN 用量页采集积分趋势，文件名按服务商命名', async () => {
+    const { host, inner } = await loadScript('/account/usage');
+    expect(host.style.display).toBe('block');
+
+    await window.fetch(QODER_USAGE);
+
+    await vi.waitFor(() => expect(inner.dataset.state).toBe('ready'));
+    inner.click();
+
+    expect(fileName).toMatch(/^usage-qodercn-\d{8}-\d{6}\.json$/);
+    expect(JSON.parse(await blob!.text())).toEqual([
+      {
+        requestUrl: QODER_USAGE,
         responseTime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/),
         data: { total: 5 },
       },

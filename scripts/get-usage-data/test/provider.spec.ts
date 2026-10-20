@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { clinepass } from '@/providers/clinepass';
+import { commandcode } from '@/providers/commandcode';
 import { deepseek } from '@/providers/deepseek';
 import { isOnPage, providerOn } from '@/providers/types';
 
@@ -57,10 +58,34 @@ describe('clinepass provider', () => {
   });
 
   it('按页面路径挑出对应服务商', () => {
-    const providers = [deepseek, clinepass];
+    const providers = [deepseek, clinepass, commandcode];
 
     expect(providerOn(providers, '/usage')?.id).toBe('deepseek');
     expect(providerOn(providers, '/dashboard/usage')?.id).toBe('clinepass');
+    expect(providerOn(providers, '/zh/Tanimodori/settings/usage')?.id).toBe('commandcode');
     expect(providerOn(providers, '/dashboard')).toBeUndefined();
+  });
+});
+
+describe('commandcode provider', () => {
+  it('收下按模型统计的用量接口', () => {
+    expect(commandcode.matchesRequest(url('https://api.commandcode.ai/internal/usage/by-model'))).toBe(true);
+    expect(commandcode.matchesRequest(url('https://api.commandcode.ai/internal/usage/by-model?startDate=2026-10-01&endDate=2026-10-31'))).toBe(true);
+  });
+
+  it('放行其它端点与别的域名', () => {
+    expect(commandcode.matchesRequest(url('https://api.commandcode.ai/internal/usage/by-key'))).toBe(false);
+    expect(commandcode.matchesRequest(url('https://api.commandcode.ai/internal/usage/by-model/daily'))).toBe(false);
+    expect(commandcode.matchesRequest(url('https://commandcode.ai/internal/usage/by-model'))).toBe(false);
+    expect(commandcode.matchesRequest(url('https://api.cline.bot/internal/usage/by-model'))).toBe(false);
+  });
+
+  it('页面路径接受语言与用户名两段，也接受省略语言', () => {
+    expect(isOnPage(commandcode, '/zh/Tanimodori/settings/usage')).toBe(true);
+    expect(isOnPage(commandcode, '/en/other-user/settings/usage/')).toBe(true);
+    expect(isOnPage(commandcode, '/Tanimodori/settings/usage')).toBe(true);
+    expect(isOnPage(commandcode, '/zh/Tanimodori/settings')).toBe(false);
+    expect(isOnPage(commandcode, '/zh/Tanimodori/settings/usage/detail')).toBe(false);
+    expect(isOnPage(commandcode, '/usage')).toBe(false);
   });
 });

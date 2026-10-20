@@ -33,8 +33,8 @@ export default defineConfig({
           zh: '从大模型平台网页中保存用量数据',
         },
         namespace: 'http://tanimodori.com/',
-        match: ['https://platform.deepseek.com/*', 'https://app.cline.bot/*'],
-        include: ['https://platform.deepseek.com/*', 'https://app.cline.bot/*'],
+        match: ['https://platform.deepseek.com/*', 'https://app.cline.bot/*', 'https://commandcode.ai/*'],
+        include: ['https://platform.deepseek.com/*', 'https://app.cline.bot/*', 'https://commandcode.ai/*'],
         // 全程只读页面自己的请求：不代发请求，也不用 GM API，故在页面主世界直接覆写 fetch / XHR。
         grant: 'none',
         'run-at': 'document-start',

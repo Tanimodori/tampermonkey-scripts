@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const USAGE = 'https://platform.deepseek.com/api/v0/usage/by_api_key/cost?start=1789660800&end=1792252800&tz=28800';
 const CLINE_USAGE = 'https://api.cline.bot/api/v1/users/usr-01M3VA9F850XGCF73AASJZVM9X/usages/daily?startDate=2026-10-01&endDate=2026-10-31';
+const COMMANDCODE_USAGE = 'https://api.commandcode.ai/internal/usage/by-model';
 const originalFetch = window.fetch;
 
 interface Loaded {
@@ -78,6 +79,25 @@ describe('入口装配', () => {
     expect(JSON.parse(await blob!.text())).toEqual([
       {
         requestUrl: CLINE_USAGE,
+        responseTime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/),
+        data: { total: 5 },
+      },
+    ]);
+  });
+
+  it('在 Command Code 用量页采集按模型统计的用量，文件名按服务商命名', async () => {
+    const { host, inner } = await loadScript('/zh/Tanimodori/settings/usage');
+    expect(host.style.display).toBe('block');
+
+    await window.fetch(COMMANDCODE_USAGE);
+
+    await vi.waitFor(() => expect(inner.dataset.state).toBe('ready'));
+    inner.click();
+
+    expect(fileName).toMatch(/^usage-commandcode-\d{8}-\d{6}\.json$/);
+    expect(JSON.parse(await blob!.text())).toEqual([
+      {
+        requestUrl: COMMANDCODE_USAGE,
         responseTime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/),
         data: { total: 5 },
       },

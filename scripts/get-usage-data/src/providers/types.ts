@@ -10,3 +10,7 @@ export interface Provider {
 
 /** 页面路径比对：只忽略结尾的斜杠，其余按字面比。 */
 export const isOnPage = (provider: Provider, pathname: string): boolean => pathname.replace(/\/+$/, '') === provider.pagePath;
+
+/** 找出当前路径归属的服务商；不在任何服务商的用量页上时返回 undefined。 */
+export const providerOn = (providers: readonly Provider[], pathname: string): Provider | undefined =>
+  providers.find((provider) => isOnPage(provider, pathname));

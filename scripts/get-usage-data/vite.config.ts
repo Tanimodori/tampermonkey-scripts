@@ -30,11 +30,11 @@ export default defineConfig({
         name: { default: 'get-usage-data', zh: '大模型用量数据保存' },
         description: {
           default: 'Save usage data from LLM platform pages as JSON files',
-          zh: '从大模型服务商网页中保存用量数据',
+          zh: '从大模型平台网页中保存用量数据',
         },
         namespace: 'http://tanimodori.com/',
-        match: 'https://platform.deepseek.com/*',
-        include: 'https://platform.deepseek.com/*',
+        match: ['https://platform.deepseek.com/*', 'https://app.cline.bot/*'],
+        include: ['https://platform.deepseek.com/*', 'https://app.cline.bot/*'],
         // 全程只读页面自己的请求：不代发请求，也不用 GM API，故在页面主世界直接覆写 fetch / XHR。
         grant: 'none',
         'run-at': 'document-start',

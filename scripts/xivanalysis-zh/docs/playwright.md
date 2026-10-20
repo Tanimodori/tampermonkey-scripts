@@ -1,6 +1,6 @@
 # 用 Playwright 测用户脚本
 
-本仓的用户脚本一直只靠 vitest 测：直接 import 源码，从不过打包器，也从不进浏览器。`scripts/xivanalysis-zh` 是第一个补上浏览器侧 e2e 的包，两条路线都落在 `scripts/xivanalysis-zh/test/e2e/`，运行方式与文件分工见[那里的 README](../test/e2e/README.md)。
+本仓的用户脚本一直只靠 vitest 测：直接 import 源码，从不过打包器，也从不进浏览器。`scripts/xivanalysis-zh` 是第一个补上浏览器侧 e2e 的包。两条路线各有离线与真实站点两份，落在 `test/e2e/{offline,live}/`，运行方式与文件分工见[那里的 README](../test/e2e/README.md)。
 
 这份文档写的是这两条路线本身：各自做了什么、执行路径长什么样、以及踩到的坑。坑点部分都是实测结论，不是推断；写"实测"的地方有具体现象，写"推断"的地方会注明。
 
@@ -17,6 +17,8 @@
 | 可进 CI | 可以                                                     | 建议单独一条，要网络                        |
 
 两者不是替代关系。路线一覆盖脚本的全部逻辑而且确定、快，但它替测试做了两件本该由管理器做的事——决定 `@match` 生不生效、决定脚本进不进得来。路线二补的就是这两件。
+
+两份都有离线与真实站点两个版本：`offline/injected.spec.ts`、`offline/tampermonkey.spec.ts` 用夹具页；`live/injected.spec.ts` 跑全部真实战报，`live/tampermonkey.spec.ts` 只跑一条 smoke。真实站点固定 `locale: 'en-US'`，否则 xivanalysis 自己的 i18n 会让“页面出现中文”失去判据。
 
 ## 路线一：注入（`addInitScript` + 假 GM）
 
@@ -152,19 +154,19 @@ await page.evaluate((id) => chrome.developerPrivate.updateExtensionConfiguration
 
 ## 加 e2e 时最容易漏的一件事
 
-`@playwright/test` 与 vitest 的默认文件匹配都是 `*.spec.ts`。把 `test/e2e/*.spec.ts` 放进包目录之后，`rushx test`（vitest）会把它当成自己的用例去跑，报一堆解析错误。修法是在该包 `vite.config.ts` 的 `test` 段排掉，并把 `defineConfig` 的来源从 `vite` 换成 `vitest/config`：
+`@playwright/test` 与 vitest 的默认文件匹配都是 `*.spec.ts`。把 Playwright 的用例放进包目录之后，`rushx test`（vitest）会把它当成自己的用例去跑，报一堆解析错误。修法是在该包 `vite.config.ts` 的 `test` 段显式收窄到 `test/unit/**`，并把 `defineConfig` 的来源从 `vite` 换成 `vitest/config`：
 
 ```ts
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    exclude: ['test/e2e/**', '**/node_modules/**', '**/dist/**'],
+    include: ['test/unit/**/*.spec.ts'],
   },
 });
 ```
 
-`scripts/xivanalysis-zh` 已经这么做了。其余四个用户脚本包（`feishu-download`、`universalis-zh-data`、`tenhou-pairi-koki-display`、`fflogs-scripts`）加 e2e 时要照做。
+用 `include` 而不是继续加 `exclude`：测试目录一旦按 `offline/`、`live/` 分开，exclude 要跟着列一遍，漏一条就会让 vitest 去解析 Playwright 的用例。`scripts/xivanalysis-zh` 已经这么做了。其余四个用户脚本包（`feishu-download`、`universalis-zh-data`、`tenhou-pairi-koki-display`、`fflogs-scripts`）加 e2e 时要照做。
 
 ## 顺带发现并修掉的一个 bug
 

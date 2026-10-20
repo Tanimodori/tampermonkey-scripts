@@ -41,7 +41,7 @@ export default defineConfig({
     }),
   ],
   test: {
-    // `test/e2e/` 归 playwright，文件名同样是 `*.spec.ts`，不排掉 vitest 会把它当自己的用例跑。
-    exclude: ['test/e2e/**', '**/node_modules/**', '**/dist/**'],
+    // 只认 `test/unit/`：`test/e2e/` 归 Playwright，文件名同样可能是 `*.spec.ts`。
+    include: ['test/unit/**/*.spec.ts'],
   },
 });

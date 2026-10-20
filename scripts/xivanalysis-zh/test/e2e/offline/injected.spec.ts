@@ -1,5 +1,5 @@
 import { expect, test, type ConsoleMessage, type Page } from '@playwright/test';
-import { FALLBACK, loadSheet, MANAGER_SHIM, readBundle, routeFixture, type SheetBody } from './support';
+import { FALLBACK, loadSheet, MANAGER_SHIM, readBundle, routeFixture, type SheetBody } from '../support';
 
 /**
  * 注入组：用 `addInitScript` 在真正的 document-start 把产物塞进页面主世界，GM 由测试假扮。

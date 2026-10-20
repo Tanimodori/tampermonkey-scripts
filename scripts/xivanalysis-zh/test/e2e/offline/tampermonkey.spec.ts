@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { loadSheet, routeFixture, serveBundle, type RecordedRequests } from './support';
-import { allowUserScripts, ensureTampermonkey, installFromUrl, launchTampermonkey, waitForInjection, type TampermonkeySession } from './tampermonkey';
+import { loadSheet, routeFixture, serveBundle, type RecordedRequests } from '../support';
+import { allowUserScripts, ensureTampermonkey, installFromUrl, launchTampermonkey, waitForInjection, type TampermonkeySession } from '../tampermonkey';
 
 /**
  * 真管理器组：Tampermonkey 从应用店下下来、解包、`--load-extension` 装进 Chrome，脚本经它自己的安装流程
@@ -16,7 +16,7 @@ let server: Awaited<ReturnType<typeof serveBundle>> | undefined;
 let unavailable = '';
 
 test.beforeAll(async () => {
-  const extensionDir = await ensureTampermonkey();
+  const extensionDir = await ensureTampermonkey(!!process.env.CI);
   if (!extensionDir) {
     unavailable = 'Tampermonkey 扩展拿不到（离线或应用店不可达），跳过真管理器组';
     return;

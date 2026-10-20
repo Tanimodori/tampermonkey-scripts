@@ -12,9 +12,18 @@ Install this scirpt at [GreasyFork](https://greasyfork.org/zh-CN/scripts/523443-
 
 ## test
 
-`pnpm run test`
+`rushx test:unit`
 
-另有两组 Playwright e2e：注入组用 `addInitScript` 在 document-start 注入产物并假扮 `GM`（离线、可进 CI），真管理器组把产物装进真的 Tampermonkey 里跑（要网络、慢）。`rushx test:e2e` / `rushx test:e2e:tampermonkey` / `rushx test:e2e:all`，判什么、为什么这么分见 [test/e2e/README.md](test/e2e/README.md)。
+Playwright e2e 按「页面来源 × 运行时」分四组：
+
+- `rushx test:offline` —— 夹具页，快速注入 + 真管理器；页面与接口不出网。
+- `rushx test:live:smoke` —— 一条真实战报 + 快速注入。
+- `rushx test:live:all` —— 全部真实战报 + 快速注入，串行。
+- `rushx test:tampermonkey` —— 一条真实战报 + 真 Tampermonkey。
+- `rushx test:gate` —— unit + offline + live:smoke，日常构建门禁。
+- `rushx test:all` —— 发布用完整集合，含 live:all 与 live:tampermonkey。
+
+判什么、为什么这么分见 [test/e2e/README.md](test/e2e/README.md)。
 
 ## build
 

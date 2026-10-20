@@ -22,10 +22,14 @@
     "format:check": "oxfmt --check",
     "lint": "oxlint",
     "typecheck": "tsc -b",
-    "test": "vitest --passWithNoTests",
-    "test:e2e": "vite build && playwright test --project=injected",
-    "test:e2e:tampermonkey": "vite build && playwright test --project=tampermonkey",
-    "test:e2e:all": "vite build && playwright test"
+    "test": "vitest run --passWithNoTests",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:offline": "vite build && playwright test --project=offline-injected --project=offline-tampermonkey",
+    "test:live:smoke": "vite build && playwright test --config=playwright.live.config.ts --project=live-injected --grep @smoke",
+    "test:live:all": "vite build && playwright test --config=playwright.live.config.ts --project=live-injected",
+    "test:tampermonkey": "vite build && playwright test --config=playwright.live.config.ts --project=live-tampermonkey",
+    "test:gate": "vitest run --passWithNoTests && tsc -b && vite build && playwright test --project=offline-injected --project=offline-tampermonkey && playwright test --config=playwright.live.config.ts --project=live-injected --grep @smoke",
+    "test:all": "vitest run --passWithNoTests && tsc -b && vite build && playwright test --project=offline-injected --project=offline-tampermonkey && playwright test --config=playwright.live.config.ts --project=live-injected && playwright test --config=playwright.live.config.ts --project=live-tampermonkey"
   },
   "dependencies": {
     "xiv-garland-provider": "workspace:*"

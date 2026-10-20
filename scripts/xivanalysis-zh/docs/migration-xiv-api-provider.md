@@ -219,4 +219,4 @@ Stage E 请回的 garlands 兜底是手写的:自己的 `search.php` 地址常�
 - **传输**:注入 `createGarlandClient({ fetch: (url, init) => gmFetch(url, init?.headers) })`,仍是 `GM.xmlHttpRequest` 代发(`search.php` 无 ACAO);`vite.config.ts` 的 `grant` / `connect` 未动。接缝上的 `signal` 有意不转发,理由写在 `hooks/fetch.ts`。
 - **之后不变**:命中经国服 xivapi 单行读简中名(原生 `pageFetch`)、`memorize` 保证同串只查一次(含"查不到")、写回 `store` 与 `known`。
 
-**依赖**:`package.json` 去掉 `xiv-api-provider`(自 D-2 起已无任何 src 引用,`grep` 可核实),`dependencies` 加 `xiv-garland-provider`。新增 `test/garland.spec.ts` 用假的 GM 与假的原生 fetch 钉住上面几条,不出网。
+**依赖**:`package.json` 去掉 `xiv-api-provider`(自 D-2 起已无任何 src 引用,`grep` 可核实),`dependencies` 加 `xiv-garland-provider`。新增 `test/unit/garland.spec.ts` 用假的 GM 与假的原生 fetch 钉住上面几条,不出网。

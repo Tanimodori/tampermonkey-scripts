@@ -12,7 +12,11 @@ import { defineConfig } from '@playwright/test';
  * 移除了侧载扩展的命令行开关，只有自带那份还能 `--load-extension`。
  */
 export default defineConfig({
-  testDir: './test/e2e',
+  // 离线组：夹具页 + `page.route` 接管全部出网路径。
+  testDir: './test/e2e/offline',
+  outputDir: 'test-results/offline',
+  // `.only` 混进门禁会静默缩小范围。
+  forbidOnly: !!process.env.CI,
   // 真 Tampermonkey 组的冷启动要几十秒才注入，注入组里几次 garland 兜底也各有往返。
   timeout: 180_000,
   // 两组都要独占一个浏览器（一组是持久 context + profile），并行只会互相踩。
@@ -24,7 +28,7 @@ export default defineConfig({
     headless: true,
   },
   projects: [
-    { name: 'injected', testMatch: /injected\.spec\.ts$/ },
-    { name: 'tampermonkey', testMatch: /tampermonkey\.spec\.ts$/ },
+    { name: 'offline-injected', testMatch: /injected\.spec\.ts$/ },
+    { name: 'offline-tampermonkey', testMatch: /tampermonkey\.spec\.ts$/ },
   ],
 });

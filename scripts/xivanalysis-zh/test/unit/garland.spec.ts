@@ -53,9 +53,9 @@ const pageFetch = async (input: string): Promise<Response> => {
   return row === undefined ? new Response('not found', { status: 404 }) : jsonResponse(row);
 };
 
-let garland: typeof import('../src/data/garland');
-let store: typeof import('../src/data/store');
-let utils: typeof import('../src/utils');
+let garland: typeof import('../../src/data/garland');
+let store: typeof import('../../src/data/store');
+let utils: typeof import('../../src/utils');
 
 beforeEach(async () => {
   gmRequests.length = 0;
@@ -68,9 +68,9 @@ beforeEach(async () => {
   vi.stubGlobal('GM', { xmlHttpRequest: gmXmlHttpRequest });
   vi.stubGlobal('unsafeWindow', { fetch: pageFetch });
   vi.resetModules();
-  garland = await import('../src/data/garland');
-  store = await import('../src/data/store');
-  utils = await import('../src/utils');
+  garland = await import('../../src/data/garland');
+  store = await import('../../src/data/store');
+  utils = await import('../../src/utils');
 });
 
 afterEach(() => {

@@ -72,9 +72,10 @@ const download = async (): Promise<Buffer> => {
 
 /**
  * 备好一份解包好的 Tampermonkey，返回它的目录；下载不到（离线、应用店改协议）返回 null。
+ * `required` 为 true 时改为抛错：门禁里把“拿不到扩展”当成通过会让完整注入这条路径静默消失。
  * 扩展本身缓存下来，profile 每次重建——安装脚本那一步也在被测范围内，不能拿旧 profile 蒙混。
  */
-export const ensureTampermonkey = async (): Promise<string | null> => {
+export const ensureTampermonkey = async (required = false): Promise<string | null> => {
   if (existsSync(join(EXT_DIR, 'manifest.json'))) return EXT_DIR;
   try {
     const staging = `${EXT_DIR}.tmp`;
@@ -86,7 +87,9 @@ export const ensureTampermonkey = async (): Promise<string | null> => {
     renameSync(staging, EXT_DIR);
     return EXT_DIR;
   } catch (e) {
-    console.warn(`[tampermonkey] 扩展不可用，跳过这一组：${e instanceof Error ? e.message : String(e)}`);
+    const message = `Tampermonkey 扩展不可用：${e instanceof Error ? e.message : String(e)}`;
+    if (required) throw new Error(message);
+    console.warn(`[tampermonkey] ${message}，跳过这一组`);
     return null;
   }
 };
@@ -105,6 +108,9 @@ export const launchTampermonkey = async (extensionDir: string): Promise<Tampermo
   const context = await chromium.launchPersistentContext(PROFILE_DIR, {
     channel: 'chromium',
     headless: true,
+    // 真实页固定英语：xivanalysis 自己会按浏览器语言做 i18n，否则页面自带中文，
+    // “时间轴出现中文”就不能证明是用户脚本改的。
+    locale: 'en-US',
     args: [`--disable-extensions-except=${extensionDir}`, `--load-extension=${extensionDir}`],
   });
   let [worker] = context.serviceWorkers();

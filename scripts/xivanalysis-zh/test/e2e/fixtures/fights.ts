@@ -52,6 +52,25 @@ export interface FightFixture {
   url: string;
 }
 
+/** 真实页测试只需要这四个字段；`FIGHTS` 与 `SMOKE_FIGHT` 都能满足。 */
+export interface LiveFight {
+  zoneName: string;
+  dutyName: string;
+  job: string;
+  url: string;
+}
+
+/**
+ * 单页冒烟用的额外战报。它与 `FIGHTS` 分开：`FIGHTS` 保持「一个副本一条」，
+ * 这条只是选来覆盖 AST 与 Wicked Thunder 的稳定样本。
+ */
+export const SMOKE_FIGHT: LiveFight = {
+  zoneName: 'AAC Light-Heavyweight',
+  dutyName: 'Wicked Thunder',
+  job: 'AST',
+  url: 'https://xivanalysis.com/fflogs/PHZTyNqGvQ4AgbRr/8/116',
+};
+
 export const FIGHTS: FightFixture[] = [
   // AAC Light-Heavyweight（M1S–M4S）
   {
@@ -368,3 +387,6 @@ export const FIGHTS: FightFixture[] = [
     url: 'https://xivanalysis.com/fflogs/LX2T4ZvbcfpPBy8h/3/2',
   },
 ];
+
+/** 全量真实页集合：33 条 `FIGHTS` + 冒烟用的额外一条。 */
+export const LIVE_FIGHTS: LiveFight[] = [...FIGHTS, SMOKE_FIGHT];

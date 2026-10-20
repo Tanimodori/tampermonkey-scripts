@@ -4,6 +4,7 @@ import { commandcode } from '@/providers/commandcode';
 import { deepseek } from '@/providers/deepseek';
 import { qodercn } from '@/providers/qodercn';
 import { isOnPage, providerOn } from '@/providers/types';
+import { workbuddycn } from '@/providers/workbuddycn';
 
 const url = (raw: string): URL => new URL(raw);
 
@@ -59,12 +60,13 @@ describe('clinepass provider', () => {
   });
 
   it('按页面路径挑出对应服务商', () => {
-    const providers = [deepseek, clinepass, commandcode, qodercn];
+    const providers = [deepseek, clinepass, commandcode, qodercn, workbuddycn];
 
     expect(providerOn(providers, '/usage')?.id).toBe('deepseek');
     expect(providerOn(providers, '/dashboard/usage')?.id).toBe('clinepass');
     expect(providerOn(providers, '/zh/Tanimodori/settings/usage')?.id).toBe('commandcode');
     expect(providerOn(providers, '/account/usage')?.id).toBe('qodercn');
+    expect(providerOn(providers, '/profile/plans-usage')?.id).toBe('workbuddycn');
     expect(providerOn(providers, '/dashboard')).toBeUndefined();
   });
 });
@@ -122,5 +124,25 @@ describe('qodercn provider', () => {
     expect(isOnPage(qodercn, '/account/usage/')).toBe(true);
     expect(isOnPage(qodercn, '/account')).toBe(false);
     expect(isOnPage(qodercn, '/account/usage/detail')).toBe(false);
+  });
+});
+
+describe('workbuddycn provider', () => {
+  it('收下按请求统计的用量接口', () => {
+    expect(workbuddycn.matchesRequest(url('https://www.workbuddy.cn/billing/meter/get-user-request-usage'))).toBe(true);
+  });
+
+  it('放行其它端点与别的域名', () => {
+    expect(workbuddycn.matchesRequest(url('https://www.workbuddy.cn/billing/meter/get-user-request-usage/detail'))).toBe(false);
+    expect(workbuddycn.matchesRequest(url('https://www.workbuddy.cn/billing/meter/get-user-usage'))).toBe(false);
+    expect(workbuddycn.matchesRequest(url('https://workbuddy.cn/billing/meter/get-user-request-usage'))).toBe(false);
+    expect(workbuddycn.matchesRequest(url('https://www.qoder.cn/billing/meter/get-user-request-usage'))).toBe(false);
+  });
+
+  it('显示页面是 /profile/plans-usage', () => {
+    expect(isOnPage(workbuddycn, '/profile/plans-usage')).toBe(true);
+    expect(isOnPage(workbuddycn, '/profile/plans-usage/')).toBe(true);
+    expect(isOnPage(workbuddycn, '/profile')).toBe(false);
+    expect(isOnPage(workbuddycn, '/profile/plans-usage/detail')).toBe(false);
   });
 });

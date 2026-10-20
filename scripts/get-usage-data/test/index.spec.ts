@@ -5,6 +5,7 @@ const CLINE_USAGE = 'https://api.cline.bot/api/v1/users/usr-01M3VA9F850XGCF73AAS
 const COMMANDCODE_USAGE = 'https://api.commandcode.ai/internal/usage/by-model';
 const QODER_USAGE =
   'https://qoder.cn/api/v1/me/cost-center/credits/daily-trend?userId=01a0b730-b6ee-7460-bb05-deaf83be306c&startTime=1791907200000&endTime=1792511999999&groupBy=all';
+const WORKBUDDY_USAGE = 'https://www.workbuddy.cn/billing/meter/get-user-request-usage';
 const originalFetch = window.fetch;
 
 interface Loaded {
@@ -119,6 +120,25 @@ describe('入口装配', () => {
     expect(JSON.parse(await blob!.text())).toEqual([
       {
         requestUrl: QODER_USAGE,
+        responseTime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/),
+        data: { total: 5 },
+      },
+    ]);
+  });
+
+  it('在 WorkBuddyCN 用量页采集请求用量，文件名按服务商命名', async () => {
+    const { host, inner } = await loadScript('/profile/plans-usage');
+    expect(host.style.display).toBe('block');
+
+    await window.fetch(WORKBUDDY_USAGE);
+
+    await vi.waitFor(() => expect(inner.dataset.state).toBe('ready'));
+    inner.click();
+
+    expect(fileName).toMatch(/^usage-workbuddycn-\d{8}-\d{6}\.json$/);
+    expect(JSON.parse(await blob!.text())).toEqual([
+      {
+        requestUrl: WORKBUDDY_USAGE,
         responseTime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/),
         data: { total: 5 },
       },

@@ -25,3 +25,8 @@ get-usage-data 在下列平台的用量页显示按钮，并旁听页面发往�
 
 - 显示页面：<https://qoder.cn/account/usage>
 - 拦截接口：`GET https://qoder.cn/api/v1/me/cost-center/credits/daily-trend` 与 `GET https://qoder.cn/api/v1/me/usages/big_model_credits/histories`
+
+## WorkBuddyCN
+
+- 显示页面：<https://www.workbuddy.cn/profile/plans-usage>
+- 拦截接口：`POST https://www.workbuddy.cn/billing/meter/get-user-request-usage`

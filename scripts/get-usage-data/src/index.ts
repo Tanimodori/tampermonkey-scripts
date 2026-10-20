@@ -8,11 +8,12 @@ import { commandcode } from './providers/commandcode';
 import { deepseek } from './providers/deepseek';
 import { qodercn } from './providers/qodercn';
 import { providerOn } from './providers/types';
+import { workbuddycn } from './providers/workbuddycn';
 import { capture, capturedCount, revisionOf, snapshot, subscribe } from './store';
 import { createUsageButton, type ButtonState } from './ui/button';
 
 /** 支持的服务商。各自声明页面路径与要采集的接口，入口只负责把它们串起来。 */
-const providers = [deepseek, clinepass, commandcode, qodercn];
+const providers = [deepseek, clinepass, commandcode, qodercn, workbuddycn];
 
 const sink = (requestUrl: string, data: unknown): void => capture(requestUrl, data, new Date());
 

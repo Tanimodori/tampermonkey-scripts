@@ -2,7 +2,15 @@ import { expect, test } from '@playwright/test';
 import { SMOKE_FIGHT } from '../fixtures/fights';
 import { serveBundle } from '../support';
 import { allowUserScripts, ensureTampermonkey, installFromUrl, launchTampermonkey, waitForInjection, type TampermonkeySession } from '../tampermonkey';
-import { expectChineseTimeline, expectInjectedStyle, openWhenAvailable, reloadWhenAvailable, waitForCnSheet, watchSheetResponses } from './support';
+import {
+  expectChineseTimeline,
+  expectInjectedStyle,
+  ExternalOutageError,
+  openWhenAvailable,
+  reloadWhenAvailable,
+  waitForCnSheet,
+  watchSheetResponses,
+} from './support';
 
 /**
  * 真实页 + 完整注入：真 Tampermonkey 装上构建产物，再打开真实战报页。
@@ -39,16 +47,24 @@ test('真实战报页在真 Tampermonkey 下被本地化', async () => {
   const page = await session!.context.newPage();
   const responses = watchSheetResponses(page);
 
-  await openWhenAvailable(page, SMOKE_FIGHT.url, responses, 2, { requireCn: false });
-  expect(await waitForInjection(page), '超时前 Tampermonkey 没有把脚本注入进来').toBe(true);
+  try {
+    await openWhenAvailable(page, SMOKE_FIGHT.url, responses, 2, { requireCn: false });
+    expect(await waitForInjection(page), '超时前 Tampermonkey 没有把脚本注入进来').toBe(true);
 
-  // 冷启动可能让首次导航错过 document-start；管理器热起来后重载一次，才是它正常的注入时机。
-  // `reloadWhenAvailable` 会清掉首轮记录，让后面的断言只认重载之后的国服响应。
-  await reloadWhenAvailable(page, SMOKE_FIGHT.url, responses);
+    // 冷启动可能让首次导航错过 document-start；管理器热起来后重载一次，才是它正常的注入时机。
+    // `reloadWhenAvailable` 会清掉首轮记录，让后面的断言只认重载之后的国服响应。
+    await reloadWhenAvailable(page, SMOKE_FIGHT.url, responses);
 
-  await waitForCnSheet(page, responses);
-  await expectInjectedStyle(page);
-  await expectChineseTimeline(page);
+    await waitForCnSheet(page, responses);
+    await expectInjectedStyle(page);
+    await expectChineseTimeline(page);
+  } catch (error) {
+    if (error instanceof ExternalOutageError) {
+      test.skip(true, error.message);
+      return;
+    }
+    throw error;
+  }
 
   await page.close();
 });

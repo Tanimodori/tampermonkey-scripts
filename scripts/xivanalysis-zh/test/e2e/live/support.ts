@@ -45,6 +45,24 @@ const isRateLimited = async (page: Page): Promise<boolean> =>
     .count()
     .catch(() => 0)) > 0;
 
+/**
+ * xivanalysis 的 FFLogs 代理自身故障。页面会显示 “API Error ... HTTPError: 503”，
+ * 战报根本不会渲染；这与翻译脚本无关，也在不注入脚本时能复现。
+ */
+const isUpstreamError = async (page: Page): Promise<boolean> =>
+  (await page
+    .getByText('API Error', { exact: false })
+    .count()
+    .catch(() => 0)) > 0;
+
+/** 上游 API 故障：由测试转成 skip，而不是把别人的 503 记成翻译回归。 */
+export class ExternalOutageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ExternalOutageError';
+  }
+}
+
 /** 限流后的全局冷却：同一 worker 里的后续用例先等它过去，避免每条都撞墙。 */
 let cooldownUntil = 0;
 
@@ -58,17 +76,18 @@ const markRateLimited = (): void => {
   cooldownUntil = Math.max(cooldownUntil, Date.now() + 180_000);
 };
 
-type OpenOutcome = 'ok' | 'limited' | 'timeout';
+type OpenOutcome = 'ok' | 'limited' | 'upstream' | 'timeout';
 
 /**
- * 导航后等三种结果之一：国服 sheet 200、xivanalysis 限流页、超时。
- * 限流页在首次分析请求返回后才渲染，所以不能只等固定几秒再查一次。
+ * 导航后等四种结果之一：国服 sheet 200、xivanalysis 限流页、FFLogs 代理故障、超时。
+ * 限流页与 API Error 页都在首次分析请求返回后才渲染，所以不能只等固定几秒再查一次。
  */
 const waitForOutcome = async (page: Page, responses: SheetResponse[], timeoutMs: number): Promise<OpenOutcome> => {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (responses.some((response) => response.status === 200)) return 'ok';
     if (await isRateLimited(page)) return 'limited';
+    if (await isUpstreamError(page)) return 'upstream';
     await page.waitForTimeout(500);
   }
   return 'timeout';
@@ -77,6 +96,11 @@ const waitForOutcome = async (page: Page, responses: SheetResponse[], timeoutMs:
 const handleOutcome = async (outcome: OpenOutcome, url: string, attempt: number, attempts: number): Promise<void> => {
   if (outcome === 'ok') return;
   if (outcome === 'timeout') throw new Error(`60 秒内没有成功的国服 sheet 响应：${url}`);
+  if (outcome === 'upstream') {
+    if (attempt === attempts) throw new ExternalOutageError(`xivanalysis 的 FFLogs 代理返回 API Error，战报未渲染：${url}`);
+    await new Promise((resolve) => setTimeout(resolve, 30_000));
+    return;
+  }
   markRateLimited();
   if (attempt === attempts) throw new Error(`xivanalysis 持续限流，放弃：${url}`);
   await waitForRateLimitCooldown();
@@ -134,12 +158,19 @@ export const expectInjectedStyle = async (page: Page, timeout = 60_000): Promise
 /**
  * 至少一个时间轴标签带中日韩文字。真实页固定 `locale: 'en-US'`，所以这不是页面自己的
  * i18n 产物，只能来自脚本的改写。
+ *
+ * 国服 sheet 可能先于战报数据到达，所以 `openWhenAvailable` 返回 ok 并不代表战报渲染成功；
+ * 这里同时盯 API Error 页，命中就抛 `ExternalOutageError`，由调用方转成 skip。
  */
 export const expectChineseTimeline = async (page: Page, timeout = 60_000): Promise<void> => {
-  await expect
-    .poll(
-      () => page.locator('[class*="Timeline-module_content"]').evaluateAll((nodes) => nodes.some((node) => /[\u4e00-\u9fff]/.test(node.textContent ?? ''))),
-      { timeout },
-    )
-    .toBe(true);
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    if (await isUpstreamError(page)) throw new ExternalOutageError(`xivanalysis 的 FFLogs 代理返回 API Error，战报未渲染：${page.url()}`);
+    const hasChinese = await page
+      .locator('[class*="Timeline-module_content"]')
+      .evaluateAll((nodes) => nodes.some((node) => /[\u4e00-\u9fff]/.test(node.textContent ?? '')));
+    if (hasChinese) return;
+    await page.waitForTimeout(500);
+  }
+  throw new Error(`60 秒内时间轴没有出现中日韩文字：${page.url()}`);
 };

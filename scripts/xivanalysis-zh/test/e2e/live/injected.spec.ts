@@ -4,6 +4,7 @@ import {
   expectChineseTimeline,
   expectFetchTakenOver,
   expectInjectedStyle,
+  ExternalOutageError,
   installFastInjection,
   openWhenAvailable,
   waitForCnSheet,
@@ -38,11 +39,19 @@ test.describe('xivanalysis-zh / 真实页 / 快速注入', () => {
       await installFastInjection(page);
       const responses = watchSheetResponses(page);
 
-      await openWhenAvailable(page, fight.url, responses);
-      await expectFetchTakenOver(page);
-      await waitForCnSheet(page, responses);
-      await expectInjectedStyle(page);
-      await expectChineseTimeline(page);
+      try {
+        await openWhenAvailable(page, fight.url, responses);
+        await expectFetchTakenOver(page);
+        await waitForCnSheet(page, responses);
+        await expectInjectedStyle(page);
+        await expectChineseTimeline(page);
+      } catch (error) {
+        if (error instanceof ExternalOutageError) {
+          test.skip(true, error.message);
+          return;
+        }
+        throw error;
+      }
     });
   }
 });

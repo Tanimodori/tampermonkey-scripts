@@ -25,6 +25,18 @@ Playwright e2e 按「页面来源 × 运行时」分四组：
 
 判什么、为什么这么分见 [test/e2e/README.md](test/e2e/README.md)。
 
+## 状态表烘焙
+
+`src/data/generated/statuses.json` 是 xivanalysis `STATUSES` 的英文名/icon 与国服简中名的静态合并结果，构建时由 `src/data/statuses.ts` 直接 import，Vite 内联进产物。**构建不联网**。
+
+```bash
+rushx bake:statuses                 # 更新数据（唯一联网步骤）
+rushx bake:statuses:verify          # 离线校验 data 与 meta 的 hash/条目数/字段
+rushx bake:statuses:check-upstream  # 只比较 meta 里的上游 commit
+```
+
+`bake:statuses` 默认跟随 `dawntrail` 分支并把实际 commit 写进 `statuses.meta.json`；需要固定版本时用 `--sha <commit>`。生成文件要一起提交，`statuses.meta.json` 不参与打包。
+
 ## build
 
 `pnpm run build`

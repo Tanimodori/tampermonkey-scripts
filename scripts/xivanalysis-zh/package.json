@@ -1,6 +1,6 @@
 {
   "name": "xivanalysis-zh",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "private": true,
   "description": "Fill in the missing Chinese translations for xivanalysis.",
   "homepage": "https://github.com/Tanimodori/tampermonkey-scripts#readme",
@@ -22,6 +22,9 @@
     "format:check": "oxfmt --check",
     "lint": "oxlint",
     "typecheck": "tsc -b",
+    "bake:statuses": "node scripts/bake-statuses.mjs",
+    "bake:statuses:check-upstream": "node scripts/bake-statuses.mjs --check-upstream",
+    "bake:statuses:verify": "node scripts/bake-statuses.mjs --verify",
     "test": "vitest run --passWithNoTests",
     "test:unit": "vitest run --passWithNoTests",
     "test:offline": "vite build && playwright test --project=offline-injected --project=offline-tampermonkey",

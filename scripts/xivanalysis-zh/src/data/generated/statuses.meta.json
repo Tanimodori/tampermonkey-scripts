@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "upstream": {
+    "repo": "xivanalysis/xivanalysis",
+    "ref": "dawntrail",
+    "commit": "f532855e635bdfb4211cec8128d582dadfdc6a75"
+  },
+  "bakedAt": "2026-10-21T15:34:12.112Z",
+  "cnVersion": "20261013-1e14140",
+  "dataSha256": "1ed524840501ba0938644dda42b0251fb3113582ae073ad68d0a2447ab9ed3fa",
+  "entriesCount": 470,
+  "sourceDigest": "1981dc734832ae2dd16f21a7a8c01a70b3f5b7fbe4f7f5a0e5b1cdc90678d98d",
+  "counts": {
+    "root": 471,
+    "variants": 480,
+    "emitted": 470,
+    "missingZh": 0,
+    "sameText": 0,
+    "ambiguousNames": 8,
+    "iconMismatch": 22
+  },
+  "warnings": {
+    "missingZh": [],
+    "sameText": [],
+    "ambiguousNames": [
+      "Embolden(鼓励:1239 / 鼓励:1297)",
+      "Esprit(伶俐:1847 / 伶俐:1848)",
+      "Improvisation(即兴表演:1827 / 享受即兴表演:2695)",
+      "Seraphism(炽天附体:3884 / 炽天之光:3885)",
+      "Standard Finish(标准舞步结束:1821 / 标准舞步结束:2105)",
+      "Temporal Displacement(时间停止:1119 / 时间停止:2165)",
+      "Tsubame-Gaeshi(燕回返预备:4216 / 燕回返预备:4217 / 燕回返预备:4218)",
+      "Wildfire(野火:861 / 野火:1946)"
+    ],
+    "iconMismatch": [
+      "Rampart(1191) upstream=210152 cn=213911",
+      "Requiescat(1368) upstream=212514 cn=218345",
+      "Divine Might(2673) upstream=12521 cn=212521",
+      "Bulwark(77) upstream=10156 cn=210156",
+      "Atonement Ready(1902) upstream=210207 cn=212522",
+      "Blood Weapon(742) upstream=213109 cn=217926",
+      "Undead Rebirth(3255) upstream=13124 cn=213124",
+      "Confession(1219) upstream=218901 cn=212637",
+      "Soteria(2610) upstream=212956 cn=219756",
+      "Perfect Balance(110) upstream=210217 cn=217564",
+      "Nastrond Ready(3844) upstream=218151 cn=212589",
+      "Bunshin(1954) upstream=212912 cn=219681",
+      "Meikyo Shisui(1233) upstream=213309 cn=219641",
+      "Radiant Finale(2964) upstream=212622 cn=212624",
+      "Overheated(2688) upstream=18385 cn=218385",
+      "Finishing Move Ready(3868) upstream=213727 cn=213728",
+      "Last Dance Ready(3867) upstream=213728 cn=213727",
+      "Further Ruin(1212) upstream=212685 cn=219481",
+      "Triplecast(1211) upstream=212658 cn=219621",
+      "Embolden(1297) upstream=218941 cn=213410"
+    ]
+  }
+}

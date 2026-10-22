@@ -1,36 +1,81 @@
-# call
+# 一次调用
 
-`createCall` 造出执行调用的函数，跨调用信息由调用方以 `context` 的形式递给 `call`，流经端点上的两个适配器。
+`createCall` 造出执行调用的函数。它把端点声明执行成一次往返。
+
+## 公开契约
 
 ```ts
+/** `createCall` 的构造入参。 */
 export interface CallOptions {
-  /** 唯一一条接缝，不给就走 `globalThis.fetch`。 */
-  readonly transport?: WebFetcher | undefined;
-  /** 这条 call 的默认时限；端点上的 `timeoutMs` 优先。 */
-  readonly timeoutMs?: number | undefined;
+  /** 唯一传输接缝，缺省 `globalThis.fetch` */
+  readonly transport?: WebFetcher;
+  /** 这条调用的默认时限 */
+  readonly timeoutMs?: number;
 }
 
+/** 一次调用的执行函数。 */
 export interface Call<Context> {
-  /** 一次调用，`In` 与 `Out` 从实参位置推断。 */
+  /** 一次调用，In 与 Out 从实参位置推断 */
   <In, Out>(context: Context, endpoint: Endpoint<Context, In, Out>, input: In): Promise<Out>;
 }
 ```
 
-## 调用链
+`Context` 是调用方定义的类型参数。`createCall<Context>` 把它固定下来。同一次调用的端点适配器与读法都收到同一个值。
 
-1. 装配：`requestSchema.parse` 校验整份入参，`requestAdaptor` 把它造成 `ApiRequest`。这一段抛出的归 `BAD_INPUT`。
-2. 发出与读取：`transport` 发出请求，body 只读一次。连接失败、body 未到、到的不是端点声明的形状（缺省是 JSON）归 `NETWORK_ERROR`。读法由端点上的 `responseReader` 或 `responseBodyReader` 声明，两条都不给就按 JSON 读。
-3. 判定与投影：`responseAdaptor` 判定并交出 `Out`，`responseSchema.parse` 校验它。这一段抛出的归 `BAD_OUTPUT`。
+## 最小装配
 
-三段按最便宜的失败先付排列，各经 `wrapApiError`。`createCall` 返回的函数抛出的错误都是 `ApiError`，`operation` 与 `request`、`response` 由出栈处补上。
+```ts
+import { createCall } from 'api-sdk-framework';
+import type { Endpoint } from 'api-sdk-framework';
 
-## 时限
+interface ApiContext {
+  readonly base: string;
+}
 
-时限由 `CallOptions.timeoutMs` 或端点上的 `timeoutMs` 定下，端点优先；两处都不给就不设时限。计时从进入 call 起、到 call 退出止，装配、发出与读取、判定与投影三段都在内。
+const endpoint: Endpoint<ApiContext, { id: string }, unknown> = {
+  operation: 'readMessage',
+  requestAdaptor: (context, input) => ({
+    url: new URL(`/messages/${input.id}`, context.base).href,
+    init: {},
+  }),
+  responseAdaptor: (_context, response) => response.body,
+};
 
-到点后这次调用的 `signal` 被 abort，call 在下一个检查点抛 `ApiError`，`errorCode` 为 `TIMEOUT`，`operation` 与 `request` 一并带上。`signal` 随 `init` 交给 `transport`，真实 `fetch` 收下后会自己中止这次往返。
+const call = createCall<ApiContext>({ timeoutMs: 10_000 });
 
-## 边界
+const message = await call({ base: 'https://api.example.com' }, endpoint, { id: 'm1' });
+```
 
-- 一次调用只有一次往返，不重试、不翻页、不聚合。
-- 失败的处理由调用方在 `call` 外面决定。
+## 行为规则
+
+### 执行顺序
+
+一次调用只做一次往返。重试、分页与聚合由调用方处理。
+
+调用按以下顺序执行。
+
+| 阶段       | 执行内容                                            |
+| ---------- | --------------------------------------------------- |
+| 入参       | `requestSchema.parse`（有则跑），`requestAdaptor`   |
+| 往返与读取 | `transport` 发出请求，按端点声明的读法读取答复      |
+| 投影       | `responseAdaptor`，`responseSchema.parse`（有则跑） |
+
+### 时限
+
+- 端点上的 `timeoutMs` 优先于 `CallOptions.timeoutMs`。`CallOptions.timeoutMs` 与端点上的 `timeoutMs` 都没有时不设时限。
+- 计时覆盖整个调用，包括读取答复。到点后，调用在下一次检查点失败，检查点在异步等待结束后。
+
+### 失败
+
+`createCall` 返回的函数只抛 `ApiError`。各阶段抛出的非 `ApiError` 错误都会被包装成 `ApiError`，错误码由所在阶段决定。
+
+| 阶段       | 触发                                                 | errorCode       |
+| ---------- | ---------------------------------------------------- | --------------- |
+| 入参       | `requestSchema.parse` 不过，或 `requestAdaptor` 抛错 | `BAD_INPUT`     |
+| 往返与读取 | `transport` 抛错，或读法抛错                         | `NETWORK_ERROR` |
+| 投影       | `responseAdaptor` 或 `responseSchema` 抛错           | `BAD_OUTPUT`    |
+| 时限       | 到点后在下一次检查点失败                             | `TIMEOUT`       |
+
+- `operation` 总会带上。`request` 在 `requestAdaptor` 返回后才有，`response` 在答复读完后才有。`cause` 保留底层错误。
+- 各阶段抛出的 `ApiError` 只补缺失的 `operation`、`request`、`response`，不改已有值，并保留原 `errorCode`。
+- 上游状态码与业务码的归类属于端点的 `responseAdaptor`。

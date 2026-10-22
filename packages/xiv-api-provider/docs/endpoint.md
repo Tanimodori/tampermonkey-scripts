@@ -1,121 +1,251 @@
-# Endpoint
+# 端点
 
-`Endpoint` 描述单个 API 端点，契约来自 [`api-sdk-framework`](../../api-sdk-framework/README.md)。`context` 是调用方经 `call` 递进来的 client，因此本库的端点是 `Endpoint<XivApiClient, In, Out>`，包内以 `XivApiEndpoint<In, Out>` 指代。
+本库提供读取端点，路径挂在 edition 的 `apiBase` 下。逐端点写它的入参与返回形状。
 
-```ts
-export type XivApiEndpoint<In, Out> = Endpoint<XivApiClient, In, Out>;
-```
+## 端点一览
 
-本库填的槽有四个。
+| 读取                               | 方法 | 路径                   | 说明         |
+| ---------------------------------- | ---- | ---------------------- | ------------ |
+| `listSheets` / `listSheetsRaw`     | GET  | `/sheet`               | 列出表       |
+| `readRows` / `readRowsRaw`         | GET  | `/sheet/{sheet}`       | 读一批行     |
+| `readRow` / `readRowRaw`           | GET  | `/sheet/{sheet}/{row}` | 读一行       |
+| `search` / `searchRaw`             | GET  | `/search`              | 检索         |
+| `listVersions` / `listVersionsRaw` | GET  | `/version`             | 列出数据版本 |
+| `readAsset`                        | GET  | `/asset`               | 读取图片资源 |
 
-- `operation`：调用名，`readRow` 等，失败消息用它点名这次读取。
-- `responseBodyReader`：只换 body 的读法。JSON 端点共用 `client/http.ts` 的 `readJsonBody`，字节端点自己读。
-- `requestAdaptor`：拼地址与请求头，`edition` 与注入的 `language` 都从 client 读。
-- `responseAdaptor`：先经 `ensureOk` 收尾非 2xx，再用 `client/guards.ts` 的手写谓词判定信封并投影。
+默认名带校验，`Raw` 后缀不带。`readAsset` 的答复是字节，没有配对。
 
-带校验的装配另填 `responseSchema`，见[校验](validation.md)。
-
-## 端点
-
-本库翻译六个端点，各自具名导出。默认名归带校验的装配，无校验的那一份带 `Raw` 后缀，两者共用同一批适配器；`readAsset` 的答复是字节，没有 schema 描述它，因此不配对，保持本名。
-
-### 表
-
-- `listSheets`（`listSheetsRaw`）：`GET /sheet`，无入参，答 `{ sheets: [{ name }] }`。
-
-### 行
-
-`GET /sheet/{sheet}` 列表读，`GET /sheet/{sheet}/{row}` 读一行，`row` 是 `123` 或带子行的 `123:4`。
-
-- `readRow`（`readRowRaw`）：入参 `ReadRowInput`。
-- `readRows`（`readRowsRaw`）：入参 `ReadRowsInput`，答 `{ schema, version, rows }`。
+## 公共类型
 
 ```ts
-export interface ReadRowInput {
-  readonly sheet: SheetName;
-  /** 行号，或带子行的 `123:4` */
-  readonly row: number | string;
-  readonly query?: RowReaderQuery;
+type SheetName = 'Action' | 'ActionCategory' | 'Addon' | 'ClassJob' | 'ClassJobCategory' | 'Item' | 'ItemSearchCategory' | 'ItemUICategory' | 'Status';
+
+type Fields = Record<string, unknown>;
+
+interface SheetRow<T extends SheetName> {
+  /** 行号 */
+  readonly row_id: number;
+  /** 子行号 */
+  readonly subrow_id?: number | null;
+  /** 该表的字段 */
+  readonly fields: SheetFields<T>;
+  /** 瞬态字段 */
+  readonly transient?: Fields;
 }
 
-export interface ReadRowsInput {
+const knownSheetNames: readonly string[];
+function isKnownSheet(name: string): name is SheetName;
+```
+
+`SheetFields<T>` 是表 `T` 声明的字段集合。`Fields` 是未建模列的宽松形状。
+
+## 通用约定
+
+- 路径不带版本段。`version` 是 `SearchQuery` 与 `AssetQuery` 的查询参数，读行不接受版本参数。
+- `fields` 省略时返回全部列，响应体会明显变大。
+- `transient` 是瞬态字段，例如 `Description@as(html)`。
+- `schema` 指定读取所用的 schema，例如 `exdschema`。
+- 百分号编码交给 `URLSearchParams`。
+
+## listSheets
+
+列出服务端已知的表。
+
+不接受参数。
+
+```ts
+interface ListSheetsResponse {
+  /** 表 */
+  readonly sheets: {
+    /** 表名 */
+    name: string;
+  }[];
+}
+```
+
+## readRows
+
+读一批行。`rows` 指定行号，`limit` 与 `after` 用于分页。
+
+```ts
+interface ReadRowsInput {
+  /** 表名 */
   readonly sheet: SheetName;
+  /** 查询 */
   readonly query?: SheetRowsQuery;
 }
 ```
 
-### 检索
+```ts
+interface SheetRowsOutput {
+  /** schema 标签 */
+  readonly schema: string;
+  /** 数据版本 */
+  readonly version: string;
+  /** 行 */
+  readonly rows: SheetRow<SheetName>[];
+}
+```
 
-- `search`（`searchRaw`）：`GET /search`，入参 `SearchQuery`，答 `{ schema, version, next?, results }`。
+## readRow
 
-`query` 是 xivapi 自己的语法，不是搜索框。子句要写成 `字段~"值"` 或 `字段="值"`，裸词会得到 400。命中只发生在所请求语言的那个字段上，因此同一条拉丁子句在国服镜像上返回空数组，见 [client 的 edition 差异](client.md)。
-
-### 版本
-
-- `listVersions`（`listVersionsRaw`）：`GET /version`，无入参，答 `{ versions: [{ key, names }] }`。
-
-### 资源
-
-- `readAsset`：`GET /asset`，入参 `AssetQuery`，答复按字节读，投影为 `{ bytes, contentType }`。内容类型随字节一起交回，因为两个 edition 在 `format` 上不一致，要特定编码的调用方必须读响应而不是信自己的请求。
+读一行。`row` 是 `123`，或带子行的 `123:4`。
 
 ```ts
-export interface AssetQuery {
-  readonly path: string;
-  readonly format?: 'jpg' | 'png' | 'webp';
+interface ReadRowInput {
+  /** 表名 */
+  readonly sheet: SheetName;
+  /** 行号或子行 */
+  readonly row: number | string;
+  /** 查询 */
+  readonly query?: RowReaderQuery;
+}
+```
+
+答复是 `SheetRow<SheetName>`。
+
+## search
+
+用 xivapi 自己的查询语法检索行，例如 `Name="Potion"` 或 `Name~"Potion"`；`~` 是子串匹配。裸词不是合法子句。命中只发生在所请求语言的那个字段上，因此同一条拉丁子句在国服镜像上返回空数组。
+
+```ts
+interface SearchQuery extends RowReaderQuery {
+  /** 查询语法 */
+  readonly query: string;
+  /** 表名 */
+  readonly sheets?: readonly string[];
+  /** 数量上限 */
+  readonly limit?: number;
+  /** 上一批游标 */
+  readonly cursor?: string;
+  /** 数据版本 */
   readonly version?: string;
 }
 ```
 
-图标在库里有三种地址形态，`utils/icon.ts` 把它们互相换算。`paddedIconId`、`iconFolder`、`siteIconPath`、`siteIconUrl` 从一个 sheet 图标 id 推出站点路径与 URL，`texturePath` 从一行的 `Icon` 字段取游戏贴图路径，`texturePathWithoutExtension` 去掉 `.tex` 后缀，`iconIdFromTexturePath` 与 `iconIdFromImageUrl` 各自反推回 id。`/asset` 只接受 `path` 那一种。
+```ts
+interface SearchResponse {
+  /** schema 标签 */
+  readonly schema: string;
+  /** 数据版本 */
+  readonly version: string;
+  /** 下一批游标 */
+  readonly next?: string | null;
+  /** 命中 */
+  readonly results: SearchResult[];
+}
+
+interface SearchResult {
+  /** 匹配度 */
+  readonly score: number;
+  /** 表名 */
+  readonly sheet: string;
+  /** 行号 */
+  readonly row_id: number;
+  /** 子行号 */
+  readonly subrow_id?: number | null;
+  /** 字段 */
+  readonly fields: Fields;
+  /** 瞬态字段 */
+  readonly transient?: Fields;
+}
+```
+
+## listVersions
+
+列出服务端持有的数据版本。
+
+不接受参数。
+
+```ts
+interface VersionsResponse {
+  /** 版本 */
+  readonly versions: VersionInfo[];
+}
+
+interface VersionInfo {
+  /** 版本键 */
+  readonly key: string;
+  /** 版本名 */
+  readonly names: string[];
+}
+```
+
+## readAsset
+
+按字节读取图片资源。`format` 不保证被遵守；国服可能返回 `webp`，所以内容类型必须从响应读。
+
+```ts
+interface AssetQuery {
+  /** 资源路径 */
+  readonly path: string;
+  /** 编码 */
+  readonly format?: 'jpg' | 'png' | 'webp';
+  /** 数据版本 */
+  readonly version?: string;
+}
+```
+
+```ts
+// 返回形状；本包没有同名的导出类型
+type ReadAssetOutput = {
+  /** 字节 */
+  readonly bytes: Uint8Array;
+  /** 内容类型 */
+  readonly contentType: string | null;
+};
+```
+
+## 读取中文数据
+
+国服镜像返回简中。已建模字段的表里，以下字段在读取中文数据时最常用。
+
+- `Action`：`Name`、`ActionCategory.Name`、`ClassJob.Name`、`ClassJobCategory.Name` 直接取；HTML 描述用 `transient=Description@as(html)`。
+- `Item`、`Status`：`Name` 与 `Description` 都是普通字段，`Description` 不是 transient；描述可能含换行。
+- `Addon`：`Text` 含游戏标记，例如 `<Switch(...)>`、`<Value>…</Value>`。
+- `ClassJob`：`Name` 是本地化全名，`Abbreviation` 仍是拉丁缩写。
 
 ## 查询参数
 
-读行与检索共用 `RowReaderQuery`，四个字段都由 URL 构造直接写进查询串。
-
 ```ts
-export interface RowReaderQuery {
+interface RowReaderQuery {
+  /** 语言 */
   readonly language?: LanguageToken;
-  /** 要返回的字段名；省略即返回全部列 */
+  /** 字段名 */
   readonly fields?: readonly string[];
-  /** 瞬态字段，例如 `['Description@as(html)']` */
+  /** 瞬态字段 */
   readonly transient?: readonly string[];
-  /** 读取所用的 schema，例如 `exdschema` */
+  /** schema */
   readonly schema?: string;
 }
 
-export interface SheetRowsQuery extends RowReaderQuery {
-  /** 指定行号，逗号分隔 */
+interface SheetRowsQuery extends RowReaderQuery {
+  /** 行号 */
   readonly rows?: readonly number[];
+  /** 数量上限 */
   readonly limit?: number;
-  /** 上一批的游标 */
+  /** 上一批游标 */
   readonly after?: number;
-}
-
-export interface SearchQuery extends RowReaderQuery {
-  /** xivapi 自己的查询语法 */
-  readonly query: string;
-  /** 只在列出的表里搜 */
-  readonly sheets?: readonly string[];
-  readonly limit?: number;
-  /** 上一批的游标 */
-  readonly cursor?: string;
-  readonly version?: string;
 }
 ```
 
-## 信封
-
-本库只认一种正文，`{ schema, version, rows }`，或把 `row_id` 与 `fields` 摊平在顶层的单行形态；检索是 `{ schema, version, next?, results }`。它构造的路径是 `/api/sheet/{Sheet}` 与 `/api/sheet/{Sheet}/{row}`，不带版本段，数据版本是查询参数。更旧的 `/api/1/sheet/…` 仍由 `beta.xivapi.com` 以同一信封回答，它不属于任何一个 edition。
-
 ## 地址构造
 
-每个端点都有一个纯函数与它对应，输入 edition 与查询就得到完整的 `URL`，不发请求。这组函数是公开的，离线测试与活体测试因此共用同一批地址。
+每个端点都有一个纯函数与它对应，输入 edition 与查询就得到完整的 `URL`，不发请求。
 
-- `listSheetsUrl`、`versionsUrl`、`openApiUrl`：只吃 edition。
-- `sheetRowsUrl`、`sheetRowUrl`：吃 edition、sheet 与查询。
-- `searchUrl`、`assetUrl`、`composedMapUrl`：吃 edition 与各自的查询。
+- `listSheetsUrl`、`versionsUrl`、`openApiUrl`：edition。
+- `sheetRowsUrl`：edition、表名、查询。
+- `sheetRowUrl`：edition、表名、行号、查询。
+- `searchUrl`、`assetUrl`：edition、查询。
+- `composedMapUrl`：edition、territory、index、查询。
 
-百分号编码交给 `URLSearchParams`，两个 edition 都同时接受 `rows=1,2` 与 `rows=1%2C2`。
+`openApiUrl` 指向 `/openapi.json`，用于对照服务端的 OpenAPI 文档。`composedMapUrl` 构造 `/asset/map/{territory}/{index}`，本库没有对应的读取端点。
+
+## 旧地址
+
+- `xivapi.com` 已退役，它现在回答 404，正文不是本库认识的任何一种信封。
+- `beta.xivapi.com/api/1/…` 仍以 v2 信封回答，它不属于任何一个 edition。
+- v1 的 `cafemaker.wakingsands.com` 不可达。
 
 ## 官方参考
 

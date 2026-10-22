@@ -17,9 +17,9 @@ export type ErrorCode = 'INPUT_ERROR' | 'TRANSPORT_ERROR' | 'OUTPUT_ERROR' | 'AU
 export class ExampleError extends Error {
   /** 错误代码 */
   readonly code: ErrorCode;
-  /** 调用名，由调用链在出栈处补上 */
+  /** 调用名 */
   operation: string | undefined;
-  /** 原样答复，只在答复到达后存在 */
+  /** 原样答复 */
   response: Response | undefined;
   /** 底层错误 */
   readonly cause?: unknown;

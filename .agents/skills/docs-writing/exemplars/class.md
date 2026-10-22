@@ -23,15 +23,15 @@ export interface ExampleClientOptions {
 export interface ExampleOperation<In, Out> {
   /** 调用名 */
   readonly name: string;
-  /** 把入参转成请求 */
+  /** 入参到请求的适配器 */
   readonly toRequest: (input: In) => unknown;
-  /** 把答复转成出参 */
+  /** 答复到出参的适配器 */
   readonly toOutput: (value: unknown) => Out;
 }
 
 /** 持有凭据并调用端点的对象。 */
 export interface ExampleClient {
-  /** 一次调用，In 与 Out 从实参位置推断 */
+  /** 一次调用 */
   call<In, Out>(operation: ExampleOperation<In, Out>, input: In): Promise<Out>;
 }
 
@@ -42,6 +42,7 @@ export function createExampleClient(options: ExampleClientOptions): ExampleClien
 ## 行为
 
 - client 持有装配时给的地址与凭据，生命周期由创建它的调用方决定。
+- `call` 的 `In` 与 `Out` 从实参位置推断。
 - `call` 接收一个端点声明与入参，返回该端点的出参。
 - `call` 失败时抛 `ExampleError`。
 

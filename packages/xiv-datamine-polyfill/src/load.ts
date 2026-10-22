@@ -35,8 +35,14 @@ export interface LoadedSheet {
   readonly warnings: readonly string[];
 }
 
-const csvOf = async (sheet: string, ref: string, options: LoadOptions, warn: (message: string) => void): Promise<{ csv: string; fetched: boolean }> => {
-  const file = csvPath(options.cacheDir, ref, sheet);
+const csvOf = async (
+  sheet: string,
+  ref: string,
+  locale: string,
+  options: LoadOptions,
+  warn: (message: string) => void,
+): Promise<{ csv: string; fetched: boolean }> => {
+  const file = csvPath(options.cacheDir, ref, locale, sheet);
   const cached = readText(file);
   const age = ageOf(file);
   // A pinned ref names content that cannot change, so its cached sheet is never treated as stale.
@@ -45,7 +51,7 @@ const csvOf = async (sheet: string, ref: string, options: LoadOptions, warn: (me
 
   try {
     const client = createDatamineClient({ fetch: options.fetch, timeoutMs: options.timeoutMs });
-    const csv = await client.call(fetchSheetCsv, { sheet, ref, locale: options.locale });
+    const csv = await client.call(fetchSheetCsv, { sheet, ref, locale });
     writeText(file, csv);
     return { csv, fetched: true };
   } catch (cause) {
@@ -117,7 +123,7 @@ const build = async (sheet: string, locale: string, rules: SheetRules, options: 
 
   const ref = options.ref ?? DEFAULT_REF;
   const origin = `${sheet}.csv@${ref}`;
-  const { csv, fetched } = await csvOf(sheet, ref, options, warn);
+  const { csv, fetched } = await csvOf(sheet, ref, locale, options, warn);
   const identity: TableIdentity = { sheet, ref, locale, rules, csvHash: contentHash(csv) };
   const file = modulePath(options.cacheDir, sheet, locale, ref, cacheKey(identity));
 

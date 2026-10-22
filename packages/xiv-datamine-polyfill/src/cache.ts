@@ -20,7 +20,8 @@ export const cachePaths = (cacheDir: string) => ({
   modules: join(cacheDir, 'modules'),
 });
 
-export const csvPath = (cacheDir: string, ref: string, sheet: string): string => join(cachePaths(cacheDir).csv, encodeURIComponent(ref), `${sheet}.csv`);
+export const csvPath = (cacheDir: string, ref: string, locale: string, sheet: string): string =>
+  join(cachePaths(cacheDir).csv, encodeURIComponent(ref), encodeURIComponent(locale), `${sheet}.csv`);
 
 export const modulePath = (cacheDir: string, sheet: string, locale: string, ref: string, key: string): string =>
   join(cachePaths(cacheDir).modules, `${sheet}.${locale}.${encodeURIComponent(ref)}.${key}.js`);

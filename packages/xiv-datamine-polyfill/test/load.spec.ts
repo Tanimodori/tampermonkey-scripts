@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ApiErrorCodes, isApiError } from 'api-sdk-framework';
@@ -16,6 +16,8 @@ import { loadTable, type LoadOptions } from '@/load';
 
 const REF = 'v7.99';
 const CSV = ['key,0,1,2', '#,Name,Icon,Order{Minor}', 'int32,str,Image,byte', '0,"",0,0', '1,"格斗武器",60101,7', '2,"单手剑",60102,6'].join('\n');
+/** The same sheet in Japanese: one locale must not read the other locale's CSV. */
+const CSV_JA = CSV.replace('格斗武器', '格闘武器').replace('单手剑', '片手剣');
 /** The same sheet after upstream moved: one row added, which must not read as "already built". */
 const MOVED = CSV.replace('2,"单手剑",60102,6', '2,"单手剑",60102,6\n3,"双手斧",60103,2');
 
@@ -127,6 +129,64 @@ describe('a cold cache', () => {
 
     expect(isApiError(failure)).toBe(true);
     expect(failure).toMatchObject({ errorCode: ApiErrorCodes.ENDPOINT_NOT_FOUND, response: { status: 404 } });
+  });
+});
+
+describe('locales', () => {
+  it('keeps one CSV per locale under the same ref', async () => {
+    const dir = cacheDir();
+    const { fetch, asked } = server({
+      [csvUrl(REF, 'ItemUICategory', 'chs')]: CSV,
+      [csvUrl(REF, 'ItemUICategory', 'ja')]: CSV_JA,
+    });
+
+    const chinese = await loadTable('ItemUICategory', options({ cacheDir: dir, fetch, locale: 'chs' }));
+    const japanese = await loadTable('ItemUICategory', options({ cacheDir: dir, fetch, locale: 'ja' }));
+
+    expect(asked.sort()).toEqual([csvUrl(REF, 'ItemUICategory', 'chs'), csvUrl(REF, 'ItemUICategory', 'ja')].sort());
+    expect(read(chinese.raw).cell(1, 'Name')).toBe('格斗武器');
+    expect(read(japanese.raw).cell(1, 'Name')).toBe('格闘武器');
+    expect(chinese.file).not.toBe(japanese.file);
+
+    const csvRoot = join(dir, 'csv', REF);
+    expect(readdirSync(csvRoot).sort()).toEqual(['chs', 'ja']);
+    expect(readFileSync(join(csvRoot, 'chs', 'ItemUICategory.csv'), 'utf8')).toBe(CSV);
+    expect(readFileSync(join(csvRoot, 'ja', 'ItemUICategory.csv'), 'utf8')).toBe(CSV_JA);
+  });
+
+  it('serves each locale from its own cache on the next build', async () => {
+    const dir = cacheDir();
+    const first = server({
+      [csvUrl(REF, 'ItemUICategory', 'chs')]: CSV,
+      [csvUrl(REF, 'ItemUICategory', 'ja')]: CSV_JA,
+    });
+    await loadTable('ItemUICategory', options({ cacheDir: dir, fetch: first.fetch, locale: 'chs' }));
+    await loadTable('ItemUICategory', options({ cacheDir: dir, fetch: first.fetch, locale: 'ja' }));
+
+    const second = server({});
+    const chinese = await loadTable('ItemUICategory', options({ cacheDir: dir, fetch: second.fetch, locale: 'chs' }));
+    const japanese = await loadTable('ItemUICategory', options({ cacheDir: dir, fetch: second.fetch, locale: 'ja' }));
+
+    expect(second.asked).toEqual([]);
+    expect(chinese.source).toBe('module');
+    expect(japanese.source).toBe('module');
+  });
+
+  it('does not let two locales overwrite one CSV when they run together', async () => {
+    const dir = cacheDir();
+    const { fetch, asked } = server({
+      [csvUrl(REF, 'ItemUICategory', 'chs')]: CSV,
+      [csvUrl(REF, 'ItemUICategory', 'ja')]: CSV_JA,
+    });
+
+    const [chinese, japanese] = await Promise.all([
+      loadTable('ItemUICategory', options({ cacheDir: dir, fetch, locale: 'chs' })),
+      loadTable('ItemUICategory', options({ cacheDir: dir, fetch, locale: 'ja' })),
+    ]);
+
+    expect(asked.sort()).toEqual([csvUrl(REF, 'ItemUICategory', 'chs'), csvUrl(REF, 'ItemUICategory', 'ja')].sort());
+    expect(read(chinese.raw).cell(1, 'Name')).toBe('格斗武器');
+    expect(read(japanese.raw).cell(1, 'Name')).toBe('格闘武器');
   });
 });
 

@@ -8,11 +8,11 @@
 
 ```text
 node_modules/.cache/xiv-datamine-polyfill/
-├── csv/<ref>/<Sheet>.csv
+├── csv/<ref>/<locale>/<Sheet>.csv
 └── modules/<Sheet>.<locale>.<ref>.<key>.js
 ```
 
-路径里的 `<ref>` 做 URL 编码。
+路径里的 `<ref>` 与 `<locale>` 做 URL 编码。CSV 与模块都按语种分开，同一个 `ref` 下构建多种语种不会互相覆盖。
 
 ## 键
 
@@ -33,12 +33,6 @@ CSV 缓存可用（未过期，或 `ref` 是 `HEAD` 以外的固定值）就用�
 `ref` 为 `HEAD` 时，CSV 缓存按 `maxAge` 过期。
 
 显式写了 `HEAD` 以外的 `ref` 就视为固定，那张表的缓存不再按时间更新，即使 `maxAge` 更短。固定的是缓存策略，不是上游内容，分支名仍可能移动。
-
-## 语种
-
-CSV 缓存按 `ref` 与表名分，不按语种分。同一个 `ref` 下先构建一种语种再构建另一种，第二次会复用第一次的 CSV。固定的 `ref` 只有删除缓存才会改变；移动的 `ref` 等到过期后重新取。
-
-要同时构建多个语种，可以让每个语种用单独的 `cacheDir`。
 
 ## 清理
 

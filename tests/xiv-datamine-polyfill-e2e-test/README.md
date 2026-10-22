@@ -2,7 +2,7 @@
 
 这个项目不产出可发布的东西。它验证 `packages/xiv-datamine-polyfill` 这个 vite 插件能否嵌进一个真实的消费者构建，并对由此得到的产物做三项判定：两张 `.csv` 导入在真实 `vite build` 里被解析并打包，产物是数据加读取器、不带任何构建期机制，离线（桩 `fetch`）与在线（`XIV_LIVE=1`）两套数据都能正常读。
 
-独立成项目，是因为这些检查用不了被检查包自己的配置。插件包内测试直接调 `loadTable`，从不经过打包器，其[设计说明](../../packages/xiv-datamine-polyfill/docs/design.md#测试)也是这么划分的；而“导入在构建里解析成模块、产物里不混入别的东西”只有站在包外、真的走一遍构建才看得见。这里每一个导入都经过目标包的 `package.json#exports`。
+独立成项目，是因为这些检查用不了被检查包自己的配置。插件包内测试直接调 `loadTable`，从不经过打包器；而“导入在构建里解析成模块、产物里不混入别的东西”只有站在包外、真的走一遍构建才看得见。这里每一个导入都经过目标包的 `package.json#exports`。
 
 ## 构成
 
@@ -20,7 +20,7 @@
 
 缓存按模式分开：`node_modules/.cache/xiv-datamine-polyfill-e2e-test` 与同级的 `…-e2e-test-live`。共用一个目录时，一次活体运行会把真表留在离线构建读的缓存里，`test:offline` 就不再是它声称的那次确定性构建。桩会打印它被问到的路径，所以第二次离线构建打印 0 行就是“缓存命中、零请求”的现场证据。
 
-`test:online` 走真实网络，只手动运行，不进门禁。`loadTable` 的冷热缓存、`maxAge`、`HEAD` 移动、断网回退这些行为由插件包自己的测试覆盖，见[设计说明](../../packages/xiv-datamine-polyfill/docs/design.md)，这里不重复。
+`test:online` 走真实网络，只手动运行，不进门禁。`loadTable` 的冷热缓存、`maxAge`、`HEAD` 移动、断网回退这些行为由插件包自己的测试覆盖，这里不重复。
 
 ## tsconfig 拆分
 

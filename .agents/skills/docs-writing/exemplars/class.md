@@ -41,12 +41,9 @@ export function createExampleClient(options: ExampleClientOptions): ExampleClien
 
 ## 行为
 
-- client 持有装配时给的地址与凭据，生命周期由创建它的调用方决定。
-- `call` 的 `In` 与 `Out` 从实参位置推断。
-- `call` 接收一个端点声明与入参，返回该端点的出参。
 - `call` 失败时抛 `ExampleError`。
 
 ## 边界
 
-- client 只负责一次调用。重试、分页、节流与日志由调用方决定。
-- client 不持有缓存，也不负责凭据的持久化。
+- 重试、分页、节流与日志由调用方处理。
+- 缓存与凭据持久化由调用方管理。

@@ -25,10 +25,10 @@ rush add -p example-package
 
 ## 文档
 
-| 文档                   | 内容           |
-| ---------------------- | -------------- |
-| [端点表](endpoint.md)  | 请求与答复     |
-| [错误处理](error.md)   | 错误类与错误码 |
-| [对象与类型](class.md) | client 的契约  |
-| [功能或切面](topic.md) | 一个功能的整体 |
-| [本地开发](develop.md) | 命令与本地状态 |
+| 文档                      | 内容           |
+| ------------------------- | -------------- |
+| [API 端点](endpoint.md)   | 请求与答复     |
+| [错误](error.md)          | 错误类与错误码 |
+| [ExampleClient](class.md) | client 的契约  |
+| [日志](topic.md)          | 一个功能的整体 |
+| [本地开发](develop.md)    | 命令与本地状态 |

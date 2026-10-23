@@ -30,5 +30,5 @@ export class ExampleError extends Error {
 
 - `INPUT_ERROR`：请求没有发出去，原因是入参。
 - `TRANSPORT_ERROR`：没有可读的答复。
-- `OUTPUT_ERROR`：答复读不出，或投影失败。
+- `OUTPUT_ERROR`：答复无法读取，或出参转换失败。
 - `AUTH_ERROR`：上游拒绝凭据。

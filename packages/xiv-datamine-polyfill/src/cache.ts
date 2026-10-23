@@ -24,7 +24,7 @@ export const csvPath = (cacheDir: string, ref: string, locale: string, sheet: st
   join(cachePaths(cacheDir).csv, encodeURIComponent(ref), encodeURIComponent(locale), `${sheet}.csv`);
 
 export const modulePath = (cacheDir: string, sheet: string, locale: string, ref: string, key: string): string =>
-  join(cachePaths(cacheDir).modules, `${sheet}.${locale}.${encodeURIComponent(ref)}.${key}.js`);
+  join(cachePaths(cacheDir).modules, `${sheet}.${encodeURIComponent(locale)}.${encodeURIComponent(ref)}.${key}.js`);
 
 export const readText = (file: string): string | null => {
   try {

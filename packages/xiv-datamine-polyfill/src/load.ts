@@ -22,7 +22,7 @@ export interface LoadOptions extends DataminePolyfillOptions {
 }
 
 export interface LoadedSheet {
-  /** The absolute path to hand the bundler. A real file, which is what lets `load` stand alone without vite. */
+  /** The path to hand the bundler. A real file, which is what lets `load` stand alone without vite. */
   readonly file: string;
   readonly sheet: string;
   readonly ref: string;

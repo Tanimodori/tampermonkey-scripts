@@ -31,4 +31,4 @@ rush add -p example-package
 | [错误处理](error.md)   | 错误类与错误码 |
 | [对象与类型](class.md) | client 的契约  |
 | [功能或切面](topic.md) | 一个功能的整体 |
-| [本地开发](develop.md) | 命令与注意事项 |
+| [本地开发](develop.md) | 命令与本地状态 |

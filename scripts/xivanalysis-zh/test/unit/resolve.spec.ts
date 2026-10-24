@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { resetUntranslated, untranslatedList } from '../../src/data/ignore';
-import { createResolve, warnSearch } from '../../src/data/resolve';
+import { createResolve, resolve, warnSearch } from '../../src/data/resolve';
 import { addEntry, fetchProvider, onMapGrowth, recordPair, resetStore } from '../../src/data/store';
 import type { XivEntry } from '../../src/types/workflow';
 import { KNOWN, isTarget, known } from '../../src/utils';
@@ -59,6 +59,11 @@ describe('resolve', () => {
 
   it('全部来源为空时返回空数组', async () => {
     await expect(createResolve([async () => [], async () => []])({ en: 'Nothing' })).resolves.toEqual([]);
+  });
+
+  it('默认链能命中 override 与 baked 状态', async () => {
+    await expect(resolve({ en: 'GCD' })).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ en: 'GCD', zh: 'GCD' })]));
+    await expect(resolve({ en: 'Regen' })).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ kind: 'status', en: 'Regen' })]));
   });
 
   it('warnSearch 上报未覆盖英文并返回空数组', async () => {

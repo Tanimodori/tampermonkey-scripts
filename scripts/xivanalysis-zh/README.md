@@ -12,18 +12,19 @@ Install this scirpt at [GreasyFork](https://greasyfork.org/zh-CN/scripts/523443-
 
 ## test
 
-`rushx test:unit`
+`rushx test:unit` 跑 unit、DOM（jsdom）与权威覆盖率测试，全部离线。
 
-Playwright e2e 按「页面来源 × 运行时」分四组：
+Playwright 分组：
 
-- `rushx test:offline` —— 夹具页，快速注入 + 真管理器；页面与接口不出网。
+- `rushx test:e2e:fast` —— 离线夹具 + 快速注入，判注入时机与安装。
+- `rushx test:e2e:full` —— 离线夹具 + 真 Tampermonkey，判安装与 `@match`。
+- `rushx test:live:upstream` —— 真实英文、国服、ClassJob 与 garland 契约。
 - `rushx test:live:smoke` —— 一条真实战报 + 快速注入。
-- `rushx test:live:all` —— 全部真实战报 + 快速注入，串行。
-- `rushx test:tampermonkey` —— 一条真实战报 + 真 Tampermonkey。
-- `rushx test:gate` —— unit + offline + live:smoke，日常构建门禁。
-- `rushx test:all` —— 发布用完整集合，含 live:all 与 live:tampermonkey。
+- `rushx test:corpus:capture` —— 手工刷新 33 条战报语料，约 50 分钟，不属于门禁。
+- `rushx test:gate:offline` —— unit + typecheck + build + 两组离线 e2e。
+- `rushx test:gate:live` —— 上游契约 + 一条真实战报 smoke。
 
-判什么、为什么这么分见 [test/e2e/README.md](test/e2e/README.md)。
+测试维度、每条用例与预期见 [docs/test-matrix.md](docs/test-matrix.md)；e2e 的分组与踩坑见 [test/e2e/README.md](test/e2e/README.md)。
 
 ## 状态表烘焙
 

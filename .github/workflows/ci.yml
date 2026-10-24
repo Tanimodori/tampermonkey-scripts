@@ -27,3 +27,6 @@ jobs:
         run: node common/scripts/install-run-rush.js install
       - name: Rush rebuild
         run: node common/scripts/install-run-rush.js rebuild --verbose
+      - name: Test xivanalysis-zh
+        working-directory: scripts/xivanalysis-zh
+        run: ../../common/temp/node_modules/.bin/rushx test:unit

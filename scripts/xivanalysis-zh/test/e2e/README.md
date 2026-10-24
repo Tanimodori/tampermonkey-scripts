@@ -1,74 +1,91 @@
 # xivanalysis-zh 的 e2e
 
-这个目录判的是构建产物在真实浏览器里的行为；`test/unit/garland.spec.ts` 判源码级逻辑，从不过打包器。Playwright 与 Vitest 的 `*.spec.ts` 不再混在同一层：`vite.config.ts` 只收 `test/unit/**`。
+这个目录判的是构建产物在真实浏览器里的行为。源码级、DOM 级与权威覆盖的测试在 `test/unit`、`test/dom` 与 `test/coverage`，不经过打包器；完整矩阵见 [docs/test-matrix.md](../../docs/test-matrix.md)。
 
-测试按两个维度划分：
+## 分组
 
-- **页面来源**：`offline/` 用夹具页并由 `page.route` 接管全部出网；`live/` 导航到真实 xivanalysis 战报页，页面与 xivapi 都走真网络。
-- **运行时**：`injected` 由测试自己用 `addInitScript` 注入产物并假扮 `GM`；`tampermonkey` 用真扩展、走它自己的安装流程。
+| 组             | 文件                                   | 判什么                                                               |
+| -------------- | -------------------------------------- | -------------------------------------------------------------------- |
+| 离线快速注入   | `offline/install-fast.spec.ts`         | `document-start` 能否跑起产物、`fetch` 是否被接管、样式是否进入页面  |
+| 离线完整注入   | `offline/install-tampermonkey.spec.ts` | 真 Tampermonkey 能否装上、`@match` 是否生效                          |
+| 真实上游       | `live/upstream.spec.ts`                | 英文 / 国服 sheet、ClassJob、跨域是否可用                            |
+| 真实战报 smoke | `live/smoke.spec.ts`                   | 一条 `SMOKE_FIGHT` 上 `fetch`、国服 sheet、样式与中文时间轴          |
+| 语料捕获       | `live/corpus.spec.ts`                  | 串行抓取 33 条战报的页面终态与接口数据，写入 `test/coverage/corpus/` |
 
-|              | offline                        | live                        |
-| ------------ | ------------------------------ | --------------------------- |
-| injected     | `offline/injected.spec.ts`     | `live/injected.spec.ts`     |
-| tampermonkey | `offline/tampermonkey.spec.ts` | `live/tampermonkey.spec.ts` |
+安装组只判安装语义，翻译细节归拦截与 UI 维度；真实上游组不注入产物；语料捕获是手工步骤，不进任何门禁。
 
-两条路线本身的执行路径与踩到的坑见 [docs/playwright.md](../../docs/playwright.md)。
+## 离线组
 
-## 四组各判什么
+夹具页只摆安装所需的入口，`page.route` 接管 `xivanalysis.com`、`v2.xivapi.com`、`xivapi-v2.xivcdn.com` 与 `www.garlandtools.cn`。假 GM 是个薄适配器：它真去 `fetch`，再把结果包成 GM 的响应形状。跨域由测试在响应头里补 `access-control-allow-origin`。
 
-**offline + injected** 覆盖脚本自己的全部逻辑，确定、离线、几秒跑完：document-start 注入、取表改写、ClassJob 缩写、garland 兜底、样式、不该改的节点、`[xiv-warn]`。它在 `support.ts` 里把 `xivanalysis.com`、`v2.xivapi.com`、`xivapi-v2.xivcdn.com`、`www.garlandtools.cn` 四条路径全部接管。
+离线组不判取表翻译、ClassJob 缩写、garland 兜底、时间轴与图标改写。这些由 `test/unit/intercept.spec.ts` 与 `test/dom/*.spec.ts` 覆盖，失败时能直接定位到纯逻辑或 DOM 行为。
 
-**offline + tampermonkey** 判管理器语义：脚本能不能被真扩展装上、`@match` 生不生效、注入是否发生。页面与 xivapi 仍是桩，但扩展本身是真的。
+## 真实上游组
 
-**live + injected** 判真实 DOM、真实数据上的落法。全量是 `fights.ts` 的 33 条战报加一条额外的 `SMOKE_FIGHT`，共 34 条；每条都要求：页面 `fetch` 已被接管、至少一次国服 sheet 响应是 200、样式进了页面、至少一个时间轴标签出现中日韩文字。
+用 `page.route` 在 `https://xivanalysis.com/` 提供本地 HTML，让 `fetch` 的 origin 与脚本运行时一致，然后访问真实 `v2.xivapi.com`、`xivapi-v2.xivcdn.com` 与国服 ClassJob。断言只到“200、`rows` 非空、字段形状可用、跨域能过”。
 
-**live + tampermonkey** 只跑 `SMOKE_FIGHT`：真扩展装上产物，打开真实战报页，等后台冷启动完成后重载一次，再断言国服请求、样式与中文时间轴。每次都要重建 profile、等 MV3 后台冷启动，全量跑代价过高。
+garland 的 `search.php` 没有 ACAO，浏览器里够不着，因此真实契约由 `test/live-upstream/garland.contract.spec.ts` 用 Node `fetch` 验证。
+
+## 真实战报 smoke
+
+只跑 `SMOKE_FIGHT`：快速注入产物，打开真实战报页，断言 `fetch` 被接管、至少一次国服 sheet 响应为 200、样式进入页面、时间轴出现中文。它只用来发现真实 DOM 选择器漂移，不承担 33 条战报的权威覆盖。
+
+## 语料捕获
+
+`test:corpus:capture` 串行遍历 `fights.ts` 的 33 条 `FIGHTS`，每条之间等 60 秒，复用限流退避。页面稳定后写入：
+
+- `manifest.json` —— 捕获时间、页面、sheet 类型与计数。
+- `labels.json` —— 时间轴与图标的去重标签，含翻译前英文与页面终态。
+- `sheets.json` —— 与标签配对的英文 / 中文行。
+- `classjobs.json` —— 缩写到中文全名。
+- `abbreviations.json` —— 实际用到的职业缩写。
+- `garland.json` —— 未落在 sheet 行里的兜底标签。
+- `warnings.json` —— capture 期间的 `[xiv-warn]`。
+
+写入先落临时目录，全部成功后再替换正式语料；失败不覆盖旧语料。`test/coverage/coverage.spec.ts` 离线读这些文件，检查终态无待翻英文、标签与行都有译文、sheet 类型受支持、缩写有中文名，以及告警只出现在 `test/coverage/warnings.allowlist.json`。
+
+快速注入的假 GM 走页面 `fetch`，真实 garland 没有 ACAO。capture 用 `page.route` 代发并补 CORS，模拟真 Tampermonkey 的 GM 行为；因此语料里的兜底结果与真实用户看到的一致。
 
 ## 为什么要固定 `locale: 'en-US'`
 
-xivanalysis 自己会按浏览器语言做 i18n。开发机是中文环境时，页面本身就会显示中文，“时间轴出现中日韩文字”就不再能证明用户脚本生效。`playwright.live.config.ts` 的 `use.locale` 与 `launchTampermonkey()` 的 `locale` 都固定成 `en-US`，这样真实页上的中日韩文字只可能来自脚本。
+xivanalysis 自己会按浏览器语言做 i18n。开发机是中文环境时，页面本身就会显示中文，“时间轴出现中日韩文字”不再能证明用户脚本生效。`playwright.live.config.ts` 的 `use.locale` 与 `launchTampermonkey()` 的 `locale` 都固定成 `en-US`，真实页上的中日韩文字才只可能来自脚本。
 
-## 全量为什么串行且要等
+## 为什么捕获串行且要等
 
-`playwright.live.config.ts` 的 `workers` 是 1，用例之间再固定等 60 秒。每个真实页会并发发出 Action / Status / Item / ClassJob 等多张 sheet 请求，再叠上多页面并发，很容易触发 xivapi 429；而 xivanalysis 自己还有一层按 IP 的分析限流，几分钟内连续打开十几页就会返回 “Slow down. Too many requests.”。34 页串行加间隔大约五十分钟，full 不是每次构建都跑，这个代价可以接受。
+`playwright.live.config.ts` 的 `workers` 是 1，capture 的用例之间固定等 60 秒。每个真实页会并发发出 Action / Status / Item / ClassJob 等多张 sheet 请求，多页面并发很容易触发 xivapi 429；xivanalysis 自己还有一层按 IP 的分析限流。33 条串行加间隔约五十分钟，作为手工刷新语料可以接受。
 
-限流页在首次分析请求返回后才渲染，所以不能只等固定几秒再查一次。`openWhenAvailable` 会同时等「国服 sheet 200」「限流页」「超时」三种结果；命中限流就退避 180 秒并重试，同一 worker 里的后续用例也会先等全局冷却。失败时 `waitForCnSheet` 会把见过的国服状态码全部列出来，能直接区分限流、站点故障和翻译回归。
+限流页在首次分析请求返回后才渲染，所以不能只等固定几秒。`openWhenAvailable` 同时等「国服 sheet 200」「限流页」「上游故障」「超时」，命中限流就退避 180 秒并重试。`waitForCnSheet` 失败时会列出见过的国服状态码，能区分限流、站点故障与翻译回归。
 
-## 夹具与桩的形状
+## 夹具与桩
 
-离线夹具页只摆 detector 认的那几个节点（`.Timeline-module_content`、`.Timeline-module_item img`、一个 `grid-column-start: -3` 的、一个含中日韩的），并且**把取表入口 `window.__loadSheet` 交给测试触发**——页面若在解析时自己就 fetch，就会和脚本安装 `unsafeWindow.fetch` 抢时序，测出来的东西不确定。
+离线夹具把取表入口 `window.__loadSheet` 交给测试触发，避免页面解析期的请求与脚本安装 `unsafeWindow.fetch` 抢时序。真实上游、smoke 与 capture 不替换页面响应；capture 只额外代发 garland 并补 CORS。
 
-假 GM 是个薄适配器：它真去 `fetch`，再把结果包成 GM 的响应形状，这样「GM 代发」和「页面原生 fetch」共用同一套路由。跨域由测试在响应头里补 `access-control-allow-origin` 解决。
+## 为什么两组都要 `channel: 'chromium'`
 
-`live/` 不摆任何夹具，也不替换页面响应；它只观察脚本改写出来的国服请求与页面上的落法。
+Playwright 自带的那份 Chrome for Testing。系统 Chrome 137 起移除了侧载扩展的命令行开关，只有自带这份还能 `--load-extension`；扩展也只在持久 context 里可用。完整注入组因此自己 `launchPersistentContext`，不用默认的 `page` fixture。
 
-## 两组为什么都要 `channel: 'chromium'`
+## 安装组发现并修掉的问题
 
-Playwright 自带的那份 Chrome for Testing。系统 Chrome 137 起移除了侧载扩展的命令行开关，只有自带这份还能 `--load-extension`；扩展也只在持久 context 里可用，而非持久 context 下 Playwright 会直接拒绝 `chrome://extensions`（它会让浏览器崩）。真管理器组因此自己 `launchPersistentContext`，不用默认的 `page` fixture。
+脚本声明 `@run-at document-start`，但 `injectStyle()` 直接 `document.head.appendChild`、两个 detector 直接 `observe(document.body, …)`。document-start 时这两个节点都还不存在，脚本当场抛 `Cannot read properties of null (reading 'appendChild')`，整个 IIFE 中断。`injectFetch()` 排在前面，所以取表改写照常生效，坏掉的只是样式与两个 DOM detector。
 
-## 加这组测试时发现并修掉的问题
-
-脚本声明 `@run-at document-start`，但 `injectStyle()` 直接 `document.head.appendChild`、两个 detector 直接 `observer.observe(document.body, …)`。document-start 时这两个节点都还不存在——`addInitScript` 下实测 `documentElement` / `head` / `body` 全为 null，脚本当场抛 `Cannot read properties of null (reading 'appendChild')`，整个 IIFE 中断。`injectFetch()` 排在 `injectStyle()` 前面，所以取表改写照常生效，坏掉的只是样式与两个 DOM detector——**页面上的时间轴与图标一个字都不会被翻译**，而且不报错。
-
-Tampermonkey 这边侥幸没暴露：它的 MV3 后台冷启动把注入推到了 `readyState === 'complete'`，那时 head / body 早已就位。也就是说这个 bug 一直在，只是被管理器的启动延迟盖住了。
-
-修法是 `src/hooks/dom.ts` 的 `whenNodeReady`：等目标节点出现再执行，`injectFetch()` 仍留在最前面。离线注入组的第一个用例（`在 document-start 注入不抛错`）就是钉这件事的。
+修法是 `src/hooks/dom.ts` 的 `whenNodeReady`：等目标节点出现再执行，`injectFetch()` 仍留在最前面。`install-fast.spec.ts` 的“快速注入在 document-start 跑起来”钉住这件事。
 
 ## 运行
 
 ```bash
-rushx test:unit          # vitest，源码级，无浏览器
-rushx test:offline       # 夹具页 + 假 GM / 真管理器（页面与接口不出网）
-rushx test:live:smoke    # 一条真实战报 + 快速注入
-rushx test:live:all      # 34 条真实战报 + 快速注入，串行
-rushx test:tampermonkey  # 一条真实战报 + 真管理器
-rushx test:gate          # unit + tsc + build + offline + live:smoke
-rushx test:all           # 发布用：上面的全部，含 live:all 与 live:tampermonkey
+rushx test:unit           # unit + DOM + 权威覆盖率，离线
+rushx test:e2e:fast       # 离线快速注入组
+rushx test:e2e:full       # 离线真 Tampermonkey 组
+rushx test:live:upstream  # 真实上游契约
+rushx test:live:smoke     # 一条真实战报 smoke
+rushx test:corpus:capture # 手工刷新 33 条战报语料
+rushx test:gate:offline   # unit + typecheck + build + 两组离线 e2e
+rushx test:gate:live      # 上游契约 + 一条真实战报 smoke
 ```
 
-`test:gate` 刻意不含 `test:tampermonkey`：它要下载/启动真扩展、等 MV3 冷启动，适合发布前跑，不适合每次构建。`test:all` 才是完整集合。
+`test:gate:offline` 包含真 Tampermonkey 组，首次运行需要下载扩展。`test:corpus:capture` 不属于两个门禁，语料提交后覆盖率测试离线运行。
 
-所有 `test:*` 都是单次执行，没有 watch / UI / headed；AI 调用时行为确定。
+所有 `test:*` 都是单次执行，没有 watch / UI / headed。
 
 浏览器得先装一次：
 
@@ -76,13 +93,11 @@ rushx test:all           # 发布用：上面的全部，含 live:all 与 live:t
 npx playwright install chromium
 ```
 
-（这一条是本目录唯一需要 `npx` 的地方，`rushx` 下没有等价入口。）
-
 ## 缓存与跳过
 
 `test/e2e/.cache/`（已在仓库根 `.gitignore` 的 `.cache/` 下）：
 
 - `tampermonkey/` —— 解包好的扩展，下载一次后复用。删掉会重新下。
-- `profile/` —— 真管理器组的浏览器 profile，每次运行重建：安装脚本与翻开关都在被测范围内，不能拿旧 profile 蒙混。
+- `profile/` —— 完整注入组的浏览器 profile，每次运行重建。
 
-本地拿不到扩展时，真管理器组会跳过；CI 下 `ensureTampermonkey(!!process.env.CI)` 会直接失败，避免门禁里的完整注入路径静默消失。
+本地拿不到扩展时，完整注入组会跳过；CI 下 `ensureTampermonkey(!!process.env.CI)` 会直接失败。CI 目前只跑 `test:unit`，不承担浏览器与在线测试。

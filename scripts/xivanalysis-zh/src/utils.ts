@@ -19,15 +19,19 @@ export const addKnown = (text: string): void => {
 };
 export const known = (text: string): boolean => KNOWN.has(text.trim().toLowerCase());
 
+// 判定“看起来是需要翻译的英文”，不看是否已登记。覆盖率测试用它检查页面终态，
+// 避免 KNOWN 把残留英文掩盖掉。
+const CJK = /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]/;
+
+export const looksEnglish = (text: string): boolean => {
+  const t = text.trim();
+  return /[A-Za-z]{2,}/.test(t) && !CJK.test(t);
+};
+
 // 反查/兜底目标判定:值得送去 resolve、或作为"漏翻"上报的英文标签。
 // 须含 2+ 连续拉丁字母、不含中日韩(含中日韩多为站点已给的中文,如 tooltip「该效果无法在此情境下使用。」),
 // 且尚未 known。
-const CJK = /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]/;
-
-export const isTarget = (text: string): boolean => {
-  const t = text.trim();
-  return /[A-Za-z]{2,}/.test(t) && !CJK.test(t) && !known(t);
-};
+export const isTarget = (text: string): boolean => looksEnglish(text) && !known(text);
 
 // 在一批条目里按 id > iconId > en > zh 匹配:依次尝试每个字段,取第一个非空结果(某字段查得到就用它,
 // 查不到就退到下一字段)。这样只带 en 的源(override/jobAbbr 条目无 iconId)在 icon 查询(带 iconId)下仍能按 en 命中。

@@ -62,3 +62,10 @@ export const notifyMapGrowth = (): void => {
     }
   }
 };
+
+/** 清空映射与缓存，供测试隔离。增长监听器由 detector 自己退订。 */
+export const resetStore = (): void => {
+  byEn.clear();
+  byIconId.clear();
+  fetchCache = null;
+};

@@ -2,6 +2,7 @@
 import { resolve } from 'path';
 import userscriptMetadata from 'vite-plugin-userscript-metadata';
 import { defineConfig } from 'vitest/config';
+import { USERSCRIPT_META } from './src/userscript.meta.ts';
 
 export default defineConfig({
   build: {
@@ -22,21 +23,7 @@ export default defineConfig({
   },
   plugins: [
     userscriptMetadata({
-      meta: {
-        name: { default: 'xivanalysis-zh', zh: 'xivanalysis 中文补全' },
-        description: {
-          default: 'Fill in the missing Chinese translations for xivanalysis',
-          zh: '为 xivanalysis 填补缺失的中文翻译',
-        },
-        namespace: 'http://tanimodori.com/',
-        match: 'https://xivanalysis.com/*',
-        include: 'https://xivanalysis.com/*',
-        // 截获并改写宿主页 fetch(unsafeWindow)。CN 读走原生 fetch(国服回 ACAO:*);
-        // 仅 garlands search.php 兜底无 CORS 头,须经 GM → 保留 GM_xmlhttpRequest + @connect。
-        grant: ['GM_xmlhttpRequest', 'unsafeWindow'],
-        connect: ['www.garlandtools.cn'],
-        'run-at': 'document-start',
-      },
+      meta: USERSCRIPT_META,
       injectPackageJson: true,
     }),
   ],

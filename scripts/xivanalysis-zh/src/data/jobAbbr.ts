@@ -1,4 +1,4 @@
-import { pageFetch } from '../hooks/request';
+import { pageFetch } from '../hooks/pageFetch';
 import type { XivEntry, XivEntryProvider } from '../types/workflow';
 import { memorize } from '../utils';
 

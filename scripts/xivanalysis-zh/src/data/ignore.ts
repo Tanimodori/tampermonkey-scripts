@@ -9,3 +9,8 @@ export const reportUntranslated = (text: string): void => {
 };
 
 export const untranslatedList = (): string[] => [...warned].sort();
+
+/** 清空去重集合，供测试隔离。 */
+export const resetUntranslated = (): void => {
+  warned.clear();
+};

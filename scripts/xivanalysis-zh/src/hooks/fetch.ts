@@ -7,7 +7,7 @@
 // 一个原不存在的超时;一发超时会被 memorize 当成"没查到"记下,一个慢响应就永久少一条翻译。GM 自己的网络错误/超时
 // /abort 仍 reject(见下),语义与改造前一致。
 // GM 的类型与 `unsafeWindow` 由 src/types/gm.d.ts 全局声明,此处不重复定义。
-const parseHeaders = (raw: string): [string, string][] => {
+export const parseHeaders = (raw: string): [string, string][] => {
   const out: [string, string][] = [];
   for (const line of raw.split(/\r?\n/)) {
     const i = line.indexOf(':');
@@ -17,7 +17,13 @@ const parseHeaders = (raw: string): [string, string][] => {
   return out;
 };
 
-export const gmFetch = async (url: string, headers?: Record<string, string>): Promise<Response> => {
-  const res = await GM.xmlHttpRequest({ method: 'GET', url, headers, responseType: 'text', anonymous: true }); // 网络错误/超时/abort → reject
-  return new Response(res.responseText, { status: res.status, statusText: res.statusText, headers: parseHeaders(res.responseHeaders) });
+type GmRequest = (details: GMXMLHttpRequestDetails) => Promise<GMXMLHttpResponse>;
+
+export const createGmFetch = (request: GmRequest) => {
+  return async (url: string, headers?: Record<string, string>): Promise<Response> => {
+    const res = await request({ method: 'GET', url, headers, responseType: 'text', anonymous: true }); // 网络错误/超时/abort → reject
+    return new Response(res.responseText, { status: res.status, statusText: res.statusText, headers: parseHeaders(res.responseHeaders) });
+  };
 };
+
+export const gmFetch = createGmFetch((details) => GM.xmlHttpRequest(details));

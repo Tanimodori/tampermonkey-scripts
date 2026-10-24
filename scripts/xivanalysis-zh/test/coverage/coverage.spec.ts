@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve as resolvePath } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { createGarlandSearch, type GarlandDeps } from '../../src/data/garland';
 import { resetUntranslated } from '../../src/data/ignore';
 import { overrideProvider } from '../../src/data/override';
 import { createResolve } from '../../src/data/resolve';
@@ -109,13 +110,44 @@ beforeAll(async () => {
   garlandByKey = new Map(garland.map((entry) => [`${entry.en.toLowerCase()}|${entry.iconId ?? ''}`, entry]));
   const jobEntries: XivEntry[] = Object.entries(classJobs).map(([en, zh]) => ({ kind: 'unknown', id: -1, en, zh }));
   const jobProvider: XivEntryProvider = async () => jobEntries;
-  // 语料里的兜底条目替身。真实 adapter 由 garland.spec.ts 与 garland-wiring.spec.ts 单独覆盖，
-  // 这里验证解析链确实会走到兜底源，并按 en+iconId 取对应变体。
-  const garlandStub: XivSearch = async (query) => {
-    if (!query.en) return [];
-    const entry = garlandByKey.get(`${query.en.toLowerCase()}|${query.iconId ?? ''}`);
-    return entry ? [{ kind: 'unknown', id: -1, en: entry.en, zh: entry.zh, iconId: entry.iconId }] : [];
+
+  // 用真实 createGarlandSearch 跑语料：client 返回合成的检索命中，pageFetch 返回对应的国服行。
+  // 这样 iconId 优先、无 iconId 优先汉字、同串缓存与 addKnown 都走生产代码。
+  const byEn = new Map<string, { id: number; entry: CorpusGarland }[]>();
+  const idToEntry = new Map<number, CorpusGarland>();
+  let nextId = 1;
+  for (const entry of garland) {
+    const id = nextId++;
+    idToEntry.set(id, entry);
+    const list = byEn.get(entry.en.toLowerCase()) ?? [];
+    list.push({ id, entry });
+    byEn.set(entry.en.toLowerCase(), list);
+  }
+  for (const list of byEn.values()) {
+    // 无 iconId 的 timeline 变体在前；有 iconId 时 adapter 会自行把它排到前面。
+    list.sort((a, b) => (a.entry.iconId ?? -1) - (b.entry.iconId ?? -1));
+  }
+  const client = {
+    call: async (_endpoint: unknown, input: { text: string }) =>
+      (byEn.get(input.text.toLowerCase()) ?? []).map(({ id, entry }) => ({ type: 'action', id: String(id), obj: { i: id, n: entry.en, c: entry.iconId } })),
+  } as unknown as GarlandDeps['client'];
+  const pageFetch: typeof fetch = async (input) => {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : (input as Request).url;
+    const match = url.match(/\/api\/sheet\/[^/]+\/(\d+)/);
+    const entry = match ? idToEntry.get(Number(match[1])) : undefined;
+    if (!entry) return new Response('not found', { status: 404 });
+    return new Response(JSON.stringify({ fields: { Name: entry.zh, Icon: entry.iconId == null ? undefined : { id: entry.iconId } } }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
   };
+  const garlandSearch = createGarlandSearch({
+    client,
+    pageFetch,
+    addEntry: () => false,
+    addKnown: () => undefined,
+  });
+
   const warn: XivSearch = (query) => {
     if (query.en) misses.push(query.en);
     return Promise.resolve([]);
@@ -126,7 +158,7 @@ beforeAll(async () => {
     bakedStatusSearch,
     providerToSearch(fetchProvider),
     providerToSearch(jobProvider),
-    garlandStub,
+    garlandSearch,
     warn,
   ]);
 });

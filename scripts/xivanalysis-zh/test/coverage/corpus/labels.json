@@ -2814,7 +2814,7 @@
   {
     "kind": "icon",
     "en": "Onslaught",
-    "zh": "オンスロート",
+    "zh": "猛攻",
     "iconId": 2561,
     "pages": [
       "https://xivanalysis.com/fflogs/PF9aA7xQ2kMNn8G4/44/1208"
@@ -4355,7 +4355,7 @@
   {
     "kind": "icon",
     "en": "True Thrust",
-    "zh": "トゥルースラスト",
+    "zh": "精准刺",
     "iconId": 310,
     "pages": [
       "https://xivanalysis.com/fflogs/rmWHfNpP3Gx6bRjq/21/27",
@@ -6627,7 +6627,7 @@
   {
     "kind": "timeline",
     "en": "Onslaught",
-    "zh": "オンスロート",
+    "zh": "猛攻",
     "pages": [
       "https://xivanalysis.com/fflogs/PF9aA7xQ2kMNn8G4/44/1208"
     ]

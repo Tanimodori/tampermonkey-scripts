@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve as resolvePath } from 'node:path';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { resetUntranslated } from '../../src/data/ignore';
 import { overrideProvider } from '../../src/data/override';
 import { createResolve } from '../../src/data/resolve';
 import { bakedStatusSearch } from '../../src/data/statuses';
@@ -8,6 +9,7 @@ import { addEntry, fetchProvider, resetStore } from '../../src/data/store';
 import { parseSheetRequest } from '../../src/hooks/requestCore';
 import type { XivEntry, XivEntryProvider, XivKind, XivSearch } from '../../src/types/workflow';
 import { KNOWN, looksEnglish, providerToSearch } from '../../src/utils';
+import { JOBS } from '../e2e/fixtures/fights';
 import warningAllowlist from './warnings.allowlist.json';
 
 interface Manifest {
@@ -41,6 +43,7 @@ interface CorpusGarland {
 }
 
 const corpusDir = process.env.CORPUS_DIR ? resolvePath(process.env.CORPUS_DIR) : resolvePath(import.meta.dirname, 'corpus');
+const HAN = /[\u3400-\u9fff]/;
 
 const readCorpus = <T>(name: string): T => {
   try {
@@ -74,6 +77,7 @@ let sheets: CorpusSheetRow[];
 let classJobs: Record<string, string>;
 let abbreviations: string[];
 let garland: CorpusGarland[];
+let garlandByEn: Map<string, CorpusGarland>;
 let warnings: string[];
 let resolve: XivSearch;
 let identity: Set<string>;
@@ -90,6 +94,8 @@ beforeAll(async () => {
 
   resetStore();
   KNOWN.clear();
+  resetUntranslated();
+  misses.length = 0;
 
   const overrides = await overrideProvider();
   identity = new Set(overrides.filter((entry) => entry.zh === entry.en).map((entry) => entry.en.trim().toLowerCase()));
@@ -97,13 +103,17 @@ beforeAll(async () => {
   for (const row of sheets) {
     addEntry({ kind: sheetKind(row.sheet), id: row.id, en: row.en, zh: row.zh, iconId: row.iconId });
   }
-  for (const entry of garland) {
-    addEntry({ kind: 'unknown', id: -1, en: entry.en, zh: entry.zh, iconId: entry.iconId });
-  }
 
+  garlandByEn = new Map(garland.map((entry) => [entry.en.toLowerCase(), entry]));
   const jobEntries: XivEntry[] = Object.entries(classJobs).map(([en, zh]) => ({ kind: 'unknown', id: -1, en, zh }));
   const jobProvider: XivEntryProvider = async () => jobEntries;
-  const noGarland: XivSearch = async () => [];
+  // 语料里的兜底条目替身。真实 adapter 由 garland.spec.ts 与 garland-wiring.spec.ts 单独覆盖，
+  // 这里验证解析链确实会走到兜底源。
+  const garlandStub: XivSearch = async (query) => {
+    if (!query.en) return [];
+    const entry = garlandByEn.get(query.en.toLowerCase());
+    return entry ? [{ kind: 'unknown', id: -1, en: entry.en, zh: entry.zh, iconId: entry.iconId }] : [];
+  };
   const warn: XivSearch = (query) => {
     if (query.en) misses.push(query.en);
     return Promise.resolve([]);
@@ -114,13 +124,20 @@ beforeAll(async () => {
     bakedStatusSearch,
     providerToSearch(fetchProvider),
     providerToSearch(jobProvider),
-    noGarland,
+    garlandStub,
     warn,
   ]);
 });
 
+afterAll(() => {
+  resetStore();
+  KNOWN.clear();
+  resetUntranslated();
+  misses.length = 0;
+});
+
 describe('权威语料', () => {
-  it('语料完整且计数一致', () => {
+  it('语料完整、计数一致且没有空值', () => {
     expect(manifest.version).toBe(1);
     expect(Number.isNaN(Date.parse(manifest.capturedAt))).toBe(false);
     expect(manifest.pages).toHaveLength(Number(process.env.CORPUS_EXPECT_PAGES ?? 33));
@@ -136,18 +153,45 @@ describe('权威语料', () => {
     expect(new Set(labelKeys).size).toBe(labelKeys.length);
     const sheetKeys = sheets.map((row) => `${row.sheet}:${row.id}`);
     expect(new Set(sheetKeys).size).toBe(sheetKeys.length);
-  });
 
-  it('页面终态没有残留的待翻英文', () => {
+    const pageUrls = new Set(manifest.pages.map((page) => page.url));
     for (const label of labels) {
-      if (!looksEnglish(label.zh)) continue;
-      if (identity.has(label.zh.toLowerCase())) continue;
-      if (warningAllowlist[label.zh as keyof typeof warningAllowlist]) continue;
-      expect.fail(`${label.kind}: ${label.en} 终态仍是英文 ${label.zh}`);
+      expect(label.en.trim(), label.en).toBeTruthy();
+      expect(label.zh, label.en).toBeTruthy();
+      expect(label.pages.length, label.en).toBeGreaterThan(0);
+      for (const page of label.pages) expect(pageUrls.has(page), page).toBe(true);
+    }
+    for (const row of sheets) {
+      expect(row.en.trim(), `${row.sheet}/${row.id}`).toBeTruthy();
+      expect(row.zh, `${row.sheet}/${row.id}`).toBeTruthy();
+    }
+    for (const [abbr, zh] of Object.entries(classJobs)) {
+      expect(abbr, abbr).toBeTruthy();
+      expect(zh, abbr).toBeTruthy();
+    }
+    const garlandKeys = garland.map((entry) => entry.en.toLowerCase());
+    expect(new Set(garlandKeys).size).toBe(garlandKeys.length);
+    for (const entry of garland) {
+      expect(entry.en.trim(), entry.en).toBeTruthy();
+      expect(entry.zh, entry.en).toBeTruthy();
+      expect(entry.zh, entry.en).not.toBe(entry.en);
+    }
+    for (const warning of warnings) {
+      expect(warningText(warning), warning).toBeTruthy();
     }
   });
 
-  it('每个待翻标签都能按来源解析出译文', async () => {
+  it('页面终态没有残留的待翻英文或其他非中文译文', () => {
+    for (const label of labels) {
+      if (identity.has(label.zh.toLowerCase())) continue;
+      if (warningAllowlist[label.zh as keyof typeof warningAllowlist]) continue;
+      if (looksEnglish(label.zh) || !HAN.test(label.zh)) {
+        expect.fail(`${label.kind}: ${label.en} 终态不是中文 ${label.zh}`);
+      }
+    }
+  });
+
+  it('每个待翻标签都能在解析链中找到中文译文', async () => {
     for (const label of labels) {
       if (!looksEnglish(label.en)) continue;
       if (identity.has(label.en.toLowerCase())) continue;
@@ -156,12 +200,25 @@ describe('权威语料', () => {
         continue;
       }
 
-      expect(label.zh, `${label.kind}: ${label.en}`).toBeTruthy();
       expect(label.zh, `${label.kind}: ${label.en}`).not.toBe(label.en);
+      expect(HAN.test(label.zh), `${label.kind}: ${label.en} 译文不是中文 ${label.zh}`).toBe(true);
       const hits = await resolve({ en: label.en, iconId: label.iconId });
       expect(hits.length, `${label.kind}: ${label.en}`).toBeGreaterThan(0);
     }
     expect(misses).toEqual([]);
+  });
+
+  it('非 sheet 标签都有对应的兜底条目', () => {
+    const sheetNames = new Set(sheets.map((row) => row.en.toLowerCase()));
+    for (const label of labels) {
+      if (!looksEnglish(label.en)) continue;
+      if (identity.has(label.en.toLowerCase())) continue;
+      if (warningAllowlist[label.en as keyof typeof warningAllowlist]) continue;
+      if (sheetNames.has(label.en.toLowerCase())) continue;
+      const fallback = garlandByEn.get(label.en.toLowerCase());
+      expect(fallback, `${label.kind}: ${label.en} 既无 sheet 行也无 garland 条目`).toBeTruthy();
+      expect(fallback?.zh, `${label.kind}: ${label.en}`).toBe(label.zh);
+    }
   });
 
   it('capture 中出现的 sheet 类型都受支持', () => {
@@ -174,23 +231,28 @@ describe('权威语料', () => {
   it('捕获的 sheet 行都有中文名', () => {
     for (const row of sheets) {
       if (!looksEnglish(row.en)) continue;
-      if (row.zh && row.zh !== row.en) continue;
       if (identity.has(row.en.toLowerCase())) continue;
-      expect.fail(`${row.sheet}/${row.id} ${row.en} 没有中文名`);
+      expect(row.zh, `${row.sheet}/${row.id} ${row.en}`).not.toBe(row.en);
+      expect(HAN.test(row.zh), `${row.sheet}/${row.id} ${row.en} 译文不是中文 ${row.zh}`).toBe(true);
     }
   });
 
   it('职业缩写表完整，捕获到的缩写都有中文全名', () => {
     const entries = Object.entries(classJobs);
-    expect(entries.length).toBeGreaterThan(0);
+    expect(entries.length).toBeGreaterThanOrEqual(44);
+    for (const job of JOBS) {
+      expect(classJobs[job], job).toBeTruthy();
+    }
     for (const [abbr, zh] of entries) {
       expect(abbr, abbr).toBeTruthy();
       expect(zh, abbr).toBeTruthy();
       expect(zh, abbr).not.toBe(abbr);
+      expect(HAN.test(zh), `${abbr} 译文不是中文 ${zh}`).toBe(true);
     }
     for (const abbr of abbreviations) {
       expect(classJobs[abbr], abbr).toBeTruthy();
       expect(classJobs[abbr], abbr).not.toBe(abbr);
+      expect(HAN.test(classJobs[abbr]), `${abbr} 译文不是中文 ${classJobs[abbr]}`).toBe(true);
     }
   });
 
@@ -198,10 +260,14 @@ describe('权威语料', () => {
     const parsed = warnings.map(warningText);
     expect(parsed.every((text) => typeof text === 'string')).toBe(true);
     for (const text of parsed as string[]) {
-      expect(warningAllowlist[text as keyof typeof warningAllowlist], `未登记的告警: ${text}`).toBeTruthy();
+      const reason = warningAllowlist[text as keyof typeof warningAllowlist];
+      expect(reason, `未登记的告警: ${text}`).toBeTruthy();
     }
     for (const key of Object.keys(warningAllowlist)) {
       expect(parsed).toContain(key);
+    }
+    for (const [key, reason] of Object.entries(warningAllowlist)) {
+      expect(reason.trim(), `${key} 的白名单理由为空`).toBeTruthy();
     }
   });
 });

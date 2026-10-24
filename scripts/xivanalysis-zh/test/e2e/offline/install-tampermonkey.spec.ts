@@ -38,7 +38,7 @@ const requireSession = (): TampermonkeySession => {
 /** 打开夹具页并等脚本真的注入进来——Tampermonkey 的后台冷启动会让注入晚到几十秒。 */
 const openMatchingPage = async (): Promise<Page> => {
   const page = await requireSession().context.newPage();
-  await routeFixture(page, { fallback: false });
+  await routeFixture(page);
   await page.goto('https://xivanalysis.com/');
   const injected = await waitForInjection(page);
   expect(injected, '超时前 Tampermonkey 没有把脚本注入进来').toBe(true);
@@ -56,13 +56,17 @@ test('脚本装上后匹配页面被接管', async () => {
 
 test('@match 之外的站点不注入', async () => {
   test.skip(!!unavailable, unavailable);
+
+  // 先用匹配页把管理器跑热，再等 15 秒确认非匹配页仍是原生 fetch，避免把冷启动当成 @match 生效。
+  const warm = await openMatchingPage();
+  await warm.close();
+
   const page = await requireSession().context.newPage();
   await page.route(
     (url) => url.hostname === 'example.com',
     (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><html><body>nope</body></html>' }),
   );
   await page.goto('https://example.com/');
-  // 匹配页已经把这台管理器跑热了，这里再等足够久仍未被接管，才算 @match 真的挡住了。
   await page.waitForTimeout(15_000);
   expect(await page.evaluate(() => /\[native code\]/.test(String(window.fetch)))).toBe(true);
   await page.close();

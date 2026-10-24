@@ -213,7 +213,10 @@
     "sheets": 490,
     "classJobs": 44,
     "abbreviations": 0,
-    "garland": 143,
+    "garland": 71,
     "warnings": 39
-  }
+  },
+  "notes": [
+    "旧捕获的 Onslaught/True Thrust 因 garland 未按 iconId 消歧而得到日文名，已按国服单行结果更正；identity 与重复 sheet 的兜底条目已移除。"
+  ]
 }

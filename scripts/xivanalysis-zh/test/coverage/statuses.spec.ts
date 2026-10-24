@@ -54,13 +54,13 @@ describe('烘焙状态表', () => {
     expect(hits.some((entry) => entry.en === 'Regen')).toBe(true);
   });
 
-  it('同名多条目按 id 升序返回,首个是确定的', async () => {
+  it('同名多条目按烘焙表顺序返回,首个是确定的', async () => {
     const name = ['Seraphism', 'Tsubame-Gaeshi'].find((candidate) => bakedStatusNameCount(candidate) > 1);
     expect(name).toBeTruthy();
     if (!name) return;
 
     const hits = await bakedStatusSearch({ en: name });
     expect(hits.length).toBeGreaterThan(1);
-    expect(hits[0].id).toBeLessThan(hits[hits.length - 1].id);
+    expect(hits).toEqual(bakedStatuses.filter((entry) => entry.en.toLowerCase() === name.toLowerCase()));
   });
 });

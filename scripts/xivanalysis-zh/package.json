@@ -25,14 +25,14 @@
     "bake:statuses": "node scripts/bake-statuses.mjs",
     "bake:statuses:check-upstream": "node scripts/bake-statuses.mjs --check-upstream",
     "bake:statuses:verify": "node scripts/bake-statuses.mjs --verify",
-    "test": "vitest run --passWithNoTests",
-    "test:unit": "vitest run --passWithNoTests",
+    "test": "vitest run",
+    "test:unit": "vitest run",
     "test:e2e:fast": "vite build && playwright test --project=offline-injected",
     "test:e2e:full": "vite build && playwright test --project=offline-tampermonkey",
     "test:live:upstream": "playwright test --config=playwright.live.config.ts --project=live-upstream && vitest run --config=vitest.live.config.ts",
     "test:live:smoke": "vite build && playwright test --config=playwright.live.config.ts --project=live-smoke --grep @smoke",
     "test:corpus:capture": "vite build && playwright test --config=playwright.live.config.ts --project=live-corpus",
-    "test:gate:offline": "vitest run --passWithNoTests && tsc -b && vite build && playwright test --project=offline-injected --project=offline-tampermonkey",
+    "test:gate:offline": "vitest run && tsc -b && vite build && playwright test --project=offline-injected --project=offline-tampermonkey",
     "test:gate:live": "vite build && playwright test --config=playwright.live.config.ts --project=live-upstream --project=live-smoke && vitest run --config=vitest.live.config.ts"
   },
   "dependencies": {

@@ -1,16 +1,7 @@
 [
   {
-    "en": "Addersgall",
-    "zh": "Addersgall"
-  },
-  {
     "en": "Addersting",
     "zh": "蛇刺"
-  },
-  {
-    "en": "Aero in Green",
-    "zh": "疾风之绿",
-    "iconId": 3802
   },
   {
     "en": "Aetherhues",
@@ -18,77 +9,25 @@
     "iconId": 213801
   },
   {
-    "en": "Aetherhues II",
-    "zh": "以太色调II",
-    "iconId": 213802
-  },
-  {
-    "en": "Aetherial Manipulation",
-    "zh": "以太步"
-  },
-  {
     "en": "Akh Morn",
     "zh": "死亡轮回",
     "iconId": 2694
-  },
-  {
-    "en": "Ammo",
-    "zh": "Ammo"
-  },
-  {
-    "en": "Arcane Circle",
-    "zh": "神秘环",
-    "iconId": 212936
   },
   {
     "en": "Arcanum",
     "zh": "奥秘卡"
   },
   {
-    "en": "Arm's Length",
-    "zh": "亲疏自行"
-  },
-  {
     "en": "Astral Fire andUmbral Ice",
     "zh": "星极火和灵极冰"
-  },
-  {
-    "en": "Astral Soul",
-    "zh": "Astral Soul"
   },
   {
     "en": "Autos",
     "zh": "自动技能"
   },
   {
-    "en": "Battery",
-    "zh": "Battery"
-  },
-  {
-    "en": "Battle Litany",
-    "zh": "战斗连祷",
-    "iconId": 212578
-  },
-  {
-    "en": "Battle Voice",
-    "zh": "战斗之声",
-    "iconId": 212601
-  },
-  {
-    "en": "Beast Chakra",
-    "zh": "Beast Chakra"
-  },
-  {
-    "en": "Beast Gauge",
-    "zh": "Beast Gauge"
-  },
-  {
     "en": "Between the Lines",
     "zh": "魔里行间"
-  },
-  {
-    "en": "Blood Gauge",
-    "zh": "Blood Gauge"
   },
   {
     "en": "Blood Stalk",
@@ -99,76 +38,26 @@
     "zh": "失血箭"
   },
   {
-    "en": "Brotherhood",
-    "zh": "义结金兰：攻击",
-    "iconId": 212532
-  },
-  {
-    "en": "Canvas",
-    "zh": "Canvas"
-  },
-  {
-    "en": "Chain Stratagem",
-    "zh": "连环计",
-    "iconId": 212809
-  },
-  {
-    "en": "Chakras",
-    "zh": "Chakras"
-  },
-  {
     "en": "Chi",
     "zh": "地之印",
     "iconId": 2902
-  },
-  {
-    "en": "Claw Motif",
-    "zh": "兽爪彩绘",
-    "iconId": 3817
-  },
-  {
-    "en": "Coda",
-    "zh": "Coda"
   },
   {
     "en": "Commands",
     "zh": "手动技能"
   },
   {
-    "en": "Death Gauge",
-    "zh": "Death Gauge"
-  },
-  {
     "en": "Demi",
     "zh": "亚灵神"
-  },
-  {
-    "en": "Depictions",
-    "zh": "Depictions"
   },
   {
     "en": "Deployment Tactics",
     "zh": "展开战术"
   },
   {
-    "en": "Devilment",
-    "zh": "进攻之探戈",
-    "iconId": 213714
-  },
-  {
     "en": "Dive Ready",
     "zh": "幻象冲预备",
     "iconId": 212583
-  },
-  {
-    "en": "Divination",
-    "zh": "占卜",
-    "iconId": 213245
-  },
-  {
-    "en": "Dokumori",
-    "zh": "介毒之术",
-    "iconId": 212920
   },
   {
     "en": "Dragon's Flight",
@@ -182,11 +71,6 @@
   {
     "en": "Earth's Reply",
     "zh": "金刚决意"
-  },
-  {
-    "en": "Embolden",
-    "zh": "鼓励",
-    "iconId": 218941
   },
   {
     "en": "Embrace",
@@ -204,23 +88,6 @@
   {
     "en": "Eukrasian Prognosis II",
     "zh": "均衡预后II"
-  },
-  {
-    "en": "Faerie Gauge",
-    "zh": "Faerie Gauge"
-  },
-  {
-    "en": "Feathers",
-    "zh": "Feathers"
-  },
-  {
-    "en": "Finisher Procs",
-    "zh": "Finisher Procs"
-  },
-  {
-    "en": "Fire III",
-    "zh": "爆炎",
-    "iconId": 453
   },
   {
     "en": "Flourishing Finish",
@@ -252,18 +119,6 @@
     "iconId": 213723
   },
   {
-    "en": "Fury Gauge",
-    "zh": "Fury Gauge"
-  },
-  {
-    "en": "Gauges",
-    "zh": "Gauges"
-  },
-  {
-    "en": "GCD",
-    "zh": "GCD"
-  },
-  {
     "en": "Grand Impact Ready",
     "zh": "显贵冲击预备",
     "iconId": 213412
@@ -273,17 +128,8 @@
     "zh": "灵魂之青"
   },
   {
-    "en": "Harpe",
-    "zh": "勾刃",
-    "iconId": 3614
-  },
-  {
     "en": "Heat",
     "zh": "射线"
-  },
-  {
-    "en": "Honed Procs",
-    "zh": "Honed Procs"
   },
   {
     "en": "Hunter's Sting",
@@ -301,11 +147,6 @@
     "iconId": 3479
   },
   {
-    "en": "Infernal Slice",
-    "zh": "地狱切割",
-    "iconId": 3603
-  },
-  {
     "en": "Jin",
     "zh": "人之印",
     "iconId": 2903
@@ -320,16 +161,8 @@
     "zh": "伤腿"
   },
   {
-    "en": "Lemure",
-    "zh": "Lemure"
-  },
-  {
     "en": "Ley Lines Buffs",
     "zh": "黑魔纹增益"
-  },
-  {
-    "en": "Lucid Dreaming",
-    "zh": "醒梦"
   },
   {
     "en": "Magicked Swordplay",
@@ -341,11 +174,6 @@
     "zh": "真言"
   },
   {
-    "en": "Maw Motif",
-    "zh": "尖牙彩绘",
-    "iconId": 3818
-  },
-  {
     "en": "Medicated",
     "zh": "强化药",
     "iconId": 216203
@@ -355,16 +183,8 @@
     "zh": "小奥秘卡"
   },
   {
-    "en": "Movement",
-    "zh": "Movement"
-  },
-  {
     "en": "Mudra",
     "zh": "结印"
-  },
-  {
-    "en": "Nadi Gauge",
-    "zh": "Nadi Gauge"
   },
   {
     "en": "Nascent Chaos",
@@ -375,26 +195,6 @@
     "en": "Nastrond Ready",
     "zh": "死者之岸预备",
     "iconId": 218151
-  },
-  {
-    "en": "Oath Gauge",
-    "zh": "Oath Gauge"
-  },
-  {
-    "en": "Offensive Cards",
-    "zh": "Offensive Cards"
-  },
-  {
-    "en": "oGCD Procs",
-    "zh": "oGCD Procs"
-  },
-  {
-    "en": "Paint",
-    "zh": "Paint"
-  },
-  {
-    "en": "Palette Gauge",
-    "zh": "Palette Gauge"
   },
   {
     "en": "Peloton",
@@ -409,52 +209,18 @@
     "zh": "通晓"
   },
   {
-    "en": "Pom Motif",
-    "zh": "绒球彩绘",
-    "iconId": 3815
-  },
-  {
-    "en": "Portraits",
-    "zh": "Portraits"
-  },
-  {
     "en": "Prefulgence Ready",
     "zh": "光芒四射预备",
     "iconId": 213413
-  },
-  {
-    "en": "Proc",
-    "zh": "Proc"
-  },
-  {
-    "en": "Provoke",
-    "zh": "挑衅"
-  },
-  {
-    "en": "Radiant Finale",
-    "zh": "光明神的最终乐章",
-    "iconId": 212622
   },
   {
     "en": "Raid Buffs",
     "zh": "团辅"
   },
   {
-    "en": "Rattling Coils",
-    "zh": "Rattling Coils"
-  },
-  {
     "en": "Reaving Fangs",
     "zh": "穿裂尖齿",
     "iconId": 3702
-  },
-  {
-    "en": "Reawaken Combo",
-    "zh": "Reawaken Combo"
-  },
-  {
-    "en": "Reawaken Procs",
-    "zh": "Reawaken Procs"
   },
   {
     "en": "Release Defiance",
@@ -465,35 +231,9 @@
     "zh": "解除王室亲卫"
   },
   {
-    "en": "Resources",
-    "zh": "Resources"
-  },
-  {
-    "en": "Searing Light",
-    "zh": "灼热之光",
-    "iconId": 212699
-  },
-  {
-    "en": "Sen",
-    "zh": "Sen"
-  },
-  {
-    "en": "Shadow of Death",
-    "zh": "死亡之影",
-    "iconId": 3606
-  },
-  {
     "en": "Shifu",
     "zh": "士风",
     "iconId": 3156
-  },
-  {
-    "en": "Shirk",
-    "zh": "退避"
-  },
-  {
-    "en": "Shroud Gauge",
-    "zh": "Shroud Gauge"
   },
   {
     "en": "Silken Flow",
@@ -511,16 +251,8 @@
     "iconId": 3741
   },
   {
-    "en": "Smudge",
-    "zh": "速涂"
-  },
-  {
     "en": "Songs",
     "zh": "战歌"
-  },
-  {
-    "en": "Soul Gauge",
-    "zh": "Soul Gauge"
   },
   {
     "en": "Standard Finish",
@@ -533,11 +265,6 @@
     "iconId": 212588
   },
   {
-    "en": "Starry Muse",
-    "zh": "星空构想",
-    "iconId": 213808
-  },
-  {
     "en": "Starry Sky Motif",
     "zh": "星空彩绘",
     "iconId": 3820
@@ -548,11 +275,6 @@
     "iconId": 213806
   },
   {
-    "en": "Surecast",
-    "zh": "沉稳咏唱",
-    "iconId": 869
-  },
-  {
     "en": "Swiftskin's Sting",
     "zh": "疾速利齿",
     "iconId": 3704
@@ -560,21 +282,6 @@
   {
     "en": "Techne Makre",
     "zh": "术道恒久"
-  },
-  {
-    "en": "Technical Finish",
-    "zh": "技巧舞步结束",
-    "iconId": 213709
-  },
-  {
-    "en": "The Balance",
-    "zh": "太阳神之衡",
-    "iconId": 213204
-  },
-  {
-    "en": "The Spear",
-    "zh": "战争神之枪",
-    "iconId": 213207
   },
   {
     "en": "Thorned Flourish",
@@ -598,29 +305,8 @@
   },
   {
     "en": "True Thrust",
-    "zh": "トゥルースラスト",
+    "zh": "精准刺",
     "iconId": 310
-  },
-  {
-    "en": "Umbral Hearts",
-    "zh": "Umbral Hearts"
-  },
-  {
-    "en": "Uncoiled Procs",
-    "zh": "Uncoiled Procs"
-  },
-  {
-    "en": "Vicewinder Combo",
-    "zh": "Vicewinder Combo"
-  },
-  {
-    "en": "Vicewinder Procs",
-    "zh": "Vicewinder Procs"
-  },
-  {
-    "en": "Water in Blue",
-    "zh": "流水之蓝",
-    "iconId": 3803
   },
   {
     "en": "Wyrmwave",

@@ -109,7 +109,7 @@ const handleOutcome = async (outcome: OpenOutcome, url: string, attempt: number,
 /**
  * 导航到真实战报页；命中 xivanalysis 的限流页时退避后重试。
  *
- * 全量 34 页即使串行也可能在几分钟内触发站点自己的限流（页面文案是 “Slow down. Too many requests.”），
+ * capture 的 33 条战报即使串行也可能在几分钟内触发站点自己的限流（页面文案是 “Slow down. Too many requests.”），
  * 这与翻译逻辑无关。退避只在这里发生，断言仍然只看真实页面。
  */
 export const openWhenAvailable = async (page: Page, url: string, responses: SheetResponse[] = [], attempts = 2): Promise<void> => {

@@ -26,9 +26,9 @@
 
 `context.addInitScript()` 按顺序挂两段：先挂一段假扮管理器的前置脚本（把 `window.unsafeWindow` 指向页面自己的 window，再给 `window.GM.xmlHttpRequest` 一个实现），再挂构建产物 `dist/index.js` 本身。
 
-假 GM 是个薄适配器：它真去 `fetch`，再把结果包成 GM 的响应形状（`status` / `statusText` / `responseHeaders` / `responseText` / …）。这样"GM 代发"与"页面原生 fetch"共用同一套 `page.route` 路由，不需要为 GM 单开一条通路。
+假 GM 是个薄适配器：它真去 `fetch`，再把结果包成 GM 的响应形状（`status` / `statusText` / `responseHeaders` / `responseText` / …）。安装组不触发 GM 请求；需要时仍可用同一套 `page.route` 路由。
 
-出网的四条路径全部由 `page.route` 接管：夹具页本身、`v2.xivapi.com`（页面请求的英文表）、`xivapi-v2.xivcdn.com`（脚本改写出来的国服表与 ClassJob）、`www.garlandtools.cn`（GM 兜底检索）。
+离线安装组的 `routeFixture` 只接管夹具页本身。取表、ClassJob、garland 与 DOM 改写不在 e2e 里重复，分别由 `test/unit`、`test/dom` 与 `test/coverage` 覆盖。
 
 ### 执行路径
 
@@ -47,24 +47,13 @@ page.goto('https://xivanalysis.com/')      ← 由 page.route 回答，是夹具
 断言：没有 pageerror；页面 fetch 已被接管；style 已进入 head
 ```
 
-安装组不读表、不改节点。取表改写、ClassJob 缩写、garland 兜底与 DOM 改写由 `test/unit/intercept.spec.ts` 与 `test/dom/*` 覆盖，不在 e2e 里重复。
+安装组不读表、不改节点。取表改写、ClassJob 缩写、garland 兜底与 DOM 改写由 `test/unit/intercept.spec.ts`、`jobAbbr.spec.ts`、`garland.spec.ts`/`garland-wiring.spec.ts` 与 `test/dom/*` 覆盖，不在 e2e 里重复。
 
 ### 坑点
 
 **1. `addInitScript` 就是真正的 document-start，`document` 几乎是空的。** 实测该时刻 `document.readyState === 'loading'`，`document.documentElement`、`document.head`、`document.body` **三者全为 null**。脚本若在这时碰它们就会当场抛错。这一条直接暴露了 `xivanalysis-zh` 的一个真 bug，详见下一节。
 
-**2. 跨域响应要自己补 `access-control-allow-origin`。** 夹具页的 origin 是 `https://xivanalysis.com`，而脚本要去 `v2.xivapi.com` 与 `xivapi-v2.xivcdn.com`。`route.fulfill()` 的响应头由测试给，所以补 CORS 头这一步得自己写（本仓的做法是在所有 JSON 答复上统一带 `access-control-allow-origin: *`）。真实站点这两处本来就回 `ACAO: *`，夹具是照着它补的，不是凭空放宽。
-
-**3. 取表入口要交给测试触发，不能让页面在解析时自己 fetch。** 页面若在解析期就发请求，就会与脚本安装 `unsafeWindow.fetch` 抢时序——谁先谁后不确定，测出来的东西也就不确定。夹具页因此只暴露 `window.__loadSheet`，由测试在注入完成之后调。安装组不调用它；取表合并由 `test/unit/intercept.spec.ts` 覆盖。
-
-**4. 查询串会被 `URLSearchParams.set` 重排。** 脚本改写国服地址用的是 `url.searchParams.set('language', 'chs')`，这会重新序列化整个查询串，把 `,` 编码成 `%2C`。所以断言别比字符串，按参数比：
-
-```ts
-const cnUrl = new URL(cnSheet[0]);
-expect(cnUrl.searchParams.get('fields')).toBe('Name,Icon'); // 而不是比 'fields=Name,Icon'
-```
-
-**5. 不该动的节点由 DOM 测试钉住。** 判"改对了"很容易漏掉"改多了"。夹具页里有一个 `grid-column-start: -3` 的单元格（第 3 列是玩家名）和一个含中日韩文字的单元格，断言在 `test/dom/timeline.spec.ts`；安装组只判注入，不碰这些节点。
+**2. 不该动的节点由 DOM 测试与安装组共同钉住。** 判"改对了"很容易漏掉"改多了"。夹具页里有一个 `grid-column-start: -3` 的单元格（第 3 列是玩家名）和一个含中日韩文字的单元格；安装组在真实浏览器里断言两者保持原样，detector 的跳过逻辑在 `test/dom/timeline.spec.ts`。
 
 ## 路线二：真 Tampermonkey
 

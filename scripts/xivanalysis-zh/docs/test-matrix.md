@@ -101,16 +101,16 @@ garland 没有 ACAO，走 Node `fetch` 验证形状。
 
 ## 测试脚本
 
-| 脚本                  | 内容                             | 何时运行         | 估算成本    |
-| --------------------- | -------------------------------- | ---------------- | ----------- |
-| `test:unit`           | vitest 运行 unit、dom、coverage  | 每次离线门禁     | 1–2 秒      |
-| `test:e2e:fast`       | 构建后跑离线快速注入组           | 每次离线门禁     | 约 5 秒     |
-| `test:e2e:full`       | 构建后跑离线真 Tampermonkey 组   | 每次离线门禁     | 约 30 秒    |
-| `test:live:upstream`  | 上游契约全部用例                 | 在线门禁         | 约 5 秒     |
-| `test:live:smoke`     | 真实战报 smoke                   | 在线门禁         | 约 15–60 秒 |
-| `test:corpus:capture` | 串行捕获基线战报的页面与接口数据 | 手工刷新语料     | 约 50 分钟  |
-| `test:gate:offline`   | 离线部分的所有测试               | 每次提交与 CI    | 约 40 秒    |
-| `test:gate:live`      | 在线部分的所有测试               | 发布前与定时任务 | 约 1 分钟   |
+| 脚本                  | 内容                             | 何时运行                        | 估算成本    |
+| --------------------- | -------------------------------- | ------------------------------- | ----------- |
+| `test:unit`           | vitest 运行 unit、dom、coverage  | 每次离线门禁                    | 1–2 秒      |
+| `test:e2e:fast`       | 构建后跑离线快速注入组           | 每次离线门禁                    | 约 5 秒     |
+| `test:e2e:full`       | 构建后跑离线真 Tampermonkey 组   | 每次离线门禁                    | 约 30 秒    |
+| `test:live:upstream`  | 上游契约全部用例                 | 在线门禁                        | 约 5 秒     |
+| `test:live:smoke`     | 真实战报 smoke                   | 在线门禁                        | 约 15–60 秒 |
+| `test:corpus:capture` | 串行捕获基线战报的页面与接口数据 | 手工刷新语料                    | 约 50 分钟  |
+| `test:gate:offline`   | 离线部分的所有测试               | 本地提交前；CI 只跑 `test:unit` | 约 40 秒    |
+| `test:gate:live`      | 在线部分的所有测试               | 发布前或手动                    | 约 1 分钟   |
 
 离线组只保证页面与接口不出网。真 Tampermonkey 组首次运行仍需下载扩展。
 

@@ -387,6 +387,3 @@ export const FIGHTS: FightFixture[] = [
     url: 'https://xivanalysis.com/fflogs/LX2T4ZvbcfpPBy8h/3/2',
   },
 ];
-
-/** 全量真实页集合：33 条 `FIGHTS` + 冒烟用的额外一条。 */
-export const LIVE_FIGHTS: LiveFight[] = [...FIGHTS, SMOKE_FIGHT];

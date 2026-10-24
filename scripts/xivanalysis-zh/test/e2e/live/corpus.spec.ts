@@ -1,4 +1,4 @@
-import { mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { test, type Page } from '@playwright/test';
 import { FIGHTS } from '../fixtures/fights';
@@ -164,8 +164,9 @@ test('捕获 33 条战报的权威语料', async ({ page }) => {
   let pending: Promise<void>[] = [];
 
   page.on('response', (response) => {
+    const capture = current;
     const task = (async () => {
-      if (!current) return;
+      if (!capture) return;
       const url = new URL(response.url());
       const match = url.pathname.match(/^\/api\/sheet\/([A-Za-z]+)(?:\/(\d+))?$/);
       if (!match) return;
@@ -178,22 +179,22 @@ test('捕获 33 条战报的权威语料', async ({ page }) => {
           for (const row of body.rows ?? []) {
             const abbr = row.fields?.Abbreviation;
             const name = row.fields?.Name;
-            if (typeof abbr === 'string' && abbr && typeof name === 'string' && name) current.classJob.set(abbr, name);
+            if (typeof abbr === 'string' && abbr && typeof name === 'string' && name) capture.classJob.set(abbr, name);
           }
           return;
         }
-        current.sheetTypes.add(sheet);
-        const target = current.cn.get(sheet) ?? new Map<number, RawRow>();
+        capture.sheetTypes.add(sheet);
+        const target = capture.cn.get(sheet) ?? new Map<number, RawRow>();
         for (const row of body.rows ?? []) target.set(row.row_id, row);
-        current.cn.set(sheet, target);
+        capture.cn.set(sheet, target);
         return;
       }
 
       if (lang === 'en' && (url.hostname === 'v2.xivapi.com' || url.hostname === 'beta.xivapi.com' || url.hostname.endsWith('.xivapi.com'))) {
-        current.sheetTypes.add(sheet);
-        const target = current.en.get(sheet) ?? new Map<number, RawRow>();
+        capture.sheetTypes.add(sheet);
+        const target = capture.en.get(sheet) ?? new Map<number, RawRow>();
         for (const row of body.rows ?? []) target.set(row.row_id, row);
-        current.en.set(sheet, target);
+        capture.en.set(sheet, target);
       }
     })().catch(() => undefined);
     pending.push(task);
@@ -298,7 +299,10 @@ test('捕获 33 条战报的权威语料', async ({ page }) => {
 
   const corpusLabels = [...labels.values()].sort((a, b) => `${a.kind}:${a.en}`.localeCompare(`${b.kind}:${b.en}`));
   const corpusSheets = [...sheets.values()].sort((a, b) => `${a.sheet}:${a.id}`.localeCompare(`${b.sheet}:${b.id}`));
-  const corpusGarland = [...garland.values()].sort((a, b) => a.en.localeCompare(b.en));
+  const sheetPairs = new Set(corpusSheets.map((row) => `${row.en.toLowerCase()}\u0000${row.zh}`));
+  const corpusGarland = [...garland.values()]
+    .filter((entry) => entry.zh !== entry.en && !sheetPairs.has(`${entry.en.toLowerCase()}\u0000${entry.zh}`))
+    .sort((a, b) => a.en.localeCompare(b.en));
   const corpusClassJobs = Object.fromEntries([...classJobs.entries()].sort(([a], [b]) => a.localeCompare(b)));
   const corpusAbbreviations = [...usedAbbreviations].sort();
   const corpusWarnings = [...new Set(warnings)].sort();
@@ -326,6 +330,14 @@ test('捕获 33 条战报的权威语料', async ({ page }) => {
   writeFileSync(resolve(tmpDir, 'garland.json'), `${JSON.stringify(corpusGarland, null, 2)}\n`);
   writeFileSync(resolve(tmpDir, 'warnings.json'), `${JSON.stringify(corpusWarnings, null, 2)}\n`);
 
-  rmSync(outDir, { recursive: true, force: true });
-  renameSync(tmpDir, outDir);
+  const backupDir = `${outDir}.bak`;
+  rmSync(backupDir, { recursive: true, force: true });
+  if (existsSync(outDir)) renameSync(outDir, backupDir);
+  try {
+    renameSync(tmpDir, outDir);
+    rmSync(backupDir, { recursive: true, force: true });
+  } catch (error) {
+    if (existsSync(backupDir)) renameSync(backupDir, outDir);
+    throw error;
+  }
 });

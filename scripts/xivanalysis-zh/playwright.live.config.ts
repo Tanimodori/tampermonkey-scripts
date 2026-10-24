@@ -14,7 +14,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   // 真实站点是 SPA：首屏之后还要等 FFLogs / xivapi 的往返。
   timeout: 180_000,
-  // 全量 34 页串行跑。每页会并发发出多张 sheet 请求，再提高 worker 容易触发 429。
+  // capture 的 33 条战报串行跑。每页会并发发出多张 sheet 请求，再提高 worker 容易触发 429。
   fullyParallel: false,
   workers: 1,
   projects: [

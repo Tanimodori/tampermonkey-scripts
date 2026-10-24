@@ -86,6 +86,21 @@ describe('garland 真实接线', () => {
     expect(utils.known('Fire')).toBe(true);
   });
 
+  it('item 命中也读国服单行', async () => {
+    gmHits = [{ type: 'item', id: '1', obj: { i: 1, n: 'Potion', c: 2 } }];
+    sheetRows['Item/1'] = { fields: { Name: '药水', Icon: { id: 2 } } };
+
+    await expect(garland.garlandSearch({ en: 'Potion' })).resolves.toEqual([{ kind: 'item', id: 1, en: 'Potion', zh: '药水', iconId: 2 }]);
+    expect(pageRequests[0]).toContain('/api/sheet/Item/1?fields=Name,Icon&language=chs');
+  });
+
+  it.each(['trait', 'addon'])('provider 不认识的 %s 命中直接跳过', async (type) => {
+    gmHits = [{ type, id: '1', obj: { i: 1, n: 'Unknown', c: 1 } }];
+
+    await expect(garland.garlandSearch({ en: 'Unknown' })).resolves.toEqual([]);
+    expect(pageRequests).toEqual([]);
+  });
+
   it('检索返回非 2xx 时降级为没查到', async () => {
     gmStatus = 404;
 

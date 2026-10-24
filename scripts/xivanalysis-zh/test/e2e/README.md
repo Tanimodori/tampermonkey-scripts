@@ -16,9 +16,9 @@
 
 ## 离线组
 
-夹具页只摆安装所需的入口，`page.route` 接管 `xivanalysis.com`、`v2.xivapi.com`、`xivapi-v2.xivcdn.com` 与 `www.garlandtools.cn`。假 GM 是个薄适配器：它真去 `fetch`，再把结果包成 GM 的响应形状。跨域由测试在响应头里补 `access-control-allow-origin`。
+夹具页只摆安装所需的节点，`page.route` 只接管 `xivanalysis.com`。假 GM 仍是薄适配器，但安装组不触发 garland 请求。
 
-离线组不判取表翻译、ClassJob 缩写、garland 兜底、时间轴与图标改写。这些由 `test/unit/intercept.spec.ts` 与 `test/dom/*.spec.ts` 覆盖，失败时能直接定位到纯逻辑或 DOM 行为。
+离线组不判取表翻译、ClassJob 缩写、garland 兜底、时间轴与图标改写。拦截、ClassJob 与 garland 分别由 `test/unit` 的 `intercept.spec.ts`、`jobAbbr.spec.ts`、`garland.spec.ts`/`garland-wiring.spec.ts` 覆盖，DOM 改写由 `test/dom` 覆盖。
 
 ## 真实上游组
 
@@ -58,7 +58,7 @@ xivanalysis 自己会按浏览器语言做 i18n。开发机是中文环境时，
 
 ## 夹具与桩
 
-离线夹具把取表入口 `window.__loadSheet` 交给测试触发，避免页面解析期的请求与脚本安装 `unsafeWindow.fetch` 抢时序。真实上游、smoke 与 capture 不替换页面响应；capture 只额外代发 garland 并补 CORS。
+离线夹具只摆安装页与两个“不该动”的节点，不提供取表入口；取表合并由 `test/unit/intercept.spec.ts` 覆盖。真实上游、smoke 与 capture 不替换页面响应；capture 只额外代发 garland 并补 CORS。
 
 ## 为什么两组都要 `channel: 'chromium'`
 

@@ -1,6 +1,6 @@
 # 工具
 
-包内还有图标地址换算与 promise 记忆。
+包内还有图标地址换算。
 
 ## 图标地址
 
@@ -22,33 +22,3 @@ export function iconIdFromImageUrl(src: string): number | null;
 ```
 
 `paddedIconId` 补到六位，`iconFolder` 取前三位加 `000`。`texturePath` 默认取 `path_hr1`，传 `false` 取 `path`。`iconIdFromTexturePath` 与 `iconIdFromImageUrl` 在取不到 id 时返回 `null`。
-
-## 记忆
-
-`createMemo` 把一个异步结果按 key 记成 promise。
-
-```ts
-export interface Memo<K, V> {
-  /** 缓存 */
-  readonly cache: Map<K, Promise<V>>;
-  /** 取值函数 */
-  readonly get: (key: K) => Promise<V>;
-  /** 存在性判断 */
-  readonly has: (key: K) => boolean;
-  /** 删除函数 */
-  readonly delete: (key: K) => boolean;
-  /** 清空函数 */
-  readonly clear: () => void;
-  /** 条目数 */
-  readonly size: () => number;
-}
-
-export interface MemoOptions {
-  /** 条目上限 */
-  readonly max?: number;
-}
-
-export function createMemo<K, V>(loader: (key: K) => Promise<V>, options?: MemoOptions): Memo<K, V>;
-```
-
-同一个键的并发调用拿到同一个 promise。失败时删掉那个键，下次调用重试。条目数达到上限时丢最旧的，缺省上限是 500。`cache` 公开，调用方可以查看或清空。

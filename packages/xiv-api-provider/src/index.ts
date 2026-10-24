@@ -13,10 +13,7 @@
  * 的类型面。
  */
 
-// 共用：memo、图标换算与调用链的契约。
-export { createMemo } from '@/utils/cache.ts';
-export type { Memo, MemoOptions } from '@/utils/cache.ts';
-
+// 共用：图标换算与调用链的契约。
 export {
   iconFolder,
   iconIdFromImageUrl,

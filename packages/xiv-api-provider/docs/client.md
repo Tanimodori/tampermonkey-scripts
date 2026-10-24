@@ -78,4 +78,4 @@ export interface EditionDescriptor {
 
 一次读取只做一次往返。重试、分页、聚合、节流与日志由调用方决定。
 
-缓存也归调用方；包内有 `createMemo` 可用。
+缓存也归调用方。

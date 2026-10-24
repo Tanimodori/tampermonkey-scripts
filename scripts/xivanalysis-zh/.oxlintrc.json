@@ -4,6 +4,6 @@
     "es2021": true,
     "browser": true
   },
-  "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/.rush/**"],
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/.rush/**", "test/coverage/corpus/**"],
   "rules": {}
 }

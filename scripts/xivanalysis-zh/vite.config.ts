@@ -41,7 +41,9 @@ export default defineConfig({
     }),
   ],
   test: {
-    // 只认 `test/unit/`：`test/e2e/` 归 Playwright，文件名同样可能是 `*.spec.ts`。
-    include: ['test/unit/**/*.spec.ts'],
+    // 只认单测目录：`test/e2e/` 归 Playwright，文件名同样可能是 `*.spec.ts`。
+    include: ['test/unit/**/*.spec.ts', 'test/dom/**/*.spec.ts', 'test/coverage/**/*.spec.ts'],
+    // `src/style.ts` 以 `?inline` 导入 CSS，需要让 Vitest 处理样式才能拿到内容。
+    css: true,
   },
 });

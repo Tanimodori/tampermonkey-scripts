@@ -1,4 +1,4 @@
-export type XivKind = 'action' | 'status' | 'item' | 'addon' | 'unknown';
+export type XivKind = 'action' | 'status' | 'item' | 'addon' | 'trait' | 'unknown';
 
 export interface XivEntry {
   kind: XivKind;

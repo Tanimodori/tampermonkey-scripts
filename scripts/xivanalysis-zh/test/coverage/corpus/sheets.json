@@ -1,0 +1,3432 @@
+[
+  {
+    "sheet": "Action",
+    "id": 107,
+    "en": "Barrage",
+    "zh": "纷乱箭",
+    "iconId": 353
+  },
+  {
+    "sheet": "Action",
+    "id": 114,
+    "en": "Mage's Ballad",
+    "zh": "贤者的叙事谣",
+    "iconId": 2602
+  },
+  {
+    "sheet": "Action",
+    "id": 116,
+    "en": "Army's Paeon",
+    "zh": "军神的赞美歌",
+    "iconId": 2603
+  },
+  {
+    "sheet": "Action",
+    "id": 133,
+    "en": "Medica II",
+    "zh": "医济",
+    "iconId": 409
+  },
+  {
+    "sheet": "Action",
+    "id": 136,
+    "en": "Presence of Mind",
+    "zh": "神速咏唱",
+    "iconId": 2626
+  },
+  {
+    "sheet": "Action",
+    "id": 140,
+    "en": "Benediction",
+    "zh": "天赐祝福",
+    "iconId": 2627
+  },
+  {
+    "sheet": "Action",
+    "id": 149,
+    "en": "Transpose",
+    "zh": "星灵移位",
+    "iconId": 466
+  },
+  {
+    "sheet": "Action",
+    "id": 15,
+    "en": "Riot Blade",
+    "zh": "暴乱剑",
+    "iconId": 156
+  },
+  {
+    "sheet": "Action",
+    "id": 152,
+    "en": "Fire III",
+    "zh": "爆炎",
+    "iconId": 453
+  },
+  {
+    "sheet": "Action",
+    "id": 154,
+    "en": "Blizzard III",
+    "zh": "冰封",
+    "iconId": 456
+  },
+  {
+    "sheet": "Action",
+    "id": 155,
+    "en": "Aetherial Manipulation",
+    "zh": "以太步",
+    "iconId": 467
+  },
+  {
+    "sheet": "Action",
+    "id": 157,
+    "en": "Manaward",
+    "zh": "魔罩",
+    "iconId": 463
+  },
+  {
+    "sheet": "Action",
+    "id": 158,
+    "en": "Manafont",
+    "zh": "魔泉",
+    "iconId": 2651
+  },
+  {
+    "sheet": "Action",
+    "id": 15989,
+    "en": "Cascade",
+    "zh": "瀑泻",
+    "iconId": 3451
+  },
+  {
+    "sheet": "Action",
+    "id": 15990,
+    "en": "Fountain",
+    "zh": "喷泉",
+    "iconId": 3452
+  },
+  {
+    "sheet": "Action",
+    "id": 15991,
+    "en": "Reverse Cascade",
+    "zh": "逆瀑泻",
+    "iconId": 3460
+  },
+  {
+    "sheet": "Action",
+    "id": 15992,
+    "en": "Fountainfall",
+    "zh": "坠喷泉",
+    "iconId": 3464
+  },
+  {
+    "sheet": "Action",
+    "id": 15997,
+    "en": "Standard Step",
+    "zh": "标准舞步",
+    "iconId": 3454
+  },
+  {
+    "sheet": "Action",
+    "id": 15998,
+    "en": "Technical Step",
+    "zh": "技巧舞步",
+    "iconId": 3473
+  },
+  {
+    "sheet": "Action",
+    "id": 15999,
+    "en": "Emboite",
+    "zh": "蔷薇曲脚步",
+    "iconId": 3455
+  },
+  {
+    "sheet": "Action",
+    "id": 16000,
+    "en": "Entrechat",
+    "zh": "小鸟交叠跳",
+    "iconId": 3456
+  },
+  {
+    "sheet": "Action",
+    "id": 16005,
+    "en": "Saber Dance",
+    "zh": "剑舞",
+    "iconId": 3476
+  },
+  {
+    "sheet": "Action",
+    "id": 16007,
+    "en": "Fan Dance",
+    "zh": "扇舞·序",
+    "iconId": 3462
+  },
+  {
+    "sheet": "Action",
+    "id": 16009,
+    "en": "Fan Dance III",
+    "zh": "扇舞·急",
+    "iconId": 3472
+  },
+  {
+    "sheet": "Action",
+    "id": 16010,
+    "en": "En Avant",
+    "zh": "前冲步",
+    "iconId": 3467
+  },
+  {
+    "sheet": "Action",
+    "id": 16011,
+    "en": "Devilment",
+    "zh": "进攻之探戈",
+    "iconId": 3471
+  },
+  {
+    "sheet": "Action",
+    "id": 16012,
+    "en": "Shield Samba",
+    "zh": "防守之桑巴",
+    "iconId": 3469
+  },
+  {
+    "sheet": "Action",
+    "id": 16013,
+    "en": "Flourish",
+    "zh": "百花争艳",
+    "iconId": 3475
+  },
+  {
+    "sheet": "Action",
+    "id": 16014,
+    "en": "Improvisation",
+    "zh": "即兴表演",
+    "iconId": 3477
+  },
+  {
+    "sheet": "Action",
+    "id": 16015,
+    "en": "Curing Waltz",
+    "zh": "治疗之华尔兹",
+    "iconId": 3468
+  },
+  {
+    "sheet": "Action",
+    "id": 16137,
+    "en": "Keen Edge",
+    "zh": "利刃斩",
+    "iconId": 3401
+  },
+  {
+    "sheet": "Action",
+    "id": 16138,
+    "en": "No Mercy",
+    "zh": "无情",
+    "iconId": 3402
+  },
+  {
+    "sheet": "Action",
+    "id": 16139,
+    "en": "Brutal Shell",
+    "zh": "残暴弹",
+    "iconId": 3403
+  },
+  {
+    "sheet": "Action",
+    "id": 16140,
+    "en": "Camouflage",
+    "zh": "伪装",
+    "iconId": 3404
+  },
+  {
+    "sheet": "Action",
+    "id": 16141,
+    "en": "Demon Slice",
+    "zh": "恶魔切",
+    "iconId": 3405
+  },
+  {
+    "sheet": "Action",
+    "id": 16142,
+    "en": "Royal Guard",
+    "zh": "王室亲卫",
+    "iconId": 3406
+  },
+  {
+    "sheet": "Action",
+    "id": 16143,
+    "en": "Lightning Shot",
+    "zh": "闪雷弹",
+    "iconId": 3407
+  },
+  {
+    "sheet": "Action",
+    "id": 16144,
+    "en": "Danger Zone",
+    "zh": "危险领域",
+    "iconId": 3408
+  },
+  {
+    "sheet": "Action",
+    "id": 16145,
+    "en": "Solid Barrel",
+    "zh": "迅连斩",
+    "iconId": 3409
+  },
+  {
+    "sheet": "Action",
+    "id": 16146,
+    "en": "Gnashing Fang",
+    "zh": "烈牙",
+    "iconId": 3410
+  },
+  {
+    "sheet": "Action",
+    "id": 16147,
+    "en": "Savage Claw",
+    "zh": "猛兽爪",
+    "iconId": 3411
+  },
+  {
+    "sheet": "Action",
+    "id": 16148,
+    "en": "Nebula",
+    "zh": "星云",
+    "iconId": 3412
+  },
+  {
+    "sheet": "Action",
+    "id": 16149,
+    "en": "Demon Slaughter",
+    "zh": "恶魔杀",
+    "iconId": 3413
+  },
+  {
+    "sheet": "Action",
+    "id": 16150,
+    "en": "Wicked Talon",
+    "zh": "凶禽爪",
+    "iconId": 3414
+  },
+  {
+    "sheet": "Action",
+    "id": 16151,
+    "en": "Aurora",
+    "zh": "极光",
+    "iconId": 3415
+  },
+  {
+    "sheet": "Action",
+    "id": 16152,
+    "en": "Superbolide",
+    "zh": "超火流星",
+    "iconId": 3416
+  },
+  {
+    "sheet": "Action",
+    "id": 16153,
+    "en": "Sonic Break",
+    "zh": "音速破",
+    "iconId": 3417
+  },
+  {
+    "sheet": "Action",
+    "id": 16155,
+    "en": "Continuation",
+    "zh": "续剑",
+    "iconId": 3419
+  },
+  {
+    "sheet": "Action",
+    "id": 16156,
+    "en": "Jugular Rip",
+    "zh": "撕喉",
+    "iconId": 3420
+  },
+  {
+    "sheet": "Action",
+    "id": 16157,
+    "en": "Abdomen Tear",
+    "zh": "裂膛",
+    "iconId": 3421
+  },
+  {
+    "sheet": "Action",
+    "id": 16158,
+    "en": "Eye Gouge",
+    "zh": "穿目",
+    "iconId": 3422
+  },
+  {
+    "sheet": "Action",
+    "id": 16159,
+    "en": "Bow Shock",
+    "zh": "弓形冲波",
+    "iconId": 3423
+  },
+  {
+    "sheet": "Action",
+    "id": 16160,
+    "en": "Heart of Light",
+    "zh": "光之心",
+    "iconId": 3424
+  },
+  {
+    "sheet": "Action",
+    "id": 16161,
+    "en": "Heart of Stone",
+    "zh": "石之心",
+    "iconId": 3425
+  },
+  {
+    "sheet": "Action",
+    "id": 16162,
+    "en": "Burst Strike",
+    "zh": "爆发击",
+    "iconId": 3426
+  },
+  {
+    "sheet": "Action",
+    "id": 16192,
+    "en": "Double Standard Finish",
+    "zh": "双色标准舞步结束",
+    "iconId": 3459
+  },
+  {
+    "sheet": "Action",
+    "id": 16196,
+    "en": "Quadruple Technical Finish",
+    "zh": "四色技巧舞步结束",
+    "iconId": 3474
+  },
+  {
+    "sheet": "Action",
+    "id": 162,
+    "en": "Flare",
+    "zh": "核爆",
+    "iconId": 2652
+  },
+  {
+    "sheet": "Action",
+    "id": 16459,
+    "en": "Confiteor",
+    "zh": "悔罪",
+    "iconId": 2518
+  },
+  {
+    "sheet": "Action",
+    "id": 16460,
+    "en": "Atonement",
+    "zh": "赎罪剑",
+    "iconId": 2519
+  },
+  {
+    "sheet": "Action",
+    "id": 16461,
+    "en": "Intervene",
+    "zh": "调停",
+    "iconId": 2520
+  },
+  {
+    "sheet": "Action",
+    "id": 16464,
+    "en": "Nascent Flash",
+    "zh": "原初的勇猛",
+    "iconId": 2567
+  },
+  {
+    "sheet": "Action",
+    "id": 16465,
+    "en": "Inner Chaos",
+    "zh": "狂魂",
+    "iconId": 2568
+  },
+  {
+    "sheet": "Action",
+    "id": 16470,
+    "en": "Edge of Shadow",
+    "zh": "暗影锋",
+    "iconId": 3086
+  },
+  {
+    "sheet": "Action",
+    "id": 16471,
+    "en": "Dark Missionary",
+    "zh": "暗黑布道",
+    "iconId": 3087
+  },
+  {
+    "sheet": "Action",
+    "id": 16472,
+    "en": "Living Shadow",
+    "zh": "掠影示现",
+    "iconId": 3088
+  },
+  {
+    "sheet": "Action",
+    "id": 16478,
+    "en": "High Jump",
+    "zh": "高跳",
+    "iconId": 2591
+  },
+  {
+    "sheet": "Action",
+    "id": 16479,
+    "en": "Raiden Thrust",
+    "zh": "龙眼雷电",
+    "iconId": 2592
+  },
+  {
+    "sheet": "Action",
+    "id": 16480,
+    "en": "Stardiver",
+    "zh": "坠星冲",
+    "iconId": 2593
+  },
+  {
+    "sheet": "Action",
+    "id": 16481,
+    "en": "Hissatsu: Senei",
+    "zh": "必杀剑·闪影",
+    "iconId": 3178
+  },
+  {
+    "sheet": "Action",
+    "id": 16482,
+    "en": "Ikishoten",
+    "zh": "意气冲天",
+    "iconId": 3179
+  },
+  {
+    "sheet": "Action",
+    "id": 16483,
+    "en": "Tsubame-gaeshi",
+    "zh": "燕回返",
+    "iconId": 3180
+  },
+  {
+    "sheet": "Action",
+    "id": 16486,
+    "en": "Kaeshi: Setsugekka",
+    "zh": "回返雪月花",
+    "iconId": 3183
+  },
+  {
+    "sheet": "Action",
+    "id": 16487,
+    "en": "Shoha",
+    "zh": "照破",
+    "iconId": 3184
+  },
+  {
+    "sheet": "Action",
+    "id": 16489,
+    "en": "Meisui",
+    "zh": "命水",
+    "iconId": 2924
+  },
+  {
+    "sheet": "Action",
+    "id": 16492,
+    "en": "Hyosho Ranryu",
+    "zh": "冰晶乱流之术",
+    "iconId": 2926
+  },
+  {
+    "sheet": "Action",
+    "id": 16493,
+    "en": "Bunshin",
+    "zh": "分身之术",
+    "iconId": 2927
+  },
+  {
+    "sheet": "Action",
+    "id": 16495,
+    "en": "Burst Shot",
+    "zh": "爆发射击",
+    "iconId": 2618
+  },
+  {
+    "sheet": "Action",
+    "id": 16498,
+    "en": "Drill",
+    "zh": "钻头",
+    "iconId": 3043
+  },
+  {
+    "sheet": "Action",
+    "id": 16500,
+    "en": "Air Anchor",
+    "zh": "空气锚",
+    "iconId": 3045
+  },
+  {
+    "sheet": "Action",
+    "id": 16501,
+    "en": "Automaton Queen",
+    "zh": "后式自走人偶",
+    "iconId": 3501
+  },
+  {
+    "sheet": "Action",
+    "id": 16503,
+    "en": "Pile Bunker",
+    "zh": "打桩枪",
+    "iconId": 3503
+  },
+  {
+    "sheet": "Action",
+    "id": 16504,
+    "en": "Arm Punch",
+    "zh": "铁臂拳",
+    "iconId": 3504
+  },
+  {
+    "sheet": "Action",
+    "id": 16505,
+    "en": "Despair",
+    "zh": "绝望",
+    "iconId": 2665
+  },
+  {
+    "sheet": "Action",
+    "id": 16506,
+    "en": "Umbral Soul",
+    "zh": "灵极魂",
+    "iconId": 2666
+  },
+  {
+    "sheet": "Action",
+    "id": 16507,
+    "en": "Xenoglossy",
+    "zh": "异言",
+    "iconId": 2667
+  },
+  {
+    "sheet": "Action",
+    "id": 16508,
+    "en": "Energy Drain",
+    "zh": "能量吸收",
+    "iconId": 514
+  },
+  {
+    "sheet": "Action",
+    "id": 16527,
+    "en": "Engagement",
+    "zh": "交剑",
+    "iconId": 3231
+  },
+  {
+    "sheet": "Action",
+    "id": 16528,
+    "en": "Enchanted Reprise",
+    "zh": "魔续斩",
+    "iconId": 3232
+  },
+  {
+    "sheet": "Action",
+    "id": 16530,
+    "en": "Scorch",
+    "zh": "焦热",
+    "iconId": 3234
+  },
+  {
+    "sheet": "Action",
+    "id": 16532,
+    "en": "Dia",
+    "zh": "天辉",
+    "iconId": 2641
+  },
+  {
+    "sheet": "Action",
+    "id": 16534,
+    "en": "Afflatus Rapture",
+    "zh": "狂喜之心",
+    "iconId": 2643
+  },
+  {
+    "sheet": "Action",
+    "id": 16535,
+    "en": "Afflatus Misery",
+    "zh": "苦难之心",
+    "iconId": 2644
+  },
+  {
+    "sheet": "Action",
+    "id": 16536,
+    "en": "Temperance",
+    "zh": "节制",
+    "iconId": 2645
+  },
+  {
+    "sheet": "Action",
+    "id": 16538,
+    "en": "Fey Illumination",
+    "zh": "异想的幻光",
+    "iconId": 2853
+  },
+  {
+    "sheet": "Action",
+    "id": 16542,
+    "en": "Recitation",
+    "zh": "秘策",
+    "iconId": 2822
+  },
+  {
+    "sheet": "Action",
+    "id": 16543,
+    "en": "Fey Blessing",
+    "zh": "异想的祥光",
+    "iconId": 2854
+  },
+  {
+    "sheet": "Action",
+    "id": 16545,
+    "en": "Summon Seraph",
+    "zh": "炽天召唤",
+    "iconId": 2850
+  },
+  {
+    "sheet": "Action",
+    "id": 16546,
+    "en": "Consolation",
+    "zh": "慰藉",
+    "iconId": 2851
+  },
+  {
+    "sheet": "Action",
+    "id": 16552,
+    "en": "Divination",
+    "zh": "占卜",
+    "iconId": 3553
+  },
+  {
+    "sheet": "Action",
+    "id": 16553,
+    "en": "Celestial Opposition",
+    "zh": "天星冲日",
+    "iconId": 3142
+  },
+  {
+    "sheet": "Action",
+    "id": 16554,
+    "en": "Combust III",
+    "zh": "焚灼",
+    "iconId": 3554
+  },
+  {
+    "sheet": "Action",
+    "id": 16556,
+    "en": "Celestial Intersection",
+    "zh": "天星交错",
+    "iconId": 3556
+  },
+  {
+    "sheet": "Action",
+    "id": 16558,
+    "en": "Horoscope",
+    "zh": "天宫图",
+    "iconId": 3551
+  },
+  {
+    "sheet": "Action",
+    "id": 16559,
+    "en": "Neutral Sect",
+    "zh": "中间学派",
+    "iconId": 3552
+  },
+  {
+    "sheet": "Action",
+    "id": 166,
+    "en": "Aetherflow",
+    "zh": "以太超流",
+    "iconId": 510
+  },
+  {
+    "sheet": "Action",
+    "id": 167,
+    "en": "Energy Drain",
+    "zh": "能量吸收",
+    "iconId": 514
+  },
+  {
+    "sheet": "Action",
+    "id": 16889,
+    "en": "Tactician",
+    "zh": "策动",
+    "iconId": 3040
+  },
+  {
+    "sheet": "Action",
+    "id": 17209,
+    "en": "Hypercharge",
+    "zh": "超荷",
+    "iconId": 3041
+  },
+  {
+    "sheet": "Action",
+    "id": 17870,
+    "en": "Ruin II",
+    "zh": "毁坏",
+    "iconId": 502
+  },
+  {
+    "sheet": "Action",
+    "id": 181,
+    "en": "Fester",
+    "zh": "溃烂爆发",
+    "iconId": 2676
+  },
+  {
+    "sheet": "Action",
+    "id": 18873,
+    "en": "Fuma Shuriken",
+    "zh": "风魔手里剑",
+    "iconId": 2907
+  },
+  {
+    "sheet": "Action",
+    "id": 18881,
+    "en": "Suiton",
+    "zh": "水遁之术",
+    "iconId": 2913
+  },
+  {
+    "sheet": "Action",
+    "id": 197,
+    "en": "Shield Wall",
+    "zh": "铜墙铁盾",
+    "iconId": 103
+  },
+  {
+    "sheet": "Action",
+    "id": 20,
+    "en": "Fight or Flight",
+    "zh": "战逃反应",
+    "iconId": 166
+  },
+  {
+    "sheet": "Action",
+    "id": 2240,
+    "en": "Spinning Edge",
+    "zh": "双刃旋",
+    "iconId": 601
+  },
+  {
+    "sheet": "Action",
+    "id": 2242,
+    "en": "Gust Slash",
+    "zh": "绝风",
+    "iconId": 602
+  },
+  {
+    "sheet": "Action",
+    "id": 2255,
+    "en": "Aeolian Edge",
+    "zh": "旋风刃",
+    "iconId": 605
+  },
+  {
+    "sheet": "Action",
+    "id": 2259,
+    "en": "Ten",
+    "zh": "天之印",
+    "iconId": 2901
+  },
+  {
+    "sheet": "Action",
+    "id": 2264,
+    "en": "Kassatsu",
+    "zh": "生杀予夺",
+    "iconId": 2906
+  },
+  {
+    "sheet": "Action",
+    "id": 2267,
+    "en": "Raiton",
+    "zh": "雷遁之术",
+    "iconId": 2912
+  },
+  {
+    "sheet": "Action",
+    "id": 23,
+    "en": "Circle of Scorn",
+    "zh": "厄运流转",
+    "iconId": 161
+  },
+  {
+    "sheet": "Action",
+    "id": 24290,
+    "en": "Eukrasia",
+    "zh": "均衡",
+    "iconId": 3658
+  },
+  {
+    "sheet": "Action",
+    "id": 24294,
+    "en": "Soteria",
+    "zh": "拯救",
+    "iconId": 3662
+  },
+  {
+    "sheet": "Action",
+    "id": 24296,
+    "en": "Druochole",
+    "zh": "灵橡清汁",
+    "iconId": 3664
+  },
+  {
+    "sheet": "Action",
+    "id": 24298,
+    "en": "Kerachole",
+    "zh": "坚角清汁",
+    "iconId": 3666
+  },
+  {
+    "sheet": "Action",
+    "id": 24299,
+    "en": "Ixochole",
+    "zh": "寄生清汁",
+    "iconId": 3667
+  },
+  {
+    "sheet": "Action",
+    "id": 24303,
+    "en": "Taurochole",
+    "zh": "白牛清汁",
+    "iconId": 3671
+  },
+  {
+    "sheet": "Action",
+    "id": 24305,
+    "en": "Haima",
+    "zh": "输血",
+    "iconId": 3673
+  },
+  {
+    "sheet": "Action",
+    "id": 24309,
+    "en": "Rhizomata",
+    "zh": "根素",
+    "iconId": 3677
+  },
+  {
+    "sheet": "Action",
+    "id": 24310,
+    "en": "Holos",
+    "zh": "整体论",
+    "iconId": 3678
+  },
+  {
+    "sheet": "Action",
+    "id": 24311,
+    "en": "Panhaima",
+    "zh": "泛输血",
+    "iconId": 3679
+  },
+  {
+    "sheet": "Action",
+    "id": 24312,
+    "en": "Dosis III",
+    "zh": "注药III",
+    "iconId": 3680
+  },
+  {
+    "sheet": "Action",
+    "id": 24313,
+    "en": "Phlegma III",
+    "zh": "发炎III",
+    "iconId": 3681
+  },
+  {
+    "sheet": "Action",
+    "id": 24316,
+    "en": "Toxikon II",
+    "zh": "箭毒II",
+    "iconId": 3684
+  },
+  {
+    "sheet": "Action",
+    "id": 24317,
+    "en": "Krasis",
+    "zh": "混合",
+    "iconId": 3685
+  },
+  {
+    "sheet": "Action",
+    "id": 24318,
+    "en": "Pneuma",
+    "zh": "魂灵风息",
+    "iconId": 3686
+  },
+  {
+    "sheet": "Action",
+    "id": 24373,
+    "en": "Slice",
+    "zh": "切割",
+    "iconId": 3601
+  },
+  {
+    "sheet": "Action",
+    "id": 24374,
+    "en": "Waxing Slice",
+    "zh": "增盈切割",
+    "iconId": 3602
+  },
+  {
+    "sheet": "Action",
+    "id": 24375,
+    "en": "Infernal Slice",
+    "zh": "地狱切割",
+    "iconId": 3603
+  },
+  {
+    "sheet": "Action",
+    "id": 24378,
+    "en": "Shadow of Death",
+    "zh": "死亡之影",
+    "iconId": 3606
+  },
+  {
+    "sheet": "Action",
+    "id": 24380,
+    "en": "Soul Slice",
+    "zh": "灵魂切割",
+    "iconId": 3608
+  },
+  {
+    "sheet": "Action",
+    "id": 24382,
+    "en": "Gibbet",
+    "zh": "绞决",
+    "iconId": 3610
+  },
+  {
+    "sheet": "Action",
+    "id": 24383,
+    "en": "Gallows",
+    "zh": "缢杀",
+    "iconId": 3611
+  },
+  {
+    "sheet": "Action",
+    "id": 24385,
+    "en": "Plentiful Harvest",
+    "zh": "大丰收",
+    "iconId": 3613
+  },
+  {
+    "sheet": "Action",
+    "id": 24386,
+    "en": "Harpe",
+    "zh": "勾刃",
+    "iconId": 3614
+  },
+  {
+    "sheet": "Action",
+    "id": 24387,
+    "en": "Soulsow",
+    "zh": "播魂种",
+    "iconId": 3615
+  },
+  {
+    "sheet": "Action",
+    "id": 24388,
+    "en": "Harvest Moon",
+    "zh": "收获月",
+    "iconId": 3616
+  },
+  {
+    "sheet": "Action",
+    "id": 24390,
+    "en": "Unveiled Gibbet",
+    "zh": "绞决爪",
+    "iconId": 3618
+  },
+  {
+    "sheet": "Action",
+    "id": 24391,
+    "en": "Unveiled Gallows",
+    "zh": "缢杀爪",
+    "iconId": 3619
+  },
+  {
+    "sheet": "Action",
+    "id": 24393,
+    "en": "Gluttony",
+    "zh": "暴食",
+    "iconId": 3621
+  },
+  {
+    "sheet": "Action",
+    "id": 24394,
+    "en": "Enshroud",
+    "zh": "夜游魂衣",
+    "iconId": 3622
+  },
+  {
+    "sheet": "Action",
+    "id": 24395,
+    "en": "Void Reaping",
+    "zh": "虚无收割",
+    "iconId": 3623
+  },
+  {
+    "sheet": "Action",
+    "id": 24396,
+    "en": "Cross Reaping",
+    "zh": "交错收割",
+    "iconId": 3624
+  },
+  {
+    "sheet": "Action",
+    "id": 24398,
+    "en": "Communio",
+    "zh": "团契",
+    "iconId": 3626
+  },
+  {
+    "sheet": "Action",
+    "id": 24399,
+    "en": "Lemure's Slice",
+    "zh": "夜游魂切割",
+    "iconId": 3627
+  },
+  {
+    "sheet": "Action",
+    "id": 24404,
+    "en": "Arcane Crest",
+    "zh": "神秘纹",
+    "iconId": 3632
+  },
+  {
+    "sheet": "Action",
+    "id": 24405,
+    "en": "Arcane Circle",
+    "zh": "神秘环",
+    "iconId": 3633
+  },
+  {
+    "sheet": "Action",
+    "id": 25746,
+    "en": "Holy Sheltron",
+    "zh": "圣盾阵",
+    "iconId": 2950
+  },
+  {
+    "sheet": "Action",
+    "id": 25747,
+    "en": "Expiacion",
+    "zh": "偿赎剑",
+    "iconId": 2951
+  },
+  {
+    "sheet": "Action",
+    "id": 25748,
+    "en": "Blade of Faith",
+    "zh": "信念之剑",
+    "iconId": 2952
+  },
+  {
+    "sheet": "Action",
+    "id": 25749,
+    "en": "Blade of Truth",
+    "zh": "真理之剑",
+    "iconId": 2953
+  },
+  {
+    "sheet": "Action",
+    "id": 25750,
+    "en": "Blade of Valor",
+    "zh": "英勇之剑",
+    "iconId": 2954
+  },
+  {
+    "sheet": "Action",
+    "id": 25754,
+    "en": "Oblation",
+    "zh": "献奉",
+    "iconId": 3089
+  },
+  {
+    "sheet": "Action",
+    "id": 25755,
+    "en": "Salt and Darkness",
+    "zh": "腐秽黑暗",
+    "iconId": 3090
+  },
+  {
+    "sheet": "Action",
+    "id": 25757,
+    "en": "Shadowbringer",
+    "zh": "暗影使者",
+    "iconId": 3091
+  },
+  {
+    "sheet": "Action",
+    "id": 25762,
+    "en": "Thunderclap",
+    "zh": "轻身步法",
+    "iconId": 2975
+  },
+  {
+    "sheet": "Action",
+    "id": 25766,
+    "en": "Riddle of Wind",
+    "zh": "疾风极意",
+    "iconId": 2978
+  },
+  {
+    "sheet": "Action",
+    "id": 25771,
+    "en": "Heavens' Thrust",
+    "zh": "苍穹刺",
+    "iconId": 2595
+  },
+  {
+    "sheet": "Action",
+    "id": 25772,
+    "en": "Chaotic Spring",
+    "zh": "樱花缭乱",
+    "iconId": 2596
+  },
+  {
+    "sheet": "Action",
+    "id": 25773,
+    "en": "Wyrmwind Thrust",
+    "zh": "天龙点睛",
+    "iconId": 2597
+  },
+  {
+    "sheet": "Action",
+    "id": 25774,
+    "en": "Phantom Kamaitachi",
+    "zh": "残影镰鼬",
+    "iconId": 2929
+  },
+  {
+    "sheet": "Action",
+    "id": 25778,
+    "en": "Fleeting Raiju",
+    "zh": "月影雷兽牙",
+    "iconId": 2932
+  },
+  {
+    "sheet": "Action",
+    "id": 25781,
+    "en": "Ogi Namikiri",
+    "zh": "奥义斩浪",
+    "iconId": 3187
+  },
+  {
+    "sheet": "Action",
+    "id": 25782,
+    "en": "Kaeshi: Namikiri",
+    "zh": "回返斩浪",
+    "iconId": 3188
+  },
+  {
+    "sheet": "Action",
+    "id": 25787,
+    "en": "Crowned Collider",
+    "zh": "王室对撞机",
+    "iconId": 3047
+  },
+  {
+    "sheet": "Action",
+    "id": 25788,
+    "en": "Chain Saw",
+    "zh": "回转飞锯",
+    "iconId": 3048
+  },
+  {
+    "sheet": "Action",
+    "id": 25790,
+    "en": "Tillana",
+    "zh": "提拉纳",
+    "iconId": 3480
+  },
+  {
+    "sheet": "Action",
+    "id": 25791,
+    "en": "Fan Dance IV",
+    "zh": "扇舞·终",
+    "iconId": 3481
+  },
+  {
+    "sheet": "Action",
+    "id": 25792,
+    "en": "Starfall Dance",
+    "zh": "流星舞",
+    "iconId": 3482
+  },
+  {
+    "sheet": "Action",
+    "id": 25796,
+    "en": "Amplifier",
+    "zh": "详述",
+    "iconId": 2671
+  },
+  {
+    "sheet": "Action",
+    "id": 25797,
+    "en": "Paradox",
+    "zh": "悖论",
+    "iconId": 2672
+  },
+  {
+    "sheet": "Action",
+    "id": 25799,
+    "en": "Radiant Aegis",
+    "zh": "守护之光",
+    "iconId": 2750
+  },
+  {
+    "sheet": "Action",
+    "id": 25801,
+    "en": "Searing Light",
+    "zh": "灼热之光",
+    "iconId": 2780
+  },
+  {
+    "sheet": "Action",
+    "id": 25805,
+    "en": "Summon Ifrit",
+    "zh": "火神召唤",
+    "iconId": 2680
+  },
+  {
+    "sheet": "Action",
+    "id": 25806,
+    "en": "Summon Titan",
+    "zh": "土神召唤",
+    "iconId": 2755
+  },
+  {
+    "sheet": "Action",
+    "id": 25807,
+    "en": "Summon Garuda",
+    "zh": "风神召唤",
+    "iconId": 2756
+  },
+  {
+    "sheet": "Action",
+    "id": 25817,
+    "en": "Ruby Ruin III",
+    "zh": "红宝石毁荡",
+    "iconId": 2682
+  },
+  {
+    "sheet": "Action",
+    "id": 25818,
+    "en": "Topaz Ruin III",
+    "zh": "黄宝石毁荡",
+    "iconId": 2682
+  },
+  {
+    "sheet": "Action",
+    "id": 25819,
+    "en": "Emerald Ruin III",
+    "zh": "绿宝石毁荡",
+    "iconId": 2682
+  },
+  {
+    "sheet": "Action",
+    "id": 25820,
+    "en": "Astral Impulse",
+    "zh": "星极脉冲",
+    "iconId": 2757
+  },
+  {
+    "sheet": "Action",
+    "id": 25855,
+    "en": "Verthunder III",
+    "zh": "赤暴雷",
+    "iconId": 3235
+  },
+  {
+    "sheet": "Action",
+    "id": 25856,
+    "en": "Veraero III",
+    "zh": "赤暴风",
+    "iconId": 3236
+  },
+  {
+    "sheet": "Action",
+    "id": 25857,
+    "en": "Magick Barrier",
+    "zh": "抗死",
+    "iconId": 3237
+  },
+  {
+    "sheet": "Action",
+    "id": 25858,
+    "en": "Resolution",
+    "zh": "决断",
+    "iconId": 3238
+  },
+  {
+    "sheet": "Action",
+    "id": 25859,
+    "en": "Glare III",
+    "zh": "闪灼",
+    "iconId": 2646
+  },
+  {
+    "sheet": "Action",
+    "id": 25861,
+    "en": "Aquaveil",
+    "zh": "水流幕",
+    "iconId": 2648
+  },
+  {
+    "sheet": "Action",
+    "id": 25862,
+    "en": "Liturgy of the Bell",
+    "zh": "礼仪之铃",
+    "iconId": 2649
+  },
+  {
+    "sheet": "Action",
+    "id": 25865,
+    "en": "Broil IV",
+    "zh": "极炎法",
+    "iconId": 2875
+  },
+  {
+    "sheet": "Action",
+    "id": 25867,
+    "en": "Protraction",
+    "zh": "生命回生法",
+    "iconId": 2877
+  },
+  {
+    "sheet": "Action",
+    "id": 25868,
+    "en": "Expedient",
+    "zh": "疾风怒涛之计",
+    "iconId": 2878
+  },
+  {
+    "sheet": "Action",
+    "id": 25871,
+    "en": "Fall Malefic",
+    "zh": "落陷凶星",
+    "iconId": 3559
+  },
+  {
+    "sheet": "Action",
+    "id": 25873,
+    "en": "Exaltation",
+    "zh": "擢升",
+    "iconId": 3561
+  },
+  {
+    "sheet": "Action",
+    "id": 25874,
+    "en": "Macrocosmos",
+    "zh": "大宇宙",
+    "iconId": 3562
+  },
+  {
+    "sheet": "Action",
+    "id": 28,
+    "en": "Iron Will",
+    "zh": "钢铁信念",
+    "iconId": 2505
+  },
+  {
+    "sheet": "Action",
+    "id": 2876,
+    "en": "Reassemble",
+    "zh": "整备",
+    "iconId": 3022
+  },
+  {
+    "sheet": "Action",
+    "id": 2878,
+    "en": "Wildfire",
+    "zh": "野火",
+    "iconId": 3018
+  },
+  {
+    "sheet": "Action",
+    "id": 2887,
+    "en": "Dismantle",
+    "zh": "武装解除",
+    "iconId": 3011
+  },
+  {
+    "sheet": "Action",
+    "id": 30,
+    "en": "Hallowed Ground",
+    "zh": "神圣领域",
+    "iconId": 2502
+  },
+  {
+    "sheet": "Action",
+    "id": 31,
+    "en": "Heavy Swing",
+    "zh": "重劈",
+    "iconId": 260
+  },
+  {
+    "sheet": "Action",
+    "id": 32065,
+    "en": "Release Iron Will",
+    "zh": "解除钢铁信念",
+    "iconId": 2521
+  },
+  {
+    "sheet": "Action",
+    "id": 34606,
+    "en": "Steel Fangs",
+    "zh": "咬噬尖齿",
+    "iconId": 3701
+  },
+  {
+    "sheet": "Action",
+    "id": 34611,
+    "en": "Flanksbane Fang",
+    "zh": "侧裂獠齿",
+    "iconId": 3706
+  },
+  {
+    "sheet": "Action",
+    "id": 34612,
+    "en": "Hindsting Strike",
+    "zh": "背击獠齿",
+    "iconId": 3707
+  },
+  {
+    "sheet": "Action",
+    "id": 34620,
+    "en": "Vicewinder",
+    "zh": "强碎灵蛇",
+    "iconId": 3715
+  },
+  {
+    "sheet": "Action",
+    "id": 34621,
+    "en": "Hunter's Coil",
+    "zh": "猛袭盘蛇",
+    "iconId": 3716
+  },
+  {
+    "sheet": "Action",
+    "id": 34622,
+    "en": "Swiftskin's Coil",
+    "zh": "疾速盘蛇",
+    "iconId": 3717
+  },
+  {
+    "sheet": "Action",
+    "id": 34626,
+    "en": "Reawaken",
+    "zh": "祖灵降临",
+    "iconId": 3721
+  },
+  {
+    "sheet": "Action",
+    "id": 34627,
+    "en": "First Generation",
+    "zh": "祖灵之牙一式",
+    "iconId": 3722
+  },
+  {
+    "sheet": "Action",
+    "id": 34628,
+    "en": "Second Generation",
+    "zh": "祖灵之牙二式",
+    "iconId": 3723
+  },
+  {
+    "sheet": "Action",
+    "id": 34629,
+    "en": "Third Generation",
+    "zh": "祖灵之牙三式",
+    "iconId": 3724
+  },
+  {
+    "sheet": "Action",
+    "id": 34630,
+    "en": "Fourth Generation",
+    "zh": "祖灵之牙四式",
+    "iconId": 3725
+  },
+  {
+    "sheet": "Action",
+    "id": 34631,
+    "en": "Ouroboros",
+    "zh": "祖灵大蛇牙",
+    "iconId": 3726
+  },
+  {
+    "sheet": "Action",
+    "id": 34633,
+    "en": "Uncoiled Fury",
+    "zh": "飞蛇之尾",
+    "iconId": 3728
+  },
+  {
+    "sheet": "Action",
+    "id": 34634,
+    "en": "Death Rattle",
+    "zh": "蛇尾击",
+    "iconId": 3729
+  },
+  {
+    "sheet": "Action",
+    "id": 34636,
+    "en": "Twinfang Bite",
+    "zh": "双牙连击",
+    "iconId": 3731
+  },
+  {
+    "sheet": "Action",
+    "id": 34637,
+    "en": "Twinblood Bite",
+    "zh": "双牙乱击",
+    "iconId": 3732
+  },
+  {
+    "sheet": "Action",
+    "id": 34640,
+    "en": "First Legacy",
+    "zh": "祖灵之蛇一式",
+    "iconId": 3735
+  },
+  {
+    "sheet": "Action",
+    "id": 34641,
+    "en": "Second Legacy",
+    "zh": "祖灵之蛇二式",
+    "iconId": 3736
+  },
+  {
+    "sheet": "Action",
+    "id": 34642,
+    "en": "Third Legacy",
+    "zh": "祖灵之蛇三式",
+    "iconId": 3737
+  },
+  {
+    "sheet": "Action",
+    "id": 34643,
+    "en": "Fourth Legacy",
+    "zh": "祖灵之蛇四式",
+    "iconId": 3738
+  },
+  {
+    "sheet": "Action",
+    "id": 34644,
+    "en": "Uncoiled Twinfang",
+    "zh": "飞蛇连尾击",
+    "iconId": 3739
+  },
+  {
+    "sheet": "Action",
+    "id": 34645,
+    "en": "Uncoiled Twinblood",
+    "zh": "飞蛇乱尾击",
+    "iconId": 3740
+  },
+  {
+    "sheet": "Action",
+    "id": 34647,
+    "en": "Serpent's Ire",
+    "zh": "蛇灵气",
+    "iconId": 3742
+  },
+  {
+    "sheet": "Action",
+    "id": 34650,
+    "en": "Fire in Red",
+    "zh": "火炎之红",
+    "iconId": 3801
+  },
+  {
+    "sheet": "Action",
+    "id": 34651,
+    "en": "Aero in Green",
+    "zh": "疾风之绿",
+    "iconId": 3802
+  },
+  {
+    "sheet": "Action",
+    "id": 34652,
+    "en": "Water in Blue",
+    "zh": "流水之蓝",
+    "iconId": 3803
+  },
+  {
+    "sheet": "Action",
+    "id": 34653,
+    "en": "Blizzard in Cyan",
+    "zh": "冰结之蓝青",
+    "iconId": 3804
+  },
+  {
+    "sheet": "Action",
+    "id": 34654,
+    "en": "Stone in Yellow",
+    "zh": "飞石之纯黄",
+    "iconId": 3805
+  },
+  {
+    "sheet": "Action",
+    "id": 34655,
+    "en": "Thunder in Magenta",
+    "zh": "闪雷之品红",
+    "iconId": 3806
+  },
+  {
+    "sheet": "Action",
+    "id": 34662,
+    "en": "Holy in White",
+    "zh": "神圣之白",
+    "iconId": 3813
+  },
+  {
+    "sheet": "Action",
+    "id": 34663,
+    "en": "Comet in Black",
+    "zh": "彗星之黑",
+    "iconId": 3814
+  },
+  {
+    "sheet": "Action",
+    "id": 34664,
+    "en": "Pom Motif",
+    "zh": "绒球彩绘",
+    "iconId": 3815
+  },
+  {
+    "sheet": "Action",
+    "id": 34665,
+    "en": "Wing Motif",
+    "zh": "翅膀彩绘",
+    "iconId": 3816
+  },
+  {
+    "sheet": "Action",
+    "id": 34666,
+    "en": "Claw Motif",
+    "zh": "兽爪彩绘",
+    "iconId": 3817
+  },
+  {
+    "sheet": "Action",
+    "id": 34667,
+    "en": "Maw Motif",
+    "zh": "尖牙彩绘",
+    "iconId": 3818
+  },
+  {
+    "sheet": "Action",
+    "id": 34668,
+    "en": "Hammer Motif",
+    "zh": "重锤彩绘",
+    "iconId": 3819
+  },
+  {
+    "sheet": "Action",
+    "id": 34670,
+    "en": "Pom Muse",
+    "zh": "绒球构想",
+    "iconId": 3821
+  },
+  {
+    "sheet": "Action",
+    "id": 34671,
+    "en": "Winged Muse",
+    "zh": "翅膀构想",
+    "iconId": 3822
+  },
+  {
+    "sheet": "Action",
+    "id": 34672,
+    "en": "Clawed Muse",
+    "zh": "兽爪构想",
+    "iconId": 3823
+  },
+  {
+    "sheet": "Action",
+    "id": 34673,
+    "en": "Fanged Muse",
+    "zh": "尖牙构想",
+    "iconId": 3824
+  },
+  {
+    "sheet": "Action",
+    "id": 34674,
+    "en": "Striking Muse",
+    "zh": "重锤构想",
+    "iconId": 3825
+  },
+  {
+    "sheet": "Action",
+    "id": 34675,
+    "en": "Starry Muse",
+    "zh": "星空构想",
+    "iconId": 3826
+  },
+  {
+    "sheet": "Action",
+    "id": 34676,
+    "en": "Mog of the Ages",
+    "zh": "莫古力激流",
+    "iconId": 3827
+  },
+  {
+    "sheet": "Action",
+    "id": 34678,
+    "en": "Hammer Stamp",
+    "zh": "重锤敲章",
+    "iconId": 3829
+  },
+  {
+    "sheet": "Action",
+    "id": 34679,
+    "en": "Hammer Brush",
+    "zh": "重锤掠刷",
+    "iconId": 3830
+  },
+  {
+    "sheet": "Action",
+    "id": 34680,
+    "en": "Polishing Hammer",
+    "zh": "重锤抛光",
+    "iconId": 3831
+  },
+  {
+    "sheet": "Action",
+    "id": 34681,
+    "en": "Star Prism",
+    "zh": "天星棱光",
+    "iconId": 3832
+  },
+  {
+    "sheet": "Action",
+    "id": 34683,
+    "en": "Subtractive Palette",
+    "zh": "减色混合",
+    "iconId": 3833
+  },
+  {
+    "sheet": "Action",
+    "id": 34684,
+    "en": "Smudge",
+    "zh": "速涂",
+    "iconId": 3834
+  },
+  {
+    "sheet": "Action",
+    "id": 34685,
+    "en": "Tempera Coat",
+    "zh": "坦培拉涂层",
+    "iconId": 3835
+  },
+  {
+    "sheet": "Action",
+    "id": 34686,
+    "en": "Tempera Grassa",
+    "zh": "油性坦培拉涂层",
+    "iconId": 3836
+  },
+  {
+    "sheet": "Action",
+    "id": 34688,
+    "en": "Rainbow Drip",
+    "zh": "彩虹点滴",
+    "iconId": 3838
+  },
+  {
+    "sheet": "Action",
+    "id": 3538,
+    "en": "Goring Blade",
+    "zh": "沥血剑",
+    "iconId": 2506
+  },
+  {
+    "sheet": "Action",
+    "id": 3539,
+    "en": "Royal Authority",
+    "zh": "王权剑",
+    "iconId": 2507
+  },
+  {
+    "sheet": "Action",
+    "id": 3540,
+    "en": "Divine Veil",
+    "zh": "圣光幕帘",
+    "iconId": 2508
+  },
+  {
+    "sheet": "Action",
+    "id": 3547,
+    "en": "the Forbidden Chakra",
+    "zh": "阴阳斗气斩",
+    "iconId": 2535
+  },
+  {
+    "sheet": "Action",
+    "id": 3549,
+    "en": "Fell Cleave",
+    "zh": "裂石飞环",
+    "iconId": 2557
+  },
+  {
+    "sheet": "Action",
+    "id": 3552,
+    "en": "Equilibrium",
+    "zh": "泰然自若",
+    "iconId": 2560
+  },
+  {
+    "sheet": "Action",
+    "id": 3554,
+    "en": "Fang and Claw",
+    "zh": "龙牙龙爪",
+    "iconId": 2582
+  },
+  {
+    "sheet": "Action",
+    "id": 3555,
+    "en": "Geirskogul",
+    "zh": "武神枪",
+    "iconId": 2583
+  },
+  {
+    "sheet": "Action",
+    "id": 3556,
+    "en": "Wheeling Thrust",
+    "zh": "龙尾大回旋",
+    "iconId": 2584
+  },
+  {
+    "sheet": "Action",
+    "id": 3557,
+    "en": "Battle Litany",
+    "zh": "战斗连祷",
+    "iconId": 2585
+  },
+  {
+    "sheet": "Action",
+    "id": 3558,
+    "en": "Empyreal Arrow",
+    "zh": "九天连箭",
+    "iconId": 2606
+  },
+  {
+    "sheet": "Action",
+    "id": 3559,
+    "en": "the Wanderer's Minuet",
+    "zh": "放浪神的小步舞曲",
+    "iconId": 2607
+  },
+  {
+    "sheet": "Action",
+    "id": 3560,
+    "en": "Iron Jaws",
+    "zh": "伶牙俐齿",
+    "iconId": 2608
+  },
+  {
+    "sheet": "Action",
+    "id": 3562,
+    "en": "Sidewinder",
+    "zh": "侧风诱导箭",
+    "iconId": 2610
+  },
+  {
+    "sheet": "Action",
+    "id": 3563,
+    "en": "Armor Crush",
+    "zh": "强甲破点突",
+    "iconId": 2915
+  },
+  {
+    "sheet": "Action",
+    "id": 3566,
+    "en": "Dream Within a Dream",
+    "zh": "梦幻三段",
+    "iconId": 2918
+  },
+  {
+    "sheet": "Action",
+    "id": 3569,
+    "en": "Asylum",
+    "zh": "庇护所",
+    "iconId": 2632
+  },
+  {
+    "sheet": "Action",
+    "id": 3570,
+    "en": "Tetragrammaton",
+    "zh": "神名",
+    "iconId": 2633
+  },
+  {
+    "sheet": "Action",
+    "id": 3571,
+    "en": "Assize",
+    "zh": "法令",
+    "iconId": 2634
+  },
+  {
+    "sheet": "Action",
+    "id": 3573,
+    "en": "Ley Lines",
+    "zh": "黑魔纹",
+    "iconId": 2656
+  },
+  {
+    "sheet": "Action",
+    "id": 3576,
+    "en": "Blizzard IV",
+    "zh": "冰澈",
+    "iconId": 2659
+  },
+  {
+    "sheet": "Action",
+    "id": 3577,
+    "en": "Fire IV",
+    "zh": "炽炎",
+    "iconId": 2660
+  },
+  {
+    "sheet": "Action",
+    "id": 3579,
+    "en": "Ruin III",
+    "zh": "毁荡",
+    "iconId": 2682
+  },
+  {
+    "sheet": "Action",
+    "id": 3582,
+    "en": "Deathflare",
+    "zh": "死星核爆",
+    "iconId": 2685
+  },
+  {
+    "sheet": "Action",
+    "id": 3583,
+    "en": "Indomitability",
+    "zh": "不屈不挠之策",
+    "iconId": 2806
+  },
+  {
+    "sheet": "Action",
+    "id": 3587,
+    "en": "Dissipation",
+    "zh": "转化",
+    "iconId": 2810
+  },
+  {
+    "sheet": "Action",
+    "id": 3606,
+    "en": "Lightspeed",
+    "zh": "光速",
+    "iconId": 3135
+  },
+  {
+    "sheet": "Action",
+    "id": 3613,
+    "en": "Collective Unconscious",
+    "zh": "命运之轮",
+    "iconId": 3140
+  },
+  {
+    "sheet": "Action",
+    "id": 3614,
+    "en": "Essential Dignity",
+    "zh": "先天禀赋",
+    "iconId": 3141
+  },
+  {
+    "sheet": "Action",
+    "id": 3617,
+    "en": "Hard Slash",
+    "zh": "重斩",
+    "iconId": 3051
+  },
+  {
+    "sheet": "Action",
+    "id": 3623,
+    "en": "Syphon Strike",
+    "zh": "吸收斩",
+    "iconId": 3054
+  },
+  {
+    "sheet": "Action",
+    "id": 3632,
+    "en": "Souleater",
+    "zh": "噬魂斩",
+    "iconId": 3055
+  },
+  {
+    "sheet": "Action",
+    "id": 3634,
+    "en": "Dark Mind",
+    "zh": "弃明投暗",
+    "iconId": 3076
+  },
+  {
+    "sheet": "Action",
+    "id": 3638,
+    "en": "Living Dead",
+    "zh": "行尸走肉",
+    "iconId": 3077
+  },
+  {
+    "sheet": "Action",
+    "id": 3639,
+    "en": "Salted Earth",
+    "zh": "腐秽大地",
+    "iconId": 3066
+  },
+  {
+    "sheet": "Action",
+    "id": 3641,
+    "en": "Abyssal Drain",
+    "zh": "吸血深渊",
+    "iconId": 3064
+  },
+  {
+    "sheet": "Action",
+    "id": 3643,
+    "en": "Carve and Spit",
+    "zh": "精雕怒斩",
+    "iconId": 3058
+  },
+  {
+    "sheet": "Action",
+    "id": 36918,
+    "en": "Supplication",
+    "zh": "祈告剑",
+    "iconId": 2522
+  },
+  {
+    "sheet": "Action",
+    "id": 36919,
+    "en": "Sepulchre",
+    "zh": "葬送剑",
+    "iconId": 2523
+  },
+  {
+    "sheet": "Action",
+    "id": 36920,
+    "en": "Guardian",
+    "zh": "极致防御",
+    "iconId": 2524
+  },
+  {
+    "sheet": "Action",
+    "id": 36921,
+    "en": "Imperator",
+    "zh": "绝对统治",
+    "iconId": 2955
+  },
+  {
+    "sheet": "Action",
+    "id": 36922,
+    "en": "Blade of Honor",
+    "zh": "荣耀之剑",
+    "iconId": 2956
+  },
+  {
+    "sheet": "Action",
+    "id": 36926,
+    "en": "Shadowstride",
+    "zh": "暗影步",
+    "iconId": 3093
+  },
+  {
+    "sheet": "Action",
+    "id": 36927,
+    "en": "Shadowed Vigil",
+    "zh": "暗影卫",
+    "iconId": 3094
+  },
+  {
+    "sheet": "Action",
+    "id": 36928,
+    "en": "Scarlet Delirium",
+    "zh": "血红乱",
+    "iconId": 3095
+  },
+  {
+    "sheet": "Action",
+    "id": 36929,
+    "en": "Comeuppance",
+    "zh": "报应",
+    "iconId": 3096
+  },
+  {
+    "sheet": "Action",
+    "id": 36930,
+    "en": "Torcleaver",
+    "zh": "戮山",
+    "iconId": 3097
+  },
+  {
+    "sheet": "Action",
+    "id": 36932,
+    "en": "Disesteem",
+    "zh": "掠影的蔑视",
+    "iconId": 3099
+  },
+  {
+    "sheet": "Action",
+    "id": 36934,
+    "en": "Trajectory",
+    "zh": "弹道",
+    "iconId": 3434
+  },
+  {
+    "sheet": "Action",
+    "id": 36945,
+    "en": "Leaping Opo",
+    "zh": "猿舞连击",
+    "iconId": 2982
+  },
+  {
+    "sheet": "Action",
+    "id": 36946,
+    "en": "Rising Raptor",
+    "zh": "龙颚正拳",
+    "iconId": 2983
+  },
+  {
+    "sheet": "Action",
+    "id": 36947,
+    "en": "Pouncing Coeurl",
+    "zh": "豹袭崩拳",
+    "iconId": 2984
+  },
+  {
+    "sheet": "Action",
+    "id": 36948,
+    "en": "Elixir Burst",
+    "zh": "真空波",
+    "iconId": 2985
+  },
+  {
+    "sheet": "Action",
+    "id": 36949,
+    "en": "Wind's Reply",
+    "zh": "绝空拳",
+    "iconId": 2986
+  },
+  {
+    "sheet": "Action",
+    "id": 36950,
+    "en": "Fire's Reply",
+    "zh": "乾坤斗气弹",
+    "iconId": 2987
+  },
+  {
+    "sheet": "Action",
+    "id": 36951,
+    "en": "Winged Glide",
+    "zh": "龙翼滑翔",
+    "iconId": 2598
+  },
+  {
+    "sheet": "Action",
+    "id": 36952,
+    "en": "Drakesbane",
+    "zh": "云蒸龙变",
+    "iconId": 2599
+  },
+  {
+    "sheet": "Action",
+    "id": 36953,
+    "en": "Rise of the Dragon",
+    "zh": "龙炎升",
+    "iconId": 2075
+  },
+  {
+    "sheet": "Action",
+    "id": 36954,
+    "en": "Lance Barrage",
+    "zh": "前冲刺",
+    "iconId": 2076
+  },
+  {
+    "sheet": "Action",
+    "id": 36955,
+    "en": "Spiral Blow",
+    "zh": "螺旋击",
+    "iconId": 2077
+  },
+  {
+    "sheet": "Action",
+    "id": 36956,
+    "en": "Starcross",
+    "zh": "渡星冲",
+    "iconId": 2078
+  },
+  {
+    "sheet": "Action",
+    "id": 36957,
+    "en": "Dokumori",
+    "zh": "介毒之术",
+    "iconId": 619
+  },
+  {
+    "sheet": "Action",
+    "id": 36958,
+    "en": "Kunai's Bane",
+    "zh": "百雷铳",
+    "iconId": 620
+  },
+  {
+    "sheet": "Action",
+    "id": 36960,
+    "en": "Zesho Meppo",
+    "zh": "是生灭法",
+    "iconId": 2933
+  },
+  {
+    "sheet": "Action",
+    "id": 36961,
+    "en": "Tenri Jindo",
+    "zh": "天理人道",
+    "iconId": 2935
+  },
+  {
+    "sheet": "Action",
+    "id": 36962,
+    "en": "Tengentsu",
+    "zh": "天眼通",
+    "iconId": 3190
+  },
+  {
+    "sheet": "Action",
+    "id": 36963,
+    "en": "Gyofu",
+    "zh": "晓风",
+    "iconId": 3191
+  },
+  {
+    "sheet": "Action",
+    "id": 36964,
+    "en": "Zanshin",
+    "zh": "残心",
+    "iconId": 3192
+  },
+  {
+    "sheet": "Action",
+    "id": 36966,
+    "en": "Tendo Setsugekka",
+    "zh": "天道雪月花",
+    "iconId": 3194
+  },
+  {
+    "sheet": "Action",
+    "id": 36968,
+    "en": "Tendo Kaeshi Setsugekka",
+    "zh": "天道回返雪月花",
+    "iconId": 3196
+  },
+  {
+    "sheet": "Action",
+    "id": 36969,
+    "en": "Sacrificium",
+    "zh": "祭牲",
+    "iconId": 3634
+  },
+  {
+    "sheet": "Action",
+    "id": 36970,
+    "en": "Executioner's Gibbet",
+    "zh": "绞决处刑",
+    "iconId": 3635
+  },
+  {
+    "sheet": "Action",
+    "id": 36971,
+    "en": "Executioner's Gallows",
+    "zh": "缢杀处刑",
+    "iconId": 3636
+  },
+  {
+    "sheet": "Action",
+    "id": 36973,
+    "en": "Perfectio",
+    "zh": "完人",
+    "iconId": 3638
+  },
+  {
+    "sheet": "Action",
+    "id": 36975,
+    "en": "Heartbreak Shot",
+    "zh": "碎心箭",
+    "iconId": 2623
+  },
+  {
+    "sheet": "Action",
+    "id": 36976,
+    "en": "Resonant Arrow",
+    "zh": "共鸣箭",
+    "iconId": 2624
+  },
+  {
+    "sheet": "Action",
+    "id": 36977,
+    "en": "Radiant Encore",
+    "zh": "光明神的返场余音",
+    "iconId": 2100
+  },
+  {
+    "sheet": "Action",
+    "id": 36978,
+    "en": "Blazing Shot",
+    "zh": "烈焰弹",
+    "iconId": 3506
+  },
+  {
+    "sheet": "Action",
+    "id": 36979,
+    "en": "Double Check",
+    "zh": "双将",
+    "iconId": 3507
+  },
+  {
+    "sheet": "Action",
+    "id": 36980,
+    "en": "Checkmate",
+    "zh": "将死",
+    "iconId": 3508
+  },
+  {
+    "sheet": "Action",
+    "id": 36981,
+    "en": "Excavator",
+    "zh": "掘地飞轮",
+    "iconId": 3500
+  },
+  {
+    "sheet": "Action",
+    "id": 36982,
+    "en": "Full Metal Field",
+    "zh": "全金属爆发",
+    "iconId": 3049
+  },
+  {
+    "sheet": "Action",
+    "id": 36983,
+    "en": "Last Dance",
+    "zh": "落幕舞",
+    "iconId": 3483
+  },
+  {
+    "sheet": "Action",
+    "id": 36984,
+    "en": "Finishing Move",
+    "zh": "结束动作",
+    "iconId": 3484
+  },
+  {
+    "sheet": "Action",
+    "id": 36985,
+    "en": "Dance of the Dawn",
+    "zh": "拂晓舞",
+    "iconId": 3485
+  },
+  {
+    "sheet": "Action",
+    "id": 36986,
+    "en": "High Thunder",
+    "zh": "高闪雷",
+    "iconId": 2673
+  },
+  {
+    "sheet": "Action",
+    "id": 36988,
+    "en": "Retrace",
+    "zh": "魔纹重置",
+    "iconId": 2150
+  },
+  {
+    "sheet": "Action",
+    "id": 36989,
+    "en": "Flare Star",
+    "zh": "耀星",
+    "iconId": 2151
+  },
+  {
+    "sheet": "Action",
+    "id": 37,
+    "en": "Maim",
+    "zh": "凶残裂",
+    "iconId": 255
+  },
+  {
+    "sheet": "Action",
+    "id": 37004,
+    "en": "Jolt III",
+    "zh": "激荡",
+    "iconId": 3241
+  },
+  {
+    "sheet": "Action",
+    "id": 37006,
+    "en": "Grand Impact",
+    "zh": "显贵冲击",
+    "iconId": 3243
+  },
+  {
+    "sheet": "Action",
+    "id": 37012,
+    "en": "Baneful Impaction",
+    "zh": "埋伏之毒",
+    "iconId": 2879
+  },
+  {
+    "sheet": "Action",
+    "id": 37014,
+    "en": "Seraphism",
+    "zh": "炽天附体",
+    "iconId": 2881
+  },
+  {
+    "sheet": "Action",
+    "id": 37018,
+    "en": "Umbral Draw",
+    "zh": "灵极抽卡",
+    "iconId": 3565
+  },
+  {
+    "sheet": "Action",
+    "id": 37023,
+    "en": "the Balance",
+    "zh": "太阳神之衡",
+    "iconId": 3110
+  },
+  {
+    "sheet": "Action",
+    "id": 37025,
+    "en": "the Spire",
+    "zh": "建筑神之塔",
+    "iconId": 3115
+  },
+  {
+    "sheet": "Action",
+    "id": 37026,
+    "en": "the Spear",
+    "zh": "战争神之枪",
+    "iconId": 3113
+  },
+  {
+    "sheet": "Action",
+    "id": 37029,
+    "en": "Oracle",
+    "zh": "神谕",
+    "iconId": 3566
+  },
+  {
+    "sheet": "Action",
+    "id": 40,
+    "en": "Thrill of Battle",
+    "zh": "战栗",
+    "iconId": 263
+  },
+  {
+    "sheet": "Action",
+    "id": 42,
+    "en": "Storm's Path",
+    "zh": "暴风斩",
+    "iconId": 258
+  },
+  {
+    "sheet": "Action",
+    "id": 43,
+    "en": "Holmgang",
+    "zh": "死斗",
+    "iconId": 266
+  },
+  {
+    "sheet": "Action",
+    "id": 44,
+    "en": "Vengeance",
+    "zh": "复仇",
+    "iconId": 267
+  },
+  {
+    "sheet": "Action",
+    "id": 45,
+    "en": "Storm's Eye",
+    "zh": "暴风碎",
+    "iconId": 264
+  },
+  {
+    "sheet": "Action",
+    "id": 45960,
+    "en": "Enchanted Riposte",
+    "zh": "魔回刺",
+    "iconId": 3225
+  },
+  {
+    "sheet": "Action",
+    "id": 45961,
+    "en": "Enchanted Zwerchhau",
+    "zh": "魔交击斩",
+    "iconId": 3226
+  },
+  {
+    "sheet": "Action",
+    "id": 45962,
+    "en": "Enchanted Redoublement",
+    "zh": "魔连攻",
+    "iconId": 3227
+  },
+  {
+    "sheet": "Action",
+    "id": 48,
+    "en": "Defiance",
+    "zh": "守护",
+    "iconId": 2551
+  },
+  {
+    "sheet": "Action",
+    "id": 52,
+    "en": "Infuriate",
+    "zh": "战嚎",
+    "iconId": 2555
+  },
+  {
+    "sheet": "Action",
+    "id": 61,
+    "en": "Twin Snakes",
+    "zh": "双掌打",
+    "iconId": 213
+  },
+  {
+    "sheet": "Action",
+    "id": 66,
+    "en": "Demolish",
+    "zh": "破碎拳",
+    "iconId": 204
+  },
+  {
+    "sheet": "Action",
+    "id": 69,
+    "en": "Perfect Balance",
+    "zh": "震脚",
+    "iconId": 217
+  },
+  {
+    "sheet": "Action",
+    "id": 7382,
+    "en": "Intervention",
+    "zh": "干预",
+    "iconId": 2512
+  },
+  {
+    "sheet": "Action",
+    "id": 7384,
+    "en": "Holy Spirit",
+    "zh": "圣灵",
+    "iconId": 2514
+  },
+  {
+    "sheet": "Action",
+    "id": 7385,
+    "en": "Passage of Arms",
+    "zh": "武装戍卫",
+    "iconId": 2515
+  },
+  {
+    "sheet": "Action",
+    "id": 7386,
+    "en": "Onslaught",
+    "zh": "猛攻",
+    "iconId": 2561
+  },
+  {
+    "sheet": "Action",
+    "id": 7387,
+    "en": "Upheaval",
+    "zh": "动乱",
+    "iconId": 2562
+  },
+  {
+    "sheet": "Action",
+    "id": 7388,
+    "en": "Shake It Off",
+    "zh": "摆脱",
+    "iconId": 2563
+  },
+  {
+    "sheet": "Action",
+    "id": 7389,
+    "en": "Inner Release",
+    "zh": "原初的解放",
+    "iconId": 2564
+  },
+  {
+    "sheet": "Action",
+    "id": 7390,
+    "en": "Delirium",
+    "zh": "血乱",
+    "iconId": 3078
+  },
+  {
+    "sheet": "Action",
+    "id": 7392,
+    "en": "Bloodspiller",
+    "zh": "血溅",
+    "iconId": 3080
+  },
+  {
+    "sheet": "Action",
+    "id": 7393,
+    "en": "The Blackest Night",
+    "zh": "至黑之夜",
+    "iconId": 3081
+  },
+  {
+    "sheet": "Action",
+    "id": 7394,
+    "en": "Riddle of Earth",
+    "zh": "金刚极意",
+    "iconId": 2537
+  },
+  {
+    "sheet": "Action",
+    "id": 7395,
+    "en": "Riddle of Fire",
+    "zh": "红莲极意",
+    "iconId": 2541
+  },
+  {
+    "sheet": "Action",
+    "id": 7399,
+    "en": "Mirage Dive",
+    "zh": "幻象冲",
+    "iconId": 2588
+  },
+  {
+    "sheet": "Action",
+    "id": 74,
+    "en": "Dragon Kick",
+    "zh": "双龙脚",
+    "iconId": 2528
+  },
+  {
+    "sheet": "Action",
+    "id": 7400,
+    "en": "Nastrond",
+    "zh": "死者之岸",
+    "iconId": 2589
+  },
+  {
+    "sheet": "Action",
+    "id": 7402,
+    "en": "Bhavacakra",
+    "zh": "六道轮回",
+    "iconId": 2921
+  },
+  {
+    "sheet": "Action",
+    "id": 7403,
+    "en": "Ten Chi Jin",
+    "zh": "天地人",
+    "iconId": 2922
+  },
+  {
+    "sheet": "Action",
+    "id": 7404,
+    "en": "Pitch Perfect",
+    "zh": "完美音调",
+    "iconId": 2611
+  },
+  {
+    "sheet": "Action",
+    "id": 7405,
+    "en": "Troubadour",
+    "zh": "行吟",
+    "iconId": 2612
+  },
+  {
+    "sheet": "Action",
+    "id": 7408,
+    "en": "Nature's Minne",
+    "zh": "大地神的抒情恋歌",
+    "iconId": 2615
+  },
+  {
+    "sheet": "Action",
+    "id": 7409,
+    "en": "Refulgent Arrow",
+    "zh": "辉煌箭",
+    "iconId": 2616
+  },
+  {
+    "sheet": "Action",
+    "id": 7411,
+    "en": "Heated Split Shot",
+    "zh": "热分裂弹",
+    "iconId": 3031
+  },
+  {
+    "sheet": "Action",
+    "id": 7412,
+    "en": "Heated Slug Shot",
+    "zh": "热独头弹",
+    "iconId": 3032
+  },
+  {
+    "sheet": "Action",
+    "id": 7413,
+    "en": "Heated Clean Shot",
+    "zh": "热狙击弹",
+    "iconId": 3033
+  },
+  {
+    "sheet": "Action",
+    "id": 7414,
+    "en": "Barrel Stabilizer",
+    "zh": "枪管加热",
+    "iconId": 3034
+  },
+  {
+    "sheet": "Action",
+    "id": 7421,
+    "en": "Triplecast",
+    "zh": "三连咏唱",
+    "iconId": 2663
+  },
+  {
+    "sheet": "Action",
+    "id": 7422,
+    "en": "Foul",
+    "zh": "秽浊",
+    "iconId": 2664
+  },
+  {
+    "sheet": "Action",
+    "id": 7426,
+    "en": "Ruin IV",
+    "zh": "毁绝",
+    "iconId": 2686
+  },
+  {
+    "sheet": "Action",
+    "id": 7427,
+    "en": "Summon Bahamut",
+    "zh": "龙神召唤",
+    "iconId": 2691
+  },
+  {
+    "sheet": "Action",
+    "id": 7429,
+    "en": "Enkindle Bahamut",
+    "zh": "龙神迸发",
+    "iconId": 2693
+  },
+  {
+    "sheet": "Action",
+    "id": 7430,
+    "en": "Thin Air",
+    "zh": "无中生有",
+    "iconId": 2636
+  },
+  {
+    "sheet": "Action",
+    "id": 7432,
+    "en": "Divine Benison",
+    "zh": "神祝祷",
+    "iconId": 2638
+  },
+  {
+    "sheet": "Action",
+    "id": 7433,
+    "en": "Plenary Indulgence",
+    "zh": "全大赦",
+    "iconId": 2639
+  },
+  {
+    "sheet": "Action",
+    "id": 7436,
+    "en": "Chain Stratagem",
+    "zh": "连环计",
+    "iconId": 2815
+  },
+  {
+    "sheet": "Action",
+    "id": 7437,
+    "en": "Aetherpact",
+    "zh": "以太契约",
+    "iconId": 2816
+  },
+  {
+    "sheet": "Action",
+    "id": 7439,
+    "en": "Earthly Star",
+    "zh": "地星",
+    "iconId": 3143
+  },
+  {
+    "sheet": "Action",
+    "id": 7444,
+    "en": "Lord of Crowns",
+    "zh": "王冠之领主",
+    "iconId": 3147
+  },
+  {
+    "sheet": "Action",
+    "id": 7480,
+    "en": "Yukikaze",
+    "zh": "雪风",
+    "iconId": 3166
+  },
+  {
+    "sheet": "Action",
+    "id": 7481,
+    "en": "Gekko",
+    "zh": "月光",
+    "iconId": 3158
+  },
+  {
+    "sheet": "Action",
+    "id": 7482,
+    "en": "Kasha",
+    "zh": "花车",
+    "iconId": 3164
+  },
+  {
+    "sheet": "Action",
+    "id": 7487,
+    "en": "Midare Setsugekka",
+    "zh": "纷乱雪月花",
+    "iconId": 3162
+  },
+  {
+    "sheet": "Action",
+    "id": 7489,
+    "en": "Higanbana",
+    "zh": "彼岸花",
+    "iconId": 3160
+  },
+  {
+    "sheet": "Action",
+    "id": 7490,
+    "en": "Hissatsu: Shinten",
+    "zh": "必杀剑·震天",
+    "iconId": 3173
+  },
+  {
+    "sheet": "Action",
+    "id": 7492,
+    "en": "Hissatsu: Gyoten",
+    "zh": "必杀剑·晓天",
+    "iconId": 3169
+  },
+  {
+    "sheet": "Action",
+    "id": 7499,
+    "en": "Meikyo Shisui",
+    "zh": "明镜止水",
+    "iconId": 3167
+  },
+  {
+    "sheet": "Action",
+    "id": 7506,
+    "en": "Corps-a-corps",
+    "zh": "短兵相接",
+    "iconId": 3204
+  },
+  {
+    "sheet": "Action",
+    "id": 7510,
+    "en": "Verfire",
+    "zh": "赤火炎",
+    "iconId": 3208
+  },
+  {
+    "sheet": "Action",
+    "id": 7511,
+    "en": "Verstone",
+    "zh": "赤飞石",
+    "iconId": 3209
+  },
+  {
+    "sheet": "Action",
+    "id": 7517,
+    "en": "Fleche",
+    "zh": "飞刺",
+    "iconId": 3212
+  },
+  {
+    "sheet": "Action",
+    "id": 7518,
+    "en": "Acceleration",
+    "zh": "促进",
+    "iconId": 3214
+  },
+  {
+    "sheet": "Action",
+    "id": 7519,
+    "en": "Contre Sixte",
+    "zh": "六分反击",
+    "iconId": 3217
+  },
+  {
+    "sheet": "Action",
+    "id": 7520,
+    "en": "Embolden",
+    "zh": "鼓励",
+    "iconId": 3218
+  },
+  {
+    "sheet": "Action",
+    "id": 7521,
+    "en": "Manafication",
+    "zh": "魔元化",
+    "iconId": 3219
+  },
+  {
+    "sheet": "Action",
+    "id": 7526,
+    "en": "Verholy",
+    "zh": "赤神圣",
+    "iconId": 3224
+  },
+  {
+    "sheet": "Action",
+    "id": 7531,
+    "en": "Rampart",
+    "zh": "铁壁",
+    "iconId": 801
+  },
+  {
+    "sheet": "Action",
+    "id": 7533,
+    "en": "Provoke",
+    "zh": "挑衅",
+    "iconId": 803
+  },
+  {
+    "sheet": "Action",
+    "id": 7535,
+    "en": "Reprisal",
+    "zh": "雪仇",
+    "iconId": 806
+  },
+  {
+    "sheet": "Action",
+    "id": 7537,
+    "en": "Shirk",
+    "zh": "退避",
+    "iconId": 810
+  },
+  {
+    "sheet": "Action",
+    "id": 7538,
+    "en": "Interject",
+    "zh": "插言",
+    "iconId": 808
+  },
+  {
+    "sheet": "Action",
+    "id": 7540,
+    "en": "Low Blow",
+    "zh": "下踢",
+    "iconId": 802
+  },
+  {
+    "sheet": "Action",
+    "id": 7541,
+    "en": "Second Wind",
+    "zh": "内丹",
+    "iconId": 821
+  },
+  {
+    "sheet": "Action",
+    "id": 7542,
+    "en": "Bloodbath",
+    "zh": "浴血",
+    "iconId": 823
+  },
+  {
+    "sheet": "Action",
+    "id": 7546,
+    "en": "True North",
+    "zh": "真北",
+    "iconId": 830
+  },
+  {
+    "sheet": "Action",
+    "id": 7548,
+    "en": "Arm's Length",
+    "zh": "亲疏自行",
+    "iconId": 822
+  },
+  {
+    "sheet": "Action",
+    "id": 7549,
+    "en": "Feint",
+    "zh": "牵制",
+    "iconId": 828
+  },
+  {
+    "sheet": "Action",
+    "id": 7559,
+    "en": "Surecast",
+    "zh": "沉稳咏唱",
+    "iconId": 869
+  },
+  {
+    "sheet": "Action",
+    "id": 7560,
+    "en": "Addle",
+    "zh": "昏乱",
+    "iconId": 861
+  },
+  {
+    "sheet": "Action",
+    "id": 7561,
+    "en": "Swiftcast",
+    "zh": "即刻咏唱",
+    "iconId": 866
+  },
+  {
+    "sheet": "Action",
+    "id": 7562,
+    "en": "Lucid Dreaming",
+    "zh": "醒梦",
+    "iconId": 865
+  },
+  {
+    "sheet": "Action",
+    "id": 83,
+    "en": "Life Surge",
+    "zh": "龙剑",
+    "iconId": 304
+  },
+  {
+    "sheet": "Action",
+    "id": 85,
+    "en": "Lance Charge",
+    "zh": "猛枪",
+    "iconId": 309
+  },
+  {
+    "sheet": "Action",
+    "id": 9,
+    "en": "Fast Blade",
+    "zh": "先锋剑",
+    "iconId": 158
+  },
+  {
+    "sheet": "Action",
+    "id": 90,
+    "en": "Piercing Talon",
+    "zh": "贯穿尖",
+    "iconId": 315
+  },
+  {
+    "sheet": "Action",
+    "id": 94,
+    "en": "Elusive Jump",
+    "zh": "回避跳跃",
+    "iconId": 2577
+  },
+  {
+    "sheet": "Action",
+    "id": 96,
+    "en": "Dragonfire Dive",
+    "zh": "龙炎冲",
+    "iconId": 2578
+  },
+  {
+    "sheet": "Status",
+    "id": 1185,
+    "en": "Brotherhood",
+    "zh": "义结金兰：攻击",
+    "iconId": 212532
+  },
+  {
+    "sheet": "Status",
+    "id": 1200,
+    "en": "Caustic Bite",
+    "zh": "烈毒咬箭",
+    "iconId": 212616
+  },
+  {
+    "sheet": "Status",
+    "id": 1201,
+    "en": "Stormbite",
+    "zh": "狂风蚀箭",
+    "iconId": 212617
+  },
+  {
+    "sheet": "Status",
+    "id": 1220,
+    "en": "Excogitation",
+    "zh": "深谋远虑之策",
+    "iconId": 212808
+  },
+  {
+    "sheet": "Status",
+    "id": 1234,
+    "en": "Verfire Ready",
+    "zh": "赤火炎预备",
+    "iconId": 213402
+  },
+  {
+    "sheet": "Status",
+    "id": 1235,
+    "en": "Verstone Ready",
+    "zh": "赤飞石预备",
+    "iconId": 213403
+  },
+  {
+    "sheet": "Status",
+    "id": 125,
+    "en": "Raging Strikes",
+    "zh": "猛者强击",
+    "iconId": 210354
+  },
+  {
+    "sheet": "Status",
+    "id": 141,
+    "en": "Battle Voice",
+    "zh": "战斗之声",
+    "iconId": 212601
+  },
+  {
+    "sheet": "Status",
+    "id": 165,
+    "en": "Firestarter",
+    "zh": "火苗",
+    "iconId": 210460
+  },
+  {
+    "sheet": "Status",
+    "id": 1822,
+    "en": "Technical Finish",
+    "zh": "技巧舞步结束",
+    "iconId": 213709
+  },
+  {
+    "sheet": "Status",
+    "id": 1842,
+    "en": "Ready to Rip",
+    "zh": "撕喉预备",
+    "iconId": 213611
+  },
+  {
+    "sheet": "Status",
+    "id": 1843,
+    "en": "Ready to Tear",
+    "zh": "裂膛预备",
+    "iconId": 213612
+  },
+  {
+    "sheet": "Status",
+    "id": 1844,
+    "en": "Ready to Gouge",
+    "zh": "穿目预备",
+    "iconId": 213613
+  },
+  {
+    "sheet": "Status",
+    "id": 1895,
+    "en": "Biolysis",
+    "zh": "蛊毒法",
+    "iconId": 212812
+  },
+  {
+    "sheet": "Status",
+    "id": 1944,
+    "en": "Sacred Soil",
+    "zh": "野战治疗阵",
+    "iconId": 212802
+  },
+  {
+    "sheet": "Status",
+    "id": 2604,
+    "en": "Kardia",
+    "zh": "心关",
+    "iconId": 212951
+  },
+  {
+    "sheet": "Status",
+    "id": 2607,
+    "en": "Eukrasian Diagnosis",
+    "zh": "均衡诊断",
+    "iconId": 212954
+  },
+  {
+    "sheet": "Status",
+    "id": 2609,
+    "en": "Eukrasian Prognosis",
+    "zh": "均衡预后",
+    "iconId": 212954
+  },
+  {
+    "sheet": "Status",
+    "id": 2616,
+    "en": "Eukrasian Dosis III",
+    "zh": "均衡注药III",
+    "iconId": 212962
+  },
+  {
+    "sheet": "Status",
+    "id": 2620,
+    "en": "Physis II",
+    "zh": "自生II",
+    "iconId": 212966
+  },
+  {
+    "sheet": "Status",
+    "id": 2719,
+    "en": "Chaotic Spring",
+    "zh": "樱花缭乱",
+    "iconId": 212586
+  },
+  {
+    "sheet": "Status",
+    "id": 2959,
+    "en": "Ogi Namikiri Ready",
+    "zh": "奥义斩浪预备",
+    "iconId": 213313
+  },
+  {
+    "sheet": "Status",
+    "id": 2964,
+    "en": "Radiant Finale",
+    "zh": "光明神的最终乐章",
+    "iconId": 212624
+  },
+  {
+    "sheet": "Status",
+    "id": 315,
+    "en": "Whispering Dawn",
+    "zh": "仙光的低语",
+    "iconId": 212826
+  },
+  {
+    "sheet": "Status",
+    "id": 3646,
+    "en": "Flanksbane Venom",
+    "zh": "侧裂锐牙",
+    "iconId": 213752
+  },
+  {
+    "sheet": "Status",
+    "id": 3648,
+    "en": "Hindsbane Venom",
+    "zh": "背裂锐牙",
+    "iconId": 213754
+  },
+  {
+    "sheet": "Status",
+    "id": 3657,
+    "en": "Hunter's Venom",
+    "zh": "连击双锐牙",
+    "iconId": 213763
+  },
+  {
+    "sheet": "Status",
+    "id": 3658,
+    "en": "Swiftskin's Venom",
+    "zh": "乱击双锐牙",
+    "iconId": 213764
+  },
+  {
+    "sheet": "Status",
+    "id": 3665,
+    "en": "Poised for Twinfang",
+    "zh": "连尾锐尾",
+    "iconId": 213771
+  },
+  {
+    "sheet": "Status",
+    "id": 3666,
+    "en": "Poised for Twinblood",
+    "zh": "乱尾锐尾",
+    "iconId": 213772
+  },
+  {
+    "sheet": "Status",
+    "id": 3672,
+    "en": "Honed Steel",
+    "zh": "咬噬锐牙",
+    "iconId": 213757
+  },
+  {
+    "sheet": "Status",
+    "id": 3676,
+    "en": "Aetherhues II",
+    "zh": "以太色调II",
+    "iconId": 213802
+  },
+  {
+    "sheet": "Status",
+    "id": 3679,
+    "en": "Rainbow Bright",
+    "zh": "彩虹点滴效果提高",
+    "iconId": 213805
+  },
+  {
+    "sheet": "Status",
+    "id": 3680,
+    "en": "Hammer Time",
+    "zh": "重锤连击",
+    "iconId": 218677
+  },
+  {
+    "sheet": "Status",
+    "id": 3688,
+    "en": "Hyperphantasia",
+    "zh": "绘灵幻景",
+    "iconId": 218155
+  },
+  {
+    "sheet": "Status",
+    "id": 3772,
+    "en": "Honed Reavers",
+    "zh": "穿裂锐牙",
+    "iconId": 213758
+  },
+  {
+    "sheet": "Status",
+    "id": 3856,
+    "en": "Tendo",
+    "zh": "天道",
+    "iconId": 213319
+  },
+  {
+    "sheet": "Status",
+    "id": 3861,
+    "en": "Hawk's Eye",
+    "zh": "鹰眼",
+    "iconId": 213075
+  },
+  {
+    "sheet": "Status",
+    "id": 3871,
+    "en": "High Thunder",
+    "zh": "高闪雷",
+    "iconId": 212661
+  },
+  {
+    "sheet": "Status",
+    "id": 737,
+    "en": "Ley Lines",
+    "zh": "黑魔纹",
+    "iconId": 212653
+  },
+  {
+    "sheet": "Status",
+    "id": 738,
+    "en": "Circle of Power",
+    "zh": "魔纹环",
+    "iconId": 212654
+  }
+]

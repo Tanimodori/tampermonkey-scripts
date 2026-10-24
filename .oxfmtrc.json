@@ -10,7 +10,7 @@
   "vueIndentScriptAndStyle": true,
   "endOfLine": "crlf",
   "sortPackageJson": false,
-  "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/.rush/**", "**/src/data/generated/**", "**/test/coverage/corpus/**"],
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/.rush/**", "**/src/data/generated/**", "**/test/coverage/corpus/**", "**/test/coverage/corpus.debug/**"],
   "sortImports": {
     "groups": ["builtin", "external", ["internal", "subpath"], ["parent", "sibling", "index"], "style", "unknown"],
     "internalPattern": ["@/", "#"],

@@ -15,7 +15,7 @@ import { addEntry } from './store';
 type RealKind = Exclude<XivKind, 'unknown'>;
 
 const CN = 'https://xivapi-v2.xivcdn.com/api';
-const KIND2SHEET: Record<RealKind, string> = { action: 'Action', status: 'Status', item: 'Item', addon: 'Addon' };
+const KIND2SHEET: Record<RealKind, string> = { action: 'Action', status: 'Status', item: 'Item', addon: 'Addon', trait: 'Trait' };
 
 // 一条命中的名字。按 schema 它是必填串,但镜像的手写谓词只保证 `obj` 是个对象;截到缺名的命中就当这条没命中,
 // 不因此中断整轮检索(与改造前 `h.obj?.n ?? ''` 同一取舍)。

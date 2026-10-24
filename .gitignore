@@ -19,6 +19,7 @@ lib-cov/
 # Coverage directory used by tools like istanbul
 coverage/
 !scripts/xivanalysis-zh/test/coverage/
+/scripts/xivanalysis-zh/test/coverage/corpus.debug/
 
 # nyc test coverage
 .nyc_output/

@@ -4,7 +4,7 @@ import type { XivKind } from '../types/workflow';
 // 页面 `/api/sheet/<Sheet>?language=en` 请求的识别与改写，以及 EN/CN 合并与降级。
 // 这里不读全局、不发请求：传输、职业字典与配对写回都由调用方注入，单元测试可以直接跑。
 const CN_HOST = 'xivapi-v2.xivcdn.com';
-const SHEETS: Record<string, XivKind> = { Action: 'action', Item: 'item', Status: 'status', Addon: 'addon' };
+const SHEETS: Record<string, XivKind> = { Action: 'action', Item: 'item', Status: 'status', Addon: 'addon', Trait: 'trait' };
 const nameFieldOf = (sheet: string): string => (sheet === 'Addon' ? 'Text' : 'Name');
 const isXivapiHost = (host: string): boolean => host === 'v2.xivapi.com' || host === 'beta.xivapi.com' || host.endsWith('.xivapi.com');
 

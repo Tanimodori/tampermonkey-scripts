@@ -19,6 +19,12 @@ export default defineConfig({
   workers: 1,
   projects: [
     {
+      name: 'live-upstream',
+      testMatch: /upstream\.spec\.ts$/,
+      // 上游契约只有几次真实请求，给足冷启动与网络余量。
+      timeout: 60_000,
+    },
+    {
       name: 'live-injected',
       testMatch: /injected\.spec\.ts$/,
       // 含一次 180s 限流退避、60s 导航与 60s 断言等待的余量。

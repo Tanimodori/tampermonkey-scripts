@@ -29,6 +29,7 @@
     "test:unit": "vitest run --passWithNoTests",
     "test:e2e:fast": "vite build && playwright test --project=offline-injected",
     "test:e2e:full": "vite build && playwright test --project=offline-tampermonkey",
+    "test:live:upstream": "playwright test --config=playwright.live.config.ts --project=live-upstream && vitest run --config=vitest.live.config.ts",
     "test:offline": "vite build && playwright test --project=offline-injected --project=offline-tampermonkey",
     "test:live:smoke": "vite build && playwright test --config=playwright.live.config.ts --project=live-injected --grep @smoke",
     "test:live:all": "vite build && playwright test --config=playwright.live.config.ts --project=live-injected",

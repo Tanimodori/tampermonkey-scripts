@@ -112,32 +112,13 @@ const handleOutcome = async (outcome: OpenOutcome, url: string, attempt: number,
  * 全量 34 页即使串行也可能在几分钟内触发站点自己的限流（页面文案是 “Slow down. Too many requests.”），
  * 这与翻译逻辑无关。退避只在这里发生，断言仍然只看真实页面。
  */
-export const openWhenAvailable = async (
-  page: Page,
-  url: string,
-  responses: SheetResponse[] = [],
-  attempts = 2,
-  options: { requireCn?: boolean } = {},
-): Promise<void> => {
-  const requireCn = options.requireCn ?? true;
+export const openWhenAvailable = async (page: Page, url: string, responses: SheetResponse[] = [], attempts = 2): Promise<void> => {
   for (let attempt = 1; attempt <= attempts; attempt++) {
     responses.length = 0;
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    const outcome = await waitForOutcome(page, responses, requireCn ? 60_000 : 15_000);
-    // 真管理器组首次导航时脚本可能还没注入，不能要求国服请求；这里只排除限流页。
-    if (outcome === 'ok' || (!requireCn && outcome === 'timeout')) return;
-    await handleOutcome(outcome, url, attempt, attempts);
-  }
-};
-
-/** 与 `openWhenAvailable` 同理，用于真管理器组冷启动后的重载。 */
-export const reloadWhenAvailable = async (page: Page, url: string, responses: SheetResponse[] = [], attempts = 2): Promise<void> => {
-  for (let attempt = 1; attempt <= attempts; attempt++) {
-    responses.length = 0;
-    await page.reload({ waitUntil: 'domcontentloaded', timeout: 60_000 });
     const outcome = await waitForOutcome(page, responses, 60_000);
     if (outcome === 'ok') return;
-    await handleOutcome(outcome, `${url}（重载）`, attempt, attempts);
+    await handleOutcome(outcome, url, attempt, attempts);
   }
 };
 

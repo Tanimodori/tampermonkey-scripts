@@ -25,15 +25,15 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      name: 'live-injected',
-      testMatch: /injected\.spec\.ts$/,
-      // 含一次 180s 限流退避、60s 导航与 60s 断言等待的余量。
-      timeout: 600_000,
+      name: 'live-corpus',
+      testMatch: /corpus\.spec\.ts$/,
+      // 33 条串行，每条之间等 60 秒，另含限流退避余量。
+      timeout: 4_000_000,
     },
     {
-      name: 'live-tampermonkey',
-      testMatch: /tampermonkey\.spec\.ts$/,
-      // 冷启动最长 150s；再给限流退避与重载留余量。
+      name: 'live-smoke',
+      testMatch: /smoke\.spec\.ts$/,
+      // 含一次 180s 限流退避、60s 导航与 60s 断言等待的余量。
       timeout: 600_000,
     },
   ],

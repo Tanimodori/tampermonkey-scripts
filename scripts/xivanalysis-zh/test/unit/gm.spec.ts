@@ -49,4 +49,14 @@ describe('createGmFetch', () => {
 
     await expect(fetchImpl('https://www.garlandtools.cn/api/search.php?text=Fire')).rejects.toThrow('network error');
   });
+
+  it('GM 超时时 reject', async () => {
+    const fetchImpl = createGmFetch(async () => {
+      const error = new Error('timeout');
+      error.name = 'TimeoutError';
+      throw error;
+    });
+
+    await expect(fetchImpl('https://www.garlandtools.cn/api/search.php?text=Fire')).rejects.toThrow('timeout');
+  });
 });

@@ -19,9 +19,7 @@ test('快速注入在 document-start 跑起来', async ({ page }) => {
   const errors = await openFixture(page);
 
   await expect.poll(() => page.evaluate(() => !/\[native code\]/.test(String(window.fetch)))).toBe(true);
-  await expect
-    .poll(() => page.evaluate(() => [...document.querySelectorAll('style')].some((style) => (style.textContent ?? '').includes('span.highlight-yellow'))))
-    .toBe(true);
+  await expect.poll(() => page.evaluate(() => document.head?.querySelector('style')?.textContent?.includes('span.highlight-yellow') ?? false)).toBe(true);
   expect(await page.evaluate(() => (window as unknown as { unsafeWindow: Window }).unsafeWindow === window)).toBe(true);
 
   await page.waitForTimeout(500);

@@ -8,11 +8,11 @@ describe('用户脚本元数据', () => {
   });
 
   it('grant 包含 GM 请求与 unsafeWindow', () => {
-    expect(USERSCRIPT_META.grant).toEqual(expect.arrayContaining(['GM_xmlhttpRequest', 'unsafeWindow']));
+    expect(USERSCRIPT_META.grant).toEqual(['GM_xmlhttpRequest', 'unsafeWindow']);
   });
 
   it('connect 与注入时机符合预期', () => {
-    expect(USERSCRIPT_META.connect).toContain('www.garlandtools.cn');
+    expect(USERSCRIPT_META.connect).toEqual(['www.garlandtools.cn']);
     expect(USERSCRIPT_META['run-at']).toBe('document-start');
   });
 });

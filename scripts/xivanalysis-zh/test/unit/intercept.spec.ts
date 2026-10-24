@@ -31,6 +31,7 @@ describe('parseSheetRequest', () => {
     ['Item', 'item', 'Name'],
     ['Status', 'status', 'Name'],
     ['Addon', 'addon', 'Text'],
+    ['Trait', 'trait', 'Name'],
   ])('识别 %s，名称字段为 %s', (sheet, kind, nameField) => {
     const req = parseSheetRequest(`https://v2.xivapi.com/api/sheet/${sheet}?language=en&fields=Name,Icon`);
     expect(req).toMatchObject({ kind, nameField });
@@ -80,17 +81,20 @@ describe('localizeJobAbbr', () => {
 });
 
 describe('enrichSheet', () => {
-  const en: RawSheet = {
-    rows: [
-      { row_id: 1, fields: { Name: 'Fire', Icon: { id: 405 }, ClassJob: { fields: { Abbreviation: 'AST' } } } },
-      { row_id: 2, fields: { Name: 'Cure' } },
-    ],
-  };
-  const cn: RawSheet = {
-    rows: [{ row_id: 1, fields: { Name: '火炎', Icon: { id: 405 } }, transient: { extra: true } }],
-  };
+  const makeSheets = (): { en: RawSheet; cn: RawSheet } => ({
+    en: {
+      rows: [
+        { row_id: 1, fields: { Name: 'Fire', Icon: { id: 405 }, ClassJob: { fields: { Abbreviation: 'AST' } } } },
+        { row_id: 2, fields: { Name: 'Cure' } },
+      ],
+    },
+    cn: {
+      rows: [{ row_id: 1, fields: { Name: '火炎', Icon: { id: 405 } }, transient: { extra: true } }],
+    },
+  });
 
   it('按 row_id 配对，替换 fields 与 transient，未配对行不动', () => {
+    const { en, cn } = makeSheets();
     const pairs: { kind: string; nameField: string; en: unknown; cn: unknown }[] = [];
     const onPair: EnrichDeps['onPair'] = (kind, nameField, enRow, cnRow) => {
       pairs.push({ kind, nameField, en: enRow.fields?.[nameField], cn: cnRow.fields?.[nameField] });
@@ -107,6 +111,7 @@ describe('enrichSheet', () => {
   });
 
   it('非 action 不本地化职业缩写', () => {
+    const { en, cn } = makeSheets();
     const localizeJob = vi.fn();
     enrichSheet(en, cn, 'Name', 'status', { onPair: () => undefined, localizeJob });
     expect(localizeJob).not.toHaveBeenCalled();
@@ -148,6 +153,37 @@ describe('createSheetFetch', () => {
     expect(calls[1].init?.headers).toEqual({ accept: 'application/json' });
     expect(deps.ensureJobDict).toHaveBeenCalledOnce();
     expect(deps.onPair).toHaveBeenCalledOnce();
+  });
+
+  it('英文目标请求保留原 init', async () => {
+    const { fn, calls } = makePageFetch((url) => (url.includes('xivcdn.com') ? jsonResponse({ rows: [] }) : jsonResponse({ rows: [] })));
+    const init = { method: 'POST', headers: { 'x-test': '1' } };
+
+    await createSheetFetch(makeDeps(fn))(EN_ACTION, init);
+
+    expect(calls[0].init).toBe(init);
+    expect(calls[0].init).toEqual({ method: 'POST', headers: { 'x-test': '1' } });
+  });
+
+  it('国服请求 reject 时原样返回英文', async () => {
+    const en = { rows: [{ row_id: 1, fields: { Name: 'Fire' } }] };
+    const { fn } = makePageFetch((url) => {
+      if (url.includes('xivcdn.com')) throw new Error('network error');
+      return jsonResponse(en);
+    });
+
+    const result = await createSheetFetch(makeDeps(fn))(EN_ACTION);
+
+    await expect(result.json()).resolves.toEqual(en);
+  });
+
+  it('国服响应不是 JSON 时原样返回英文', async () => {
+    const en = { rows: [{ row_id: 1, fields: { Name: 'Fire' } }] };
+    const { fn } = makePageFetch((url) => (url.includes('xivcdn.com') ? new Response('not json', { status: 200 }) : jsonResponse(en)));
+
+    const result = await createSheetFetch(makeDeps(fn))(EN_ACTION);
+
+    await expect(result.json()).resolves.toEqual(en);
   });
 
   it('国服失败时原样返回英文', async () => {

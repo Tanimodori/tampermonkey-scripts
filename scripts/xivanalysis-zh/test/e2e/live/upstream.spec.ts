@@ -26,7 +26,7 @@ test('英文 sheet 返回可用的 rows', { tag: '@upstream' }, async ({ page })
   const { status, body } = await getJson(page, EN_SHEET);
   expect(status).toBe(200);
   expect(body.rows.length).toBeGreaterThan(0);
-  const row = body.rows.find((item: { fields: { Name?: string } }) => Boolean(item.fields.Name));
+  const row = body.rows.find((item: { fields: { Name?: string; Icon?: { id?: number } } }) => Boolean(item.fields.Name) && Boolean(item.fields.Icon?.id));
   expect(row).toBeTruthy();
   expect(row.fields.Icon.id).toBeGreaterThan(0);
 });

@@ -54,14 +54,17 @@ describe('图标 detector', () => {
     expect(resolve).not.toHaveBeenCalled();
   });
 
-  it('src 不含图标号时 iconId 为 undefined', async () => {
-    icon('Aetherflow', 'https://xivanalysis.com/foo.png');
+  it('src 不含图标号时 iconId 为 undefined，解析为空则保持原样', async () => {
+    const img = icon('Aetherflow', 'https://xivanalysis.com/foo.png');
     const resolve = vi.fn(async () => []);
+    const handler = vi.fn();
     const detector = createIconDetector({ resolve, isTarget, subscribeGrowth: makeGrowth().subscribeGrowth, doc: document });
-    const rescan = detector(applyEntry);
+    const rescan = detector(handler);
     cleanup = rescan.stop;
 
     await vi.waitFor(() => expect(resolve).toHaveBeenCalledWith({ en: 'Aetherflow', iconId: undefined }));
+    expect(handler).not.toHaveBeenCalled();
+    expect(img.alt).toBe('Aetherflow');
   });
 
   it('解析返回前节点被移除则不调用 handler', async () => {

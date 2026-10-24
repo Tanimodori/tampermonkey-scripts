@@ -11,7 +11,7 @@ export const readBundle = (): string => {
   try {
     return readFileSync(BUNDLE_PATH, 'utf8');
   } catch {
-    throw new Error(`找不到 ${BUNDLE_PATH}：e2e 判的是构建产物，先跑一次 vite build（rushx test:e2e 已经包含这一步）。`);
+    throw new Error(`找不到 ${BUNDLE_PATH}：e2e 判的是构建产物，先跑一次 vite build（rushx test:e2e:fast 或 test:e2e:full 已经包含这一步）。`);
   }
 };
 

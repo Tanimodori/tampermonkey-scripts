@@ -4,12 +4,12 @@ import { applyEntry } from '../../src/hooks/apply';
 import { entry } from './helpers';
 
 describe('applyEntry', () => {
-  it('modifier 优先', () => {
+  it('modifier 优先于非空 zh', () => {
     const el = document.createElement('div');
     const modifier = vi.fn((node: HTMLElement) => {
       node.innerHTML = '<b>特殊</b>';
     });
-    applyEntry(el, entry('Astral Fire and Umbral Ice', '', { modifier }));
+    applyEntry(el, entry('Astral Fire and Umbral Ice', '火炎', { modifier }));
     expect(modifier).toHaveBeenCalledWith(el);
     expect(el.innerHTML).toBe('<b>特殊</b>');
   });

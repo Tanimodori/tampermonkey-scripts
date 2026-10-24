@@ -91,6 +91,26 @@ describe('时间轴 detector', () => {
     await vi.waitFor(() => expect(target.textContent).toBe('火炎'));
   });
 
+  it('body 晚到时等它出现再观察', async () => {
+    const doc = document.implementation.createHTMLDocument('late-body');
+    doc.documentElement.removeChild(doc.body);
+    const resolve = vi.fn(async () => [entry('Fire', '火炎')]);
+    const detector = createTimelineDetector({ resolve, isTarget, subscribeGrowth: makeGrowth().subscribeGrowth, doc });
+    const rescan = detector((el, hit) => {
+      el.textContent = hit.zh;
+    });
+    cleanup = rescan.stop;
+
+    const body = doc.createElement('body');
+    doc.documentElement.appendChild(body);
+    const target = doc.createElement('div');
+    target.className = 'Timeline-module_content';
+    target.textContent = 'Fire';
+    body.appendChild(target);
+
+    await vi.waitFor(() => expect(target.textContent).toBe('火炎'));
+  });
+
   it('解析为空时保持原文', async () => {
     const target = cell('Fire');
     const resolve = vi.fn(async () => []);

@@ -45,7 +45,7 @@ export const createTimelineDetector = (deps: TimelineDetectorDeps): XivDetector 
     });
     let stopped = false;
     // document-start 时 body 尚未解析出来,observe(null) 会抛错并把整个 IIFE 带走。
-    whenNodeReady(
+    const cancelReady = whenNodeReady(
       () => doc.body,
       (body) => {
         if (stopped) return;
@@ -62,12 +62,13 @@ export const createTimelineDetector = (deps: TimelineDetectorDeps): XivDetector 
       scheduled = true;
       queueMicrotask(() => {
         scheduled = false;
-        rescan();
+        if (!stopped) rescan();
       });
     });
 
     const stop = (): void => {
       stopped = true;
+      cancelReady();
       observer.disconnect();
       unsubscribe();
     };

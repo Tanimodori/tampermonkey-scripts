@@ -1,6 +1,6 @@
 import { whenNodeReady } from './hooks/dom';
 import { injectWindow } from './hooks/tooltip';
-import injectedStyle from './styles/index.css?inline';
+import injectedStyle from './styles/injected';
 
 export const injectCss = (doc: Document = document): void => {
   const styleSheet = doc.createElement('style');

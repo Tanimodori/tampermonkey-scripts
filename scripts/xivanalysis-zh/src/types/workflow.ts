@@ -10,7 +10,8 @@ export interface XivEntry {
 }
 
 export type XivDetectorHandler = (element: HTMLElement, input: XivEntry) => void;
-export type XivDetectorRescan = () => void;
+/** 重新扫描；`stop` 断开观察者并退订映射增长，供测试清理。 */
+export type XivDetectorRescan = (() => void) & { stop?: () => void };
 export type XivDetector = (handler: XivDetectorHandler) => XivDetectorRescan;
 
 // 一次性 bulk 来源:异步产出全部条目(如 garland/jobAbbr/override 这类)。经 providerToSearch 适配成 XivSearch 入 resolve,不做特例。

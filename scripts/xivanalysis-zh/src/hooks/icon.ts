@@ -45,10 +45,12 @@ export const createIconDetector = (deps: IconDetectorDeps): XivDetector => {
         }
       }
     });
+    let stopped = false;
     // document-start 时 body 尚未解析出来,observe(null) 会抛错并把整个 IIFE 带走。
     whenNodeReady(
       () => doc.body,
       (body) => {
+        if (stopped) return;
         observer.observe(body, { childList: true, subtree: true });
         rescan(); // 补上 body 出现到观察者注册之间可能已经进去的节点
       },
@@ -56,7 +58,7 @@ export const createIconDetector = (deps: IconDetectorDeps): XivDetector => {
     );
 
     let scheduled = false;
-    subscribeGrowth(() => {
+    const unsubscribe = subscribeGrowth(() => {
       if (scheduled) return;
       scheduled = true;
       queueMicrotask(() => {
@@ -65,7 +67,12 @@ export const createIconDetector = (deps: IconDetectorDeps): XivDetector => {
       });
     });
 
-    return rescan;
+    const stop = (): void => {
+      stopped = true;
+      observer.disconnect();
+      unsubscribe();
+    };
+    return Object.assign(rescan, { stop });
   };
 };
 

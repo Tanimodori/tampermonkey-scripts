@@ -14,18 +14,6 @@
     "iconId": 2694
   },
   {
-    "en": "Arcanum",
-    "zh": "奥秘卡"
-  },
-  {
-    "en": "Astral Fire andUmbral Ice",
-    "zh": "星极火和灵极冰"
-  },
-  {
-    "en": "Autos",
-    "zh": "自动技能"
-  },
-  {
     "en": "Between the Lines",
     "zh": "魔里行间"
   },
@@ -41,14 +29,6 @@
     "en": "Chi",
     "zh": "地之印",
     "iconId": 2902
-  },
-  {
-    "en": "Commands",
-    "zh": "手动技能"
-  },
-  {
-    "en": "Demi",
-    "zh": "亚灵神"
   },
   {
     "en": "Deployment Tactics",
@@ -74,12 +54,8 @@
   },
   {
     "en": "Embrace",
-    "zh": "攻击",
+    "zh": "仙光的拥抱",
     "iconId": 2826
-  },
-  {
-    "en": "Energy Drain/Siphon",
-    "zh": "能量吸收/抽取"
   },
   {
     "en": "Esprit",
@@ -143,6 +119,10 @@
   },
   {
     "en": "Improvised Finish",
+    "zh": "即兴表演结束"
+  },
+  {
+    "en": "Improvised Finish",
     "zh": "即兴表演结束",
     "iconId": 3479
   },
@@ -161,10 +141,6 @@
     "zh": "伤腿"
   },
   {
-    "en": "Ley Lines Buffs",
-    "zh": "黑魔纹增益"
-  },
-  {
     "en": "Magicked Swordplay",
     "zh": "魔法剑术",
     "iconId": 218665
@@ -172,6 +148,10 @@
   {
     "en": "Mantra",
     "zh": "真言"
+  },
+  {
+    "en": "Medicated",
+    "zh": "强化药"
   },
   {
     "en": "Medicated",
@@ -201,10 +181,6 @@
     "zh": "速行"
   },
   {
-    "en": "Pet",
-    "zh": "召唤兽"
-  },
-  {
     "en": "Polyglot",
     "zh": "通晓"
   },
@@ -212,10 +188,6 @@
     "en": "Prefulgence Ready",
     "zh": "光芒四射预备",
     "iconId": 213413
-  },
-  {
-    "en": "Raid Buffs",
-    "zh": "团辅"
   },
   {
     "en": "Reaving Fangs",
@@ -247,12 +219,16 @@
   },
   {
     "en": "Slither",
-    "zh": "蛇尾抽击",
+    "zh": "蛇尾抽击"
+  },
+  {
+    "en": "Slither",
+    "zh": "蛇行",
     "iconId": 3741
   },
   {
-    "en": "Songs",
-    "zh": "战歌"
+    "en": "Standard Finish",
+    "zh": "标准舞步结束"
   },
   {
     "en": "Standard Finish",

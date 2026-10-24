@@ -16,6 +16,7 @@ type GarlandKind = 'action' | 'status' | 'item';
 
 const CN = 'https://xivapi-v2.xivcdn.com/api';
 const KIND2SHEET: Record<GarlandKind, string> = { action: 'Action', status: 'Status', item: 'Item' };
+const HAN = /[\u3400-\u9fff]/;
 
 // 一条命中的名字。按 schema 它是必填串,但镜像的手写谓词只保证 `obj` 是个对象;截到缺名的命中就当这条没命中,
 // 不因此中断整轮检索(与改造前 `h.obj?.n ?? ''` 同一取舍)。
@@ -58,20 +59,43 @@ export const createGarlandSearch = (deps: GarlandDeps): XivSearch => {
         candidates.push({ hit: h, id, kind });
       }
       // 同名命中可能同时有 PvP/PvE 行。图标 detector 给了 iconId 时先试图标号相同的那条,
-      // 否则会拿到 PvP 行的日文名(实测 True Thrust)。
+      // 否则会拿到 PvP 行的日文名(实测 True Thrust)。没有 iconId 时优先汉字候选,
+      // 避免时间轴先拿到日文名并把它登记进 known。
       const ordered =
         iconId == null
           ? candidates
           : [...candidates.filter((candidate) => candidate.hit.obj.c === iconId), ...candidates.filter((candidate) => candidate.hit.obj.c !== iconId)];
-      for (const { hit, id, kind } of ordered) {
-        const cn = await cnName(kind, id);
-        if (!cn?.zh) continue;
-        const entry: XivEntry = { kind, id, en: text, zh: cn.zh, iconId: cn.iconId ?? (typeof hit.obj.c === 'number' ? hit.obj.c : undefined) };
+
+      const toEntry = (hit: GarlandSearchItem, kind: GarlandKind, id: number, cn: { zh: string; iconId?: number }): XivEntry => ({
+        kind,
+        id,
+        en: text,
+        zh: cn.zh,
+        iconId: cn.iconId ?? (typeof hit.obj.c === 'number' ? hit.obj.c : undefined),
+      });
+      const remember = (entry: XivEntry): XivEntry => {
         deps.addEntry(entry);
         deps.addKnown(text);
         return entry;
+      };
+
+      if (iconId != null) {
+        for (const { hit, id, kind } of ordered) {
+          const cn = await cnName(kind, id);
+          if (cn?.zh) return remember(toEntry(hit, kind, id, cn));
+        }
+        return undefined;
       }
-      return undefined;
+
+      let fallback: XivEntry | undefined;
+      for (const { hit, id, kind } of ordered) {
+        const cn = await cnName(kind, id);
+        if (!cn?.zh) continue;
+        const entry = toEntry(hit, kind, id, cn);
+        if (HAN.test(cn.zh)) return remember(entry);
+        fallback ??= entry;
+      }
+      return fallback ? remember(fallback) : undefined;
     } catch {
       return undefined;
     }

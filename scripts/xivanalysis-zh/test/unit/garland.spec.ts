@@ -69,20 +69,23 @@ describe('garland 兜底', () => {
     await expect(search({ en: 'blizzard' })).resolves.toEqual([{ kind: 'status', id: 12, en: 'blizzard', zh: '冰封', iconId: 24 }]);
   });
 
-  it('有 iconId 时优先同图标命中，避免同名 PvP 行的日文名', async () => {
+  it('有 iconId 时优先同图标命中，无 iconId 时优先汉字候选', async () => {
     hits = [
       { type: 'action', id: '12521', obj: { i: 12521, n: 'True Thrust', c: 405 } },
+      { type: 'action', id: '14665', obj: { i: 14665, n: 'True Thrust', c: 405 } },
       { type: 'action', id: '75', obj: { i: 75, n: 'True Thrust', c: 310 } },
     ];
     sheetRows['Action/12521'] = { fields: { Name: 'トゥルースラスト', Icon: { id: 405 } } };
+    sheetRows['Action/14665'] = { fields: { Name: '精准刺', Icon: { id: 405 } } };
     sheetRows['Action/75'] = { fields: { Name: '精准刺', Icon: { id: 310 } } };
 
     await expect(search({ en: 'True Thrust', iconId: 310 })).resolves.toEqual([{ kind: 'action', id: 75, en: 'True Thrust', zh: '精准刺', iconId: 310 }]);
-    // iconId 参与缓存键，同一文本不带 iconId 时仍按首个命中解析。
-    await expect(search({ en: 'True Thrust' })).resolves.toEqual([{ kind: 'action', id: 12521, en: 'True Thrust', zh: 'トゥルースラスト', iconId: 405 }]);
+    // iconId 参与缓存键；无 iconId 时跳过日文候选，优先汉字。
+    await expect(search({ en: 'True Thrust' })).resolves.toEqual([{ kind: 'action', id: 14665, en: 'True Thrust', zh: '精准刺', iconId: 405 }]);
     expect(pageCalls).toEqual([
       'https://xivapi-v2.xivcdn.com/api/sheet/Action/75?fields=Name,Icon&language=chs',
       'https://xivapi-v2.xivcdn.com/api/sheet/Action/12521?fields=Name,Icon&language=chs',
+      'https://xivapi-v2.xivcdn.com/api/sheet/Action/14665?fields=Name,Icon&language=chs',
     ]);
   });
 

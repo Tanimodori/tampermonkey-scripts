@@ -38,11 +38,11 @@ garland 的 `search.php` 没有 ACAO，浏览器里够不着，因此真实契�
 - `labels.json` —— 时间轴与图标的去重标签，含翻译前英文与页面终态。
 - `sheets.json` —— 与标签配对的英文 / 中文行。
 - `classjobs.json` —— 缩写到中文全名。
-- `abbreviations.json` —— 实际用到的职业缩写。
-- `garland.json` —— 未落在 sheet 行里的兜底标签。
+- `abbreviations.json` —— 实际用到的职业缩写。真实页面请求 Action 时未带 `ClassJob` 字段，通常为空；覆盖率以 ClassJob 全表为准。
+- `garland.json` —— 未落在 sheet 行里的兜底标签，按 `en + iconId` 区分 icon / timeline 变体。
 - `warnings.json` —— capture 期间的 `[xiv-warn]`。
 
-写入先落临时目录，全部成功后再替换正式语料；失败不覆盖旧语料。`test/coverage/coverage.spec.ts` 离线读这些文件，检查终态无待翻英文、标签与行都有译文、sheet 类型受支持、缩写有中文名，以及告警只出现在 `test/coverage/warnings.allowlist.json`。
+写入先落临时目录，全部成功后再替换正式语料；失败不覆盖旧语料。`test/coverage/coverage.spec.ts` 离线读这些文件，检查终态无待翻英文或其他非中文译文、标签与行都有译文、sheet 类型受支持、缩写有中文名，以及告警只出现在 `test/coverage/warnings.allowlist.json`。
 
 快速注入的假 GM 走页面 `fetch`，真实 garland 没有 ACAO。capture 用 `page.route` 代发并补 CORS，模拟真 Tampermonkey 的 GM 行为；因此语料里的兜底结果与真实用户看到的一致。
 

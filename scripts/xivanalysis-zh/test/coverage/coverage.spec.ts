@@ -77,10 +77,11 @@ let sheets: CorpusSheetRow[];
 let classJobs: Record<string, string>;
 let abbreviations: string[];
 let garland: CorpusGarland[];
-let garlandByEn: Map<string, CorpusGarland>;
+let garlandByKey: Map<string, CorpusGarland>;
 let warnings: string[];
 let resolve: XivSearch;
 let identity: Set<string>;
+let overrideNames: Set<string>;
 const misses: string[] = [];
 
 beforeAll(async () => {
@@ -99,19 +100,20 @@ beforeAll(async () => {
 
   const overrides = await overrideProvider();
   identity = new Set(overrides.filter((entry) => entry.zh === entry.en).map((entry) => entry.en.trim().toLowerCase()));
+  overrideNames = new Set(overrides.map((entry) => entry.en.trim().toLowerCase()));
 
   for (const row of sheets) {
     addEntry({ kind: sheetKind(row.sheet), id: row.id, en: row.en, zh: row.zh, iconId: row.iconId });
   }
 
-  garlandByEn = new Map(garland.map((entry) => [entry.en.toLowerCase(), entry]));
+  garlandByKey = new Map(garland.map((entry) => [`${entry.en.toLowerCase()}|${entry.iconId ?? ''}`, entry]));
   const jobEntries: XivEntry[] = Object.entries(classJobs).map(([en, zh]) => ({ kind: 'unknown', id: -1, en, zh }));
   const jobProvider: XivEntryProvider = async () => jobEntries;
   // 语料里的兜底条目替身。真实 adapter 由 garland.spec.ts 与 garland-wiring.spec.ts 单独覆盖，
-  // 这里验证解析链确实会走到兜底源。
+  // 这里验证解析链确实会走到兜底源，并按 en+iconId 取对应变体。
   const garlandStub: XivSearch = async (query) => {
     if (!query.en) return [];
-    const entry = garlandByEn.get(query.en.toLowerCase());
+    const entry = garlandByKey.get(`${query.en.toLowerCase()}|${query.iconId ?? ''}`);
     return entry ? [{ kind: 'unknown', id: -1, en: entry.en, zh: entry.zh, iconId: entry.iconId }] : [];
   };
   const warn: XivSearch = (query) => {
@@ -169,12 +171,13 @@ describe('权威语料', () => {
       expect(abbr, abbr).toBeTruthy();
       expect(zh, abbr).toBeTruthy();
     }
-    const garlandKeys = garland.map((entry) => entry.en.toLowerCase());
+    const garlandKeys = garland.map((entry) => `${entry.en.toLowerCase()}|${entry.iconId ?? ''}`);
     expect(new Set(garlandKeys).size).toBe(garlandKeys.length);
     for (const entry of garland) {
       expect(entry.en.trim(), entry.en).toBeTruthy();
       expect(entry.zh, entry.en).toBeTruthy();
       expect(entry.zh, entry.en).not.toBe(entry.en);
+      expect(HAN.test(entry.zh), `${entry.en} 兜底译文不是中文 ${entry.zh}`).toBe(true);
     }
     for (const warning of warnings) {
       expect(warningText(warning), warning).toBeTruthy();
@@ -213,9 +216,10 @@ describe('权威语料', () => {
     for (const label of labels) {
       if (!looksEnglish(label.en)) continue;
       if (identity.has(label.en.toLowerCase())) continue;
+      if (overrideNames.has(label.en.toLowerCase())) continue;
       if (warningAllowlist[label.en as keyof typeof warningAllowlist]) continue;
       if (sheetNames.has(label.en.toLowerCase())) continue;
-      const fallback = garlandByEn.get(label.en.toLowerCase());
+      const fallback = garlandByKey.get(`${label.en.toLowerCase()}|${label.iconId ?? ''}`);
       expect(fallback, `${label.kind}: ${label.en} 既无 sheet 行也无 garland 条目`).toBeTruthy();
       expect(fallback?.zh, `${label.kind}: ${label.en}`).toBe(label.zh);
     }

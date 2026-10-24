@@ -53,12 +53,37 @@ window.GM = {
 };
 `;
 
-/** 只接管夹具页本身；安装组不需要 sheet / garland 路由。 */
-export const routeFixture = async (page: Page): Promise<void> => {
+/** 只接管夹具页与启动时的 ClassJob；其它请求一律中止并记录，保证离线组不出网。 */
+export interface FixtureRoutes {
+  /** 非夹具、非 ClassJob 的外部请求；正常应为空。 */
+  external: string[];
+}
+
+export const routeFixture = async (page: Page): Promise<FixtureRoutes> => {
+  const external: string[] = [];
+  const classJob = { rows: [{ fields: { Name: '占星术士', Abbreviation: 'AST' } }] };
+
   await page.route(
-    (url) => url.hostname === 'xivanalysis.com',
-    (route) => route.fulfill({ status: 200, contentType: 'text/html', body: fixturePage() }),
+    () => true,
+    (route) => {
+      const url = new URL(route.request().url());
+      if (url.hostname === 'xivanalysis.com') {
+        return route.fulfill({ status: 200, contentType: 'text/html', body: fixturePage() });
+      }
+      if (url.hostname === 'xivapi-v2.xivcdn.com') {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          headers: { 'access-control-allow-origin': '*' },
+          body: JSON.stringify(classJob),
+        });
+      }
+      external.push(url.href);
+      return route.abort();
+    },
   );
+
+  return { external };
 };
 
 /** 起一个只服务产物的本地 HTTP 服务，供真 Tampermonkey 组用 `.user.js` 的地址安装脚本。 */

@@ -256,7 +256,7 @@ test('捕获 33 条战报的权威语料', async ({ page }) => {
       }
 
       if (!matched) {
-        if (label.zh) garland.set(label.en.toLowerCase(), { en: label.en, zh: label.zh, iconId: label.iconId });
+        if (label.zh) garland.set(`${label.en.toLowerCase()}|${label.iconId ?? ''}`, { en: label.en, zh: label.zh, iconId: label.iconId });
         continue;
       }
 

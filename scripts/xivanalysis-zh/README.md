@@ -40,4 +40,4 @@ rushx bake:statuses:check-upstream  # 只比较 meta 里的上游 commit
 
 ## build
 
-`pnpm run build`
+`rushx build`

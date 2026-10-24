@@ -27,6 +27,8 @@
     "bake:statuses:verify": "node scripts/bake-statuses.mjs --verify",
     "test": "vitest run --passWithNoTests",
     "test:unit": "vitest run --passWithNoTests",
+    "test:e2e:fast": "vite build && playwright test --project=offline-injected",
+    "test:e2e:full": "vite build && playwright test --project=offline-tampermonkey",
     "test:offline": "vite build && playwright test --project=offline-injected --project=offline-tampermonkey",
     "test:live:smoke": "vite build && playwright test --config=playwright.live.config.ts --project=live-injected --grep @smoke",
     "test:live:all": "vite build && playwright test --config=playwright.live.config.ts --project=live-injected",

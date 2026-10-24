@@ -28,7 +28,7 @@ export default defineConfig({
     headless: true,
   },
   projects: [
-    { name: 'offline-injected', testMatch: /injected\.spec\.ts$/ },
-    { name: 'offline-tampermonkey', testMatch: /tampermonkey\.spec\.ts$/ },
+    { name: 'offline-injected', testMatch: /install-fast\.spec\.ts$/ },
+    { name: 'offline-tampermonkey', testMatch: /install-tampermonkey\.spec\.ts$/ },
   ],
 });

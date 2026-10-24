@@ -1,6 +1,6 @@
 # tampermonkey-scripts
 
-JavaScript monorepo for ffxiv and userscripts.
+TypeScript monorepo for ffxiv and userscripts.
 
 **Userscripts**
 
@@ -10,6 +10,8 @@ JavaScript monorepo for ffxiv and userscripts.
 - **[xivanalysis-zh](scripts/xivanalysis-zh/README.md)**: Display actions and status of xivanalysis report in Chinese
 - **[feishu-download](scripts/feishu-download/README.md)**: Download audio and image resources from Feishu pages
 - **[get-usage-data](scripts/get-usage-data/README.md)**: Save usage data from LLM platform pages as JSON files
+
+They run in the browser with the [Tampermonkey](https://www.tampermonkey.net/) extension installed.
 
 **Libraries**
 
@@ -25,6 +27,8 @@ JavaScript monorepo for ffxiv and userscripts.
 **Services**
 
 - **[occult-pot-server](packages/occult-pot-server/README.md)**: Express Server proxying the Tencent Docs smartsheet of occult pot refresh times
+
+`occult-pot-server` runs in a Docker Compose container on Linux.
 
 **Test**
 
@@ -46,3 +50,5 @@ rush build
 ```
 
 For more information, see the documentation at: https://rushjs.io/
+
+Code is formatted with `oxfmt`, linted with `oxlint`, and type-checked with `tsc`.

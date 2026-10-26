@@ -63,4 +63,48 @@ describe('烘焙状态表', () => {
     expect(hits.length).toBeGreaterThan(1);
     expect(hits).toEqual(bakedStatuses.filter((entry) => entry.en.toLowerCase() === name.toLowerCase()));
   });
+
+  it('icon 漂移诊断与计数一致', () => {
+    const typed = meta as unknown as {
+      counts: { iconMismatch: number };
+      diagnostics?: {
+        checkedAt?: string;
+        iconDrift?: {
+          id: number;
+          en: string;
+          zh: string;
+          upstreamIconId: number;
+          cnIconId: number;
+          enIconId?: number;
+          iconOwners?: unknown[];
+          nameRows?: unknown[];
+          verdict?: string;
+          error?: string;
+        }[];
+      };
+    };
+    const drift = typed.diagnostics?.iconDrift;
+    expect(drift).toBeInstanceOf(Array);
+    expect(drift).toHaveLength(typed.counts.iconMismatch);
+    const checked = typeof typed.diagnostics?.checkedAt === 'string';
+    for (const item of drift ?? []) {
+      expect(item.id).toBeGreaterThan(0);
+      expect(item.en).toBeTruthy();
+      expect(item.zh).toBeTruthy();
+      expect(item.upstreamIconId).toBeGreaterThan(0);
+      expect(item.cnIconId).toBeGreaterThan(0);
+      if (item.verdict !== undefined) {
+        expect(['same-name-sibling', 'icon-not-in-current-sheet', 'icon-belongs-to-other-name', 'same-name-different-translation', 'unchecked']).toContain(
+          item.verdict,
+        );
+      }
+      if (checked && item.verdict !== 'unchecked') {
+        expect(item.enIconId).toBeGreaterThan(0);
+        expect(item.iconOwners).toBeInstanceOf(Array);
+        expect(item.nameRows).toBeInstanceOf(Array);
+        expect(item.verdict).toBeTruthy();
+      }
+      if (item.verdict === 'unchecked') expect(item.error).toBeTruthy();
+    }
+  });
 });

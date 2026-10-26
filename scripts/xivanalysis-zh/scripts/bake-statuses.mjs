@@ -10,6 +10,7 @@
  *   node scripts/bake-statuses.mjs --sha <sha>         # 固定上游 commit
  *   node scripts/bake-statuses.mjs --check-upstream    # 只比 meta 里的 commit 与上游分支
  *   node scripts/bake-statuses.mjs --verify            # 离线校验 data 与 meta 是否一致
+ *   node scripts/bake-statuses.mjs --check-icons       # 另查 xivapi，补全 icon 漂移诊断
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -29,9 +30,11 @@ const STATUS_DIR = 'src/data/STATUSES';
 const ICON_FILE = 'src/data/icon.ts';
 const STATUS_INDEX = `${STATUS_DIR}/index.ts`;
 const LAYERS_INDEX = `${STATUS_DIR}/layers/index.ts`;
+const EN_HOST = 'https://v2.xivapi.com/api';
 const CN_HOST = 'https://xivapi-v2.xivcdn.com/api';
 const CN_CHUNK = 100;
 const MIN_ENTRIES = 300;
+const ICON_VERDICTS = new Set(['same-name-sibling', 'icon-not-in-current-sheet', 'icon-belongs-to-other-name', 'same-name-different-translation', 'unchecked']);
 
 const args = parseArgs(process.argv.slice(2));
 const log = (message) => console.log(`[bake-statuses] ${message}`);
@@ -75,12 +78,22 @@ async function main() {
   log(`国服返回 ${cn.byId.size}/${ids.length} 行${cn.version ? `（${cn.version}）` : ''}`);
 
   const result = buildResult({ repo: args.repo, ref: args.ref, commit, sources, parsed, cn, allowMissing: args.allowMissing });
-  await writeOutputs(result.dataText, result.metaText);
+  if (args.checkIcons) {
+    log(`核对 ${result.meta.diagnostics.iconDrift.length} 条 icon 漂移的归属行（xivapi Icon= 检索）`);
+    result.meta.diagnostics = await enrichIconDiagnostics(result.meta.diagnostics);
+    log(`icon 诊断: ${formatVerdictCounts(result.meta.diagnostics.iconDrift)}`);
+  } else {
+    result.meta.diagnostics = await preserveIconDiagnostics(result.meta.diagnostics, { commit, cnVersion: cn.version });
+  }
+  const metaText = `${JSON.stringify(result.meta, null, 2)}\n`;
+  await writeOutputs(result.dataText, metaText);
   log(`写入 ${entriesSummary(result.meta)}`);
-  if (result.meta.warnings.missingZh.length) warn(`缺中文（前 ${result.meta.warnings.missingZh.length} 条）: ${result.meta.warnings.missingZh.join(', ')}`);
-  if (result.meta.warnings.ambiguousNames.length)
-    warn(`同名多义（前 ${result.meta.warnings.ambiguousNames.length} 条）: ${result.meta.warnings.ambiguousNames.join(', ')}`);
-  if (result.meta.counts.iconMismatch) warn(`上游 icon 号与国服不一致 ${result.meta.counts.iconMismatch} 条（匹配仍用上游 icon；名称优先）`);
+  if (result.meta.warnings.missingZh.length) warn(`缺中文 ${result.meta.warnings.missingZh.length} 条: ${result.meta.warnings.missingZh.join(', ')}`);
+  if (result.meta.warnings.sameNameDifferentZh.length)
+    warn(`同名异译 ${result.meta.warnings.sameNameDifferentZh.length} 组: ${result.meta.warnings.sameNameDifferentZh.join(', ')}`);
+  if (result.meta.warnings.sameNameSameZh.length)
+    log(`同名同译 ${result.meta.warnings.sameNameSameZh.length} 组（仅 id/icon 变体）: ${result.meta.warnings.sameNameSameZh.join(', ')}`);
+  if (result.meta.counts.iconMismatch) warn(`上游 icon 与国服不一致 ${result.meta.counts.iconMismatch} 条（匹配仍用上游 icon；名称优先）`);
 }
 
 function parseArgs(argv) {
@@ -90,6 +103,7 @@ function parseArgs(argv) {
     sha: '',
     baseUrl: '',
     checkUpstream: false,
+    checkIcons: false,
     verify: false,
     allowMissing: false,
     help: false,
@@ -116,6 +130,9 @@ function parseArgs(argv) {
       case '--check-upstream':
         out.checkUpstream = true;
         break;
+      case '--check-icons':
+        out.checkIcons = true;
+        break;
       case '--verify':
         out.verify = true;
         break;
@@ -141,6 +158,7 @@ function printHelp() {
   --sha <sha>          直接指定 commit，跳过解析分支
   --base-url <url>     源文件 URL 前缀（默认先 raw.githubusercontent.com，再 jsDelivr）
   --check-upstream     只比较 meta 里的 commit 与上游分支，不写文件
+  --check-icons        另查 xivapi 的 Icon= 检索，补全 icon 漂移的归属行与判定
   --verify             离线校验 statuses.json 与 meta 的 hash、条目数、字段
   --allow-missing      国服缺中文时不失败（默认失败，避免提交不完整数据）
 `);
@@ -173,6 +191,69 @@ async function verify() {
       if (typeof entry.en !== 'string' || !entry.en) problems.push(`entries[${index}].en 为空`);
       if (typeof entry.zh !== 'string' || !entry.zh) problems.push(`entries[${index}].zh 为空`);
       if (entry.iconId != null && (!Number.isInteger(entry.iconId) || entry.iconId <= 0)) problems.push(`entries[${index}].iconId 非法`);
+    }
+  }
+
+  for (const key of ['missingZh', 'sameText', 'sameNameDifferentZh', 'sameNameSameZh']) {
+    const count = meta?.counts?.[key];
+    const list = meta?.warnings?.[key];
+    if (!Number.isInteger(count)) problems.push(`counts.${key} 缺失或不是整数`);
+    if (!Array.isArray(list)) problems.push(`warnings.${key} 缺失或不是数组`);
+    if (Number.isInteger(count) && Array.isArray(list) && count !== list.length) {
+      problems.push(`counts.${key} 与 warnings.${key} 长度不一致: count=${count} warnings=${list.length}`);
+    }
+  }
+
+  const diagnostics = meta?.diagnostics;
+  if (meta?.schemaVersion >= 2 && !Number.isInteger(meta?.counts?.iconMismatch)) {
+    problems.push('counts.iconMismatch 缺失或不是整数');
+  }
+  if (meta?.schemaVersion >= 2 && diagnostics === undefined) {
+    problems.push('schemaVersion 2 缺少 diagnostics');
+  }
+  if (diagnostics !== undefined) {
+    if (!diagnostics || typeof diagnostics !== 'object') {
+      problems.push('meta.diagnostics 不是对象');
+    } else if (!Array.isArray(diagnostics.iconDrift)) {
+      problems.push('meta.diagnostics.iconDrift 不是数组');
+    } else {
+      if (Number.isInteger(meta?.counts?.iconMismatch) && meta.counts.iconMismatch !== diagnostics.iconDrift.length) {
+        problems.push(`counts.iconMismatch 与 diagnostics.iconDrift 长度不一致: count=${meta.counts.iconMismatch} drift=${diagnostics.iconDrift.length}`);
+      }
+      const checked = typeof diagnostics.checkedAt === 'string';
+      for (const [index, item] of diagnostics.iconDrift.entries()) {
+        if (!item || typeof item !== 'object') {
+          problems.push(`diagnostics.iconDrift[${index}] 不是对象`);
+          continue;
+        }
+        if (!Number.isInteger(item.id) || item.id <= 0) problems.push(`diagnostics.iconDrift[${index}].id 非法`);
+        if (typeof item.en !== 'string' || !item.en) problems.push(`diagnostics.iconDrift[${index}].en 为空`);
+        if (typeof item.zh !== 'string' || !item.zh) problems.push(`diagnostics.iconDrift[${index}].zh 为空`);
+        if (!Number.isInteger(item.upstreamIconId) || item.upstreamIconId <= 0) problems.push(`diagnostics.iconDrift[${index}].upstreamIconId 非法`);
+        if (!Number.isInteger(item.cnIconId) || item.cnIconId <= 0) problems.push(`diagnostics.iconDrift[${index}].cnIconId 非法`);
+        if (item.enIconId != null && (!Number.isInteger(item.enIconId) || item.enIconId <= 0)) problems.push(`diagnostics.iconDrift[${index}].enIconId 非法`);
+        if (item.verdict !== undefined && !ICON_VERDICTS.has(item.verdict)) problems.push(`diagnostics.iconDrift[${index}].verdict 非法: ${item.verdict}`);
+        if (checked && item.verdict !== 'unchecked') {
+          if (!Number.isInteger(item.enIconId) || item.enIconId <= 0) problems.push(`diagnostics.iconDrift[${index}].enIconId 缺失或非法`);
+          if (!Array.isArray(item.iconOwners)) problems.push(`diagnostics.iconDrift[${index}].iconOwners 缺失或不是数组`);
+          if (!Array.isArray(item.nameRows)) problems.push(`diagnostics.iconDrift[${index}].nameRows 缺失或不是数组`);
+          if (typeof item.verdict !== 'string' || !item.verdict) problems.push(`diagnostics.iconDrift[${index}].verdict 缺失`);
+        }
+        if (item.verdict === 'unchecked' && (typeof item.error !== 'string' || !item.error.trim())) {
+          problems.push(`diagnostics.iconDrift[${index}] 标记 unchecked 但缺少 error`);
+        }
+        if (item.nameRows !== undefined && !Array.isArray(item.nameRows)) problems.push(`diagnostics.iconDrift[${index}].nameRows 不是数组`);
+        if (item.iconOwners !== undefined) {
+          if (!Array.isArray(item.iconOwners)) {
+            problems.push(`diagnostics.iconDrift[${index}].iconOwners 不是数组`);
+          } else {
+            for (const [ownerIndex, owner] of item.iconOwners.entries()) {
+              if (!owner || typeof owner !== 'object') problems.push(`diagnostics.iconDrift[${index}].iconOwners[${ownerIndex}] 不是对象`);
+              else if (!Number.isInteger(owner.id) || owner.id <= 0) problems.push(`diagnostics.iconDrift[${index}].iconOwners[${ownerIndex}].id 非法`);
+            }
+          }
+        }
+      }
     }
   }
 
@@ -286,12 +367,12 @@ async function fetchSourceFile(repo, commit, path) {
   throw lastError ?? new Error(`抓取失败: ${path}`);
 }
 
-async function fetchWithRetry(url, { headers = {}, tries = 4 } = {}) {
+async function fetchWithRetry(url, { headers = {}, tries = 4, timeoutMs = 30_000 } = {}) {
   let delay = 500;
   let lastError;
   for (let attempt = 0; attempt < tries; attempt++) {
     try {
-      const response = await fetch(url, { headers });
+      const response = await fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
       if (response.ok) return response;
       const error = new HttpError(response.status, url);
       if (response.status !== 429 && response.status < 500) throw error;
@@ -652,8 +733,7 @@ function buildResult({ repo, ref, commit, sources, parsed, cn, allowMissing }) {
   const unique = new Map();
   const missing = [];
   const sameText = [];
-  let iconMismatch = 0;
-  const iconMismatchSamples = [];
+  const iconDrift = new Map();
 
   for (const variant of parsed.variants) {
     if (!variant.id || variant.id <= 0) continue;
@@ -667,8 +747,16 @@ function buildResult({ repo, ref, commit, sources, parsed, cn, allowMissing }) {
       continue;
     }
     if (variant.iconId != null && cnRow.iconId != null && variant.iconId !== cnRow.iconId) {
-      iconMismatch += 1;
-      if (iconMismatchSamples.length < 20) iconMismatchSamples.push(`${variant.name}(${variant.id}) upstream=${variant.iconId} cn=${cnRow.iconId}`);
+      const key = `${variant.id}\u0000${variant.name}\u0000${cnRow.zh}\u0000${variant.iconId}\u0000${cnRow.iconId}`;
+      if (!iconDrift.has(key)) {
+        iconDrift.set(key, {
+          id: variant.id,
+          en: variant.name,
+          zh: cnRow.zh,
+          upstreamIconId: variant.iconId,
+          cnIconId: cnRow.iconId,
+        });
+      }
     }
     const entry = { id: variant.id, en: variant.name, zh: cnRow.zh };
     if (variant.iconId != null) entry.iconId = variant.iconId;
@@ -691,16 +779,26 @@ function buildResult({ repo, ref, commit, sources, parsed, cn, allowMissing }) {
     list.push(entry);
     grouped.set(entry.en, list);
   }
-  const ambiguous = [];
+  const sameNameDifferentZh = [];
+  const sameNameSameZh = [];
   for (const [name, list] of grouped) {
-    const variants = new Set(list.map((entry) => `${entry.zh}\u0000${entry.iconId ?? ''}\u0000${entry.id}`));
-    if (variants.size > 1) ambiguous.push(`${name}(${list.map((entry) => `${entry.zh}:${entry.id}`).join(' / ')})`);
+    if (list.length < 2) continue;
+    if (new Set(list.map((entry) => entry.zh)).size > 1) {
+      sameNameDifferentZh.push(`${name}(${list.map((entry) => `${entry.zh}:${entry.id}`).join(' / ')})`);
+      continue;
+    }
+    const iconVariants = new Set(list.map((entry) => entry.iconId ?? '')).size > 1;
+    sameNameSameZh.push(
+      `${name}(${list.map((entry) => `${entry.zh}:${entry.id}:${entry.iconId ?? '-'}`).join(' / ')}) [${iconVariants ? 'icon variants' : 'id variants'}]`,
+    );
   }
+
+  const iconDriftList = [...iconDrift.values()].sort((a, b) => a.en.localeCompare(b.en) || a.id - b.id || (a.upstreamIconId ?? 0) - (b.upstreamIconId ?? 0));
 
   const dataText = `[\n${entries.map((entry) => `  ${JSON.stringify(entry)}`).join(',\n')}\n]\n`;
   const dataSha256 = sha256(dataText);
   const meta = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     upstream: { repo, ref, commit },
     bakedAt: new Date().toISOString(),
     cnVersion: cn.version,
@@ -713,19 +811,140 @@ function buildResult({ repo, ref, commit, sources, parsed, cn, allowMissing }) {
       emitted: entries.length,
       missingZh: missing.length,
       sameText: sameText.length,
-      ambiguousNames: ambiguous.length,
-      iconMismatch,
+      sameNameDifferentZh: sameNameDifferentZh.length,
+      sameNameSameZh: sameNameSameZh.length,
+      iconMismatch: iconDriftList.length,
     },
     warnings: {
-      missingZh: missing.slice(0, 20),
-      sameText: sameText.slice(0, 20),
-      ambiguousNames: ambiguous.slice(0, 20),
-      iconMismatch: iconMismatchSamples,
+      missingZh: missing,
+      sameText,
+      sameNameDifferentZh,
+      sameNameSameZh,
+    },
+    diagnostics: {
+      iconDrift: iconDriftList,
     },
   };
-  if (parsed.warnings.length) meta.warnings.parse = parsed.warnings.slice(0, 20);
+  if (parsed.warnings.length) meta.warnings.parse = parsed.warnings;
 
-  return { dataText, metaText: `${JSON.stringify(meta, null, 2)}\n`, meta };
+  return { dataText, meta };
+}
+
+async function preserveIconDiagnostics(current, { commit, cnVersion }) {
+  let previous;
+  try {
+    previous = JSON.parse(await readFile(META_FILE, 'utf8'));
+  } catch {
+    return current;
+  }
+  if (previous?.upstream?.commit !== commit || previous?.cnVersion !== cnVersion) return current;
+  if (typeof previous?.diagnostics?.checkedAt !== 'string') return current;
+  const previousDrift = previous?.diagnostics?.iconDrift;
+  if (!Array.isArray(previousDrift)) return current;
+  const byKey = new Map(previousDrift.map((item) => [`${item.id}\u0000${item.en}\u0000${item.upstreamIconId}`, item]));
+  let complete = true;
+  const iconDrift = current.iconDrift.map((item) => {
+    const old = byKey.get(`${item.id}\u0000${item.en}\u0000${item.upstreamIconId}`);
+    if (!old || old.cnIconId !== item.cnIconId || old.zh !== item.zh) {
+      complete = false;
+      return item;
+    }
+    return {
+      ...item,
+      enIconId: old.enIconId,
+      iconOwners: old.iconOwners,
+      nameRows: old.nameRows,
+      verdict: old.verdict,
+      ...(old.error === undefined ? {} : { error: old.error }),
+    };
+  });
+  return complete ? { checkedAt: previous.diagnostics.checkedAt, iconDrift } : current;
+}
+
+async function enrichIconDiagnostics(diagnostics) {
+  const drift = diagnostics?.iconDrift ?? [];
+  const enriched = [];
+  for (const [index, item] of drift.entries()) {
+    try {
+      const enRow = await fetchStatusRow(EN_HOST, item.id, 'en');
+      const [enOwners, cnOwners, enNames, cnNames] = await Promise.all([
+        searchStatus(EN_HOST, `Icon=${item.upstreamIconId}`, 'en'),
+        searchStatus(CN_HOST, `Icon=${item.upstreamIconId}`, 'chs'),
+        searchStatus(EN_HOST, `Name~${quoteQuery(item.en)}`, 'en'),
+        searchStatus(CN_HOST, `Name~${quoteQuery(item.zh)}`, 'chs'),
+      ]);
+      const iconOwners = mergeStatusRows(enOwners, cnOwners);
+      const nameRows = mergeStatusRows(enNames, cnNames).filter((row) => row.en?.toLowerCase() === item.en.toLowerCase() || row.zh === item.zh);
+      enriched.push({
+        ...item,
+        enIconId: enRow?.iconId,
+        iconOwners,
+        nameRows,
+        verdict: verdictOf(item, iconOwners),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      warn(`icon 诊断失败 ${item.en}(${item.id}): ${message}`);
+      enriched.push({ ...item, verdict: 'unchecked', error: message });
+    }
+    if (index < drift.length - 1) await sleep(150);
+  }
+  return { ...diagnostics, checkedAt: new Date().toISOString(), iconDrift: enriched };
+}
+
+async function fetchStatusRow(host, id, language) {
+  const url = `${host}/sheet/Status/${id}?fields=Name,Icon&language=${language}`;
+  const response = await fetchWithRetry(url, { headers: { accept: 'application/json' }, tries: 4 });
+  const body = await response.json();
+  return { id: body?.row_id ?? id, name: body?.fields?.Name, iconId: body?.fields?.Icon?.id };
+}
+
+async function searchStatus(host, query, language) {
+  const params = new URLSearchParams({ query, sheets: 'Status', fields: 'Name,Icon', language, limit: '100' });
+  const response = await fetchWithRetry(`${host}/search?${params.toString()}`, {
+    headers: { accept: 'application/json' },
+    tries: 4,
+  });
+  const body = await response.json();
+  const rows = (body?.results ?? [])
+    .map((row) => ({ id: row?.row_id, name: row?.fields?.Name, iconId: row?.fields?.Icon?.id }))
+    .filter((row) => Number.isInteger(row.id) && typeof row.name === 'string' && row.name);
+  if (rows.length >= 100) warn(`searchStatus 结果达到 100 条上限，可能被截断: ${query}`);
+  return rows;
+}
+
+function mergeStatusRows(enRows, cnRows) {
+  const byId = new Map();
+  for (const row of enRows) byId.set(row.id, { id: row.id, en: row.name, iconId: row.iconId });
+  for (const row of cnRows) {
+    const existing = byId.get(row.id) ?? { id: row.id };
+    existing.zh = row.name;
+    existing.cnIconId = row.iconId;
+    byId.set(row.id, existing);
+  }
+  return [...byId.values()].sort((a, b) => a.id - b.id);
+}
+
+function quoteQuery(text) {
+  return `"${String(text).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+}
+
+function verdictOf(item, iconOwners) {
+  if (!iconOwners.length) return 'icon-not-in-current-sheet';
+  const sameName = iconOwners.filter((owner) => typeof owner.en === 'string' && owner.en.toLowerCase() === item.en.toLowerCase());
+  if (!sameName.length) return 'icon-belongs-to-other-name';
+  const translated = sameName.filter((owner) => typeof owner.zh === 'string' && owner.zh);
+  if (!translated.length) return 'same-name-sibling';
+  return translated.some((owner) => owner.zh === item.zh) ? 'same-name-sibling' : 'same-name-different-translation';
+}
+
+function formatVerdictCounts(iconDrift) {
+  const counts = new Map();
+  for (const item of iconDrift) {
+    const verdict = item.verdict ?? 'unchecked';
+    counts.set(verdict, (counts.get(verdict) ?? 0) + 1);
+  }
+  return [...counts.entries()].map(([verdict, count]) => `${verdict}=${count}`).join(', ') || '0';
 }
 
 function sourceDigest(sources) {
@@ -738,7 +957,7 @@ function sha256(value) {
 }
 
 function entriesSummary(meta) {
-  return `${meta.entriesCount} 条（root ${meta.counts.root}，变体 ${meta.counts.variants}，缺中文 ${meta.counts.missingZh}，同名多义 ${meta.counts.ambiguousNames}）`;
+  return `${meta.entriesCount} 条（root ${meta.counts.root}，变体 ${meta.counts.variants}，缺中文 ${meta.counts.missingZh}，同名异译 ${meta.counts.sameNameDifferentZh}，同名同译 ${meta.counts.sameNameSameZh}）`;
 }
 
 async function writeOutputs(dataText, metaText) {

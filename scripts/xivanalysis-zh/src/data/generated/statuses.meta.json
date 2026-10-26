@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "upstream": {
     "repo": "xivanalysis/xivanalysis",
     "ref": "dawntrail",
     "commit": "f532855e635bdfb4211cec8128d582dadfdc6a75"
   },
-  "bakedAt": "2026-10-21T15:34:12.112Z",
+  "bakedAt": "2026-10-26T18:19:56.504Z",
   "cnVersion": "20261013-1e14140",
   "dataSha256": "1ed524840501ba0938644dda42b0251fb3113582ae073ad68d0a2447ab9ed3fa",
   "entriesCount": 470,
@@ -16,43 +16,641 @@
     "emitted": 470,
     "missingZh": 0,
     "sameText": 0,
-    "ambiguousNames": 8,
+    "sameNameDifferentZh": 2,
+    "sameNameSameZh": 6,
     "iconMismatch": 22
   },
   "warnings": {
     "missingZh": [],
     "sameText": [],
-    "ambiguousNames": [
-      "Embolden(鼓励:1239 / 鼓励:1297)",
-      "Esprit(伶俐:1847 / 伶俐:1848)",
+    "sameNameDifferentZh": [
       "Improvisation(即兴表演:1827 / 享受即兴表演:2695)",
-      "Seraphism(炽天附体:3884 / 炽天之光:3885)",
-      "Standard Finish(标准舞步结束:1821 / 标准舞步结束:2105)",
-      "Temporal Displacement(时间停止:1119 / 时间停止:2165)",
-      "Tsubame-Gaeshi(燕回返预备:4216 / 燕回返预备:4217 / 燕回返预备:4218)",
-      "Wildfire(野火:861 / 野火:1946)"
+      "Seraphism(炽天附体:3884 / 炽天之光:3885)"
     ],
-    "iconMismatch": [
-      "Rampart(1191) upstream=210152 cn=213911",
-      "Requiescat(1368) upstream=212514 cn=218345",
-      "Divine Might(2673) upstream=12521 cn=212521",
-      "Bulwark(77) upstream=10156 cn=210156",
-      "Atonement Ready(1902) upstream=210207 cn=212522",
-      "Blood Weapon(742) upstream=213109 cn=217926",
-      "Undead Rebirth(3255) upstream=13124 cn=213124",
-      "Confession(1219) upstream=218901 cn=212637",
-      "Soteria(2610) upstream=212956 cn=219756",
-      "Perfect Balance(110) upstream=210217 cn=217564",
-      "Nastrond Ready(3844) upstream=218151 cn=212589",
-      "Bunshin(1954) upstream=212912 cn=219681",
-      "Meikyo Shisui(1233) upstream=213309 cn=219641",
-      "Radiant Finale(2964) upstream=212622 cn=212624",
-      "Overheated(2688) upstream=18385 cn=218385",
-      "Finishing Move Ready(3868) upstream=213727 cn=213728",
-      "Last Dance Ready(3867) upstream=213728 cn=213727",
-      "Further Ruin(1212) upstream=212685 cn=219481",
-      "Triplecast(1211) upstream=212658 cn=219621",
-      "Embolden(1297) upstream=218941 cn=213410"
+    "sameNameSameZh": [
+      "Embolden(鼓励:1239:218921 / 鼓励:1297:218941) [icon variants]",
+      "Esprit(伶俐:1847:213710 / 伶俐:1848:213711) [icon variants]",
+      "Standard Finish(标准舞步结束:1821:213708 / 标准舞步结束:2105:213708) [id variants]",
+      "Temporal Displacement(时间停止:1119:215579 / 时间停止:2165:215579) [id variants]",
+      "Tsubame-Gaeshi(燕回返预备:4216:213315 / 燕回返预备:4217:213315 / 燕回返预备:4218:213315) [id variants]",
+      "Wildfire(野火:861:213011 / 野火:1946:213019) [icon variants]"
+    ]
+  },
+  "diagnostics": {
+    "checkedAt": "2026-10-26T18:19:22.009Z",
+    "iconDrift": [
+      {
+        "id": 1902,
+        "en": "Atonement Ready",
+        "zh": "赎罪剑预备",
+        "upstreamIconId": 210207,
+        "cnIconId": 212522,
+        "enIconId": 212522,
+        "iconOwners": [
+          {
+            "id": 111,
+            "en": "Greased Lightning",
+            "iconId": 210207,
+            "zh": "疾风迅雷",
+            "cnIconId": 210207
+          }
+        ],
+        "nameRows": [
+          {
+            "id": 1902,
+            "en": "Atonement Ready",
+            "iconId": 212522,
+            "zh": "赎罪剑预备",
+            "cnIconId": 212522
+          },
+          {
+            "id": 2015,
+            "en": "Atonement Ready",
+            "iconId": 212522,
+            "zh": "赎罪剑预备",
+            "cnIconId": 212522
+          }
+        ],
+        "verdict": "icon-belongs-to-other-name"
+      },
+      {
+        "id": 742,
+        "en": "Blood Weapon",
+        "zh": "嗜血",
+        "upstreamIconId": 213109,
+        "cnIconId": 217926,
+        "enIconId": 217926,
+        "iconOwners": [
+          {
+            "id": 3040,
+            "en": "●ブラッドウェポン",
+            "iconId": 213109,
+            "zh": "●ブラッドウェポン",
+            "cnIconId": 213109
+          }
+        ],
+        "nameRows": [
+          {
+            "id": 742,
+            "en": "Blood Weapon",
+            "iconId": 217926,
+            "zh": "嗜血",
+            "cnIconId": 217926
+          }
+        ],
+        "verdict": "icon-belongs-to-other-name"
+      },
+      {
+        "id": 77,
+        "en": "Bulwark",
+        "zh": "壁垒",
+        "upstreamIconId": 10156,
+        "cnIconId": 210156,
+        "enIconId": 210156,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 77,
+            "en": "Bulwark",
+            "iconId": 210156,
+            "zh": "壁垒",
+            "cnIconId": 210156
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      },
+      {
+        "id": 1954,
+        "en": "Bunshin",
+        "zh": "分身之术",
+        "upstreamIconId": 212912,
+        "cnIconId": 219681,
+        "enIconId": 219681,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 1954,
+            "en": "Bunshin",
+            "iconId": 219681,
+            "zh": "分身之术",
+            "cnIconId": 219681
+          },
+          {
+            "id": 2010,
+            "en": "Bunshin",
+            "iconId": 219681,
+            "zh": "分身之术",
+            "cnIconId": 219681
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      },
+      {
+        "id": 1219,
+        "en": "Confession",
+        "zh": "告解",
+        "upstreamIconId": 218901,
+        "cnIconId": 212637,
+        "enIconId": 212637,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 1219,
+            "en": "Confession",
+            "iconId": 212637,
+            "zh": "告解",
+            "cnIconId": 212637
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      },
+      {
+        "id": 2673,
+        "en": "Divine Might",
+        "zh": "神圣魔法效果提高",
+        "upstreamIconId": 12521,
+        "cnIconId": 212521,
+        "enIconId": 212521,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 2673,
+            "en": "Divine Might",
+            "iconId": 212521,
+            "zh": "神圣魔法效果提高",
+            "cnIconId": 212521
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      },
+      {
+        "id": 1239,
+        "en": "Embolden",
+        "zh": "鼓励",
+        "upstreamIconId": 218921,
+        "cnIconId": 213409,
+        "enIconId": 213409,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 1239,
+            "en": "Embolden",
+            "iconId": 213409,
+            "zh": "鼓励",
+            "cnIconId": 213409
+          },
+          {
+            "id": 1297,
+            "en": "Embolden",
+            "iconId": 213410,
+            "zh": "鼓励",
+            "cnIconId": 213410
+          },
+          {
+            "id": 2282,
+            "en": "Embolden",
+            "iconId": 213409,
+            "zh": "鼓励",
+            "cnIconId": 213409
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      },
+      {
+        "id": 1297,
+        "en": "Embolden",
+        "zh": "鼓励",
+        "upstreamIconId": 218941,
+        "cnIconId": 213410,
+        "enIconId": 213410,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 1239,
+            "en": "Embolden",
+            "iconId": 213409,
+            "zh": "鼓励",
+            "cnIconId": 213409
+          },
+          {
+            "id": 1297,
+            "en": "Embolden",
+            "iconId": 213410,
+            "zh": "鼓励",
+            "cnIconId": 213410
+          },
+          {
+            "id": 2282,
+            "en": "Embolden",
+            "iconId": 213409,
+            "zh": "鼓励",
+            "cnIconId": 213409
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      },
+      {
+        "id": 3868,
+        "en": "Finishing Move Ready",
+        "zh": "结束动作预备",
+        "upstreamIconId": 213727,
+        "cnIconId": 213728,
+        "enIconId": 213728,
+        "iconOwners": [
+          {
+            "id": 3867,
+            "en": "Last Dance Ready",
+            "iconId": 213727,
+            "zh": "落幕舞预备",
+            "cnIconId": 213727
+          }
+        ],
+        "nameRows": [
+          {
+            "id": 3868,
+            "en": "Finishing Move Ready",
+            "iconId": 213728,
+            "zh": "结束动作预备",
+            "cnIconId": 213728
+          }
+        ],
+        "verdict": "icon-belongs-to-other-name"
+      },
+      {
+        "id": 1212,
+        "en": "Further Ruin",
+        "zh": "毁坏强化",
+        "upstreamIconId": 212685,
+        "cnIconId": 219481,
+        "enIconId": 219481,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 1212,
+            "en": "Further Ruin",
+            "iconId": 219481,
+            "zh": "毁坏强化",
+            "cnIconId": 219481
+          },
+          {
+            "id": 2701,
+            "en": "Further Ruin",
+            "iconId": 212690
+          },
+          {
+            "id": 4399,
+            "en": "Further Ruin",
+            "iconId": 212690
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      },
+      {
+        "id": 3867,
+        "en": "Last Dance Ready",
+        "zh": "落幕舞预备",
+        "upstreamIconId": 213728,
+        "cnIconId": 213727,
+        "enIconId": 213727,
+        "iconOwners": [
+          {
+            "id": 3868,
+            "en": "Finishing Move Ready",
+            "iconId": 213728,
+            "zh": "结束动作预备",
+            "cnIconId": 213728
+          }
+        ],
+        "nameRows": [
+          {
+            "id": 3867,
+            "en": "Last Dance Ready",
+            "iconId": 213727,
+            "zh": "落幕舞预备",
+            "cnIconId": 213727
+          }
+        ],
+        "verdict": "icon-belongs-to-other-name"
+      },
+      {
+        "id": 1971,
+        "en": "Manafication",
+        "zh": "魔元化",
+        "upstreamIconId": 217491,
+        "cnIconId": 213407,
+        "enIconId": 213407,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 1971,
+            "en": "Manafication",
+            "iconId": 213407,
+            "zh": "魔元化",
+            "cnIconId": 213407
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      },
+      {
+        "id": 1233,
+        "en": "Meikyo Shisui",
+        "zh": "明镜止水",
+        "upstreamIconId": 213309,
+        "cnIconId": 219641,
+        "enIconId": 219641,
+        "iconOwners": [
+          {
+            "id": 3203,
+            "en": "Tendo Setsugekka Ready",
+            "iconId": 213309,
+            "zh": "天道雪月花预备",
+            "cnIconId": 213309
+          }
+        ],
+        "nameRows": [
+          {
+            "id": 1233,
+            "en": "Meikyo Shisui",
+            "iconId": 219641,
+            "zh": "明镜止水",
+            "cnIconId": 219641
+          },
+          {
+            "id": 1320,
+            "en": "Meikyo Shisui",
+            "iconId": 214955,
+            "zh": "明镜止水",
+            "cnIconId": 214955
+          }
+        ],
+        "verdict": "icon-belongs-to-other-name"
+      },
+      {
+        "id": 3844,
+        "en": "Nastrond Ready",
+        "zh": "死者之岸预备",
+        "upstreamIconId": 218151,
+        "cnIconId": 212589,
+        "enIconId": 212589,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 3844,
+            "en": "Nastrond Ready",
+            "iconId": 212589,
+            "zh": "死者之岸预备",
+            "cnIconId": 212589
+          },
+          {
+            "id": 4404,
+            "en": "Nastrond Ready",
+            "iconId": 212589,
+            "zh": "死者之岸预备",
+            "cnIconId": 212589
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      },
+      {
+        "id": 2688,
+        "en": "Overheated",
+        "zh": "过热",
+        "upstreamIconId": 18385,
+        "cnIconId": 218385,
+        "enIconId": 218385,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 2688,
+            "en": "Overheated",
+            "iconId": 218385,
+            "zh": "过热",
+            "cnIconId": 218385
+          },
+          {
+            "id": 3149,
+            "en": "Overheated",
+            "iconId": 214918,
+            "zh": "过热",
+            "cnIconId": 214918
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      },
+      {
+        "id": 110,
+        "en": "Perfect Balance",
+        "zh": "震脚",
+        "upstreamIconId": 210217,
+        "cnIconId": 217564,
+        "enIconId": 217564,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 110,
+            "en": "Perfect Balance",
+            "iconId": 217564,
+            "zh": "震脚",
+            "cnIconId": 217564
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      },
+      {
+        "id": 2964,
+        "en": "Radiant Finale",
+        "zh": "光明神的最终乐章",
+        "upstreamIconId": 212622,
+        "cnIconId": 212624,
+        "enIconId": 212624,
+        "iconOwners": [
+          {
+            "id": 2722,
+            "en": "Radiant Finale",
+            "iconId": 212622,
+            "zh": "光明神的最终乐章",
+            "cnIconId": 212622
+          }
+        ],
+        "nameRows": [
+          {
+            "id": 2722,
+            "en": "Radiant Finale",
+            "iconId": 212622,
+            "zh": "光明神的最终乐章",
+            "cnIconId": 212622
+          },
+          {
+            "id": 2964,
+            "en": "Radiant Finale",
+            "iconId": 212624,
+            "zh": "光明神的最终乐章",
+            "cnIconId": 212624
+          }
+        ],
+        "verdict": "same-name-sibling"
+      },
+      {
+        "id": 1191,
+        "en": "Rampart",
+        "zh": "铁壁",
+        "upstreamIconId": 210152,
+        "cnIconId": 213911,
+        "enIconId": 213911,
+        "iconOwners": [
+          {
+            "id": 71,
+            "en": "Rampart",
+            "iconId": 210152,
+            "zh": "铁壁",
+            "cnIconId": 210152
+          },
+          {
+            "id": 1978,
+            "en": "Rampart",
+            "iconId": 210152,
+            "zh": "铁壁",
+            "cnIconId": 210152
+          },
+          {
+            "id": 2797,
+            "en": "True Rampart",
+            "iconId": 210152,
+            "zh": "纯正铁壁",
+            "cnIconId": 210152
+          }
+        ],
+        "nameRows": [
+          {
+            "id": 71,
+            "en": "Rampart",
+            "iconId": 210152,
+            "zh": "铁壁",
+            "cnIconId": 210152
+          },
+          {
+            "id": 1191,
+            "en": "Rampart",
+            "iconId": 213911,
+            "zh": "铁壁",
+            "cnIconId": 213911
+          },
+          {
+            "id": 1978,
+            "en": "Rampart",
+            "iconId": 210152,
+            "zh": "铁壁",
+            "cnIconId": 210152
+          },
+          {
+            "id": 4168,
+            "en": "Rampart",
+            "iconId": 213911,
+            "zh": "铁壁",
+            "cnIconId": 213911
+          }
+        ],
+        "verdict": "same-name-sibling"
+      },
+      {
+        "id": 1368,
+        "en": "Requiescat",
+        "zh": "安魂祈祷",
+        "upstreamIconId": 212514,
+        "cnIconId": 218345,
+        "enIconId": 218345,
+        "iconOwners": [
+          {
+            "id": 1369,
+            "en": "Requiescat",
+            "iconId": 212514,
+            "zh": "安魂祈祷",
+            "cnIconId": 212514
+          }
+        ],
+        "nameRows": [
+          {
+            "id": 1368,
+            "en": "Requiescat",
+            "iconId": 218345,
+            "zh": "安魂祈祷",
+            "cnIconId": 218345
+          },
+          {
+            "id": 1369,
+            "en": "Requiescat",
+            "iconId": 212514,
+            "zh": "安魂祈祷",
+            "cnIconId": 212514
+          }
+        ],
+        "verdict": "same-name-sibling"
+      },
+      {
+        "id": 2610,
+        "en": "Soteria",
+        "zh": "拯救",
+        "upstreamIconId": 212956,
+        "cnIconId": 219756,
+        "enIconId": 219756,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 2610,
+            "en": "Soteria",
+            "iconId": 219756,
+            "zh": "拯救",
+            "cnIconId": 219756
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      },
+      {
+        "id": 1211,
+        "en": "Triplecast",
+        "zh": "三连咏唱",
+        "upstreamIconId": 212658,
+        "cnIconId": 219621,
+        "enIconId": 219621,
+        "iconOwners": [
+          {
+            "id": 2028,
+            "en": "三連魔",
+            "iconId": 212658,
+            "zh": "三連魔",
+            "cnIconId": 212658
+          }
+        ],
+        "nameRows": [
+          {
+            "id": 1211,
+            "en": "Triplecast",
+            "iconId": 219621,
+            "zh": "三连咏唱",
+            "cnIconId": 219621
+          }
+        ],
+        "verdict": "icon-belongs-to-other-name"
+      },
+      {
+        "id": 3255,
+        "en": "Undead Rebirth",
+        "zh": "出死入生",
+        "upstreamIconId": 13124,
+        "cnIconId": 213124,
+        "enIconId": 213124,
+        "iconOwners": [],
+        "nameRows": [
+          {
+            "id": 3255,
+            "en": "Undead Rebirth",
+            "iconId": 213124,
+            "zh": "出死入生",
+            "cnIconId": 213124
+          }
+        ],
+        "verdict": "icon-not-in-current-sheet"
+      }
     ]
   }
 }

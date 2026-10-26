@@ -23,6 +23,7 @@
     "lint": "oxlint",
     "typecheck": "tsc -b",
     "bake:statuses": "node scripts/bake-statuses.mjs",
+    "bake:statuses:check-icons": "node scripts/bake-statuses.mjs --check-icons",
     "bake:statuses:check-upstream": "node scripts/bake-statuses.mjs --check-upstream",
     "bake:statuses:verify": "node scripts/bake-statuses.mjs --verify",
     "test": "vitest run",

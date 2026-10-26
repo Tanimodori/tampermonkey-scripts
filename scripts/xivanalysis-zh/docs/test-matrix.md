@@ -87,11 +87,14 @@ garland 没有 ACAO，走 Node `fetch` 验证形状。
 | 权威 | sheet 类型受支持 | capture 中实际出现的 sheet 类型 | 单元测试 | 全部在 `Action`、`Item`、`Status`、`Addon`、`Trait` 白名单内 |
 | 权威 | 表行名称覆盖 | 捕获的每行英文与中文，同名或缺失 | 单元测试 | 待翻行都有中文，例外在白名单 |
 | 权威 | 职业缩写覆盖 | ClassJob 全表与捕获到的缩写 | 单元测试 | 全部有中文全名 |
-| 权威 | 告警为空 | capture 期间的所有 `[xiv-warn]` | 单元测试 | 0 条，或白名单且有原因 |
+| 权威 | 运行时告警 | capture 期间的 `[xiv-warn]` | 单元测试 | 0 条，或白名单且有原因 |
+| 权威 | 捕获冲突 | capture 期间的 `label conflict` | 单元测试 | 0 条；不允许白名单 |
 | 权威 | override 完整性 | 每条 `override` 有 `zh` 或 `modifier`，`en` 不重复 | 单元测试 | 0 异常 |
-| 权威 | 烘焙表完整性 | `hash`、条目数、字段、大小写匹配、`icon` 消歧、与烘焙表顺序一致 | 单元测试 | 与烘焙表元数据一致 |
+| 权威 | 烘焙表完整性 | `hash`、条目数、字段、大小写匹配、`icon` 消歧、与烘焙表顺序一致；`id` 是 Status row_id，`iconId` 是上游显示图标 | 单元测试 | 与烘焙表元数据一致；`diagnostics.iconDrift` 与计数一致 |
 
 权威用例读 `test/coverage/corpus/` 的语料，基线为 33 条战报，由 `test:corpus:capture` 生成。capture 指按基线战报抓取页面终态与接口数据的过程。语料记录真实战报的页面终态与接口数据，覆盖率测试在离线环境检查这些内容是否都有译文，因此不需要在每次测试中重跑全部真实战报。真实页面请求 Action 时未带 `ClassJob` 字段，`abbreviations.json` 通常为空；职业缩写覆盖以 ClassJob 全表为准。
+
+`statuses.json` 的 `id` 是游戏 `Status` 表 row_id，不是 FFLogs 的 `+1,000,000` ID；`iconId` 是上游 xivanalysis 的显示图标，不是国服 `Icon.id`。英文/国服 xivapi 对同一行的 `Icon.id` 相同；`diagnostics.iconDrift` 记录上游 icon 与当前游戏数据不一致的条目及其归属（同名行、旧图标、其他名称）。数据源与采集边界见 [data-sources.md](data-sources.md)。
 
 ## 全链路 smoke
 

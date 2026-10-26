@@ -5,7 +5,7 @@
     "ref": "dawntrail",
     "commit": "f532855e635bdfb4211cec8128d582dadfdc6a75"
   },
-  "bakedAt": "2026-10-26T18:19:56.504Z",
+  "bakedAt": "2026-10-26T18:48:31.554Z",
   "cnVersion": "20261013-1e14140",
   "dataSha256": "1ed524840501ba0938644dda42b0251fb3113582ae073ad68d0a2447ab9ed3fa",
   "entriesCount": 470,
@@ -18,7 +18,7 @@
     "sameText": 0,
     "sameNameDifferentZh": 2,
     "sameNameSameZh": 6,
-    "iconMismatch": 22
+    "iconDrift": 22
   },
   "warnings": {
     "missingZh": [],
@@ -37,7 +37,6 @@
     ]
   },
   "diagnostics": {
-    "checkedAt": "2026-10-26T18:19:22.009Z",
     "iconDrift": [
       {
         "id": 1902,
@@ -651,6 +650,7 @@
         ],
         "verdict": "icon-not-in-current-sheet"
       }
-    ]
+    ],
+    "checkedAt": "2026-10-26T18:48:51.999Z"
   }
 }

@@ -34,7 +34,10 @@
     "test:live:smoke": "vite build && playwright test --config=playwright.live.config.ts --project=live-smoke --grep @smoke",
     "test:corpus:capture": "vite build && playwright test --config=playwright.live.config.ts --project=live-corpus",
     "test:gate:offline": "vitest run && tsc -b && vite build && playwright test --project=offline-injected --project=offline-tampermonkey",
-    "test:gate:live": "vite build && playwright test --config=playwright.live.config.ts --project=live-upstream --project=live-smoke && vitest run --config=vitest.live.config.ts"
+    "test:gate:live": "vite build && playwright test --config=playwright.live.config.ts --project=live-upstream --project=live-smoke && vitest run --config=vitest.live.config.ts",
+    "update:data": "node scripts/update-data.mjs",
+    "update:data:icons": "node scripts/update-data.mjs --icons",
+    "update:data:corpus": "node scripts/update-data.mjs --corpus"
   },
   "dependencies": {
     "xiv-garland-provider": "workspace:*"

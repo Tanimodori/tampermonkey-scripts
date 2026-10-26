@@ -93,7 +93,8 @@ async function main() {
     warn(`同名异译 ${result.meta.warnings.sameNameDifferentZh.length} 组: ${result.meta.warnings.sameNameDifferentZh.join(', ')}`);
   if (result.meta.warnings.sameNameSameZh.length)
     log(`同名同译 ${result.meta.warnings.sameNameSameZh.length} 组（仅 id/icon 变体）: ${result.meta.warnings.sameNameSameZh.join(', ')}`);
-  if (result.meta.counts.iconMismatch) warn(`上游 icon 与国服不一致 ${result.meta.counts.iconMismatch} 条（匹配仍用上游 icon；名称优先）`);
+  if (result.meta.counts.iconDrift)
+    warn(`上游 icon 与当前游戏数据不一致 ${result.meta.counts.iconDrift} 条（见 diagnostics.iconDrift；匹配仍用上游 icon，名称优先）`);
 }
 
 function parseArgs(argv) {
@@ -205,8 +206,8 @@ async function verify() {
   }
 
   const diagnostics = meta?.diagnostics;
-  if (meta?.schemaVersion >= 2 && !Number.isInteger(meta?.counts?.iconMismatch)) {
-    problems.push('counts.iconMismatch 缺失或不是整数');
+  if (meta?.schemaVersion >= 2 && !Number.isInteger(meta?.counts?.iconDrift)) {
+    problems.push('counts.iconDrift 缺失或不是整数');
   }
   if (meta?.schemaVersion >= 2 && diagnostics === undefined) {
     problems.push('schemaVersion 2 缺少 diagnostics');
@@ -217,8 +218,8 @@ async function verify() {
     } else if (!Array.isArray(diagnostics.iconDrift)) {
       problems.push('meta.diagnostics.iconDrift 不是数组');
     } else {
-      if (Number.isInteger(meta?.counts?.iconMismatch) && meta.counts.iconMismatch !== diagnostics.iconDrift.length) {
-        problems.push(`counts.iconMismatch 与 diagnostics.iconDrift 长度不一致: count=${meta.counts.iconMismatch} drift=${diagnostics.iconDrift.length}`);
+      if (Number.isInteger(meta?.counts?.iconDrift) && meta.counts.iconDrift !== diagnostics.iconDrift.length) {
+        problems.push(`counts.iconDrift 与 diagnostics.iconDrift 长度不一致: count=${meta.counts.iconDrift} drift=${diagnostics.iconDrift.length}`);
       }
       const checked = typeof diagnostics.checkedAt === 'string';
       for (const [index, item] of diagnostics.iconDrift.entries()) {
@@ -813,7 +814,7 @@ function buildResult({ repo, ref, commit, sources, parsed, cn, allowMissing }) {
       sameText: sameText.length,
       sameNameDifferentZh: sameNameDifferentZh.length,
       sameNameSameZh: sameNameSameZh.length,
-      iconMismatch: iconDriftList.length,
+      iconDrift: iconDriftList.length,
     },
     warnings: {
       missingZh: missing,

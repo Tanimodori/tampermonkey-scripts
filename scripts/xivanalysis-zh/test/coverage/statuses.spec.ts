@@ -66,7 +66,7 @@ describe('烘焙状态表', () => {
 
   it('icon 漂移诊断与计数一致', () => {
     const typed = meta as unknown as {
-      counts: { iconMismatch: number };
+      counts: { iconDrift: number };
       diagnostics?: {
         checkedAt?: string;
         iconDrift?: {
@@ -85,7 +85,7 @@ describe('烘焙状态表', () => {
     };
     const drift = typed.diagnostics?.iconDrift;
     expect(drift).toBeInstanceOf(Array);
-    expect(drift).toHaveLength(typed.counts.iconMismatch);
+    expect(drift).toHaveLength(typed.counts.iconDrift);
     const checked = typeof typed.diagnostics?.checkedAt === 'string';
     for (const item of drift ?? []) {
       expect(item.id).toBeGreaterThan(0);

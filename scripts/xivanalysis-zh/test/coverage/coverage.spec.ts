@@ -43,6 +43,22 @@ interface CorpusGarland {
   iconId?: number;
 }
 
+interface RuntimeWarning {
+  type: 'untranslated';
+  en: string;
+}
+
+interface CaptureWarning {
+  type: 'label-conflict';
+  en: string;
+  zh: string[];
+}
+
+interface CorpusWarnings {
+  runtime: RuntimeWarning[];
+  capture: CaptureWarning[];
+}
+
 const corpusDir = process.env.CORPUS_DIR ? resolvePath(process.env.CORPUS_DIR) : resolvePath(import.meta.dirname, 'corpus');
 const HAN = /[\u3400-\u9fff]/;
 
@@ -62,16 +78,6 @@ const sheetKind = (sheet: string): XivKind => {
   return 'addon';
 };
 
-const warningText = (warning: string): string | undefined => {
-  const match = warning.match(/未覆盖英文: (".*")$/);
-  if (!match) return undefined;
-  try {
-    return JSON.parse(match[1]) as string;
-  } catch {
-    return undefined;
-  }
-};
-
 let manifest: Manifest;
 let labels: CorpusLabel[];
 let sheets: CorpusSheetRow[];
@@ -79,7 +85,7 @@ let classJobs: Record<string, string>;
 let abbreviations: string[];
 let garland: CorpusGarland[];
 let garlandByKey: Map<string, CorpusGarland>;
-let warnings: string[];
+let warnings: CorpusWarnings;
 let resolve: XivSearch;
 let identity: Set<string>;
 let overrideNames: Set<string>;
@@ -92,7 +98,7 @@ beforeAll(async () => {
   classJobs = readCorpus<Record<string, string>>('classjobs.json');
   abbreviations = readCorpus<string[]>('abbreviations.json');
   garland = readCorpus<CorpusGarland[]>('garland.json');
-  warnings = readCorpus<string[]>('warnings.json');
+  warnings = readCorpus<CorpusWarnings>('warnings.json');
 
   resetStore();
   KNOWN.clear();
@@ -181,7 +187,9 @@ describe('权威语料', () => {
     expect(manifest.counts.classJobs).toBe(Object.keys(classJobs).length);
     expect(manifest.counts.abbreviations).toBe(abbreviations.length);
     expect(manifest.counts.garland).toBe(garland.length);
-    expect(manifest.counts.warnings).toBe(warnings.length);
+    expect(manifest.counts.warnings).toBe(warnings.runtime.length + warnings.capture.length);
+    expect(manifest.counts.runtimeWarnings).toBe(warnings.runtime.length);
+    expect(manifest.counts.captureWarnings).toBe(warnings.capture.length);
 
     const labelKeys = labels.map((label) => `${label.kind}:${label.en.toLowerCase()}`);
     expect(new Set(labelKeys).size).toBe(labelKeys.length);
@@ -211,15 +219,21 @@ describe('权威语料', () => {
       expect(entry.zh, entry.en).not.toBe(entry.en);
       expect(HAN.test(entry.zh), `${entry.en} 兜底译文不是中文 ${entry.zh}`).toBe(true);
     }
-    for (const warning of warnings) {
-      expect(warningText(warning), warning).toBeTruthy();
+    for (const warning of warnings.runtime) {
+      expect(warning.type).toBe('untranslated');
+      expect(warning.en.trim(), warning.en).toBeTruthy();
+    }
+    for (const warning of warnings.capture) {
+      expect(warning.type).toBe('label-conflict');
+      expect(warning.en.trim(), warning.en).toBeTruthy();
+      expect(warning.zh.length, warning.en).toBeGreaterThan(1);
     }
   });
 
   it('页面终态没有残留的待翻英文或其他非中文译文', () => {
     for (const label of labels) {
       if (identity.has(label.zh.toLowerCase())) continue;
-      if (warningAllowlist[label.zh as keyof typeof warningAllowlist]) continue;
+      if (warningAllowlist[label.en as keyof typeof warningAllowlist]) continue;
       if (looksEnglish(label.zh) || !HAN.test(label.zh)) {
         expect.fail(`${label.kind}: ${label.en} 终态不是中文 ${label.zh}`);
       }
@@ -293,9 +307,8 @@ describe('权威语料', () => {
   });
 
   it('告警只出现在白名单内，白名单也没有过期项', () => {
-    const parsed = warnings.map(warningText);
-    expect(parsed.every((text) => typeof text === 'string')).toBe(true);
-    for (const text of parsed as string[]) {
+    const parsed = warnings.runtime.map((warning) => warning.en);
+    for (const text of parsed) {
       const reason = warningAllowlist[text as keyof typeof warningAllowlist];
       expect(reason, `未登记的告警: ${text}`).toBeTruthy();
     }
@@ -305,5 +318,9 @@ describe('权威语料', () => {
     for (const [key, reason] of Object.entries(warningAllowlist)) {
       expect(reason.trim(), `${key} 的白名单理由为空`).toBeTruthy();
     }
+  });
+
+  it('capture 期间没有翻译冲突', () => {
+    expect(warnings.capture, JSON.stringify(warnings.capture, null, 2)).toEqual([]);
   });
 });

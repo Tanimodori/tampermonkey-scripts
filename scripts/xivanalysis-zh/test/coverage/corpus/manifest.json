@@ -214,7 +214,9 @@
     "classJobs": 44,
     "abbreviations": 0,
     "garland": 65,
-    "warnings": 39
+    "warnings": 39,
+    "runtimeWarnings": 39,
+    "captureWarnings": 0
   },
   "notes": [
     "兜底条目按当前 garland adapter（iconId 优先、无 iconId 优先汉字）逐条重算，键为 en+iconId；override/identity/与 sheet 同文条目已移除。"

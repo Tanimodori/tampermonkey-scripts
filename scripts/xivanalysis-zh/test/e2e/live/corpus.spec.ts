@@ -54,6 +54,22 @@ interface CorpusGarland {
   iconId?: number;
 }
 
+interface RuntimeWarning {
+  type: 'untranslated';
+  en: string;
+}
+
+interface CaptureWarning {
+  type: 'label-conflict';
+  en: string;
+  zh: string[];
+}
+
+interface CorpusWarnings {
+  runtime: RuntimeWarning[];
+  capture: CaptureWarning[];
+}
+
 const RECORDER = `(() => {
   const state = { labels: [], warnings: [] };
   window.__xivCorpus = state;
@@ -157,7 +173,8 @@ test('捕获 33 条战报的权威语料', async ({ page }) => {
   const classJobs = new Map<string, string>();
   const usedAbbreviations = new Set<string>();
   const sheetTypes = new Set<string>();
-  const warnings: string[] = [];
+  const runtimeWarnings: string[] = [];
+  const captureWarnings = new Map<string, CaptureWarning>();
   const pages: { url: string; zoneName: string; dutyName: string; job: string }[] = [];
 
   let current: PageNet | undefined;
@@ -249,7 +266,12 @@ test('捕获 33 条战报的权威语料', async ({ page }) => {
       if (existing) {
         if (!existing.pages.includes(fight.url)) existing.pages.push(fight.url);
         if (existing.zh && label.zh && existing.zh !== label.zh) {
-          warnings.push(`label conflict: ${label.en}: ${existing.zh} / ${label.zh}`);
+          const zh = [existing.zh, label.zh].sort();
+          captureWarnings.set(`${label.en.toLowerCase()}\u0000${zh.join('\u0000')}`, {
+            type: 'label-conflict',
+            en: label.en,
+            zh,
+          });
         }
       } else {
         labels.set(key, { kind: label.kind, en: label.en, zh: label.zh, iconId: label.iconId, pages: [fight.url] });
@@ -285,7 +307,7 @@ test('捕获 33 条战报的权威语料', async ({ page }) => {
       else classJobs.set(abbr, classJobs.get(abbr) || name);
     }
     for (const type of current.sheetTypes) sheetTypes.add(type);
-    for (const warning of captured.warnings) warnings.push(warning);
+    for (const warning of captured.warnings) runtimeWarnings.push(warning);
     pages.push({ url: fight.url, zoneName: fight.zoneName, dutyName: fight.dutyName, job: fight.job });
 
     current = undefined;
@@ -305,7 +327,21 @@ test('捕获 33 条战报的权威语料', async ({ page }) => {
     .sort((a, b) => a.en.localeCompare(b.en));
   const corpusClassJobs = Object.fromEntries([...classJobs.entries()].sort(([a], [b]) => a.localeCompare(b)));
   const corpusAbbreviations = [...usedAbbreviations].sort();
-  const corpusWarnings = [...new Set(warnings)].sort();
+  const runtimeWarningText = (text: string): string => {
+    const match = text.match(/未覆盖英文: (".*")$/);
+    if (!match) throw new Error(`无法解析 [xiv-warn]: ${text}`);
+    try {
+      return JSON.parse(match[1]) as string;
+    } catch {
+      throw new Error(`无法解析 [xiv-warn] 的英文串: ${text}`);
+    }
+  };
+  const corpusWarnings: CorpusWarnings = {
+    runtime: [...new Set(runtimeWarnings)]
+      .map((text) => ({ type: 'untranslated' as const, en: runtimeWarningText(text) }))
+      .sort((a, b) => a.en.localeCompare(b.en)),
+    capture: [...captureWarnings.values()].sort((a, b) => a.en.localeCompare(b.en)),
+  };
   const manifest = {
     version: 1,
     capturedAt: new Date().toISOString(),
@@ -318,7 +354,9 @@ test('捕获 33 条战报的权威语料', async ({ page }) => {
       classJobs: Object.keys(corpusClassJobs).length,
       abbreviations: corpusAbbreviations.length,
       garland: corpusGarland.length,
-      warnings: corpusWarnings.length,
+      warnings: corpusWarnings.runtime.length + corpusWarnings.capture.length,
+      runtimeWarnings: corpusWarnings.runtime.length,
+      captureWarnings: corpusWarnings.capture.length,
     },
   };
 

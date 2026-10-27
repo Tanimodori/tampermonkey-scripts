@@ -5,6 +5,11 @@ import { defineConfig } from 'vitest/config';
 import { USERSCRIPT_META } from './src/userscript.meta.ts';
 
 export default defineConfig({
+  // 生成物保持可读的缩进 JSON；构建时统一转成紧凑的 JSON.parse，缩进不进 bundle。
+  json: {
+    stringify: true,
+    namedExports: false,
+  },
   build: {
     outDir: resolve(import.meta.dirname, 'dist'),
     emptyOutDir: true,

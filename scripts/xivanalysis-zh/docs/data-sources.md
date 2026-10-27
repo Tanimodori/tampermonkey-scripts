@@ -7,7 +7,7 @@
 | 链路 | 采集什么 | 触发 | 产物 | 是否提交 |
 | --- | --- | --- | --- | --- |
 | 浏览器语料 | 真实战报页的终态、接口响应、`[xiv-warn]` | `rushx test:corpus:capture`（Playwright，约 50 分钟） | `test/coverage/corpus/*.json` | 提交 |
-| status 烘焙 | 上游 xivanalysis `STATUSES` + 国服 xivapi `Status` | `rushx bake:statuses`（Node，联网） | `src/data/generated/statuses.json` 与 meta | 提交 |
+| status 烘焙 | 上游 xivanalysis `STATUSES` + 英文/国服 xivapi `Status`（按 id 合并） | `rushx bake:statuses`（Node，联网） | `src/data/generated/statuses.json` 与 meta | 提交 |
 | datamining | 权威游戏表 CSV（`InfSein/ffxiv-datamining-mixed`） | 构建时按需拉取 | `node_modules/.cache/...` | 不提交 |
 
 ## 为什么不合并
@@ -21,7 +21,7 @@
 
 - 入口：`rushx update:data` 只跑 status 烘焙；语料 capture 是单独的约 50 分钟手工步骤，默认不跑，显式加 `--corpus` 才跑。
 - 底层工具：原子写、内容 hash、缓存与重试。datamining 侧是内容寻址缓存（`xiv-datamine-polyfill`），status 烘焙是按上游 commit 缓存；语义不同，暂不抽共享包，等第三个消费者出现再考虑。
-- icon 诊断：`rushx bake:statuses:check-icons` 用 xivapi 的 `Icon=` / `Name~` 检索确认图标归属；这是诊断，不是采集管线。
+- id 对照表：status 烘焙以游戏 `Status` row_id 为主键，把上游 `STATUSES`、英文 xivapi、国服 xivapi 合并成 `rows` 元组；en 名、en 图标只在与 upstream 不同时写入例外表，国服图标只在不同于当前 en 图标（没有 en 时 upstream）时写入 `zhIcons`。页面 DOM 没有 row_id，运行时仍按页面可见的英文名 + 图标匹配；id 用于数据合并与校验，同名消歧仍靠图标。
 
 ## universalis-zh-data
 

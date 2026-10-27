@@ -23,7 +23,6 @@
     "lint": "oxlint",
     "typecheck": "tsc -b",
     "bake:statuses": "node scripts/bake-statuses.mjs",
-    "bake:statuses:check-icons": "node scripts/bake-statuses.mjs --check-icons",
     "bake:statuses:check-upstream": "node scripts/bake-statuses.mjs --check-upstream",
     "bake:statuses:verify": "node scripts/bake-statuses.mjs --verify",
     "test": "vitest run",
@@ -36,7 +35,6 @@
     "test:gate:offline": "vitest run && tsc -b && vite build && playwright test --project=offline-injected --project=offline-tampermonkey",
     "test:gate:live": "vite build && playwright test --config=playwright.live.config.ts --project=live-upstream --project=live-smoke && vitest run --config=vitest.live.config.ts",
     "update:data": "node scripts/update-data.mjs",
-    "update:data:icons": "node scripts/update-data.mjs --icons",
     "update:data:corpus": "node scripts/update-data.mjs --corpus"
   },
   "dependencies": {

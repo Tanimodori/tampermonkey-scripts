@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
- * 把 xivanalysis 的 STATUSES（英文名 + icon 号）与国服 xivapi 的简中名烘焙成静态数据。
+ * 把 xivanalysis 的 STATUSES（英文名 + 显示 icon）与英文/国服 xivapi 的 Status 表按 id 合并成静态数据。
  *
  * 生成的 `src/data/generated/statuses.json` 会被 `src/data/statuses.ts` 直接 import，
- * Vite 在构建时内联；`statuses.meta.json` 只给本脚本与校验命令读，不进产物。
+ * Vite 在构建时内联。源文件保持 2 空格缩进以便阅读；Vite 会把 JSON import 转成紧凑的
+ * `JSON.parse("...")`，所以源文件缩进不计入 bundle。`statuses.meta.json` 只给本脚本与校验命令读，不进产物。
  *
  * 用法：
  *   node scripts/bake-statuses.mjs                     # 烘焙（需要网络）
  *   node scripts/bake-statuses.mjs --sha <sha>         # 固定上游 commit
  *   node scripts/bake-statuses.mjs --check-upstream    # 只比 meta 里的 commit 与上游分支
  *   node scripts/bake-statuses.mjs --verify            # 离线校验 data 与 meta 是否一致
- *   node scripts/bake-statuses.mjs --check-icons       # 另查 xivapi，补全 icon 漂移诊断
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -32,9 +32,8 @@ const STATUS_INDEX = `${STATUS_DIR}/index.ts`;
 const LAYERS_INDEX = `${STATUS_DIR}/layers/index.ts`;
 const EN_HOST = 'https://v2.xivapi.com/api';
 const CN_HOST = 'https://xivapi-v2.xivcdn.com/api';
-const CN_CHUNK = 100;
+const STATUS_CHUNK = 100;
 const MIN_ENTRIES = 300;
-const ICON_VERDICTS = new Set(['same-name-sibling', 'icon-not-in-current-sheet', 'icon-belongs-to-other-name', 'same-name-different-translation', 'unchecked']);
 
 const args = parseArgs(process.argv.slice(2));
 const log = (message) => console.log(`[bake-statuses] ${message}`);
@@ -72,29 +71,20 @@ async function main() {
   const sources = await readSources(args.repo, commit);
   const parsed = parseStatuses(sources);
   const ids = [...new Set(parsed.variants.map((v) => v.id).filter((id) => id > 0))].sort((a, b) => a - b);
-  log(`解析到 ${parsed.rootCount} 个 root 条目、${parsed.variants.length} 个变体，去重后 ${ids.length} 个 id；开始查国服`);
+  log(`解析到 ${parsed.rootCount} 个 root 条目、${parsed.variants.length} 个变体，去重后 ${ids.length} 个 id；开始查英文与国服`);
 
-  const cn = await fetchCnNames(ids);
+  const [en, cn] = await Promise.all([fetchStatusRows(EN_HOST, ids, 'en'), fetchStatusRows(CN_HOST, ids, 'chs')]);
+  log(`英文返回 ${en.byId.size}/${ids.length} 行`);
   log(`国服返回 ${cn.byId.size}/${ids.length} 行${cn.version ? `（${cn.version}）` : ''}`);
 
-  const result = buildResult({ repo: args.repo, ref: args.ref, commit, sources, parsed, cn, allowMissing: args.allowMissing });
-  if (args.checkIcons) {
-    log(`核对 ${result.meta.diagnostics.iconDrift.length} 条 icon 漂移的归属行（xivapi Icon= 检索）`);
-    result.meta.diagnostics = await enrichIconDiagnostics(result.meta.diagnostics);
-    log(`icon 诊断: ${formatVerdictCounts(result.meta.diagnostics.iconDrift)}`);
-  } else {
-    result.meta.diagnostics = await preserveIconDiagnostics(result.meta.diagnostics, { commit, cnVersion: cn.version });
-  }
+  const result = buildResult({ repo: args.repo, ref: args.ref, commit, parsed, en, cn, allowMissing: args.allowMissing });
   const metaText = `${JSON.stringify(result.meta, null, 2)}\n`;
   await writeOutputs(result.dataText, metaText);
-  log(`写入 ${entriesSummary(result.meta)}`);
-  if (result.meta.warnings.missingZh.length) warn(`缺中文 ${result.meta.warnings.missingZh.length} 条: ${result.meta.warnings.missingZh.join(', ')}`);
-  if (result.meta.warnings.sameNameDifferentZh.length)
-    warn(`同名异译 ${result.meta.warnings.sameNameDifferentZh.length} 组: ${result.meta.warnings.sameNameDifferentZh.join(', ')}`);
-  if (result.meta.warnings.sameNameSameZh.length)
-    log(`同名同译 ${result.meta.warnings.sameNameSameZh.length} 组（仅 id/icon 变体）: ${result.meta.warnings.sameNameSameZh.join(', ')}`);
-  if (result.meta.counts.iconDrift)
-    warn(`上游 icon 与当前游戏数据不一致 ${result.meta.counts.iconDrift} 条（见 diagnostics.iconDrift；匹配仍用上游 icon，名称优先）`);
+  log(`写入 ${entriesSummary(result)}`);
+  reportWarnings(result.warnings);
+  log(
+    `对照: 上游名与 EN 名不同 ${result.summary.enNameDiff} 条，upstream/en icon 不同 ${result.summary.upstreamIconDiff} 条，zh icon 例外 ${result.summary.zhIconDiff} 条，跳过 id<=0 ${result.summary.skippedIds} 条`,
+  );
 }
 
 function parseArgs(argv) {
@@ -104,7 +94,6 @@ function parseArgs(argv) {
     sha: '',
     baseUrl: '',
     checkUpstream: false,
-    checkIcons: false,
     verify: false,
     allowMissing: false,
     help: false,
@@ -131,9 +120,6 @@ function parseArgs(argv) {
       case '--check-upstream':
         out.checkUpstream = true;
         break;
-      case '--check-icons':
-        out.checkIcons = true;
-        break;
       case '--verify':
         out.verify = true;
         break;
@@ -159,7 +145,6 @@ function printHelp() {
   --sha <sha>          直接指定 commit，跳过解析分支
   --base-url <url>     源文件 URL 前缀（默认先 raw.githubusercontent.com，再 jsDelivr）
   --check-upstream     只比较 meta 里的 commit 与上游分支，不写文件
-  --check-icons        另查 xivapi 的 Icon= 检索，补全 icon 漂移的归属行与判定
   --verify             离线校验 statuses.json 与 meta 的 hash、条目数、字段
   --allow-missing      国服缺中文时不失败（默认失败，避免提交不完整数据）
 `);
@@ -176,94 +161,97 @@ async function verify() {
     throw new Error(`读不到 ${DATA_FILE} 或 ${META_FILE}: ${error instanceof Error ? error.message : String(error)}`);
   }
 
-  const entries = JSON.parse(dataBytes.toString('utf8'));
-  if (!Array.isArray(entries)) problems.push('statuses.json 顶层不是数组');
-  if (meta.dataSha256 !== sha256(dataBytes)) problems.push(`dataSha256 不匹配: meta=${meta.dataSha256} actual=${sha256(dataBytes)}`);
-  if (meta.entriesCount !== entries.length) problems.push(`entriesCount 不匹配: meta=${meta.entriesCount} actual=${entries.length}`);
-  if (!Array.isArray(entries) || entries.length < MIN_ENTRIES) problems.push(`条目数过少: ${entries.length}`);
+  if (dataBytes.includes(0x0d)) problems.push('statuses.json 含 CR，必须保持 LF 换行');
+  const payload = JSON.parse(dataBytes.toString('utf8'));
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) problems.push('statuses.json 顶层不是对象');
+  if (meta?.formatVersion !== 4) problems.push(`formatVersion 不是 4: ${meta?.formatVersion}`);
+  if (!meta?.upstream || typeof meta.upstream !== 'object') {
+    problems.push('meta.upstream 缺失或不是对象');
+  } else {
+    for (const key of ['repo', 'ref', 'commit']) {
+      if (typeof meta.upstream[key] !== 'string' || !meta.upstream[key]) problems.push(`meta.upstream.${key} 为空`);
+    }
+  }
+  if (!meta?.cn || typeof meta.cn !== 'object' || typeof meta.cn.version !== 'string' || !meta.cn.version) {
+    problems.push('meta.cn.version 缺失、不是字符串或为空');
+  }
+  if (!meta?.data || typeof meta.data !== 'object') {
+    problems.push('meta.data 缺失或不是对象');
+  } else {
+    if (typeof meta.data.sha256 !== 'string') problems.push('meta.data.sha256 缺失或不是字符串');
+    if (!Number.isInteger(meta.data.entries)) problems.push('meta.data.entries 缺失或不是整数');
+  }
 
-  if (Array.isArray(entries)) {
-    for (const [index, entry] of entries.entries()) {
-      if (!entry || typeof entry !== 'object') {
-        problems.push(`entries[${index}] 不是对象`);
+  const rows = payload?.rows;
+  for (const key of ['enNames', 'enIcons', 'zhIcons']) {
+    if (!payload?.[key] || typeof payload[key] !== 'object' || Array.isArray(payload[key])) {
+      problems.push(`statuses.json.${key} 缺失或不是对象`);
+    }
+  }
+  if (!Array.isArray(rows)) problems.push('statuses.json.rows 不是数组');
+
+  const digest = sha256(dataBytes);
+  if (meta?.data?.sha256 !== digest) problems.push(`data.sha256 不匹配: meta=${meta?.data?.sha256} actual=${digest}`);
+  if (Array.isArray(rows) && meta?.data?.entries !== rows.length) {
+    problems.push(`data.entries 不匹配: meta=${meta?.data?.entries} actual=${rows.length}`);
+  }
+  if (!Array.isArray(rows) || rows.length < MIN_ENTRIES) problems.push(`条目数过少: ${Array.isArray(rows) ? rows.length : 0}`);
+
+  const byId = new Map();
+  if (Array.isArray(rows)) {
+    let previousId = 0;
+    for (const [index, row] of rows.entries()) {
+      if (!Array.isArray(row) || row.length !== 4) {
+        problems.push(`rows[${index}] 不是长度 4 的数组`);
         continue;
       }
-      if (!Number.isInteger(entry.id) || entry.id <= 0) problems.push(`entries[${index}].id 非法`);
-      if (typeof entry.en !== 'string' || !entry.en) problems.push(`entries[${index}].en 为空`);
-      if (typeof entry.zh !== 'string' || !entry.zh) problems.push(`entries[${index}].zh 为空`);
-      if (entry.iconId != null && (!Number.isInteger(entry.iconId) || entry.iconId <= 0)) problems.push(`entries[${index}].iconId 非法`);
+      const [id, upstreamName, upstreamIcon, zhName] = row;
+      if (!Number.isInteger(id) || id <= 0) {
+        problems.push(`rows[${index}][0] id 非法`);
+      } else {
+        if (id <= previousId) problems.push(`rows[${index}][0] id 未严格升序或重复`);
+        previousId = id;
+      }
+      if (typeof upstreamName !== 'string' || !upstreamName) problems.push(`rows[${index}][1] upstream name 为空`);
+      if (!Number.isInteger(upstreamIcon) || upstreamIcon <= 0) problems.push(`rows[${index}][2] upstream icon 非法`);
+      if (typeof zhName !== 'string' || !zhName) problems.push(`rows[${index}][3] zh name 为空`);
+      if (typeof upstreamName === 'string' && upstreamName === zhName) {
+        problems.push(`rows[${index}] 的 zh name 与 upstream name 相同，应在烘焙时跳过`);
+      }
+      if (Number.isInteger(id) && id > 0) byId.set(id, { id, upstreamName, upstreamIcon });
     }
   }
 
-  for (const key of ['missingZh', 'sameText', 'sameNameDifferentZh', 'sameNameSameZh']) {
-    const count = meta?.counts?.[key];
-    const list = meta?.warnings?.[key];
-    if (!Number.isInteger(count)) problems.push(`counts.${key} 缺失或不是整数`);
-    if (!Array.isArray(list)) problems.push(`warnings.${key} 缺失或不是数组`);
-    if (Number.isInteger(count) && Array.isArray(list) && count !== list.length) {
-      problems.push(`counts.${key} 与 warnings.${key} 长度不一致: count=${count} warnings=${list.length}`);
-    }
-  }
-
-  const diagnostics = meta?.diagnostics;
-  if (meta?.schemaVersion >= 2 && !Number.isInteger(meta?.counts?.iconDrift)) {
-    problems.push('counts.iconDrift 缺失或不是整数');
-  }
-  if (meta?.schemaVersion >= 2 && diagnostics === undefined) {
-    problems.push('schemaVersion 2 缺少 diagnostics');
-  }
-  if (diagnostics !== undefined) {
-    if (!diagnostics || typeof diagnostics !== 'object') {
-      problems.push('meta.diagnostics 不是对象');
-    } else if (!Array.isArray(diagnostics.iconDrift)) {
-      problems.push('meta.diagnostics.iconDrift 不是数组');
-    } else {
-      if (Number.isInteger(meta?.counts?.iconDrift) && meta.counts.iconDrift !== diagnostics.iconDrift.length) {
-        problems.push(`counts.iconDrift 与 diagnostics.iconDrift 长度不一致: count=${meta.counts.iconDrift} drift=${diagnostics.iconDrift.length}`);
-      }
-      const checked = typeof diagnostics.checkedAt === 'string';
-      for (const [index, item] of diagnostics.iconDrift.entries()) {
-        if (!item || typeof item !== 'object') {
-          problems.push(`diagnostics.iconDrift[${index}] 不是对象`);
-          continue;
-        }
-        if (!Number.isInteger(item.id) || item.id <= 0) problems.push(`diagnostics.iconDrift[${index}].id 非法`);
-        if (typeof item.en !== 'string' || !item.en) problems.push(`diagnostics.iconDrift[${index}].en 为空`);
-        if (typeof item.zh !== 'string' || !item.zh) problems.push(`diagnostics.iconDrift[${index}].zh 为空`);
-        if (!Number.isInteger(item.upstreamIconId) || item.upstreamIconId <= 0) problems.push(`diagnostics.iconDrift[${index}].upstreamIconId 非法`);
-        if (!Number.isInteger(item.cnIconId) || item.cnIconId <= 0) problems.push(`diagnostics.iconDrift[${index}].cnIconId 非法`);
-        if (item.enIconId != null && (!Number.isInteger(item.enIconId) || item.enIconId <= 0)) problems.push(`diagnostics.iconDrift[${index}].enIconId 非法`);
-        if (item.verdict !== undefined && !ICON_VERDICTS.has(item.verdict)) problems.push(`diagnostics.iconDrift[${index}].verdict 非法: ${item.verdict}`);
-        if (checked && item.verdict !== 'unchecked') {
-          if (!Number.isInteger(item.enIconId) || item.enIconId <= 0) problems.push(`diagnostics.iconDrift[${index}].enIconId 缺失或非法`);
-          if (!Array.isArray(item.iconOwners)) problems.push(`diagnostics.iconDrift[${index}].iconOwners 缺失或不是数组`);
-          if (!Array.isArray(item.nameRows)) problems.push(`diagnostics.iconDrift[${index}].nameRows 缺失或不是数组`);
-          if (typeof item.verdict !== 'string' || !item.verdict) problems.push(`diagnostics.iconDrift[${index}].verdict 缺失`);
-        }
-        if (item.verdict === 'unchecked' && (typeof item.error !== 'string' || !item.error.trim())) {
-          problems.push(`diagnostics.iconDrift[${index}] 标记 unchecked 但缺少 error`);
-        }
-        if (item.nameRows !== undefined && !Array.isArray(item.nameRows)) problems.push(`diagnostics.iconDrift[${index}].nameRows 不是数组`);
-        if (item.iconOwners !== undefined) {
-          if (!Array.isArray(item.iconOwners)) {
-            problems.push(`diagnostics.iconDrift[${index}].iconOwners 不是数组`);
-          } else {
-            for (const [ownerIndex, owner] of item.iconOwners.entries()) {
-              if (!owner || typeof owner !== 'object') problems.push(`diagnostics.iconDrift[${index}].iconOwners[${ownerIndex}] 不是对象`);
-              else if (!Number.isInteger(owner.id) || owner.id <= 0) problems.push(`diagnostics.iconDrift[${index}].iconOwners[${ownerIndex}].id 非法`);
-            }
-          }
-        }
-      }
-    }
-  }
+  verifyExceptionMap(problems, 'enNames', payload?.enNames, byId, (value, upstream) => {
+    return typeof value === 'string' && value.trim().length > 0 && value.trim().toLowerCase() !== upstream.upstreamName.trim().toLowerCase();
+  });
+  verifyExceptionMap(problems, 'enIcons', payload?.enIcons, byId, (value, upstream) => {
+    return Number.isInteger(value) && value > 0 && value !== upstream.upstreamIcon;
+  });
+  verifyExceptionMap(problems, 'zhIcons', payload?.zhIcons, byId, (value, upstream) => {
+    const currentIcon = payload?.enIcons?.[String(upstream.id)] ?? upstream.upstreamIcon;
+    return Number.isInteger(value) && value > 0 && value !== currentIcon;
+  });
 
   if (problems.length) {
     for (const problem of problems) console.error(`[bake-statuses] ${problem}`);
     process.exitCode = 1;
     return;
   }
-  log(`ok: ${entries.length} 条，sha256=${meta.dataSha256}`);
+  log(`ok: ${rows.length} 条，sha256=${meta.data.sha256}`);
+}
+
+function verifyExceptionMap(problems, label, map, byId, validate) {
+  if (!map || typeof map !== 'object' || Array.isArray(map)) return;
+  for (const [key, value] of Object.entries(map)) {
+    const id = Number(key);
+    const upstream = byId.get(id);
+    if (!Number.isInteger(id) || String(id) !== key || !upstream) {
+      problems.push(`${label}.${key} 不是有效 id`);
+      continue;
+    }
+    if (!validate(value, upstream)) problems.push(`${label}.${key} 不是有效例外`);
+  }
 }
 
 async function checkUpstream() {
@@ -710,255 +698,165 @@ function readIcon(node) {
   return undefined;
 }
 
-async function fetchCnNames(ids) {
+async function fetchStatusRows(host, ids, language) {
   const byId = new Map();
   let version = '';
-  for (let offset = 0; offset < ids.length; offset += CN_CHUNK) {
-    const chunk = ids.slice(offset, offset + CN_CHUNK);
-    const url = `${CN_HOST}/sheet/Status?rows=${chunk.join(',')}&fields=Name,Icon&language=chs&limit=${chunk.length}`;
+  for (let offset = 0; offset < ids.length; offset += STATUS_CHUNK) {
+    const chunk = ids.slice(offset, offset + STATUS_CHUNK);
+    const wanted = new Set(chunk);
+    const url = `${host}/sheet/Status?rows=${chunk.join(',')}&fields=Name,Icon&language=${language}&limit=${chunk.length}`;
     const response = await fetchWithRetry(url, { headers: { accept: 'application/json' }, tries: 5 });
     const body = await response.json();
     if (!version && typeof body?.version === 'string') version = body.version;
     for (const row of body?.rows ?? []) {
       const name = row?.fields?.Name;
-      if (typeof name === 'string' && name) {
-        byId.set(row.row_id, { zh: name, iconId: row.fields?.Icon?.id });
+      if (Number.isInteger(row?.row_id) && wanted.has(row.row_id) && typeof name === 'string' && name) {
+        byId.set(row.row_id, { name, iconId: row.fields?.Icon?.id });
       }
     }
-    if (offset + CN_CHUNK < ids.length) await sleep(150);
+    if (offset + STATUS_CHUNK < ids.length) await sleep(150);
   }
   return { byId, version };
 }
 
-function buildResult({ repo, ref, commit, sources, parsed, cn, allowMissing }) {
-  const unique = new Map();
-  const missing = [];
+function buildResult({ repo, ref, commit, parsed, en, cn, allowMissing }) {
+  const records = new Map();
+  const missingZh = [];
+  const missingEn = [];
   const sameText = [];
-  const iconDrift = new Map();
+  const invalidUpstream = [];
+  const duplicateIds = [];
+  let skippedIds = 0;
 
   for (const variant of parsed.variants) {
-    if (!variant.id || variant.id <= 0) continue;
-    const cnRow = cn.byId.get(variant.id);
-    if (!cnRow?.zh) {
-      missing.push(`${variant.name}(${variant.id})`);
+    if (!variant.id || variant.id <= 0) {
+      skippedIds++;
       continue;
     }
-    if (cnRow.zh === variant.name) {
+    if (!Number.isInteger(variant.iconId) || variant.iconId <= 0) {
+      invalidUpstream.push(`${variant.name}(${variant.id})`);
+      continue;
+    }
+    const cnRow = cn.byId.get(variant.id);
+    if (!cnRow?.name || !Number.isInteger(cnRow.iconId) || cnRow.iconId <= 0) {
+      missingZh.push(`${variant.name}(${variant.id})`);
+      continue;
+    }
+    if (cnRow.name === variant.name) {
       sameText.push(`${variant.name}(${variant.id})`);
       continue;
     }
-    if (variant.iconId != null && cnRow.iconId != null && variant.iconId !== cnRow.iconId) {
-      const key = `${variant.id}\u0000${variant.name}\u0000${cnRow.zh}\u0000${variant.iconId}\u0000${cnRow.iconId}`;
-      if (!iconDrift.has(key)) {
-        iconDrift.set(key, {
-          id: variant.id,
-          en: variant.name,
-          zh: cnRow.zh,
-          upstreamIconId: variant.iconId,
-          cnIconId: cnRow.iconId,
-        });
-      }
-    }
-    const entry = { id: variant.id, en: variant.name, zh: cnRow.zh };
-    if (variant.iconId != null) entry.iconId = variant.iconId;
-    const key = `${entry.id}\u0000${entry.en}\u0000${entry.zh}\u0000${entry.iconId ?? ''}`;
-    if (!unique.has(key)) unique.set(key, entry);
+    const enRow = en.byId.get(variant.id);
+    const enSource = enRow?.name && Number.isInteger(enRow.iconId) && enRow.iconId > 0 ? { name: enRow.name, icon: enRow.iconId } : undefined;
+    if (!enSource) missingEn.push(`${variant.name}(${variant.id})`);
+
+    const record = {
+      id: variant.id,
+      upstream: { name: variant.name, icon: variant.iconId },
+      ...(enSource ? { en: enSource } : {}),
+      zh: { name: cnRow.name, icon: cnRow.iconId },
+    };
+    const previous = records.get(variant.id);
+    if (previous && JSON.stringify(previous) !== JSON.stringify(record)) duplicateIds.push(`${variant.name}(${variant.id})`);
+    records.set(variant.id, record);
   }
 
-  if (missing.length && !allowMissing) {
-    throw new Error(`国服缺中文 ${missing.length} 条（前 20 条: ${missing.slice(0, 20).join(', ')}）；确认可接受后加 --allow-missing`);
+  if (missingZh.length && !allowMissing) {
+    throw new Error(`国服缺中文 ${missingZh.length} 条（前 20 条: ${missingZh.slice(0, 20).join(', ')}）；确认可接受后加 --allow-missing`);
   }
 
-  const entries = [...unique.values()].sort((a, b) => a.en.localeCompare(b.en) || a.id - b.id || (a.iconId ?? 0) - (b.iconId ?? 0));
+  const entries = [...records.values()].sort((a, b) => a.id - b.id);
   if (entries.length < MIN_ENTRIES) {
     throw new Error(`只生成 ${entries.length} 条，低于下限 ${MIN_ENTRIES}；上游结构可能变了，已中止写入`);
   }
 
   const grouped = new Map();
   for (const entry of entries) {
-    const list = grouped.get(entry.en) ?? [];
+    const list = grouped.get(entry.upstream.name) ?? [];
     list.push(entry);
-    grouped.set(entry.en, list);
+    grouped.set(entry.upstream.name, list);
   }
   const sameNameDifferentZh = [];
   const sameNameSameZh = [];
   for (const [name, list] of grouped) {
     if (list.length < 2) continue;
-    if (new Set(list.map((entry) => entry.zh)).size > 1) {
-      sameNameDifferentZh.push(`${name}(${list.map((entry) => `${entry.zh}:${entry.id}`).join(' / ')})`);
+    if (new Set(list.map((entry) => entry.zh.name)).size > 1) {
+      sameNameDifferentZh.push(`${name}(${list.map((entry) => `${entry.zh.name}:${entry.id}`).join(' / ')})`);
       continue;
     }
-    const iconVariants = new Set(list.map((entry) => entry.iconId ?? '')).size > 1;
+    const iconVariants = new Set(list.map((entry) => entry.upstream.icon)).size > 1;
     sameNameSameZh.push(
-      `${name}(${list.map((entry) => `${entry.zh}:${entry.id}:${entry.iconId ?? '-'}`).join(' / ')}) [${iconVariants ? 'icon variants' : 'id variants'}]`,
+      `${name}(${list.map((entry) => `${entry.zh.name}:${entry.id}:${entry.upstream.icon}`).join(' / ')}) [${iconVariants ? 'icon variants' : 'id variants'}]`,
     );
   }
 
-  const iconDriftList = [...iconDrift.values()].sort((a, b) => a.en.localeCompare(b.en) || a.id - b.id || (a.upstreamIconId ?? 0) - (b.upstreamIconId ?? 0));
+  const enNames = {};
+  const enIcons = {};
+  const zhIcons = {};
+  const rows = entries.map((entry) => {
+    const en = entry.en;
+    const currentIcon = en?.icon ?? entry.upstream.icon;
+    if (en && en.name.trim().toLowerCase() !== entry.upstream.name.trim().toLowerCase()) enNames[entry.id] = en.name;
+    if (en && en.icon !== entry.upstream.icon) enIcons[entry.id] = en.icon;
+    if (entry.zh.icon !== currentIcon) zhIcons[entry.id] = entry.zh.icon;
+    return [entry.id, entry.upstream.name, entry.upstream.icon, entry.zh.name];
+  });
 
-  const dataText = `[\n${entries.map((entry) => `  ${JSON.stringify(entry)}`).join(',\n')}\n]\n`;
+  // 源文件保持可读；Vite 构建 JSON import 时会转成紧凑的 JSON.parse 字符串，不影响 bundle。
+  const dataText = `${JSON.stringify({ rows, enNames, enIcons, zhIcons }, null, 2)}\n`;
   const dataSha256 = sha256(dataText);
   const meta = {
-    schemaVersion: 2,
+    formatVersion: 4,
     upstream: { repo, ref, commit },
-    bakedAt: new Date().toISOString(),
-    cnVersion: cn.version,
-    dataSha256,
-    entriesCount: entries.length,
-    sourceDigest: sourceDigest(sources),
-    counts: {
-      root: parsed.rootCount,
-      variants: parsed.variants.length,
-      emitted: entries.length,
-      missingZh: missing.length,
-      sameText: sameText.length,
-      sameNameDifferentZh: sameNameDifferentZh.length,
-      sameNameSameZh: sameNameSameZh.length,
-      iconDrift: iconDriftList.length,
-    },
-    warnings: {
-      missingZh: missing,
-      sameText,
-      sameNameDifferentZh,
-      sameNameSameZh,
-    },
-    diagnostics: {
-      iconDrift: iconDriftList,
-    },
+    cn: { version: cn.version },
+    data: { sha256: dataSha256, entries: entries.length },
   };
-  if (parsed.warnings.length) meta.warnings.parse = parsed.warnings;
-
-  return { dataText, meta };
+  const warnings = {
+    parse: parsed.warnings,
+    invalidUpstream,
+    duplicateIds,
+    missingZh,
+    missingEn,
+    sameText,
+    sameNameDifferentZh,
+    sameNameSameZh,
+  };
+  const summary = {
+    root: parsed.rootCount,
+    variants: parsed.variants.length,
+    skippedIds,
+    enNameDiff: Object.keys(enNames).length,
+    upstreamIconDiff: Object.keys(enIcons).length,
+    zhIconDiff: Object.keys(zhIcons).length,
+  };
+  return { dataText, meta, warnings, summary };
 }
 
-async function preserveIconDiagnostics(current, { commit, cnVersion }) {
-  let previous;
-  try {
-    previous = JSON.parse(await readFile(META_FILE, 'utf8'));
-  } catch {
-    return current;
+function reportWarnings(warnings) {
+  const groups = [
+    ['上游解析', '条', warnings.parse],
+    ['上游缺 icon', '条', warnings.invalidUpstream],
+    ['重复 id', '条', warnings.duplicateIds],
+    ['缺中文', '条', warnings.missingZh],
+    ['缺英文', '条', warnings.missingEn],
+    ['中文名与上游英文名相同', '条', warnings.sameText],
+    ['同名异译', '组', warnings.sameNameDifferentZh],
+    ['同名同译', '组', warnings.sameNameSameZh],
+  ];
+  for (const [label, unit, list] of groups) {
+    if (!list?.length) continue;
+    const sample = list.slice(0, 20).join(', ');
+    const suffix = list.length > 20 ? ` …（共 ${list.length} ${unit}）` : '';
+    warn(`${label} ${list.length} ${unit}: ${sample}${suffix}`);
   }
-  if (previous?.upstream?.commit !== commit || previous?.cnVersion !== cnVersion) return current;
-  if (typeof previous?.diagnostics?.checkedAt !== 'string') return current;
-  const previousDrift = previous?.diagnostics?.iconDrift;
-  if (!Array.isArray(previousDrift)) return current;
-  const byKey = new Map(previousDrift.map((item) => [`${item.id}\u0000${item.en}\u0000${item.upstreamIconId}`, item]));
-  let complete = true;
-  const iconDrift = current.iconDrift.map((item) => {
-    const old = byKey.get(`${item.id}\u0000${item.en}\u0000${item.upstreamIconId}`);
-    if (!old || old.cnIconId !== item.cnIconId || old.zh !== item.zh) {
-      complete = false;
-      return item;
-    }
-    return {
-      ...item,
-      enIconId: old.enIconId,
-      iconOwners: old.iconOwners,
-      nameRows: old.nameRows,
-      verdict: old.verdict,
-      ...(old.error === undefined ? {} : { error: old.error }),
-    };
-  });
-  return complete ? { checkedAt: previous.diagnostics.checkedAt, iconDrift } : current;
-}
-
-async function enrichIconDiagnostics(diagnostics) {
-  const drift = diagnostics?.iconDrift ?? [];
-  const enriched = [];
-  for (const [index, item] of drift.entries()) {
-    try {
-      const enRow = await fetchStatusRow(EN_HOST, item.id, 'en');
-      const [enOwners, cnOwners, enNames, cnNames] = await Promise.all([
-        searchStatus(EN_HOST, `Icon=${item.upstreamIconId}`, 'en'),
-        searchStatus(CN_HOST, `Icon=${item.upstreamIconId}`, 'chs'),
-        searchStatus(EN_HOST, `Name~${quoteQuery(item.en)}`, 'en'),
-        searchStatus(CN_HOST, `Name~${quoteQuery(item.zh)}`, 'chs'),
-      ]);
-      const iconOwners = mergeStatusRows(enOwners, cnOwners);
-      const nameRows = mergeStatusRows(enNames, cnNames).filter((row) => row.en?.toLowerCase() === item.en.toLowerCase() || row.zh === item.zh);
-      enriched.push({
-        ...item,
-        enIconId: enRow?.iconId,
-        iconOwners,
-        nameRows,
-        verdict: verdictOf(item, iconOwners),
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      warn(`icon 诊断失败 ${item.en}(${item.id}): ${message}`);
-      enriched.push({ ...item, verdict: 'unchecked', error: message });
-    }
-    if (index < drift.length - 1) await sleep(150);
-  }
-  return { ...diagnostics, checkedAt: new Date().toISOString(), iconDrift: enriched };
-}
-
-async function fetchStatusRow(host, id, language) {
-  const url = `${host}/sheet/Status/${id}?fields=Name,Icon&language=${language}`;
-  const response = await fetchWithRetry(url, { headers: { accept: 'application/json' }, tries: 4 });
-  const body = await response.json();
-  return { id: body?.row_id ?? id, name: body?.fields?.Name, iconId: body?.fields?.Icon?.id };
-}
-
-async function searchStatus(host, query, language) {
-  const params = new URLSearchParams({ query, sheets: 'Status', fields: 'Name,Icon', language, limit: '100' });
-  const response = await fetchWithRetry(`${host}/search?${params.toString()}`, {
-    headers: { accept: 'application/json' },
-    tries: 4,
-  });
-  const body = await response.json();
-  const rows = (body?.results ?? [])
-    .map((row) => ({ id: row?.row_id, name: row?.fields?.Name, iconId: row?.fields?.Icon?.id }))
-    .filter((row) => Number.isInteger(row.id) && typeof row.name === 'string' && row.name);
-  if (rows.length >= 100) warn(`searchStatus 结果达到 100 条上限，可能被截断: ${query}`);
-  return rows;
-}
-
-function mergeStatusRows(enRows, cnRows) {
-  const byId = new Map();
-  for (const row of enRows) byId.set(row.id, { id: row.id, en: row.name, iconId: row.iconId });
-  for (const row of cnRows) {
-    const existing = byId.get(row.id) ?? { id: row.id };
-    existing.zh = row.name;
-    existing.cnIconId = row.iconId;
-    byId.set(row.id, existing);
-  }
-  return [...byId.values()].sort((a, b) => a.id - b.id);
-}
-
-function quoteQuery(text) {
-  return `"${String(text).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
-}
-
-function verdictOf(item, iconOwners) {
-  if (!iconOwners.length) return 'icon-not-in-current-sheet';
-  const sameName = iconOwners.filter((owner) => typeof owner.en === 'string' && owner.en.toLowerCase() === item.en.toLowerCase());
-  if (!sameName.length) return 'icon-belongs-to-other-name';
-  const translated = sameName.filter((owner) => typeof owner.zh === 'string' && owner.zh);
-  if (!translated.length) return 'same-name-sibling';
-  return translated.some((owner) => owner.zh === item.zh) ? 'same-name-sibling' : 'same-name-different-translation';
-}
-
-function formatVerdictCounts(iconDrift) {
-  const counts = new Map();
-  for (const item of iconDrift) {
-    const verdict = item.verdict ?? 'unchecked';
-    counts.set(verdict, (counts.get(verdict) ?? 0) + 1);
-  }
-  return [...counts.entries()].map(([verdict, count]) => `${verdict}=${count}`).join(', ') || '0';
-}
-
-function sourceDigest(sources) {
-  const lines = [...sources.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([path, text]) => `${path} ${sha256(text)}`);
-  return sha256(lines.join('\n'));
 }
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
 }
 
-function entriesSummary(meta) {
-  return `${meta.entriesCount} 条（root ${meta.counts.root}，变体 ${meta.counts.variants}，缺中文 ${meta.counts.missingZh}，同名异译 ${meta.counts.sameNameDifferentZh}，同名同译 ${meta.counts.sameNameSameZh}）`;
+function entriesSummary({ meta, summary, warnings }) {
+  return `${meta.data.entries} 条（root ${summary.root}，变体 ${summary.variants}，缺中文 ${warnings.missingZh.length}，缺英文 ${warnings.missingEn.length}，同名异译 ${warnings.sameNameDifferentZh.length} 组，同名同译 ${warnings.sameNameSameZh.length} 组）`;
 }
 
 async function writeOutputs(dataText, metaText) {

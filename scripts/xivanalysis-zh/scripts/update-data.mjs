@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 
 const PKG_DIR = resolve(import.meta.dirname, '..');
 const argv = process.argv.slice(2);
-const known = new Set(['--icons', '--corpus', '--help', '-h']);
+const known = new Set(['--corpus', '--help', '-h']);
 for (const arg of argv) {
   if (!known.has(arg)) {
     console.error(`[update-data] 未知参数: ${arg}`);
@@ -27,7 +27,7 @@ const run = (args) => {
 };
 
 console.log('[update-data] 更新 status 烘焙...');
-run([resolve(PKG_DIR, 'scripts/bake-statuses.mjs'), ...(argv.includes('--icons') ? ['--check-icons'] : [])]);
+run([resolve(PKG_DIR, 'scripts/bake-statuses.mjs')]);
 console.log('[update-data] status 烘焙完成。');
 
 if (argv.includes('--corpus')) {
@@ -41,7 +41,6 @@ if (argv.includes('--corpus')) {
 function printHelp() {
   console.log(`用法: node scripts/update-data.mjs [选项]
 
-  --icons   同时用 xivapi 的 Icon= 检索富化 statuses.meta.json 的 iconDrift（联网）
   --corpus  同时运行 33 条战报的语料 capture（约 50 分钟）
   --help    显示本帮助
 `);

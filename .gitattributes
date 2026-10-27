@@ -9,6 +9,11 @@
 # rejected as invalid_metadata. These files must therefore be stored and checked out as LF.
 *.dwf.ts                     text eol=lf
 
+# statuses.json 的 data.sha256 按原始字节校验；这两个生成物必须保持 LF，
+# 不能被全局 eol=crlf 在 checkout 时改写。
+scripts/xivanalysis-zh/src/data/generated/statuses.json      text eol=lf
+scripts/xivanalysis-zh/src/data/generated/statuses.meta.json text eol=lf
+
 # Don't allow people to merge changes to these generated files, because the result
 # may be invalid.  You need to run "rush update" again.
 pnpm-lock.yaml               merge=text

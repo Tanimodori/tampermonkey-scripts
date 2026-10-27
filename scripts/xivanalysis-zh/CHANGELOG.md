@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- `statuses.json` 改为按 id 排序的元组 + 稀疏例外（`rows` + `enNames`/`enIcons`/`zhIcons`）；运行时按 upstream/en 名称匹配，并用三方图标消歧。
+- 源文件保持可读缩进；`vite.config.ts` 统一把 JSON import 转成紧凑的 `JSON.parse`，构建产物 59.9 kB，低于改动前的约 72.9 kB。
+- `statuses.meta.json` 精简为 `formatVersion`、upstream、国服版本和 data hash/条目数；移除 diagnostics、warnings、counts。
+- 移除 `bake:statuses:check-icons`、`update:data:icons`；烘焙 warning 改为输出到 stderr。
+
 ## v0.0.6 (2026/10/21)
 
 - 构建期烘焙 xivanalysis 状态表（英文名/icon + 国服简中名），时间轴与图标不再为状态名逐个反查。

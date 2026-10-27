@@ -3,8 +3,8 @@
  * 把 xivanalysis 的 STATUSES（英文名 + 显示 icon）与英文/国服 xivapi 的 Status 表按 id 合并成静态数据。
  *
  * 生成的 `src/data/generated/statuses.json` 会被 `src/data/statuses.ts` 直接 import，
- * Vite 在构建时内联。源文件保持 2 空格缩进以便阅读；Vite 会把 JSON import 转成紧凑的
- * `JSON.parse("...")`，所以源文件缩进不计入 bundle。`statuses.meta.json` 只给本脚本与校验命令读，不进产物。
+ * Vite 在构建时内联。源文件的 rows 每行一条、例外表保持缩进，便于阅读；Vite 会把 JSON import
+ * 转成紧凑的 `JSON.parse("...")`，所以源文件排版不计入 bundle。`statuses.meta.json` 只给本脚本与校验命令读，不进产物。
  *
  * 用法：
  *   node scripts/bake-statuses.mjs                     # 烘焙（需要网络）
@@ -802,8 +802,8 @@ function buildResult({ repo, ref, commit, parsed, en, cn, allowMissing }) {
     return [entry.id, entry.upstream.name, entry.upstream.icon, entry.zh.name];
   });
 
-  // 源文件保持可读；Vite 构建 JSON import 时会转成紧凑的 JSON.parse 字符串，不影响 bundle。
-  const dataText = `${JSON.stringify({ rows, enNames, enIcons, zhIcons }, null, 2)}\n`;
+  // rows 每行一条，例外表保持缩进；Vite 构建 JSON import 时会转成紧凑的 JSON.parse 字符串，不影响 bundle。
+  const dataText = serializeStatusData({ rows, enNames, enIcons, zhIcons });
   const dataSha256 = sha256(dataText);
   const meta = {
     formatVersion: 4,
@@ -830,6 +830,22 @@ function buildResult({ repo, ref, commit, parsed, en, cn, allowMissing }) {
     zhIconDiff: Object.keys(zhIcons).length,
   };
   return { dataText, meta, warnings, summary };
+}
+
+function serializeStatusData({ rows, enNames, enIcons, zhIcons }) {
+  const formatRow = (row) => `[${row.map((value) => JSON.stringify(value)).join(', ')}]`;
+  const formatMap = (map) => JSON.stringify(map, null, 2).replace(/\n/g, '\n  ');
+  return [
+    '{',
+    '  "rows": [',
+    rows.map((row) => `    ${formatRow(row)}`).join(',\n'),
+    '  ],',
+    `  "enNames": ${formatMap(enNames)},`,
+    `  "enIcons": ${formatMap(enIcons)},`,
+    `  "zhIcons": ${formatMap(zhIcons)}`,
+    '}',
+    '',
+  ].join('\n');
 }
 
 function reportWarnings(warnings) {

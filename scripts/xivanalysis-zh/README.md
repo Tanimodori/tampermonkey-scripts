@@ -28,7 +28,7 @@ Playwright 分组：
 
 ## 状态表烘焙
 
-`src/data/generated/statuses.json` 是按 id 排序的 status 对照表，构建时由 `src/data/statuses.ts` 直接 import，Vite 内联进产物。**构建不联网**。源文件保持 2 空格缩进便于阅读；`vite.config.ts` 开启 `json.stringify` 并关闭 named exports，Vite 会把 JSON import 转成紧凑的 `JSON.parse("...")`，缩进不进 bundle。
+`src/data/generated/statuses.json` 是按 id 排序的 status 对照表，构建时由 `src/data/statuses.ts` 直接 import，Vite 内联进产物。**构建不联网**。源文件的 `rows` 每行一条、例外表保持缩进便于阅读；`vite.config.ts` 开启 `json.stringify` 并关闭 named exports，Vite 会把 JSON import 转成紧凑的 `JSON.parse("...")`，排版不进 bundle。
 
 结构是元组 + 稀疏例外，只存运行时真正需要的子集：
 

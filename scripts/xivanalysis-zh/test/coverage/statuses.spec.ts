@@ -20,9 +20,12 @@ describe('烘焙状态表', () => {
     expect(meta).not.toHaveProperty('counts');
   });
 
-  it('statuses.json 是保留缩进的元组 + 稀疏例外', () => {
+  it('statuses.json 是每行一条的元组 + 稀疏例外', () => {
     const text = readFileSync(DATA_URL, 'utf8');
     expect(text).toContain('\n  "rows": [');
+    const rowLines = text.split('\n').filter((line) => /^ {4}\[/.test(line));
+    expect(rowLines).toHaveLength(data.rows.length);
+    expect(rowLines[0]).toBe('    [1, "Petrification", 215001, "石化"],');
     const enNames: Record<string, string> = data.enNames;
     const enIcons: Record<string, number> = data.enIcons;
     const zhIcons: Record<string, number> = data.zhIcons;

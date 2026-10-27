@@ -94,7 +94,7 @@ garland 没有 ACAO，走 Node `fetch` 验证形状。
 
 权威用例读 `test/coverage/corpus/` 的语料，基线为 33 条战报，由 `test:corpus:capture` 生成。capture 指按基线战报抓取页面终态与接口数据的过程。语料记录真实战报的页面终态与接口数据，覆盖率测试在离线环境检查这些内容是否都有译文，因此不需要在每次测试中重跑全部真实战报。真实页面请求 Action 时未带 `ClassJob` 字段，`abbreviations.json` 通常为空；职业缩写覆盖以 ClassJob 全表为准。
 
-`statuses.json` 的 `id` 是游戏 `Status` 表 row_id，不是 FFLogs 的 `+1,000,000` ID。数据用 `rows` 元组保存 `[id, upstream 名, upstream 图标, 国服名]`；`enNames`/`enIcons` 只存与 upstream 不同的例外，`zhIcons` 只存与当前 en/upstream 图标不同的例外。源文件保持缩进便于阅读，Vite 构建时转成紧凑的 `JSON.parse`。运行时页面没有 row_id，先按 upstream name、再按 en name 匹配，同名多 id 时用 upstream/en/zh 图标消歧。烘焙告警只写 stderr，不进入 meta。数据源与采集边界见 [data-sources.md](data-sources.md)。
+`statuses.json` 的 `id` 是游戏 `Status` 表 row_id，不是 FFLogs 的 `+1,000,000` ID。数据用 `rows` 元组保存 `[id, upstream 名, upstream 图标, 国服名]`；`enNames`/`enIcons` 只存与 upstream 不同的例外，`zhIcons` 只存与当前 en/upstream 图标不同的例外。源文件的 `rows` 每行一条，Vite 构建时转成紧凑的 `JSON.parse`。运行时页面没有 row_id，先按 upstream name、再按 en name 匹配，同名多 id 时用 upstream/en/zh 图标消歧。烘焙告警只写 stderr，不进入 meta。数据源与采集边界见 [data-sources.md](data-sources.md)。
 
 ## 全链路 smoke
 

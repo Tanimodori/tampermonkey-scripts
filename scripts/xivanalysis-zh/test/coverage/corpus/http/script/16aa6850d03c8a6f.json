@@ -1,0 +1,109 @@
+{
+  "formatVersion": 1,
+  "id": "16aa6850d03c8a6f",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=2604%2C2616%2C2607%2C2609%2C2938%2C2642%2C2643%2C2620&limit=8&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 2604,
+          "fields": {
+            "Icon": {
+              "id": 212951,
+              "path": "ui/icon/212000/212951.tex",
+              "path_hr1": "ui/icon/212000/212951_hr1.tex"
+            },
+            "Name": "心关"
+          }
+        },
+        {
+          "row_id": 2616,
+          "fields": {
+            "Icon": {
+              "id": 212962,
+              "path": "ui/icon/212000/212962.tex",
+              "path_hr1": "ui/icon/212000/212962_hr1.tex"
+            },
+            "Name": "均衡注药III"
+          }
+        },
+        {
+          "row_id": 2607,
+          "fields": {
+            "Icon": {
+              "id": 212954,
+              "path": "ui/icon/212000/212954.tex",
+              "path_hr1": "ui/icon/212000/212954_hr1.tex"
+            },
+            "Name": "均衡诊断"
+          }
+        },
+        {
+          "row_id": 2609,
+          "fields": {
+            "Icon": {
+              "id": 212954,
+              "path": "ui/icon/212000/212954.tex",
+              "path_hr1": "ui/icon/212000/212954_hr1.tex"
+            },
+            "Name": "均衡预后"
+          }
+        },
+        {
+          "row_id": 2938,
+          "fields": {
+            "Icon": {
+              "id": 212970,
+              "path": "ui/icon/212000/212970.tex",
+              "path_hr1": "ui/icon/212000/212970_hr1.tex"
+            },
+            "Name": "坚角清汁[回]"
+          }
+        },
+        {
+          "row_id": 2642,
+          "fields": {
+            "Icon": {
+              "id": 217585,
+              "path": "ui/icon/217000/217585.tex",
+              "path_hr1": "ui/icon/217000/217585_hr1.tex"
+            },
+            "Name": "血印"
+          }
+        },
+        {
+          "row_id": 2643,
+          "fields": {
+            "Icon": {
+              "id": 217355,
+              "path": "ui/icon/217000/217355.tex",
+              "path_hr1": "ui/icon/217000/217355_hr1.tex"
+            },
+            "Name": "泛血印"
+          }
+        },
+        {
+          "row_id": 2620,
+          "fields": {
+            "Icon": {
+              "id": 212966,
+              "path": "ui/icon/212000/212966.tex",
+              "path_hr1": "ui/icon/212000/212966_hr1.tex"
+            },
+            "Name": "自生II"
+          }
+        }
+      ]
+    }
+  }
+}

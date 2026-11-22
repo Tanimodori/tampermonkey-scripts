@@ -1,0 +1,318 @@
+{
+  "formatVersion": 1,
+  "id": "LX2T4ZvbcfpPBy8h/3/2",
+  "url": "https://xivanalysis.com/fflogs/LX2T4ZvbcfpPBy8h/3/2",
+  "job": "BLM",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Astral Fire andUmbral Ice",
+      "-5"
+    ],
+    [
+      "Polyglot",
+      "-5"
+    ],
+    [
+      "Gauges",
+      "-5"
+    ],
+    [
+      "Astral Soul",
+      "-4"
+    ],
+    [
+      "Umbral Hearts",
+      "-4"
+    ],
+    [
+      "Paradox",
+      "-4"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Standard Finish",
+      "-4"
+    ],
+    [
+      "Battle Litany",
+      "-4"
+    ],
+    [
+      "Technical Finish",
+      "-4"
+    ],
+    [
+      "Devilment",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Ley Lines Buffs",
+      "-5"
+    ],
+    [
+      "Ley Lines",
+      "-4"
+    ],
+    [
+      "Circle Of Power",
+      "-4"
+    ],
+    [
+      "Transpose",
+      "-5"
+    ],
+    [
+      "Triplecast",
+      "-5"
+    ],
+    [
+      "Swiftcast",
+      "-5"
+    ],
+    [
+      "Amplifier",
+      "-5"
+    ],
+    [
+      "Ley Lines",
+      "-5"
+    ],
+    [
+      "Manafont",
+      "-5"
+    ],
+    [
+      "Addle",
+      "-5"
+    ],
+    [
+      "Manaward",
+      "-5"
+    ],
+    [
+      "Surecast",
+      "-5"
+    ],
+    [
+      "Aetherial Manipulation",
+      "-5"
+    ],
+    [
+      "Between the Lines",
+      "-5"
+    ],
+    [
+      "Retrace",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Standard Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213708_hr1.tex&format=png"
+    ],
+    [
+      "Battle Litany",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212578_hr1.tex&format=png"
+    ],
+    [
+      "Technical Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213709_hr1.tex&format=png"
+    ],
+    [
+      "Devilment",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213714_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Fire III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000453_hr1.tex&format=png"
+    ],
+    [
+      "High Thunder",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002673_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "Xenoglossy",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002667_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "Flare Star",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002151_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "High Thunder",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002673_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "Flare Star",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002151_hr1.tex&format=png"
+    ],
+    [
+      "Despair",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002665_hr1.tex&format=png"
+    ],
+    [
+      "Blizzard III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000456_hr1.tex&format=png"
+    ],
+    [
+      "Blizzard IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002659_hr1.tex&format=png"
+    ],
+    [
+      "Paradox",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002672_hr1.tex&format=png"
+    ],
+    [
+      "Paradox",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002672_hr1.tex&format=png"
+    ],
+    [
+      "Fire III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000453_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "Fire IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002660_hr1.tex&format=png"
+    ],
+    [
+      "High Thunder",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002673_hr1.tex&format=png"
+    ],
+    [
+      "Thunderhead",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212660_hr1.tex&format=png"
+    ],
+    [
+      "Thunderhead",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212660_hr1.tex&format=png"
+    ],
+    [
+      "Thunderhead",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212660_hr1.tex&format=png"
+    ],
+    [
+      "Firestarter",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/210000/210460_hr1.tex&format=png"
+    ],
+    [
+      "Ley Lines",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212653_hr1.tex&format=png"
+    ],
+    [
+      "Circle Of Power",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212654_hr1.tex&format=png"
+    ],
+    [
+      "Transpose",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000466_hr1.tex&format=png"
+    ],
+    [
+      "Transpose",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000466_hr1.tex&format=png"
+    ],
+    [
+      "Triplecast",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002663_hr1.tex&format=png"
+    ],
+    [
+      "Swiftcast",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000866_hr1.tex&format=png"
+    ],
+    [
+      "Amplifier",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002671_hr1.tex&format=png"
+    ],
+    [
+      "Ley Lines",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002656_hr1.tex&format=png"
+    ],
+    [
+      "Manafont",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002651_hr1.tex&format=png"
+    ],
+    [
+      "Addle",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000861_hr1.tex&format=png"
+    ],
+    [
+      "Surecast",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000869_hr1.tex&format=png"
+    ]
+  ]
+}

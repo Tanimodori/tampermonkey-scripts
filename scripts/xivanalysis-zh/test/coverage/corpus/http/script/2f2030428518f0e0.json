@@ -1,0 +1,101 @@
+{
+  "formatVersion": 1,
+  "id": "2f2030428518f0e0",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Jinpu&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "14572",
+        "obj": {
+          "i": 14572,
+          "n": "Jinpu",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "20784",
+        "obj": {
+          "i": 20784,
+          "n": "Jinpu",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "7478",
+        "obj": {
+          "i": 7478,
+          "n": "Jinpu",
+          "c": 3152,
+          "j": 34,
+          "t": 3,
+          "l": 4
+        }
+      },
+      {
+        "type": "action",
+        "id": "8722",
+        "obj": {
+          "i": 8722,
+          "n": "Jinpu",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "8822",
+        "obj": {
+          "i": 8822,
+          "n": "Jinpu",
+          "c": 784,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "9003",
+        "obj": {
+          "i": 9003,
+          "n": "Jinpu",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "9141",
+        "obj": {
+          "i": 9141,
+          "n": "Jinpu",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

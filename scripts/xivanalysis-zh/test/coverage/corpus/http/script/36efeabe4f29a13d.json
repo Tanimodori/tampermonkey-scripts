@@ -1,0 +1,16 @@
+{
+  "formatVersion": 1,
+  "id": "36efeabe4f29a13d",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Reawaken+Procs&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": []
+  }
+}

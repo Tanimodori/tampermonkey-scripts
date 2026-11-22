@@ -1,0 +1,28 @@
+{
+  "formatVersion": 1,
+  "id": "8a8fa401ddb0dc5c",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status/496?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 496,
+      "fields": {
+        "Icon": {
+          "id": 212901,
+          "path": "ui/icon/212000/212901.tex",
+          "path_hr1": "ui/icon/212000/212901_hr1.tex"
+        },
+        "Name": "结印"
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "276ec0af18f63b6c",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/34609?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 34609,
+      "fields": {
+        "Icon": {
+          "id": 3704,
+          "path": "ui/icon/003000/003704.tex",
+          "path_hr1": "ui/icon/003000/003704_hr1.tex"
+        },
+        "Name": "疾速利齿"
+      },
+      "transient": {
+        "Description": "对目标发动物理攻击　威力：300\n追加效果：疾速\n持续时间：40秒\n疾速效果：自身的自动攻击间隔、战技与魔法的咏唱及复唱时间缩短15%\n发动条件：咬噬尖齿或穿裂尖齿命中时\n\n※该技能无法设置到热键栏\n　满足发动条件后，穿裂尖齿变为疾速利齿"
+      }
+    }
+  }
+}

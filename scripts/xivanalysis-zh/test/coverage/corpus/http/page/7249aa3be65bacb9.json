@@ -1,0 +1,450 @@
+{
+  "formatVersion": 1,
+  "id": "7249aa3be65bacb9",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Action?rows=16155,16162,16163,16146,16165,16144,16138,16153,16159,25760,16164,16145,16149,16139,16137,16150,16158,197,36934,16151,16161,16152,36935,16160,25758,16140,7531,7535,16147,36939,16156,16157,16141,16148,7548,16142,7533,16143,3&limit=39&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 16155,
+          "fields": {
+            "Icon": {
+              "id": 3419,
+              "path": "ui/icon/003000/003419.tex",
+              "path_hr1": "ui/icon/003000/003419_hr1.tex"
+            },
+            "Name": "Continuation"
+          }
+        },
+        {
+          "row_id": 16162,
+          "fields": {
+            "Icon": {
+              "id": 3426,
+              "path": "ui/icon/003000/003426.tex",
+              "path_hr1": "ui/icon/003000/003426_hr1.tex"
+            },
+            "Name": "Burst Strike"
+          }
+        },
+        {
+          "row_id": 16163,
+          "fields": {
+            "Icon": {
+              "id": 3427,
+              "path": "ui/icon/003000/003427.tex",
+              "path_hr1": "ui/icon/003000/003427_hr1.tex"
+            },
+            "Name": "Fated Circle"
+          }
+        },
+        {
+          "row_id": 16146,
+          "fields": {
+            "Icon": {
+              "id": 3410,
+              "path": "ui/icon/003000/003410.tex",
+              "path_hr1": "ui/icon/003000/003410_hr1.tex"
+            },
+            "Name": "Gnashing Fang"
+          }
+        },
+        {
+          "row_id": 16165,
+          "fields": {
+            "Icon": {
+              "id": 3429,
+              "path": "ui/icon/003000/003429.tex",
+              "path_hr1": "ui/icon/003000/003429_hr1.tex"
+            },
+            "Name": "Blasting Zone"
+          }
+        },
+        {
+          "row_id": 16144,
+          "fields": {
+            "Icon": {
+              "id": 3408,
+              "path": "ui/icon/003000/003408.tex",
+              "path_hr1": "ui/icon/003000/003408_hr1.tex"
+            },
+            "Name": "Danger Zone"
+          }
+        },
+        {
+          "row_id": 16138,
+          "fields": {
+            "Icon": {
+              "id": 3402,
+              "path": "ui/icon/003000/003402.tex",
+              "path_hr1": "ui/icon/003000/003402_hr1.tex"
+            },
+            "Name": "No Mercy"
+          }
+        },
+        {
+          "row_id": 16153,
+          "fields": {
+            "Icon": {
+              "id": 3417,
+              "path": "ui/icon/003000/003417.tex",
+              "path_hr1": "ui/icon/003000/003417_hr1.tex"
+            },
+            "Name": "Sonic Break"
+          }
+        },
+        {
+          "row_id": 16159,
+          "fields": {
+            "Icon": {
+              "id": 3423,
+              "path": "ui/icon/003000/003423.tex",
+              "path_hr1": "ui/icon/003000/003423_hr1.tex"
+            },
+            "Name": "Bow Shock"
+          }
+        },
+        {
+          "row_id": 25760,
+          "fields": {
+            "Icon": {
+              "id": 3432,
+              "path": "ui/icon/003000/003432.tex",
+              "path_hr1": "ui/icon/003000/003432_hr1.tex"
+            },
+            "Name": "Double Down"
+          }
+        },
+        {
+          "row_id": 16164,
+          "fields": {
+            "Icon": {
+              "id": 3428,
+              "path": "ui/icon/003000/003428.tex",
+              "path_hr1": "ui/icon/003000/003428_hr1.tex"
+            },
+            "Name": "Bloodfest"
+          }
+        },
+        {
+          "row_id": 16145,
+          "fields": {
+            "Icon": {
+              "id": 3409,
+              "path": "ui/icon/003000/003409.tex",
+              "path_hr1": "ui/icon/003000/003409_hr1.tex"
+            },
+            "Name": "Solid Barrel"
+          }
+        },
+        {
+          "row_id": 16149,
+          "fields": {
+            "Icon": {
+              "id": 3413,
+              "path": "ui/icon/003000/003413.tex",
+              "path_hr1": "ui/icon/003000/003413_hr1.tex"
+            },
+            "Name": "Demon Slaughter"
+          }
+        },
+        {
+          "row_id": 16139,
+          "fields": {
+            "Icon": {
+              "id": 3403,
+              "path": "ui/icon/003000/003403.tex",
+              "path_hr1": "ui/icon/003000/003403_hr1.tex"
+            },
+            "Name": "Brutal Shell"
+          }
+        },
+        {
+          "row_id": 16137,
+          "fields": {
+            "Icon": {
+              "id": 3401,
+              "path": "ui/icon/003000/003401.tex",
+              "path_hr1": "ui/icon/003000/003401_hr1.tex"
+            },
+            "Name": "Keen Edge"
+          }
+        },
+        {
+          "row_id": 16150,
+          "fields": {
+            "Icon": {
+              "id": 3414,
+              "path": "ui/icon/003000/003414.tex",
+              "path_hr1": "ui/icon/003000/003414_hr1.tex"
+            },
+            "Name": "Wicked Talon"
+          }
+        },
+        {
+          "row_id": 16158,
+          "fields": {
+            "Icon": {
+              "id": 3422,
+              "path": "ui/icon/003000/003422.tex",
+              "path_hr1": "ui/icon/003000/003422_hr1.tex"
+            },
+            "Name": "Eye Gouge"
+          }
+        },
+        {
+          "row_id": 197,
+          "fields": {
+            "Icon": {
+              "id": 103,
+              "path": "ui/icon/000000/000103.tex",
+              "path_hr1": "ui/icon/000000/000103_hr1.tex"
+            },
+            "Name": "Shield Wall"
+          }
+        },
+        {
+          "row_id": 36934,
+          "fields": {
+            "Icon": {
+              "id": 3434,
+              "path": "ui/icon/003000/003434.tex",
+              "path_hr1": "ui/icon/003000/003434_hr1.tex"
+            },
+            "Name": "Trajectory"
+          }
+        },
+        {
+          "row_id": 16151,
+          "fields": {
+            "Icon": {
+              "id": 3415,
+              "path": "ui/icon/003000/003415.tex",
+              "path_hr1": "ui/icon/003000/003415_hr1.tex"
+            },
+            "Name": "Aurora"
+          }
+        },
+        {
+          "row_id": 16161,
+          "fields": {
+            "Icon": {
+              "id": 3425,
+              "path": "ui/icon/003000/003425.tex",
+              "path_hr1": "ui/icon/003000/003425_hr1.tex"
+            },
+            "Name": "Heart of Stone"
+          }
+        },
+        {
+          "row_id": 16152,
+          "fields": {
+            "Icon": {
+              "id": 3416,
+              "path": "ui/icon/003000/003416.tex",
+              "path_hr1": "ui/icon/003000/003416_hr1.tex"
+            },
+            "Name": "Superbolide"
+          }
+        },
+        {
+          "row_id": 36935,
+          "fields": {
+            "Icon": {
+              "id": 3435,
+              "path": "ui/icon/003000/003435.tex",
+              "path_hr1": "ui/icon/003000/003435_hr1.tex"
+            },
+            "Name": "Great Nebula"
+          }
+        },
+        {
+          "row_id": 16160,
+          "fields": {
+            "Icon": {
+              "id": 3424,
+              "path": "ui/icon/003000/003424.tex",
+              "path_hr1": "ui/icon/003000/003424_hr1.tex"
+            },
+            "Name": "Heart of Light"
+          }
+        },
+        {
+          "row_id": 25758,
+          "fields": {
+            "Icon": {
+              "id": 3430,
+              "path": "ui/icon/003000/003430.tex",
+              "path_hr1": "ui/icon/003000/003430_hr1.tex"
+            },
+            "Name": "Heart of Corundum"
+          }
+        },
+        {
+          "row_id": 16140,
+          "fields": {
+            "Icon": {
+              "id": 3404,
+              "path": "ui/icon/003000/003404.tex",
+              "path_hr1": "ui/icon/003000/003404_hr1.tex"
+            },
+            "Name": "Camouflage"
+          }
+        },
+        {
+          "row_id": 7531,
+          "fields": {
+            "Icon": {
+              "id": 801,
+              "path": "ui/icon/000000/000801.tex",
+              "path_hr1": "ui/icon/000000/000801_hr1.tex"
+            },
+            "Name": "Rampart"
+          }
+        },
+        {
+          "row_id": 7535,
+          "fields": {
+            "Icon": {
+              "id": 806,
+              "path": "ui/icon/000000/000806.tex",
+              "path_hr1": "ui/icon/000000/000806_hr1.tex"
+            },
+            "Name": "Reprisal"
+          }
+        },
+        {
+          "row_id": 16147,
+          "fields": {
+            "Icon": {
+              "id": 3411,
+              "path": "ui/icon/003000/003411.tex",
+              "path_hr1": "ui/icon/003000/003411_hr1.tex"
+            },
+            "Name": "Savage Claw"
+          }
+        },
+        {
+          "row_id": 36939,
+          "fields": {
+            "Icon": {
+              "id": 3439,
+              "path": "ui/icon/003000/003439.tex",
+              "path_hr1": "ui/icon/003000/003439_hr1.tex"
+            },
+            "Name": "Lion Heart"
+          }
+        },
+        {
+          "row_id": 16156,
+          "fields": {
+            "Icon": {
+              "id": 3420,
+              "path": "ui/icon/003000/003420.tex",
+              "path_hr1": "ui/icon/003000/003420_hr1.tex"
+            },
+            "Name": "Jugular Rip"
+          }
+        },
+        {
+          "row_id": 16157,
+          "fields": {
+            "Icon": {
+              "id": 3421,
+              "path": "ui/icon/003000/003421.tex",
+              "path_hr1": "ui/icon/003000/003421_hr1.tex"
+            },
+            "Name": "Abdomen Tear"
+          }
+        },
+        {
+          "row_id": 16141,
+          "fields": {
+            "Icon": {
+              "id": 3405,
+              "path": "ui/icon/003000/003405.tex",
+              "path_hr1": "ui/icon/003000/003405_hr1.tex"
+            },
+            "Name": "Demon Slice"
+          }
+        },
+        {
+          "row_id": 16148,
+          "fields": {
+            "Icon": {
+              "id": 3412,
+              "path": "ui/icon/003000/003412.tex",
+              "path_hr1": "ui/icon/003000/003412_hr1.tex"
+            },
+            "Name": "Nebula"
+          }
+        },
+        {
+          "row_id": 7548,
+          "fields": {
+            "Icon": {
+              "id": 822,
+              "path": "ui/icon/000000/000822.tex",
+              "path_hr1": "ui/icon/000000/000822_hr1.tex"
+            },
+            "Name": "Arm's Length"
+          }
+        },
+        {
+          "row_id": 16142,
+          "fields": {
+            "Icon": {
+              "id": 3406,
+              "path": "ui/icon/003000/003406.tex",
+              "path_hr1": "ui/icon/003000/003406_hr1.tex"
+            },
+            "Name": "Royal Guard"
+          }
+        },
+        {
+          "row_id": 7533,
+          "fields": {
+            "Icon": {
+              "id": 803,
+              "path": "ui/icon/000000/000803.tex",
+              "path_hr1": "ui/icon/000000/000803_hr1.tex"
+            },
+            "Name": "Provoke"
+          }
+        },
+        {
+          "row_id": 16143,
+          "fields": {
+            "Icon": {
+              "id": 3407,
+              "path": "ui/icon/003000/003407.tex",
+              "path_hr1": "ui/icon/003000/003407_hr1.tex"
+            },
+            "Name": "Lightning Shot"
+          }
+        },
+        {
+          "row_id": 3,
+          "fields": {
+            "Icon": {
+              "id": 104,
+              "path": "ui/icon/000000/000104.tex",
+              "path_hr1": "ui/icon/000000/000104_hr1.tex"
+            },
+            "Name": "Sprint"
+          }
+        }
+      ]
+    }
+  }
+}

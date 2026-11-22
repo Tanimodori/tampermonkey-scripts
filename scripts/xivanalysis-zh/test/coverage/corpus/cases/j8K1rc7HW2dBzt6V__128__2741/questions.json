@@ -1,0 +1,350 @@
+{
+  "formatVersion": 1,
+  "id": "j8K1rc7HW2dBzt6V/128/2741",
+  "url": "https://xivanalysis.com/fflogs/j8K1rc7HW2dBzt6V/128/2741",
+  "job": "GNB",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Ammo",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Battle Voice",
+      "-4"
+    ],
+    [
+      "Battle Litany",
+      "-4"
+    ],
+    [
+      "Embolden",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Royal Guard",
+      "-5"
+    ],
+    [
+      "No Mercy",
+      "-5"
+    ],
+    [
+      "Continuation",
+      "-5"
+    ],
+    [
+      "Danger Zone",
+      "-5"
+    ],
+    [
+      "Bow Shock",
+      "-5"
+    ],
+    [
+      "Trajectory",
+      "-5"
+    ],
+    [
+      "Superbolide",
+      "-5"
+    ],
+    [
+      "Camouflage",
+      "-5"
+    ],
+    [
+      "Nebula",
+      "-5"
+    ],
+    [
+      "Rampart",
+      "-5"
+    ],
+    [
+      "Heart of Light",
+      "-5"
+    ],
+    [
+      "Heart of Stone",
+      "-5"
+    ],
+    [
+      "Aurora",
+      "-5"
+    ],
+    [
+      "Reprisal",
+      "-5"
+    ],
+    [
+      "Provoke",
+      "-5"
+    ],
+    [
+      "Shirk",
+      "-5"
+    ],
+    [
+      "Arm's Length",
+      "-5"
+    ],
+    [
+      "Sonic Break",
+      "-5"
+    ],
+    [
+      "Gnashing Fang",
+      "-5"
+    ],
+    [
+      "Release Royal Guard",
+      "-5"
+    ],
+    [
+      "Gunmetal Soul",
+      "-5"
+    ],
+    [
+      "Shield Wall",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Battle Voice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212601_hr1.tex&format=png"
+    ],
+    [
+      "Battle Litany",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212578_hr1.tex&format=png"
+    ],
+    [
+      "Embolden",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/218000/218941_hr1.tex&format=png"
+    ],
+    [
+      "Lightning Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003407_hr1.tex&format=png"
+    ],
+    [
+      "Keen Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003401_hr1.tex&format=png"
+    ],
+    [
+      "Brutal Shell",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003403_hr1.tex&format=png"
+    ],
+    [
+      "Solid Barrel",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003409_hr1.tex&format=png"
+    ],
+    [
+      "Gnashing Fang",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003410_hr1.tex&format=png"
+    ],
+    [
+      "Savage Claw",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003411_hr1.tex&format=png"
+    ],
+    [
+      "Wicked Talon",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003414_hr1.tex&format=png"
+    ],
+    [
+      "Sonic Break",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003417_hr1.tex&format=png"
+    ],
+    [
+      "Keen Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003401_hr1.tex&format=png"
+    ],
+    [
+      "Brutal Shell",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003403_hr1.tex&format=png"
+    ],
+    [
+      "Solid Barrel",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003409_hr1.tex&format=png"
+    ],
+    [
+      "Demon Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003405_hr1.tex&format=png"
+    ],
+    [
+      "Demon Slaughter",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003413_hr1.tex&format=png"
+    ],
+    [
+      "Burst Strike",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003426_hr1.tex&format=png"
+    ],
+    [
+      "Keen Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003401_hr1.tex&format=png"
+    ],
+    [
+      "Brutal Shell",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003403_hr1.tex&format=png"
+    ],
+    [
+      "Solid Barrel",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003409_hr1.tex&format=png"
+    ],
+    [
+      "Gnashing Fang",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003410_hr1.tex&format=png"
+    ],
+    [
+      "Savage Claw",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003411_hr1.tex&format=png"
+    ],
+    [
+      "Wicked Talon",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003414_hr1.tex&format=png"
+    ],
+    [
+      "Burst Strike",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003426_hr1.tex&format=png"
+    ],
+    [
+      "Keen Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003401_hr1.tex&format=png"
+    ],
+    [
+      "Brutal Shell",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003403_hr1.tex&format=png"
+    ],
+    [
+      "Solid Barrel",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003409_hr1.tex&format=png"
+    ],
+    [
+      "Keen Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003401_hr1.tex&format=png"
+    ],
+    [
+      "Brutal Shell",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003403_hr1.tex&format=png"
+    ],
+    [
+      "Ready to Rip",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213611_hr1.tex&format=png"
+    ],
+    [
+      "Ready to Rip",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213611_hr1.tex&format=png"
+    ],
+    [
+      "Ready to Tear",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213612_hr1.tex&format=png"
+    ],
+    [
+      "Ready to Tear",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213612_hr1.tex&format=png"
+    ],
+    [
+      "Ready to Gouge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213613_hr1.tex&format=png"
+    ],
+    [
+      "Ready to Gouge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213613_hr1.tex&format=png"
+    ],
+    [
+      "No Mercy",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003402_hr1.tex&format=png"
+    ],
+    [
+      "Jugular Rip",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003420_hr1.tex&format=png"
+    ],
+    [
+      "Abdomen Tear",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003421_hr1.tex&format=png"
+    ],
+    [
+      "Eye Gouge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003422_hr1.tex&format=png"
+    ],
+    [
+      "Jugular Rip",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003420_hr1.tex&format=png"
+    ],
+    [
+      "Abdomen Tear",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003421_hr1.tex&format=png"
+    ],
+    [
+      "Eye Gouge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003422_hr1.tex&format=png"
+    ],
+    [
+      "Danger Zone",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003408_hr1.tex&format=png"
+    ],
+    [
+      "Danger Zone",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003408_hr1.tex&format=png"
+    ],
+    [
+      "Bow Shock",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003423_hr1.tex&format=png"
+    ],
+    [
+      "Camouflage",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003404_hr1.tex&format=png"
+    ],
+    [
+      "Rampart",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000801_hr1.tex&format=png"
+    ],
+    [
+      "Heart of Light",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003424_hr1.tex&format=png"
+    ],
+    [
+      "Heart of Stone",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003425_hr1.tex&format=png"
+    ],
+    [
+      "Aurora",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003415_hr1.tex&format=png"
+    ],
+    [
+      "Provoke",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000803_hr1.tex&format=png"
+    ],
+    [
+      "Sonic Break",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003417_hr1.tex&format=png"
+    ],
+    [
+      "Gnashing Fang",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003410_hr1.tex&format=png"
+    ],
+    [
+      "Gnashing Fang",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003410_hr1.tex&format=png"
+    ]
+  ]
+}

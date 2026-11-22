@@ -1,0 +1,388 @@
+{
+  "formatVersion": 1,
+  "id": "9c5fcff7bd23f0a0",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Proc&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "status",
+        "id": "2409",
+        "obj": {
+          "i": 2409,
+          "n": "Process of Elimination A",
+          "c": 215277,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "2410",
+        "obj": {
+          "i": 2410,
+          "n": "Process of Elimination B",
+          "c": 215278,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "2411",
+        "obj": {
+          "i": 2411,
+          "n": "Process of Elimination C",
+          "c": 215279,
+          "t": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "48834",
+        "obj": {
+          "i": 48834,
+          "n": "Processed Inorganic Lumber",
+          "l": 1,
+          "c": 22453,
+          "t": 63,
+          "g": 5,
+          "f": [
+            {
+              "id": 36963,
+              "job": 8,
+              "lvl": 100
+            },
+            {
+              "id": 36965,
+              "job": 8,
+              "lvl": 100
+            }
+          ],
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "52502",
+        "obj": {
+          "i": 52502,
+          "n": "Processed Survey Fuel",
+          "l": 1,
+          "c": 22418,
+          "t": 63,
+          "g": 5,
+          "f": [
+            {
+              "id": 37983,
+              "job": 8,
+              "lvl": 100,
+              "stars": 2
+            }
+          ],
+          "r": 1,
+          "o": 1
+        }
+      },
+      {
+        "type": "npc",
+        "id": "1018339",
+        "obj": {
+          "i": 1018339,
+          "n": "Processing Node"
+        }
+      },
+      {
+        "type": "leve",
+        "id": "534",
+        "obj": {
+          "i": 534,
+          "n": "Procession of the Noble",
+          "l": 5,
+          "j": 34,
+          "p": 42
+        }
+      },
+      {
+        "type": "item",
+        "id": "52098",
+        "obj": {
+          "i": 52098,
+          "n": "Prochilodus Cosmica",
+          "l": 1,
+          "c": 28409,
+          "t": 47,
+          "g": 7,
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "36403",
+        "obj": {
+          "i": 36403,
+          "n": "Prochilodus Luminosus",
+          "l": 500,
+          "c": 28409,
+          "t": 47,
+          "g": 7,
+          "r": 1
+        }
+      },
+      {
+        "type": "npc",
+        "id": "1045164",
+        "obj": {
+          "i": 1045164,
+          "n": "Procopius"
+        }
+      },
+      {
+        "type": "item",
+        "id": "24253",
+        "obj": {
+          "i": 24253,
+          "n": "Procoptodon Leather",
+          "l": 380,
+          "c": 22007,
+          "t": 52,
+          "g": 5,
+          "f": [
+            {
+              "id": 33155,
+              "job": 12,
+              "lvl": 70,
+              "stars": 4
+            }
+          ],
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "24244",
+        "obj": {
+          "i": 24244,
+          "n": "Procoptodon Skin",
+          "l": 380,
+          "c": 21814,
+          "t": 52,
+          "g": 5,
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "25230",
+        "obj": {
+          "i": 25230,
+          "n": "Procyon",
+          "l": 430,
+          "c": 34926,
+          "t": 89,
+          "p": 2,
+          "g": 0,
+          "j": 99,
+          "r": 3,
+          "e": 80
+        }
+      },
+      {
+        "type": "quest",
+        "id": "69383",
+        "obj": {
+          "i": 69383,
+          "n": "A Procession Eggstraordinaire",
+          "g": 244,
+          "l": "Gridania",
+          "s": 197
+        }
+      },
+      {
+        "type": "fate",
+        "id": "2020",
+        "obj": {
+          "i": 2020,
+          "n": "Additional Power Procurement",
+          "l": 1,
+          "t": "Rebuild"
+        }
+      },
+      {
+        "type": "fate",
+        "id": "2037",
+        "obj": {
+          "i": 2037,
+          "n": "Additional Power Procurement",
+          "l": 1,
+          "t": "Rebuild"
+        }
+      },
+      {
+        "type": "npc",
+        "id": "1034105",
+        "obj": {
+          "i": 1034105,
+          "n": "Dwarven Procurer",
+          "l": 2953
+        }
+      },
+      {
+        "type": "action",
+        "id": "49179",
+        "obj": {
+          "i": 49179,
+          "n": "Empty Proclamation",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "npc",
+        "id": "1043936",
+        "obj": {
+          "i": 1043936,
+          "n": "Food Processing Unit",
+          "l": 3712
+        }
+      },
+      {
+        "type": "leve",
+        "id": "898",
+        "obj": {
+          "i": 898,
+          "n": "Marl-ementary Procedure",
+          "l": 56,
+          "j": 34,
+          "p": 2100
+        }
+      },
+      {
+        "type": "npc",
+        "id": "1025805",
+        "obj": {
+          "i": 1025805,
+          "n": "Namazu Procurer",
+          "l": 2411
+        }
+      },
+      {
+        "type": "npc",
+        "id": "1022877",
+        "obj": {
+          "i": 1022877,
+          "n": "Orthodox Proctor"
+        }
+      },
+      {
+        "type": "mob",
+        "id": "74890000005854",
+        "obj": {
+          "i": 74890000005854,
+          "n": "Orthodox Proctor",
+          "l": "63",
+          "z": 2000
+        }
+      },
+      {
+        "type": "npc",
+        "id": "1047116",
+        "obj": {
+          "i": 1047116,
+          "n": "Patient Proctor",
+          "l": 4506
+        }
+      },
+      {
+        "type": "fate",
+        "id": "2019",
+        "obj": {
+          "i": 2019,
+          "n": "Power Procurement",
+          "l": 1,
+          "t": "Rebuild"
+        }
+      },
+      {
+        "type": "fate",
+        "id": "2036",
+        "obj": {
+          "i": 2036,
+          "n": "Power Procurement",
+          "l": 1,
+          "t": "Rebuild"
+        }
+      },
+      {
+        "type": "quest",
+        "id": "65649",
+        "obj": {
+          "i": 65649,
+          "n": "Proper Procedure",
+          "g": 112,
+          "l": "Limsa Lominsa",
+          "s": 10
+        }
+      },
+      {
+        "type": "action",
+        "id": "47515",
+        "obj": {
+          "i": 47515,
+          "n": "Spell Procession",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "quest",
+        "id": "66916",
+        "obj": {
+          "i": 66916,
+          "n": "Standard Procedure",
+          "g": 47,
+          "l": "Western La Noscea",
+          "s": 10,
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "52480",
+        "obj": {
+          "i": 52480,
+          "n": "Survey Processed Oilcloth",
+          "l": 1,
+          "c": 26127,
+          "t": 63,
+          "g": 5,
+          "f": [
+            {
+              "id": 38103,
+              "job": 12,
+              "lvl": 100,
+              "stars": 2
+            },
+            {
+              "id": 38133,
+              "job": 13,
+              "lvl": 100,
+              "stars": 2
+            }
+          ],
+          "r": 1,
+          "o": 1
+        }
+      }
+    ]
+  }
+}

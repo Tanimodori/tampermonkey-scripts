@@ -1,0 +1,16 @@
+{
+  "formatVersion": 1,
+  "id": "3497296947281198",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Blood+Gauge&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": []
+  }
+}

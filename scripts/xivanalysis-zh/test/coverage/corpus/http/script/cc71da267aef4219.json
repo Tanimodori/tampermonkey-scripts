@@ -1,0 +1,129 @@
+{
+  "formatVersion": 1,
+  "id": "cc71da267aef4219",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Harpe&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "24386",
+        "obj": {
+          "i": 24386,
+          "n": "Harpe",
+          "c": 3614,
+          "j": 39,
+          "t": 2,
+          "l": 15
+        }
+      },
+      {
+        "type": "action",
+        "id": "27806",
+        "obj": {
+          "i": 27806,
+          "n": "Harpe",
+          "c": 784,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "31146",
+        "obj": {
+          "i": 31146,
+          "n": "Harpe",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "32571",
+        "obj": {
+          "i": 32571,
+          "n": "Harpe",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "32940",
+        "obj": {
+          "i": 32940,
+          "n": "Harpe",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "mob",
+        "id": "29580000002890",
+        "obj": {
+          "i": 29580000002890,
+          "n": "Harpeia",
+          "l": "50",
+          "z": 1377
+        }
+      },
+      {
+        "type": "mob",
+        "id": "60630000005253",
+        "obj": {
+          "i": 60630000005253,
+          "n": "Chasm Harpeia",
+          "l": "60",
+          "z": 1792
+        }
+      },
+      {
+        "type": "status",
+        "id": "2845",
+        "obj": {
+          "i": 2845,
+          "n": "Enhanced Harpe",
+          "c": 212939,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "2859",
+        "obj": {
+          "i": 2859,
+          "n": "Enhanced Harpe",
+          "c": 212939,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "32538",
+        "obj": {
+          "i": 32538,
+          "n": "Gravity Harpe",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

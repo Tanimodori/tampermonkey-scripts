@@ -1,0 +1,24 @@
+{
+  "formatVersion": 1,
+  "id": "3yp2VRDPv9BfnG1X/76/8032",
+  "slug": "3yp2VRDPv9BfnG1X__76__8032",
+  "url": "https://xivanalysis.com/fflogs/3yp2VRDPv9BfnG1X/76/8032",
+  "job": "WHM",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "16dd342ce63ee5ab",
+      "208119ef5ffedd6f",
+      "df11464e24bb24cc"
+    ],
+    "script": [
+      "49aa935e6882bfb0",
+      "5ea858e69a0c1fca",
+      "7fe6e9d854c3b3c0",
+      "94379c4f77e50b40",
+      "9b6b4a92cf7218f6",
+      "bfc225abc97e93d7"
+    ]
+  }
+}

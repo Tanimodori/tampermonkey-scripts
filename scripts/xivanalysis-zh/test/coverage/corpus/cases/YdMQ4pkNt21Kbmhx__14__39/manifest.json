@@ -1,0 +1,25 @@
+{
+  "formatVersion": 1,
+  "id": "YdMQ4pkNt21Kbmhx/14/39",
+  "slug": "YdMQ4pkNt21Kbmhx__14__39",
+  "url": "https://xivanalysis.com/fflogs/YdMQ4pkNt21Kbmhx/14/39",
+  "job": "DRG",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "404208d6bcd4387d",
+      "1ce2897b3b3582b0"
+    ],
+    "script": [
+      "40d619d2b8ba3a79",
+      "445594efea7a3d08",
+      "5ea858e69a0c1fca",
+      "79ec717ebc4f1e66",
+      "7fe6e9d854c3b3c0",
+      "93f80eddee310458",
+      "9b6b4a92cf7218f6",
+      "9c5fcff7bd23f0a0"
+    ]
+  }
+}

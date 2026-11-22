@@ -1,0 +1,26 @@
+{
+  "formatVersion": 1,
+  "id": "BFLJ2NWGPADyCkta/11/46",
+  "slug": "BFLJ2NWGPADyCkta__11__46",
+  "url": "https://xivanalysis.com/fflogs/BFLJ2NWGPADyCkta/11/46",
+  "job": "PLD",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "2cfcff880e8c2ff3",
+      "1541ae02065f9efd"
+    ],
+    "script": [
+      "15ff7708d7c46e6e",
+      "1c68f4746d5b9ee1",
+      "345414004453c888",
+      "54c13aef2ae4e765",
+      "5ea858e69a0c1fca",
+      "65f1047255901a09",
+      "9b6b4a92cf7218f6",
+      "c808250a998a0179",
+      "dfd1f126d5ab892f"
+    ]
+  }
+}

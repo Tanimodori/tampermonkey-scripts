@@ -1,0 +1,87 @@
+{
+  "formatVersion": 1,
+  "id": "b14802c3736d5a15",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Claw+Motif&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "34666",
+        "obj": {
+          "i": 34666,
+          "n": "Claw Motif",
+          "c": 3817,
+          "j": 42,
+          "t": 2,
+          "l": 96
+        }
+      },
+      {
+        "type": "action",
+        "id": "38978",
+        "obj": {
+          "i": 38978,
+          "n": "Claw Motif",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "39202",
+        "obj": {
+          "i": 39202,
+          "n": "Claw Motif",
+          "c": 9742,
+          "j": 42,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "39579",
+        "obj": {
+          "i": 39579,
+          "n": "Claw Motif",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "status",
+        "id": "4107",
+        "obj": {
+          "i": 4107,
+          "n": "Claw Motif",
+          "c": 214703,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "47130",
+        "obj": {
+          "i": 47130,
+          "n": "Claw Motif",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

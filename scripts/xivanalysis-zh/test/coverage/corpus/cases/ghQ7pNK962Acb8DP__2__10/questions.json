@@ -1,0 +1,346 @@
+{
+  "formatVersion": 1,
+  "id": "ghQ7pNK962Acb8DP/2/10",
+  "url": "https://xivanalysis.com/fflogs/ghQ7pNK962Acb8DP/2/10",
+  "job": "PCT",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Portraits",
+      "-5"
+    ],
+    [
+      "Depictions",
+      "-5"
+    ],
+    [
+      "Canvas",
+      "-5"
+    ],
+    [
+      "Paint",
+      "-5"
+    ],
+    [
+      "Palette Gauge",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Starry Muse",
+      "-4"
+    ],
+    [
+      "Brotherhood",
+      "-4"
+    ],
+    [
+      "Chain Stratagem",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Subtractive Palette",
+      "-5"
+    ],
+    [
+      "Mog of the Ages",
+      "-5"
+    ],
+    [
+      "Pom Muse",
+      "-5"
+    ],
+    [
+      "Striking Muse",
+      "-5"
+    ],
+    [
+      "Starry Muse",
+      "-5"
+    ],
+    [
+      "Swiftcast",
+      "-5"
+    ],
+    [
+      "Tempera Coat",
+      "-5"
+    ],
+    [
+      "Tempera Grassa",
+      "-5"
+    ],
+    [
+      "Addle",
+      "-5"
+    ],
+    [
+      "Surecast",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Starry Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213808_hr1.tex&format=png"
+    ],
+    [
+      "Brotherhood",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212532_hr1.tex&format=png"
+    ],
+    [
+      "Chain Stratagem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212809_hr1.tex&format=png"
+    ],
+    [
+      "Chain Stratagem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212809_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Rainbow Drip",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003838_hr1.tex&format=png"
+    ],
+    [
+      "Wing Motif",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003816_hr1.tex&format=png"
+    ],
+    [
+      "Hammer Stamp",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003829_hr1.tex&format=png"
+    ],
+    [
+      "Blizzard in Cyan",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003804_hr1.tex&format=png"
+    ],
+    [
+      "Stone in Yellow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003805_hr1.tex&format=png"
+    ],
+    [
+      "Thunder in Magenta",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003806_hr1.tex&format=png"
+    ],
+    [
+      "Comet in Black",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003814_hr1.tex&format=png"
+    ],
+    [
+      "Star Prism",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003832_hr1.tex&format=png"
+    ],
+    [
+      "Hammer Brush",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003830_hr1.tex&format=png"
+    ],
+    [
+      "Polishing Hammer",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003831_hr1.tex&format=png"
+    ],
+    [
+      "Rainbow Drip",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003838_hr1.tex&format=png"
+    ],
+    [
+      "Claw Motif",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003817_hr1.tex&format=png"
+    ],
+    [
+      "Fire in Red",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003801_hr1.tex&format=png"
+    ],
+    [
+      "Aero in Green",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003802_hr1.tex&format=png"
+    ],
+    [
+      "Hammer Motif",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003819_hr1.tex&format=png"
+    ],
+    [
+      "Water in Blue",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003803_hr1.tex&format=png"
+    ],
+    [
+      "Fire in Red",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003801_hr1.tex&format=png"
+    ],
+    [
+      "Aero in Green",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003802_hr1.tex&format=png"
+    ],
+    [
+      "Water in Blue",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003803_hr1.tex&format=png"
+    ],
+    [
+      "Maw Motif",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003818_hr1.tex&format=png"
+    ],
+    [
+      "Pom Motif",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003815_hr1.tex&format=png"
+    ],
+    [
+      "Aetherhues",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213801_hr1.tex&format=png"
+    ],
+    [
+      "Aetherhues",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213801_hr1.tex&format=png"
+    ],
+    [
+      "Aetherhues",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213801_hr1.tex&format=png"
+    ],
+    [
+      "Aetherhues II",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213802_hr1.tex&format=png"
+    ],
+    [
+      "Aetherhues II",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213802_hr1.tex&format=png"
+    ],
+    [
+      "Aetherhues II",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213802_hr1.tex&format=png"
+    ],
+    [
+      "Rainbow Bright",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213805_hr1.tex&format=png"
+    ],
+    [
+      "Starstruck",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213806_hr1.tex&format=png"
+    ],
+    [
+      "Hyperphantasia",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/218000/218155_hr1.tex&format=png"
+    ],
+    [
+      "Hammer Time",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/218000/218677_hr1.tex&format=png"
+    ],
+    [
+      "Hammer Time",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/218000/218677_hr1.tex&format=png"
+    ],
+    [
+      "Subtractive Palette",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003833_hr1.tex&format=png"
+    ],
+    [
+      "Mog of the Ages",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003827_hr1.tex&format=png"
+    ],
+    [
+      "Mog of the Ages",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003827_hr1.tex&format=png"
+    ],
+    [
+      "Pom Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003821_hr1.tex&format=png"
+    ],
+    [
+      "Winged Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003822_hr1.tex&format=png"
+    ],
+    [
+      "Clawed Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003823_hr1.tex&format=png"
+    ],
+    [
+      "Fanged Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003824_hr1.tex&format=png"
+    ],
+    [
+      "Pom Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003821_hr1.tex&format=png"
+    ],
+    [
+      "Winged Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003822_hr1.tex&format=png"
+    ],
+    [
+      "Clawed Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003823_hr1.tex&format=png"
+    ],
+    [
+      "Fanged Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003824_hr1.tex&format=png"
+    ],
+    [
+      "Pom Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003821_hr1.tex&format=png"
+    ],
+    [
+      "Winged Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003822_hr1.tex&format=png"
+    ],
+    [
+      "Clawed Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003823_hr1.tex&format=png"
+    ],
+    [
+      "Fanged Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003824_hr1.tex&format=png"
+    ],
+    [
+      "Pom Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003821_hr1.tex&format=png"
+    ],
+    [
+      "Winged Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003822_hr1.tex&format=png"
+    ],
+    [
+      "Clawed Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003823_hr1.tex&format=png"
+    ],
+    [
+      "Fanged Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003824_hr1.tex&format=png"
+    ],
+    [
+      "Striking Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003825_hr1.tex&format=png"
+    ],
+    [
+      "Striking Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003825_hr1.tex&format=png"
+    ],
+    [
+      "Starry Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003826_hr1.tex&format=png"
+    ],
+    [
+      "Swiftcast",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000866_hr1.tex&format=png"
+    ],
+    [
+      "Swiftcast",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000866_hr1.tex&format=png"
+    ]
+  ]
+}

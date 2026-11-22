@@ -1,0 +1,350 @@
+{
+  "formatVersion": 1,
+  "id": "9pdYDGRWb8ZMCX1V/2/50",
+  "url": "https://xivanalysis.com/fflogs/9pdYDGRWb8ZMCX1V/2/50",
+  "job": "SGE",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Addersting",
+      "-5"
+    ],
+    [
+      "Addersgall",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Starry Muse",
+      "-4"
+    ],
+    [
+      "Technical Finish",
+      "-4"
+    ],
+    [
+      "Dokumori",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Addersgall",
+      "-5"
+    ],
+    [
+      "Rhizomata",
+      "-5"
+    ],
+    [
+      "Eukrasia",
+      "-5"
+    ],
+    [
+      "Eukrasian Diagnosis",
+      "-5"
+    ],
+    [
+      "Eukrasian Prognosis",
+      "-5"
+    ],
+    [
+      "Eukrasian Dosis III",
+      "-5"
+    ],
+    [
+      "Pneuma",
+      "-5"
+    ],
+    [
+      "Phlegma III",
+      "-5"
+    ],
+    [
+      "Holos",
+      "-5"
+    ],
+    [
+      "Panhaima",
+      "-5"
+    ],
+    [
+      "Haima",
+      "-5"
+    ],
+    [
+      "Physis II",
+      "-5"
+    ],
+    [
+      "Zoe",
+      "-5"
+    ],
+    [
+      "Krasis",
+      "-5"
+    ],
+    [
+      "Kardia",
+      "-5"
+    ],
+    [
+      "Soteria",
+      "-5"
+    ],
+    [
+      "Lucid Dreaming",
+      "-5"
+    ],
+    [
+      "Swiftcast",
+      "-5"
+    ],
+    [
+      "Eukrasian Prognosis II",
+      "-5"
+    ],
+    [
+      "Techne Makre",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Starry Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213808_hr1.tex&format=png"
+    ],
+    [
+      "Technical Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213709_hr1.tex&format=png"
+    ],
+    [
+      "Dokumori",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212920_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasian Diagnosis",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003659_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasia",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003658_hr1.tex&format=png"
+    ],
+    [
+      "Toxikon II",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003684_hr1.tex&format=png"
+    ],
+    [
+      "Phlegma III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003681_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasian Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003682_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Phlegma III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003681_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasia",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003658_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasian Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003682_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003680_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasia",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003658_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasian Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003682_hr1.tex&format=png"
+    ],
+    [
+      "Druochole",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003664_hr1.tex&format=png"
+    ],
+    [
+      "Ixochole",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003667_hr1.tex&format=png"
+    ],
+    [
+      "Taurochole",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003671_hr1.tex&format=png"
+    ],
+    [
+      "Kerachole",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003666_hr1.tex&format=png"
+    ],
+    [
+      "Kerachole",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003666_hr1.tex&format=png"
+    ],
+    [
+      "Rhizomata",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003677_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasia",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003658_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasia",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003658_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasia",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003658_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasian Diagnosis",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003659_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasian Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003682_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasian Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003682_hr1.tex&format=png"
+    ],
+    [
+      "Eukrasian Dosis III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003682_hr1.tex&format=png"
+    ],
+    [
+      "Phlegma III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003681_hr1.tex&format=png"
+    ],
+    [
+      "Phlegma III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003681_hr1.tex&format=png"
+    ],
+    [
+      "Haima",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003673_hr1.tex&format=png"
+    ],
+    [
+      "Krasis",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003685_hr1.tex&format=png"
+    ],
+    [
+      "Kardia",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003653_hr1.tex&format=png"
+    ],
+    [
+      "Kardia",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003653_hr1.tex&format=png"
+    ],
+    [
+      "Kardia",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003653_hr1.tex&format=png"
+    ],
+    [
+      "Soteria",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003662_hr1.tex&format=png"
+    ],
+    [
+      "Lucid Dreaming",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000865_hr1.tex&format=png"
+    ]
+  ]
+}

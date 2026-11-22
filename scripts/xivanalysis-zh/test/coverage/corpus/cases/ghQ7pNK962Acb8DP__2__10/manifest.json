@@ -1,0 +1,32 @@
+{
+  "formatVersion": 1,
+  "id": "ghQ7pNK962Acb8DP/2/10",
+  "slug": "ghQ7pNK962Acb8DP__2__10",
+  "url": "https://xivanalysis.com/fflogs/ghQ7pNK962Acb8DP/2/10",
+  "job": "PCT",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "4cfa65aae86c692b",
+      "5eda810e0b891061"
+    ],
+    "script": [
+      "0ac4e6e0907bbcca",
+      "23d0a04b0edbab65",
+      "24797c24ec50d56e",
+      "282d9cc1ec483dfa",
+      "3dda24b6f8a32de0",
+      "466d0ce3e2acb6c9",
+      "54a89e08548e90da",
+      "5ea858e69a0c1fca",
+      "9b6b4a92cf7218f6",
+      "9bf6b5d492d6cd58",
+      "9c5fcff7bd23f0a0",
+      "a77f6340c81f4021",
+      "ac4aaadcb62cb79d",
+      "b00c67cea1d2c52b",
+      "dad27548aefc5b16"
+    ]
+  }
+}

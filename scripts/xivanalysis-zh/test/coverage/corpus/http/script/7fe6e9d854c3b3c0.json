@@ -1,0 +1,16 @@
+{
+  "formatVersion": 1,
+  "id": "7fe6e9d854c3b3c0",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Gauges&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": []
+  }
+}

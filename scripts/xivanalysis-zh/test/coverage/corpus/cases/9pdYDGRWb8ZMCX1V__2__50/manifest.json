@@ -1,0 +1,30 @@
+{
+  "formatVersion": 1,
+  "id": "9pdYDGRWb8ZMCX1V/2/50",
+  "slug": "9pdYDGRWb8ZMCX1V__2__50",
+  "url": "https://xivanalysis.com/fflogs/9pdYDGRWb8ZMCX1V/2/50",
+  "job": "SGE",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "48c343fda8a19eb7",
+      "c96cfeda836ade97",
+      "df11464e24bb24cc"
+    ],
+    "script": [
+      "0da491def7035335",
+      "16aa6850d03c8a6f",
+      "433567162a144938",
+      "5ea858e69a0c1fca",
+      "6bd98fb2e0c10f7a",
+      "8297fea1b43ef31b",
+      "8fc0ae1fab85619d",
+      "8fe702448c3b8a4f",
+      "98b64868bcddae95",
+      "9b6b4a92cf7218f6",
+      "bfc225abc97e93d7",
+      "f16f79cb14d6aa09"
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "formatVersion": 1,
+  "id": "3ee63e9f335993ac",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Hunter%27s+Sting&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "34608",
+        "obj": {
+          "i": 34608,
+          "n": "Hunter's Sting",
+          "c": 3703,
+          "j": 41,
+          "t": 3,
+          "l": 5
+        }
+      },
+      {
+        "type": "action",
+        "id": "38117",
+        "obj": {
+          "i": 38117,
+          "n": "Hunter's Sting",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38797",
+        "obj": {
+          "i": 38797,
+          "n": "Hunter's Sting",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "39159",
+        "obj": {
+          "i": 39159,
+          "n": "Hunter's Sting",
+          "c": 9700,
+          "j": 41,
+          "t": 3,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

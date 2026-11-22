@@ -1,0 +1,43 @@
+{
+  "formatVersion": 1,
+  "id": "1ce2897b3b3582b0",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=2720,2719&limit=2&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 2720,
+          "fields": {
+            "Icon": {
+              "id": 210303,
+              "path": "ui/icon/210000/210303.tex",
+              "path_hr1": "ui/icon/210000/210303_hr1.tex"
+            },
+            "Name": "Power Surge"
+          }
+        },
+        {
+          "row_id": 2719,
+          "fields": {
+            "Icon": {
+              "id": 212586,
+              "path": "ui/icon/212000/212586.tex",
+              "path_hr1": "ui/icon/212000/212586_hr1.tex"
+            },
+            "Name": "Chaotic Spring"
+          }
+        }
+      ]
+    }
+  }
+}

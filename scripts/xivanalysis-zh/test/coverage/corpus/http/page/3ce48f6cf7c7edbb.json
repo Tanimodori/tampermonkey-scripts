@@ -1,0 +1,87 @@
+{
+  "formatVersion": 1,
+  "id": "3ce48f6cf7c7edbb",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=2717,2718,956,1879,3895,848&limit=6&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 2717,
+          "fields": {
+            "Icon": {
+              "id": 213262,
+              "path": "ui/icon/213000/213262.tex",
+              "path_hr1": "ui/icon/213000/213262_hr1.tex"
+            },
+            "Name": "Exaltation"
+          }
+        },
+        {
+          "row_id": 2718,
+          "fields": {
+            "Icon": {
+              "id": 213263,
+              "path": "ui/icon/213000/213263.tex",
+              "path_hr1": "ui/icon/213000/213263_hr1.tex"
+            },
+            "Name": "Macrocosmos"
+          }
+        },
+        {
+          "row_id": 956,
+          "fields": {
+            "Icon": {
+              "id": 213225,
+              "path": "ui/icon/213000/213225.tex",
+              "path_hr1": "ui/icon/213000/213225_hr1.tex"
+            },
+            "Name": "Wheel of Fortune"
+          }
+        },
+        {
+          "row_id": 1879,
+          "fields": {
+            "Icon": {
+              "id": 213246,
+              "path": "ui/icon/213000/213246.tex",
+              "path_hr1": "ui/icon/213000/213246_hr1.tex"
+            },
+            "Name": "Opposition"
+          }
+        },
+        {
+          "row_id": 3895,
+          "fields": {
+            "Icon": {
+              "id": 213266,
+              "path": "ui/icon/213000/213266.tex",
+              "path_hr1": "ui/icon/213000/213266_hr1.tex"
+            },
+            "Name": "Suntouched"
+          }
+        },
+        {
+          "row_id": 848,
+          "fields": {
+            "Icon": {
+              "id": 213227,
+              "path": "ui/icon/213000/213227.tex",
+              "path_hr1": "ui/icon/213000/213227_hr1.tex"
+            },
+            "Name": "Collective Unconscious"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,314 @@
+{
+  "formatVersion": 1,
+  "id": "ZYk3gNxWb7ALj9Vr/5/3",
+  "url": "https://xivanalysis.com/fflogs/ZYk3gNxWb7ALj9Vr/5/3",
+  "job": "RPR",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Death Gauge",
+      "-5"
+    ],
+    [
+      "Gauges",
+      "-5"
+    ],
+    [
+      "Soul Gauge",
+      "-4"
+    ],
+    [
+      "Shroud Gauge",
+      "-4"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Starry Muse",
+      "-4"
+    ],
+    [
+      "Battle Voice",
+      "-4"
+    ],
+    [
+      "Arcane Circle",
+      "-4"
+    ],
+    [
+      "Divination",
+      "-4"
+    ],
+    [
+      "Chain Stratagem",
+      "-4"
+    ],
+    [
+      "Radiant Finale",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Arcane Circle",
+      "-5"
+    ],
+    [
+      "Enshroud",
+      "-5"
+    ],
+    [
+      "Lemure",
+      "-5"
+    ],
+    [
+      "Blood Stalk",
+      "-5"
+    ],
+    [
+      "Gluttony",
+      "-5"
+    ],
+    [
+      "Movement",
+      "-5"
+    ],
+    [
+      "Arcane Crest",
+      "-5"
+    ],
+    [
+      "Feint",
+      "-5"
+    ],
+    [
+      "True North",
+      "-5"
+    ],
+    [
+      "Soul Slice",
+      "-5"
+    ],
+    [
+      "Sacrificium",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Starry Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213808_hr1.tex&format=png"
+    ],
+    [
+      "Battle Voice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212601_hr1.tex&format=png"
+    ],
+    [
+      "Arcane Circle",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212936_hr1.tex&format=png"
+    ],
+    [
+      "Divination",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213245_hr1.tex&format=png"
+    ],
+    [
+      "Chain Stratagem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212809_hr1.tex&format=png"
+    ],
+    [
+      "Radiant Finale",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212622_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Soulsow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003615_hr1.tex&format=png"
+    ],
+    [
+      "Harpe",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003614_hr1.tex&format=png"
+    ],
+    [
+      "Shadow of Death",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003606_hr1.tex&format=png"
+    ],
+    [
+      "Soul Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003608_hr1.tex&format=png"
+    ],
+    [
+      "Executioner's Gallows",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003636_hr1.tex&format=png"
+    ],
+    [
+      "Executioner's Gibbet",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003635_hr1.tex&format=png"
+    ],
+    [
+      "Plentiful Harvest",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003613_hr1.tex&format=png"
+    ],
+    [
+      "Void Reaping",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003623_hr1.tex&format=png"
+    ],
+    [
+      "Cross Reaping",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003624_hr1.tex&format=png"
+    ],
+    [
+      "Void Reaping",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003623_hr1.tex&format=png"
+    ],
+    [
+      "Cross Reaping",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003624_hr1.tex&format=png"
+    ],
+    [
+      "Communio",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003626_hr1.tex&format=png"
+    ],
+    [
+      "Perfectio",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003638_hr1.tex&format=png"
+    ],
+    [
+      "Soul Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003608_hr1.tex&format=png"
+    ],
+    [
+      "Gallows",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003611_hr1.tex&format=png"
+    ],
+    [
+      "Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003601_hr1.tex&format=png"
+    ],
+    [
+      "Waxing Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003602_hr1.tex&format=png"
+    ],
+    [
+      "Infernal Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003603_hr1.tex&format=png"
+    ],
+    [
+      "Soul Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003608_hr1.tex&format=png"
+    ],
+    [
+      "Gibbet",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003610_hr1.tex&format=png"
+    ],
+    [
+      "Shadow of Death",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003606_hr1.tex&format=png"
+    ],
+    [
+      "Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003601_hr1.tex&format=png"
+    ],
+    [
+      "Gallows",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003611_hr1.tex&format=png"
+    ],
+    [
+      "Waxing Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003602_hr1.tex&format=png"
+    ],
+    [
+      "Infernal Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003603_hr1.tex&format=png"
+    ],
+    [
+      "Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003601_hr1.tex&format=png"
+    ],
+    [
+      "Waxing Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003602_hr1.tex&format=png"
+    ],
+    [
+      "Infernal Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003603_hr1.tex&format=png"
+    ],
+    [
+      "Arcane Circle",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003633_hr1.tex&format=png"
+    ],
+    [
+      "Enshroud",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003622_hr1.tex&format=png"
+    ],
+    [
+      "Lemure's Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003627_hr1.tex&format=png"
+    ],
+    [
+      "Lemure's Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003627_hr1.tex&format=png"
+    ],
+    [
+      "Unveiled Gallows",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003619_hr1.tex&format=png"
+    ],
+    [
+      "Unveiled Gallows",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003619_hr1.tex&format=png"
+    ],
+    [
+      "Unveiled Gibbet",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003618_hr1.tex&format=png"
+    ],
+    [
+      "Gluttony",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003621_hr1.tex&format=png"
+    ],
+    [
+      "Arcane Crest",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003632_hr1.tex&format=png"
+    ],
+    [
+      "Arcane Crest",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003632_hr1.tex&format=png"
+    ],
+    [
+      "Feint",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000828_hr1.tex&format=png"
+    ],
+    [
+      "True North",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000830_hr1.tex&format=png"
+    ],
+    [
+      "Soul Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003608_hr1.tex&format=png"
+    ],
+    [
+      "Soul Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003608_hr1.tex&format=png"
+    ],
+    [
+      "Soul Slice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003608_hr1.tex&format=png"
+    ],
+    [
+      "Sacrificium",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003634_hr1.tex&format=png"
+    ]
+  ]
+}

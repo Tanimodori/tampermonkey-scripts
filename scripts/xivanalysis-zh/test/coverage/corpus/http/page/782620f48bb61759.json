@@ -1,0 +1,43 @@
+{
+  "formatVersion": 1,
+  "id": "782620f48bb61759",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=2586,2587&limit=2&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 2586,
+          "fields": {
+            "Icon": {
+              "id": 212926,
+              "path": "ui/icon/212000/212926.tex",
+              "path_hr1": "ui/icon/212000/212926_hr1.tex"
+            },
+            "Name": "Death's Design"
+          }
+        },
+        {
+          "row_id": 2587,
+          "fields": {
+            "Icon": {
+              "id": 217097,
+              "path": "ui/icon/217000/217097.tex",
+              "path_hr1": "ui/icon/217000/217097_hr1.tex"
+            },
+            "Name": "Soul Reaver"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "formatVersion": 1,
+  "id": "3b7c07aa01ea5890",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Starry+Sky+Motif&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "34669",
+        "obj": {
+          "i": 34669,
+          "n": "Starry Sky Motif",
+          "c": 3820,
+          "j": 42,
+          "t": 2,
+          "l": 70
+        }
+      },
+      {
+        "type": "action",
+        "id": "38991",
+        "obj": {
+          "i": 38991,
+          "n": "Starry Sky Motif",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "39592",
+        "obj": {
+          "i": 39592,
+          "n": "Starry Sky Motif",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "47143",
+        "obj": {
+          "i": 47143,
+          "n": "Starry Sky Motif",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

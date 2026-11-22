@@ -1,0 +1,373 @@
+{
+  "formatVersion": 1,
+  "id": "ca8cdbaa05d00d01",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=7518%2C7521%2C7520%2C7517%2C7519%2C7506%2C16527%2C7515%2C7561%2C16528%2C25855%2C25857%2C37004%2C25856%2C7511%2C7560%2C7510%2C7525%2C16530%2C45962%2C7526%2C3%2C45960%2C45961%2C25858%2C7527%2C7528%2C7529%2C37005%2C37007%2C37006%2C7562&limit=32&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 7518,
+          "fields": {
+            "Icon": {
+              "id": 3214,
+              "path": "ui/icon/003000/003214.tex",
+              "path_hr1": "ui/icon/003000/003214_hr1.tex"
+            },
+            "Name": "促进"
+          }
+        },
+        {
+          "row_id": 7521,
+          "fields": {
+            "Icon": {
+              "id": 3219,
+              "path": "ui/icon/003000/003219.tex",
+              "path_hr1": "ui/icon/003000/003219_hr1.tex"
+            },
+            "Name": "魔元化"
+          }
+        },
+        {
+          "row_id": 7520,
+          "fields": {
+            "Icon": {
+              "id": 3218,
+              "path": "ui/icon/003000/003218.tex",
+              "path_hr1": "ui/icon/003000/003218_hr1.tex"
+            },
+            "Name": "鼓励"
+          }
+        },
+        {
+          "row_id": 7517,
+          "fields": {
+            "Icon": {
+              "id": 3212,
+              "path": "ui/icon/003000/003212.tex",
+              "path_hr1": "ui/icon/003000/003212_hr1.tex"
+            },
+            "Name": "飞刺"
+          }
+        },
+        {
+          "row_id": 7519,
+          "fields": {
+            "Icon": {
+              "id": 3217,
+              "path": "ui/icon/003000/003217.tex",
+              "path_hr1": "ui/icon/003000/003217_hr1.tex"
+            },
+            "Name": "六分反击"
+          }
+        },
+        {
+          "row_id": 7506,
+          "fields": {
+            "Icon": {
+              "id": 3204,
+              "path": "ui/icon/003000/003204.tex",
+              "path_hr1": "ui/icon/003000/003204_hr1.tex"
+            },
+            "Name": "短兵相接"
+          }
+        },
+        {
+          "row_id": 16527,
+          "fields": {
+            "Icon": {
+              "id": 3231,
+              "path": "ui/icon/003000/003231.tex",
+              "path_hr1": "ui/icon/003000/003231_hr1.tex"
+            },
+            "Name": "交剑"
+          }
+        },
+        {
+          "row_id": 7515,
+          "fields": {
+            "Icon": {
+              "id": 3211,
+              "path": "ui/icon/003000/003211.tex",
+              "path_hr1": "ui/icon/003000/003211_hr1.tex"
+            },
+            "Name": "移转"
+          }
+        },
+        {
+          "row_id": 7561,
+          "fields": {
+            "Icon": {
+              "id": 866,
+              "path": "ui/icon/000000/000866.tex",
+              "path_hr1": "ui/icon/000000/000866_hr1.tex"
+            },
+            "Name": "即刻咏唱"
+          }
+        },
+        {
+          "row_id": 16528,
+          "fields": {
+            "Icon": {
+              "id": 3232,
+              "path": "ui/icon/003000/003232.tex",
+              "path_hr1": "ui/icon/003000/003232_hr1.tex"
+            },
+            "Name": "魔续斩"
+          }
+        },
+        {
+          "row_id": 25855,
+          "fields": {
+            "Icon": {
+              "id": 3235,
+              "path": "ui/icon/003000/003235.tex",
+              "path_hr1": "ui/icon/003000/003235_hr1.tex"
+            },
+            "Name": "赤暴雷"
+          }
+        },
+        {
+          "row_id": 25857,
+          "fields": {
+            "Icon": {
+              "id": 3237,
+              "path": "ui/icon/003000/003237.tex",
+              "path_hr1": "ui/icon/003000/003237_hr1.tex"
+            },
+            "Name": "抗死"
+          }
+        },
+        {
+          "row_id": 37004,
+          "fields": {
+            "Icon": {
+              "id": 3241,
+              "path": "ui/icon/003000/003241.tex",
+              "path_hr1": "ui/icon/003000/003241_hr1.tex"
+            },
+            "Name": "激荡"
+          }
+        },
+        {
+          "row_id": 25856,
+          "fields": {
+            "Icon": {
+              "id": 3236,
+              "path": "ui/icon/003000/003236.tex",
+              "path_hr1": "ui/icon/003000/003236_hr1.tex"
+            },
+            "Name": "赤暴风"
+          }
+        },
+        {
+          "row_id": 7511,
+          "fields": {
+            "Icon": {
+              "id": 3209,
+              "path": "ui/icon/003000/003209.tex",
+              "path_hr1": "ui/icon/003000/003209_hr1.tex"
+            },
+            "Name": "赤飞石"
+          }
+        },
+        {
+          "row_id": 7560,
+          "fields": {
+            "Icon": {
+              "id": 861,
+              "path": "ui/icon/000000/000861.tex",
+              "path_hr1": "ui/icon/000000/000861_hr1.tex"
+            },
+            "Name": "昏乱"
+          }
+        },
+        {
+          "row_id": 7510,
+          "fields": {
+            "Icon": {
+              "id": 3208,
+              "path": "ui/icon/003000/003208.tex",
+              "path_hr1": "ui/icon/003000/003208_hr1.tex"
+            },
+            "Name": "赤火炎"
+          }
+        },
+        {
+          "row_id": 7525,
+          "fields": {
+            "Icon": {
+              "id": 3223,
+              "path": "ui/icon/003000/003223.tex",
+              "path_hr1": "ui/icon/003000/003223_hr1.tex"
+            },
+            "Name": "赤核爆"
+          }
+        },
+        {
+          "row_id": 16530,
+          "fields": {
+            "Icon": {
+              "id": 3234,
+              "path": "ui/icon/003000/003234.tex",
+              "path_hr1": "ui/icon/003000/003234_hr1.tex"
+            },
+            "Name": "焦热"
+          }
+        },
+        {
+          "row_id": 45962,
+          "fields": {
+            "Icon": {
+              "id": 3227,
+              "path": "ui/icon/003000/003227.tex",
+              "path_hr1": "ui/icon/003000/003227_hr1.tex"
+            },
+            "Name": "魔连攻"
+          }
+        },
+        {
+          "row_id": 7526,
+          "fields": {
+            "Icon": {
+              "id": 3224,
+              "path": "ui/icon/003000/003224.tex",
+              "path_hr1": "ui/icon/003000/003224_hr1.tex"
+            },
+            "Name": "赤神圣"
+          }
+        },
+        {
+          "row_id": 3,
+          "fields": {
+            "Icon": {
+              "id": 104,
+              "path": "ui/icon/000000/000104.tex",
+              "path_hr1": "ui/icon/000000/000104_hr1.tex"
+            },
+            "Name": "冲刺"
+          }
+        },
+        {
+          "row_id": 45960,
+          "fields": {
+            "Icon": {
+              "id": 3225,
+              "path": "ui/icon/003000/003225.tex",
+              "path_hr1": "ui/icon/003000/003225_hr1.tex"
+            },
+            "Name": "魔回刺"
+          }
+        },
+        {
+          "row_id": 45961,
+          "fields": {
+            "Icon": {
+              "id": 3226,
+              "path": "ui/icon/003000/003226.tex",
+              "path_hr1": "ui/icon/003000/003226_hr1.tex"
+            },
+            "Name": "魔交击斩"
+          }
+        },
+        {
+          "row_id": 25858,
+          "fields": {
+            "Icon": {
+              "id": 3238,
+              "path": "ui/icon/003000/003238.tex",
+              "path_hr1": "ui/icon/003000/003238_hr1.tex"
+            },
+            "Name": "决断"
+          }
+        },
+        {
+          "row_id": 7527,
+          "fields": {
+            "Icon": {
+              "id": 3225,
+              "path": "ui/icon/003000/003225.tex",
+              "path_hr1": "ui/icon/003000/003225_hr1.tex"
+            },
+            "Name": "魔回刺"
+          }
+        },
+        {
+          "row_id": 7528,
+          "fields": {
+            "Icon": {
+              "id": 3226,
+              "path": "ui/icon/003000/003226.tex",
+              "path_hr1": "ui/icon/003000/003226_hr1.tex"
+            },
+            "Name": "魔交击斩"
+          }
+        },
+        {
+          "row_id": 7529,
+          "fields": {
+            "Icon": {
+              "id": 3227,
+              "path": "ui/icon/003000/003227.tex",
+              "path_hr1": "ui/icon/003000/003227_hr1.tex"
+            },
+            "Name": "魔连攻"
+          }
+        },
+        {
+          "row_id": 37005,
+          "fields": {
+            "Icon": {
+              "id": 3242,
+              "path": "ui/icon/003000/003242.tex",
+              "path_hr1": "ui/icon/003000/003242_hr1.tex"
+            },
+            "Name": "荆棘环绕"
+          }
+        },
+        {
+          "row_id": 37007,
+          "fields": {
+            "Icon": {
+              "id": 3244,
+              "path": "ui/icon/003000/003244.tex",
+              "path_hr1": "ui/icon/003000/003244_hr1.tex"
+            },
+            "Name": "光芒四射"
+          }
+        },
+        {
+          "row_id": 37006,
+          "fields": {
+            "Icon": {
+              "id": 3243,
+              "path": "ui/icon/003000/003243.tex",
+              "path_hr1": "ui/icon/003000/003243_hr1.tex"
+            },
+            "Name": "显贵冲击"
+          }
+        },
+        {
+          "row_id": 7562,
+          "fields": {
+            "Icon": {
+              "id": 865,
+              "path": "ui/icon/000000/000865.tex",
+              "path_hr1": "ui/icon/000000/000865_hr1.tex"
+            },
+            "Name": "醒梦"
+          }
+        }
+      ]
+    }
+  }
+}

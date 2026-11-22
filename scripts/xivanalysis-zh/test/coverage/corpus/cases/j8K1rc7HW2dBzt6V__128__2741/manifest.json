@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "j8K1rc7HW2dBzt6V/128/2741",
+  "slug": "j8K1rc7HW2dBzt6V__128__2741",
+  "url": "https://xivanalysis.com/fflogs/j8K1rc7HW2dBzt6V/128/2741",
+  "job": "GNB",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "7249aa3be65bacb9",
+      "0752a62fee73c743",
+      "8baf600c34351b25"
+    ],
+    "script": [
+      "04f0f98de9565056",
+      "090c170ca05b304a",
+      "1adea4ca01496470",
+      "36c5d277061cb6e9",
+      "5ea858e69a0c1fca",
+      "65f1047255901a09",
+      "71e0a7b664e11d32",
+      "84ca0b05614b635f",
+      "9b6b4a92cf7218f6",
+      "9c5fcff7bd23f0a0",
+      "c6b9fb5f64ce1685",
+      "dfd1f126d5ab892f",
+      "fcac966fe345a256"
+    ]
+  }
+}

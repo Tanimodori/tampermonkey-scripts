@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "00679c93c90aae87",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/7479?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 7479,
+      "fields": {
+        "Icon": {
+          "id": 3156,
+          "path": "ui/icon/003000/003156.tex",
+          "path_hr1": "ui/icon/003000/003156_hr1.tex"
+        },
+        "Name": "士风"
+      },
+      "transient": {
+        "Description": "对目标发动物理攻击　威力：140\n连击条件：晓风　连击中威力：300\n连击成功：风花\n持续时间：40秒\n风花效果：自身的自动攻击间隔、战技与魔法的咏唱及复唱时间缩短13%\n连击成功：获得5点剑气"
+      }
+    }
+  }
+}

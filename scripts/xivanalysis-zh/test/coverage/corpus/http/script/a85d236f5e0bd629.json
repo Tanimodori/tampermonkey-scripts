@@ -1,0 +1,43 @@
+{
+  "formatVersion": 1,
+  "id": "a85d236f5e0bd629",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=1235%2C1234&limit=2&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 1235,
+          "fields": {
+            "Icon": {
+              "id": 213403,
+              "path": "ui/icon/213000/213403.tex",
+              "path_hr1": "ui/icon/213000/213403_hr1.tex"
+            },
+            "Name": "赤飞石预备"
+          }
+        },
+        {
+          "row_id": 1234,
+          "fields": {
+            "Icon": {
+              "id": 213402,
+              "path": "ui/icon/213000/213402.tex",
+              "path_hr1": "ui/icon/213000/213402_hr1.tex"
+            },
+            "Name": "赤火炎预备"
+          }
+        }
+      ]
+    }
+  }
+}

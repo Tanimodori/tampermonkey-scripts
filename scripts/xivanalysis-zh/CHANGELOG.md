@@ -6,6 +6,13 @@
 - 源文件 `rows` 每行一条、例外表保持缩进；`vite.config.ts` 统一把 JSON import 转成紧凑的 `JSON.parse`，构建产物 59.9 kB，低于改动前的约 72.9 kB。
 - `statuses.meta.json` 精简为 `formatVersion`、upstream、国服版本和 data hash/条目数；移除 diagnostics、warnings、counts。
 - 移除 `bake:statuses:check-icons`、`update:data:icons`；烘焙 warning 改为输出到 stderr。
+- 权威语料改为统一 HTTP 包仓库：`http/page/<id>.json` 存无脚本页面的 EN 请求与默认响应，`http/script/<id>.json` 存 CN/ClassJob/garland 响应；每个包使用同一 schema，按 `kind`/`origin` 区分 page/script，按请求 URL 去重。
+- `cases/<slug>/manifest.json` 用包 ID 重新组合该 case 的 page/script 包；`questions.json` 存元素，`expected.json` 存 Vitest 调用生产函数算出的逐元素答案；根 `manifest.json` 记录 captureId、case/包清单与 digest。
+- expected 的 icon 答案只保存最终 `alt`；约定生产 `applyEntry` 的 `title === alt`，生成阶段校验该约定，不再重复保存 title。
+- case slug 使用 `reportCode__fightId__actorId`，例如 `mn7bYWMQf9vhABrG__4__3`；不加序号前缀，顺序由根 manifest 维护。
+- 新增 `test:corpus:questions`、`test:corpus:responses`、`test:corpus:expected`；`test:corpus:capture` 依次执行三步。
+- 删除旧 labels/sheets/classjobs/abbreviations/garland/warnings/manifest 语料、`warnings.allowlist.json`、旧 `coverage.spec.ts` 与 `live/corpus.spec.ts`，由 `http/` + `cases/` + 根 manifest 和 `untranslated.allowlist.json` 取代。
+- 新增 `untranslated.allowlist.json`，按 `timeline:<en>` / `icon:<en>|<iconId>` 登记允许保持英文的条目。
 
 ## v0.0.6 (2026/10/21)
 

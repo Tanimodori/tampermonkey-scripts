@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "74f4054c5604a07e",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/7428?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 7428,
+      "fields": {
+        "Icon": {
+          "id": 2692,
+          "path": "ui/icon/002000/002692.tex",
+          "path_hr1": "ui/icon/002000/002692_hr1.tex"
+        },
+        "Name": "真龙波"
+      },
+      "transient": {
+        "Description": "对目标发动无属性魔法攻击　威力：150\n发动条件：亚灵神巴哈姆特显现中\n\n※该技能无法设置到热键栏"
+      }
+    }
+  }
+}

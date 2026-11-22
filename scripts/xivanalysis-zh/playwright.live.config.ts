@@ -5,7 +5,7 @@ import base from './playwright.config';
  * 真实站点组：导航到 xivanalysis 的真实战报页，页面与 xivapi 都走真网络。
  *
  * 与 `playwright.config.ts` 分开，是为了让裸跑 `playwright test` 仍然只碰离线夹具；
- * 这一份里的两个 project 都会出网。
+ * 这一份里的三个 project 都会出网。
  */
 export default defineConfig({
   ...base,
@@ -25,8 +25,8 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      name: 'live-corpus',
-      testMatch: /corpus\.spec\.ts$/,
+      name: 'live-corpus-questions',
+      testMatch: /corpus-questions\.spec\.ts$/,
       // 33 条串行，每条之间等 60 秒，另含限流退避余量。
       timeout: 4_000_000,
     },

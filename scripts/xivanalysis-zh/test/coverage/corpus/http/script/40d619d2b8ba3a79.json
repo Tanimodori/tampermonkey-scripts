@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "40d619d2b8ba3a79",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/75?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 75,
+      "fields": {
+        "Icon": {
+          "id": 310,
+          "path": "ui/icon/000000/000310.tex",
+          "path_hr1": "ui/icon/000000/000310_hr1.tex"
+        },
+        "Name": "精准刺"
+      },
+      "transient": {
+        "Description": "对目标发动物理攻击　威力：230"
+      }
+    }
+  }
+}

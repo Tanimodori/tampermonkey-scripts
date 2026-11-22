@@ -1,0 +1,26 @@
+{
+  "formatVersion": 1,
+  "id": "aTZkH1m6WjxNFACQ/3/5",
+  "slug": "aTZkH1m6WjxNFACQ__3__5",
+  "url": "https://xivanalysis.com/fflogs/aTZkH1m6WjxNFACQ/3/5",
+  "job": "DRK",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "fe4bcd04811e7692",
+      "8baf600c34351b25"
+    ],
+    "script": [
+      "04f0f98de9565056",
+      "0904d5274a891089",
+      "345414004453c888",
+      "3497296947281198",
+      "5ea858e69a0c1fca",
+      "65f1047255901a09",
+      "9b6b4a92cf7218f6",
+      "c808250a998a0179",
+      "dfd1f126d5ab892f"
+    ]
+  }
+}

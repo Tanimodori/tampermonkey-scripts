@@ -1,0 +1,76 @@
+{
+  "formatVersion": 1,
+  "id": "b12260de7c512fc0",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=1298%2C1299%2C2959%2C3856%2C3852&limit=5&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 1298,
+          "fields": {
+            "Icon": {
+              "id": 213311,
+              "path": "ui/icon/213000/213311.tex",
+              "path_hr1": "ui/icon/213000/213311_hr1.tex"
+            },
+            "Name": "风月"
+          }
+        },
+        {
+          "row_id": 1299,
+          "fields": {
+            "Icon": {
+              "id": 213312,
+              "path": "ui/icon/213000/213312.tex",
+              "path_hr1": "ui/icon/213000/213312_hr1.tex"
+            },
+            "Name": "风花"
+          }
+        },
+        {
+          "row_id": 2959,
+          "fields": {
+            "Icon": {
+              "id": 213313,
+              "path": "ui/icon/213000/213313.tex",
+              "path_hr1": "ui/icon/213000/213313_hr1.tex"
+            },
+            "Name": "奥义斩浪预备"
+          }
+        },
+        {
+          "row_id": 3856,
+          "fields": {
+            "Icon": {
+              "id": 213319,
+              "path": "ui/icon/213000/213319.tex",
+              "path_hr1": "ui/icon/213000/213319_hr1.tex"
+            },
+            "Name": "天道"
+          }
+        },
+        {
+          "row_id": 3852,
+          "fields": {
+            "Icon": {
+              "id": 213315,
+              "path": "ui/icon/213000/213315.tex",
+              "path_hr1": "ui/icon/213000/213315_hr1.tex"
+            },
+            "Name": "燕回返预备"
+          }
+        }
+      ]
+    }
+  }
+}

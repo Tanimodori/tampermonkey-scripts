@@ -1,0 +1,76 @@
+{
+  "formatVersion": 1,
+  "id": "3092674543ca0d70",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=1298,1299,2959,3856,3852&limit=5&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 1298,
+          "fields": {
+            "Icon": {
+              "id": 213311,
+              "path": "ui/icon/213000/213311.tex",
+              "path_hr1": "ui/icon/213000/213311_hr1.tex"
+            },
+            "Name": "Fugetsu"
+          }
+        },
+        {
+          "row_id": 1299,
+          "fields": {
+            "Icon": {
+              "id": 213312,
+              "path": "ui/icon/213000/213312.tex",
+              "path_hr1": "ui/icon/213000/213312_hr1.tex"
+            },
+            "Name": "Fuka"
+          }
+        },
+        {
+          "row_id": 2959,
+          "fields": {
+            "Icon": {
+              "id": 213313,
+              "path": "ui/icon/213000/213313.tex",
+              "path_hr1": "ui/icon/213000/213313_hr1.tex"
+            },
+            "Name": "Ogi Namikiri Ready"
+          }
+        },
+        {
+          "row_id": 3856,
+          "fields": {
+            "Icon": {
+              "id": 213319,
+              "path": "ui/icon/213000/213319.tex",
+              "path_hr1": "ui/icon/213000/213319_hr1.tex"
+            },
+            "Name": "Tendo"
+          }
+        },
+        {
+          "row_id": 3852,
+          "fields": {
+            "Icon": {
+              "id": 213315,
+              "path": "ui/icon/213000/213315.tex",
+              "path_hr1": "ui/icon/213000/213315_hr1.tex"
+            },
+            "Name": "Tsubame-gaeshi Ready"
+          }
+        }
+      ]
+    }
+  }
+}

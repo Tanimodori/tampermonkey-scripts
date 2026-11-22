@@ -1,0 +1,956 @@
+{
+  "formatVersion": 1,
+  "id": "3fa3a9c52b44fb0a",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Draw&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "17179",
+        "obj": {
+          "i": 17179,
+          "n": "Draw",
+          "c": 3101,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "25036",
+        "obj": {
+          "i": 25036,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "29249",
+        "obj": {
+          "i": 29249,
+          "n": "Draw",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "3590",
+        "obj": {
+          "i": 3590,
+          "n": "Draw",
+          "c": 786,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38666",
+        "obj": {
+          "i": 38666,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38667",
+        "obj": {
+          "i": 38667,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38668",
+        "obj": {
+          "i": 38668,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38669",
+        "obj": {
+          "i": 38669,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38670",
+        "obj": {
+          "i": 38670,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38671",
+        "obj": {
+          "i": 38671,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38672",
+        "obj": {
+          "i": 38672,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38673",
+        "obj": {
+          "i": 38673,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38674",
+        "obj": {
+          "i": 38674,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38675",
+        "obj": {
+          "i": 38675,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38676",
+        "obj": {
+          "i": 38676,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38677",
+        "obj": {
+          "i": 38677,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "4250",
+        "obj": {
+          "i": 4250,
+          "n": "Draw",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "8920",
+        "obj": {
+          "i": 8920,
+          "n": "Draw",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "17890",
+        "obj": {
+          "i": 17890,
+          "n": "Draw and Junction",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "29124",
+        "obj": {
+          "i": 29124,
+          "n": "Draw and Junction",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "status",
+        "id": "2064",
+        "obj": {
+          "i": 2064,
+          "n": "Draw Fortitude",
+          "c": 214871,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "2063",
+        "obj": {
+          "i": 2063,
+          "n": "Draw Power",
+          "c": 214869,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "46007",
+        "obj": {
+          "i": 46007,
+          "n": "Draw Steel",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "46008",
+        "obj": {
+          "i": 46008,
+          "n": "Draw Steel",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "46009",
+        "obj": {
+          "i": 46009,
+          "n": "Draw Steel",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "46087",
+        "obj": {
+          "i": 46087,
+          "n": "Draw Steel",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "46088",
+        "obj": {
+          "i": 46088,
+          "n": "Draw Steel",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "46089",
+        "obj": {
+          "i": 46089,
+          "n": "Draw Steel",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "quest",
+        "id": "68198",
+        "obj": {
+          "i": 68198,
+          "n": "Drawing a Blank",
+          "g": 125,
+          "l": "The Fringes",
+          "s": 1040,
+          "f": 1
+        }
+      },
+      {
+        "type": "fate",
+        "id": "1829",
+        "obj": {
+          "i": 1829,
+          "n": "Drawing the Thunderstroke",
+          "l": 86,
+          "t": "Slay Enemies"
+        }
+      },
+      {
+        "type": "action",
+        "id": "1870",
+        "obj": {
+          "i": 1870,
+          "n": "Aether Draw",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "fate",
+        "id": "128",
+        "obj": {
+          "i": 128,
+          "n": "Alux of the Draw",
+          "l": 9,
+          "t": "Notorious Monster"
+        }
+      },
+      {
+        "type": "status",
+        "id": "3404",
+        "obj": {
+          "i": 3404,
+          "n": "Arrow Drawn",
+          "c": 213231,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "4043",
+        "obj": {
+          "i": 4043,
+          "n": "Arrow Drawn",
+          "c": 213231,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "915",
+        "obj": {
+          "i": 915,
+          "n": "Arrow Drawn",
+          "c": 213231,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "37017",
+        "obj": {
+          "i": 37017,
+          "n": "Astral Draw",
+          "c": 3564,
+          "j": 33,
+          "t": 4,
+          "l": 30
+        }
+      },
+      {
+        "type": "action",
+        "id": "38148",
+        "obj": {
+          "i": 38148,
+          "n": "Astral Draw",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38893",
+        "obj": {
+          "i": 38893,
+          "n": "Astral Draw",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "quest",
+        "id": "67840",
+        "obj": {
+          "i": 67840,
+          "n": "Back to the Drawing Board",
+          "g": 55,
+          "l": "The Churning Mists",
+          "s": 23,
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "48216",
+        "obj": {
+          "i": 48216,
+          "n": "Back to the Drawing Board Orchestrion Roll",
+          "l": 1,
+          "c": 25945,
+          "t": 94,
+          "g": 16,
+          "r": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "3101",
+        "obj": {
+          "i": 3101,
+          "n": "Balance Drawn",
+          "c": 213229,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "4041",
+        "obj": {
+          "i": 4041,
+          "n": "Balance Drawn",
+          "c": 213229,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "913",
+        "obj": {
+          "i": 913,
+          "n": "Balance Drawn",
+          "c": 213229,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "25455",
+        "obj": {
+          "i": 25455,
+          "n": "Blood Draw",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "status",
+        "id": "3403",
+        "obj": {
+          "i": 3403,
+          "n": "Bole Drawn",
+          "c": 213230,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "4042",
+        "obj": {
+          "i": 4042,
+          "n": "Bole Drawn",
+          "c": 213230,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "914",
+        "obj": {
+          "i": 914,
+          "n": "Bole Drawn",
+          "c": 213230,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "826",
+        "obj": {
+          "i": 826,
+          "n": "Card Drawn",
+          "c": 213201,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "2713",
+        "obj": {
+          "i": 2713,
+          "n": "Clarifying Draw",
+          "c": 213258,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "21499",
+        "obj": {
+          "i": 21499,
+          "n": "Destiny Drawn",
+          "c": 64870,
+          "j": 0,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "status",
+        "id": "2571",
+        "obj": {
+          "i": 2571,
+          "n": "Destiny Drawn",
+          "c": 215344,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "50495",
+        "obj": {
+          "i": 50495,
+          "n": "Enhanced Draw",
+          "c": 6115,
+          "j": 33,
+          "t": -1,
+          "l": 40
+        }
+      },
+      {
+        "type": "action",
+        "id": "50496",
+        "obj": {
+          "i": 50496,
+          "n": "Enhanced Draw II",
+          "c": 6116,
+          "j": 33,
+          "t": -1,
+          "l": 50
+        }
+      },
+      {
+        "type": "status",
+        "id": "3102",
+        "obj": {
+          "i": 3102,
+          "n": "Ewer Drawn",
+          "c": 213233,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "4045",
+        "obj": {
+          "i": 4045,
+          "n": "Ewer Drawn",
+          "c": 213233,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "917",
+        "obj": {
+          "i": 917,
+          "n": "Ewer Drawn",
+          "c": 213233,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "2180",
+        "obj": {
+          "i": 2180,
+          "n": "Fast Draw",
+          "c": 219601,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "22759",
+        "obj": {
+          "i": 22759,
+          "n": "Final Draw",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "item",
+        "id": "6624",
+        "obj": {
+          "i": 6624,
+          "n": "Glade Drawer Table",
+          "l": 15,
+          "c": 52486,
+          "t": 77,
+          "p": 5000,
+          "g": 9,
+          "f": [
+            {
+              "id": 1849,
+              "job": 8,
+              "lvl": 15
+            }
+          ],
+          "r": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "2055",
+        "obj": {
+          "i": 2055,
+          "n": "Lady of Crowns Drawn",
+          "c": 213257,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "2054",
+        "obj": {
+          "i": 2054,
+          "n": "Lord of Crowns Drawn",
+          "c": 213256,
+          "t": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "3280",
+        "obj": {
+          "i": 3280,
+          "n": "Lord's Drawers (Black)",
+          "l": 1,
+          "c": 45211,
+          "t": 36,
+          "p": 45,
+          "g": 3,
+          "j": 1,
+          "r": 1,
+          "e": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "3282",
+        "obj": {
+          "i": 3282,
+          "n": "Lord's Drawers (Gold)",
+          "l": 1,
+          "c": 45213,
+          "t": 36,
+          "p": 45,
+          "g": 3,
+          "j": 1,
+          "r": 1,
+          "e": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "3281",
+        "obj": {
+          "i": 3281,
+          "n": "Lord's Drawers (White)",
+          "l": 1,
+          "c": 45212,
+          "t": 36,
+          "p": 45,
+          "g": 3,
+          "j": 1,
+          "r": 1,
+          "e": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "47197",
+        "obj": {
+          "i": 47197,
+          "n": "Nigh-drawn Eruption",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "item",
+        "id": "47305",
+        "obj": {
+          "i": 47305,
+          "n": "Ovelia's Drawers",
+          "l": 1,
+          "c": 57409,
+          "t": 36,
+          "g": 3,
+          "j": 1,
+          "r": 1,
+          "e": 1
+        }
+      },
+      {
+        "type": "fate",
+        "id": "1443",
+        "obj": {
+          "i": 1443,
+          "n": "Pluck of the Draw",
+          "l": 75,
+          "t": "Gather"
+        }
+      },
+      {
+        "type": "action",
+        "id": "10026",
+        "obj": {
+          "i": 10026,
+          "n": "Sleeve Draw",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "status",
+        "id": "1926",
+        "obj": {
+          "i": 1926,
+          "n": "Sleeve Draw",
+          "c": 219561,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "7448",
+        "obj": {
+          "i": 7448,
+          "n": "Sleeve Draw",
+          "c": 3107,
+          "j": null,
+          "t": 4,
+          "l": 70
+        }
+      },
+      {
+        "type": "status",
+        "id": "4044",
+        "obj": {
+          "i": 4044,
+          "n": "Spear Drawn",
+          "c": 213232,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "916",
+        "obj": {
+          "i": 916,
+          "n": "Spear Drawn",
+          "c": 213232,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "3103",
+        "obj": {
+          "i": 3103,
+          "n": "Spire Drawn",
+          "c": 213234,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "4046",
+        "obj": {
+          "i": 4046,
+          "n": "Spire Drawn",
+          "c": 213234,
+          "t": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "918",
+        "obj": {
+          "i": 918,
+          "n": "Spire Drawn",
+          "c": 213234,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "35210",
+        "obj": {
+          "i": 35210,
+          "n": "Swinging Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "35211",
+        "obj": {
+          "i": 35211,
+          "n": "Swinging Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "35212",
+        "obj": {
+          "i": 35212,
+          "n": "Swinging Draw",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "37018",
+        "obj": {
+          "i": 37018,
+          "n": "Umbral Draw",
+          "c": 3565,
+          "j": 33,
+          "t": 4,
+          "l": 30
+        }
+      },
+      {
+        "type": "action",
+        "id": "38149",
+        "obj": {
+          "i": 38149,
+          "n": "Umbral Draw",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38894",
+        "obj": {
+          "i": 38894,
+          "n": "Umbral Draw",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "990d224710bd4647",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/34652?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 34652,
+      "fields": {
+        "Icon": {
+          "id": 3803,
+          "path": "ui/icon/003000/003803.tex",
+          "path_hr1": "ui/icon/003000/003803_hr1.tex"
+        },
+        "Name": "流水之蓝"
+      },
+      "transient": {
+        "Description": "对目标发动水属性魔法攻击　威力：570\n追加效果：获得25点调色值\n追加效果：白色颜料\n最大档数：5档\n发动条件：以太色调II状态中，且非减色混合状态中\n发动时，若自身已经附加绘灵幻景状态，且处在星空构想的艺术空间内，则会消耗1档绘灵幻景\n\n※该技能无法设置到热键栏\n　满足发动条件后，疾风之绿变为流水之蓝"
+      }
+    }
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "formatVersion": 1,
+  "id": "fcb9ea302d13d728",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=2717%2C2718%2C956%2C1879%2C3895%2C848&limit=6&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 2717,
+          "fields": {
+            "Icon": {
+              "id": 213262,
+              "path": "ui/icon/213000/213262.tex",
+              "path_hr1": "ui/icon/213000/213262_hr1.tex"
+            },
+            "Name": "擢升"
+          }
+        },
+        {
+          "row_id": 2718,
+          "fields": {
+            "Icon": {
+              "id": 213263,
+              "path": "ui/icon/213000/213263.tex",
+              "path_hr1": "ui/icon/213000/213263_hr1.tex"
+            },
+            "Name": "大宇宙"
+          }
+        },
+        {
+          "row_id": 956,
+          "fields": {
+            "Icon": {
+              "id": 213225,
+              "path": "ui/icon/213000/213225.tex",
+              "path_hr1": "ui/icon/213000/213225_hr1.tex"
+            },
+            "Name": "命运之轮"
+          }
+        },
+        {
+          "row_id": 1879,
+          "fields": {
+            "Icon": {
+              "id": 213246,
+              "path": "ui/icon/213000/213246.tex",
+              "path_hr1": "ui/icon/213000/213246_hr1.tex"
+            },
+            "Name": "天星冲日"
+          }
+        },
+        {
+          "row_id": 3895,
+          "fields": {
+            "Icon": {
+              "id": 213266,
+              "path": "ui/icon/213000/213266.tex",
+              "path_hr1": "ui/icon/213000/213266_hr1.tex"
+            },
+            "Name": "太阳星座预备"
+          }
+        },
+        {
+          "row_id": 848,
+          "fields": {
+            "Icon": {
+              "id": 213227,
+              "path": "ui/icon/213000/213227.tex",
+              "path_hr1": "ui/icon/213000/213227_hr1.tex"
+            },
+            "Name": "命运之轮"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -6,22 +6,26 @@
 
 | 链路 | 采集什么 | 触发 | 产物 | 是否提交 |
 | --- | --- | --- | --- | --- |
-| 浏览器语料 | 真实战报页的终态、接口响应、`[xiv-warn]` | `rushx test:corpus:capture`（Playwright，约 50 分钟） | `test/coverage/corpus/*.json` | 提交 |
+| 浏览器语料 | 无脚本页面的请求与默认 EN 响应、独立 CN/ClassJob/garland 响应、Vitest 计算的逐元素答案 | `rushx test:corpus:capture`（questions 约 50 分钟 + responses + expected） | `test/coverage/corpus/http/<kind>/<id>.json`、`cases/<slug>/`、`manifest.json` | 提交 |
 | status 烘焙 | 上游 xivanalysis `STATUSES` + 英文/国服 xivapi `Status`（按 id 合并） | `rushx bake:statuses`（Node，联网） | `src/data/generated/statuses.json` 与 meta | 提交 |
 | datamining | 权威游戏表 CSV（`InfSein/ffxiv-datamining-mixed`） | 构建时按需拉取 | `node_modules/.cache/...` | 不提交 |
 
 ## 为什么不合并
 
-- 浏览器语料记录的是“xivanalysis 页面实际显示了什么”，包括站点自己的 UI 字符串、时间轴终态、脚本改写结果和未命中告警。datamining 没有这些信息，无法替代。
+- 浏览器语料不是一份混合快照：questions 记录“页面实际问了什么”（请求、默认 EN 响应、待处理元素），responses 记录“脚本会额外取什么”（CN/ClassJob/garland 完整响应），expected 是 Vitest 调用生产函数算出的逐元素答案。datamining 没有这些页面事实，无法替代。
 - datamining 的 CHS 数据有滞后。2026-10 时 `chs/Status.csv` 的最新提交是 2026-09-08（CHS 7.56，数据 2026.09.01），而 xivapi 国服当时是 `20261013-1e14140`。status 烘焙继续用 xivapi 国服作为主源；datamining 只适合做可选交叉校验或离线兜底。
 - status 烘焙还需要上游 xivanalysis 的 `STATUSES` TS 源码；那是人工整理、带 layer/patch 覆盖的清单，不是游戏表，datamining 不能替代。
 - 两边的路径也不同：浏览器语料是提交到仓库的快照，datamining 是构建缓存。把两者放进同一个目录会把“历史事实”和“可重建缓存”混在一起。
 
 ## 哪些可以统一
 
-- 入口：`rushx update:data` 只跑 status 烘焙；语料 capture 是单独的约 50 分钟手工步骤，默认不跑，显式加 `--corpus` 才跑。
+- 入口：`rushx update:data` 只跑 status 烘焙；语料刷新是单独的约 50 分钟手工步骤，默认不跑，显式加 `--corpus` 才在 status 烘焙后按 questions → responses → expected 依次执行。
 - 底层工具：原子写、内容 hash、缓存与重试。datamining 侧是内容寻址缓存（`xiv-datamine-polyfill`），status 烘焙是按上游 commit 缓存；语义不同，暂不抽共享包，等第三个消费者出现再考虑。
 - id 对照表：status 烘焙以游戏 `Status` row_id 为主键，把上游 `STATUSES`、英文 xivapi、国服 xivapi 合并成 `rows` 元组；en 名、en 图标只在与 upstream 不同时写入例外表，国服图标只在不同于当前 en 图标（没有 en 时 upstream）时写入 `zhIcons`。页面 DOM 没有 row_id，运行时仍按页面可见的英文名 + 图标匹配；id 用于数据合并与校验，同名消歧仍靠图标。
+
+## 语料的问题与答案
+
+`http/page/<id>.json` 里的默认响应是页面不注入脚本时实际拿到的 EN 响应，属于问题上下文；`http/script/<id>.json` 只存脚本会额外请求的 CN/ClassJob/garland 响应；`cases/<slug>/expected.json` 只存 Vitest 调用生产函数算出的逐元素答案。case manifest 通过包 ID 重新组合该 case 需要调用的 HTTP 包。普通测试离线读这些文件，不重新请求接口、不加载用户脚本。旧 labels/sheets/garland 语料是“用答案选问题”的二次产物，不能迁移，也不应再作为数据源。
 
 ## universalis-zh-data
 

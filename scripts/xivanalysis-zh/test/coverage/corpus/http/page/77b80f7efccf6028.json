@@ -1,0 +1,87 @@
+{
+  "formatVersion": 1,
+  "id": "77b80f7efccf6028",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=3685,3674,3680,3688,3689,3679&limit=6&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 3685,
+          "fields": {
+            "Icon": {
+              "id": 213808,
+              "path": "ui/icon/213000/213808.tex",
+              "path_hr1": "ui/icon/213000/213808_hr1.tex"
+            },
+            "Name": "Starry Muse"
+          }
+        },
+        {
+          "row_id": 3674,
+          "fields": {
+            "Icon": {
+              "id": 218673,
+              "path": "ui/icon/218000/218673.tex",
+              "path_hr1": "ui/icon/218000/218673_hr1.tex"
+            },
+            "Name": "Subtractive Palette"
+          }
+        },
+        {
+          "row_id": 3680,
+          "fields": {
+            "Icon": {
+              "id": 218677,
+              "path": "ui/icon/218000/218677.tex",
+              "path_hr1": "ui/icon/218000/218677_hr1.tex"
+            },
+            "Name": "Hammer Time"
+          }
+        },
+        {
+          "row_id": 3688,
+          "fields": {
+            "Icon": {
+              "id": 218155,
+              "path": "ui/icon/218000/218155.tex",
+              "path_hr1": "ui/icon/218000/218155_hr1.tex"
+            },
+            "Name": "Hyperphantasia"
+          }
+        },
+        {
+          "row_id": 3689,
+          "fields": {
+            "Icon": {
+              "id": 213811,
+              "path": "ui/icon/213000/213811.tex",
+              "path_hr1": "ui/icon/213000/213811_hr1.tex"
+            },
+            "Name": "Inspiration"
+          }
+        },
+        {
+          "row_id": 3679,
+          "fields": {
+            "Icon": {
+              "id": 213805,
+              "path": "ui/icon/213000/213805.tex",
+              "path_hr1": "ui/icon/213000/213805_hr1.tex"
+            },
+            "Name": "Rainbow Bright"
+          }
+        }
+      ]
+    }
+  }
+}

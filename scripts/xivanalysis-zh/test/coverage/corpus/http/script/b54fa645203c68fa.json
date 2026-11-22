@@ -1,0 +1,340 @@
+{
+  "formatVersion": 1,
+  "id": "b54fa645203c68fa",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=2878%2C7414%2C2876%2C16500%2C16498%2C16499%2C25788%2C36979%2C36980%2C17209%2C7413%2C7411%2C7412%2C16501%2C16504%2C16503%2C25787%2C17206%2C36981%2C36978%2C36982%2C16889%2C2887%2C7410%2C16497%2C2874%2C2890%2C3%2C7541&limit=29&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 2878,
+          "fields": {
+            "Icon": {
+              "id": 3018,
+              "path": "ui/icon/003000/003018.tex",
+              "path_hr1": "ui/icon/003000/003018_hr1.tex"
+            },
+            "Name": "野火"
+          }
+        },
+        {
+          "row_id": 7414,
+          "fields": {
+            "Icon": {
+              "id": 3034,
+              "path": "ui/icon/003000/003034.tex",
+              "path_hr1": "ui/icon/003000/003034_hr1.tex"
+            },
+            "Name": "枪管加热"
+          }
+        },
+        {
+          "row_id": 2876,
+          "fields": {
+            "Icon": {
+              "id": 3022,
+              "path": "ui/icon/003000/003022.tex",
+              "path_hr1": "ui/icon/003000/003022_hr1.tex"
+            },
+            "Name": "整备"
+          }
+        },
+        {
+          "row_id": 16500,
+          "fields": {
+            "Icon": {
+              "id": 3045,
+              "path": "ui/icon/003000/003045.tex",
+              "path_hr1": "ui/icon/003000/003045_hr1.tex"
+            },
+            "Name": "空气锚"
+          }
+        },
+        {
+          "row_id": 16498,
+          "fields": {
+            "Icon": {
+              "id": 3043,
+              "path": "ui/icon/003000/003043.tex",
+              "path_hr1": "ui/icon/003000/003043_hr1.tex"
+            },
+            "Name": "钻头"
+          }
+        },
+        {
+          "row_id": 16499,
+          "fields": {
+            "Icon": {
+              "id": 3044,
+              "path": "ui/icon/003000/003044.tex",
+              "path_hr1": "ui/icon/003000/003044_hr1.tex"
+            },
+            "Name": "毒菌冲击"
+          }
+        },
+        {
+          "row_id": 25788,
+          "fields": {
+            "Icon": {
+              "id": 3048,
+              "path": "ui/icon/003000/003048.tex",
+              "path_hr1": "ui/icon/003000/003048_hr1.tex"
+            },
+            "Name": "回转飞锯"
+          }
+        },
+        {
+          "row_id": 36979,
+          "fields": {
+            "Icon": {
+              "id": 3507,
+              "path": "ui/icon/003000/003507.tex",
+              "path_hr1": "ui/icon/003000/003507_hr1.tex"
+            },
+            "Name": "双将"
+          }
+        },
+        {
+          "row_id": 36980,
+          "fields": {
+            "Icon": {
+              "id": 3508,
+              "path": "ui/icon/003000/003508.tex",
+              "path_hr1": "ui/icon/003000/003508_hr1.tex"
+            },
+            "Name": "将死"
+          }
+        },
+        {
+          "row_id": 17209,
+          "fields": {
+            "Icon": {
+              "id": 3041,
+              "path": "ui/icon/003000/003041.tex",
+              "path_hr1": "ui/icon/003000/003041_hr1.tex"
+            },
+            "Name": "超荷"
+          }
+        },
+        {
+          "row_id": 7413,
+          "fields": {
+            "Icon": {
+              "id": 3033,
+              "path": "ui/icon/003000/003033.tex",
+              "path_hr1": "ui/icon/003000/003033_hr1.tex"
+            },
+            "Name": "热狙击弹"
+          }
+        },
+        {
+          "row_id": 7411,
+          "fields": {
+            "Icon": {
+              "id": 3031,
+              "path": "ui/icon/003000/003031.tex",
+              "path_hr1": "ui/icon/003000/003031_hr1.tex"
+            },
+            "Name": "热分裂弹"
+          }
+        },
+        {
+          "row_id": 7412,
+          "fields": {
+            "Icon": {
+              "id": 3032,
+              "path": "ui/icon/003000/003032.tex",
+              "path_hr1": "ui/icon/003000/003032_hr1.tex"
+            },
+            "Name": "热独头弹"
+          }
+        },
+        {
+          "row_id": 16501,
+          "fields": {
+            "Icon": {
+              "id": 3501,
+              "path": "ui/icon/003000/003501.tex",
+              "path_hr1": "ui/icon/003000/003501_hr1.tex"
+            },
+            "Name": "后式自走人偶"
+          }
+        },
+        {
+          "row_id": 16504,
+          "fields": {
+            "Icon": {
+              "id": 3504,
+              "path": "ui/icon/003000/003504.tex",
+              "path_hr1": "ui/icon/003000/003504_hr1.tex"
+            },
+            "Name": "铁臂拳"
+          }
+        },
+        {
+          "row_id": 16503,
+          "fields": {
+            "Icon": {
+              "id": 3503,
+              "path": "ui/icon/003000/003503.tex",
+              "path_hr1": "ui/icon/003000/003503_hr1.tex"
+            },
+            "Name": "打桩枪"
+          }
+        },
+        {
+          "row_id": 25787,
+          "fields": {
+            "Icon": {
+              "id": 3047,
+              "path": "ui/icon/003000/003047.tex",
+              "path_hr1": "ui/icon/003000/003047_hr1.tex"
+            },
+            "Name": "王室对撞机"
+          }
+        },
+        {
+          "row_id": 17206,
+          "fields": {
+            "Icon": {
+              "id": 3505,
+              "path": "ui/icon/003000/003505.tex",
+              "path_hr1": "ui/icon/003000/003505_hr1.tex"
+            },
+            "Name": "滚轮冲"
+          }
+        },
+        {
+          "row_id": 36981,
+          "fields": {
+            "Icon": {
+              "id": 3500,
+              "path": "ui/icon/003000/003500.tex",
+              "path_hr1": "ui/icon/003000/003500_hr1.tex"
+            },
+            "Name": "掘地飞轮"
+          }
+        },
+        {
+          "row_id": 36978,
+          "fields": {
+            "Icon": {
+              "id": 3506,
+              "path": "ui/icon/003000/003506.tex",
+              "path_hr1": "ui/icon/003000/003506_hr1.tex"
+            },
+            "Name": "烈焰弹"
+          }
+        },
+        {
+          "row_id": 36982,
+          "fields": {
+            "Icon": {
+              "id": 3049,
+              "path": "ui/icon/003000/003049.tex",
+              "path_hr1": "ui/icon/003000/003049_hr1.tex"
+            },
+            "Name": "全金属爆发"
+          }
+        },
+        {
+          "row_id": 16889,
+          "fields": {
+            "Icon": {
+              "id": 3040,
+              "path": "ui/icon/003000/003040.tex",
+              "path_hr1": "ui/icon/003000/003040_hr1.tex"
+            },
+            "Name": "策动"
+          }
+        },
+        {
+          "row_id": 2887,
+          "fields": {
+            "Icon": {
+              "id": 3011,
+              "path": "ui/icon/003000/003011.tex",
+              "path_hr1": "ui/icon/003000/003011_hr1.tex"
+            },
+            "Name": "武装解除"
+          }
+        },
+        {
+          "row_id": 7410,
+          "fields": {
+            "Icon": {
+              "id": 3030,
+              "path": "ui/icon/003000/003030.tex",
+              "path_hr1": "ui/icon/003000/003030_hr1.tex"
+            },
+            "Name": "热冲击"
+          }
+        },
+        {
+          "row_id": 16497,
+          "fields": {
+            "Icon": {
+              "id": 3042,
+              "path": "ui/icon/003000/003042.tex",
+              "path_hr1": "ui/icon/003000/003042_hr1.tex"
+            },
+            "Name": "自动弩"
+          }
+        },
+        {
+          "row_id": 2874,
+          "fields": {
+            "Icon": {
+              "id": 3005,
+              "path": "ui/icon/003000/003005.tex",
+              "path_hr1": "ui/icon/003000/003005_hr1.tex"
+            },
+            "Name": "虹吸弹"
+          }
+        },
+        {
+          "row_id": 2890,
+          "fields": {
+            "Icon": {
+              "id": 3017,
+              "path": "ui/icon/003000/003017.tex",
+              "path_hr1": "ui/icon/003000/003017_hr1.tex"
+            },
+            "Name": "弹射"
+          }
+        },
+        {
+          "row_id": 3,
+          "fields": {
+            "Icon": {
+              "id": 104,
+              "path": "ui/icon/000000/000104.tex",
+              "path_hr1": "ui/icon/000000/000104_hr1.tex"
+            },
+            "Name": "冲刺"
+          }
+        },
+        {
+          "row_id": 7541,
+          "fields": {
+            "Icon": {
+              "id": 821,
+              "path": "ui/icon/000000/000821.tex",
+              "path_hr1": "ui/icon/000000/000821_hr1.tex"
+            },
+            "Name": "内丹"
+          }
+        }
+      ]
+    }
+  }
+}

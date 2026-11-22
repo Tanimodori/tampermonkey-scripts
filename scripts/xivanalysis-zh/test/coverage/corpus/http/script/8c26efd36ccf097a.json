@@ -1,0 +1,351 @@
+{
+  "formatVersion": 1,
+  "id": "8c26efd36ccf097a",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=15998%2C15997%2C36984%2C16011%2C16013%2C15992%2C15996%2C16005%2C15989%2C15991%2C15990%2C36985%2C16012%2C16009%2C25792%2C25790%2C36983%2C25791%2C16007%2C16015%2C3%2C16196%2C16010%2C16192%2C16002%2C15999%2C16000%2C16001%2C16014%2C7541&limit=30&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 15998,
+          "fields": {
+            "Icon": {
+              "id": 3473,
+              "path": "ui/icon/003000/003473.tex",
+              "path_hr1": "ui/icon/003000/003473_hr1.tex"
+            },
+            "Name": "技巧舞步"
+          }
+        },
+        {
+          "row_id": 15997,
+          "fields": {
+            "Icon": {
+              "id": 3454,
+              "path": "ui/icon/003000/003454.tex",
+              "path_hr1": "ui/icon/003000/003454_hr1.tex"
+            },
+            "Name": "标准舞步"
+          }
+        },
+        {
+          "row_id": 36984,
+          "fields": {
+            "Icon": {
+              "id": 3484,
+              "path": "ui/icon/003000/003484.tex",
+              "path_hr1": "ui/icon/003000/003484_hr1.tex"
+            },
+            "Name": "结束动作"
+          }
+        },
+        {
+          "row_id": 16011,
+          "fields": {
+            "Icon": {
+              "id": 3471,
+              "path": "ui/icon/003000/003471.tex",
+              "path_hr1": "ui/icon/003000/003471_hr1.tex"
+            },
+            "Name": "进攻之探戈"
+          }
+        },
+        {
+          "row_id": 16013,
+          "fields": {
+            "Icon": {
+              "id": 3475,
+              "path": "ui/icon/003000/003475.tex",
+              "path_hr1": "ui/icon/003000/003475_hr1.tex"
+            },
+            "Name": "百花争艳"
+          }
+        },
+        {
+          "row_id": 15992,
+          "fields": {
+            "Icon": {
+              "id": 3464,
+              "path": "ui/icon/003000/003464.tex",
+              "path_hr1": "ui/icon/003000/003464_hr1.tex"
+            },
+            "Name": "坠喷泉"
+          }
+        },
+        {
+          "row_id": 15996,
+          "fields": {
+            "Icon": {
+              "id": 3465,
+              "path": "ui/icon/003000/003465.tex",
+              "path_hr1": "ui/icon/003000/003465_hr1.tex"
+            },
+            "Name": "落血雨"
+          }
+        },
+        {
+          "row_id": 16005,
+          "fields": {
+            "Icon": {
+              "id": 3476,
+              "path": "ui/icon/003000/003476.tex",
+              "path_hr1": "ui/icon/003000/003476_hr1.tex"
+            },
+            "Name": "剑舞"
+          }
+        },
+        {
+          "row_id": 15989,
+          "fields": {
+            "Icon": {
+              "id": 3451,
+              "path": "ui/icon/003000/003451.tex",
+              "path_hr1": "ui/icon/003000/003451_hr1.tex"
+            },
+            "Name": "瀑泻"
+          }
+        },
+        {
+          "row_id": 15991,
+          "fields": {
+            "Icon": {
+              "id": 3460,
+              "path": "ui/icon/003000/003460.tex",
+              "path_hr1": "ui/icon/003000/003460_hr1.tex"
+            },
+            "Name": "逆瀑泻"
+          }
+        },
+        {
+          "row_id": 15990,
+          "fields": {
+            "Icon": {
+              "id": 3452,
+              "path": "ui/icon/003000/003452.tex",
+              "path_hr1": "ui/icon/003000/003452_hr1.tex"
+            },
+            "Name": "喷泉"
+          }
+        },
+        {
+          "row_id": 36985,
+          "fields": {
+            "Icon": {
+              "id": 3485,
+              "path": "ui/icon/003000/003485.tex",
+              "path_hr1": "ui/icon/003000/003485_hr1.tex"
+            },
+            "Name": "拂晓舞"
+          }
+        },
+        {
+          "row_id": 16012,
+          "fields": {
+            "Icon": {
+              "id": 3469,
+              "path": "ui/icon/003000/003469.tex",
+              "path_hr1": "ui/icon/003000/003469_hr1.tex"
+            },
+            "Name": "防守之桑巴"
+          }
+        },
+        {
+          "row_id": 16009,
+          "fields": {
+            "Icon": {
+              "id": 3472,
+              "path": "ui/icon/003000/003472.tex",
+              "path_hr1": "ui/icon/003000/003472_hr1.tex"
+            },
+            "Name": "扇舞·急"
+          }
+        },
+        {
+          "row_id": 25792,
+          "fields": {
+            "Icon": {
+              "id": 3482,
+              "path": "ui/icon/003000/003482.tex",
+              "path_hr1": "ui/icon/003000/003482_hr1.tex"
+            },
+            "Name": "流星舞"
+          }
+        },
+        {
+          "row_id": 25790,
+          "fields": {
+            "Icon": {
+              "id": 3480,
+              "path": "ui/icon/003000/003480.tex",
+              "path_hr1": "ui/icon/003000/003480_hr1.tex"
+            },
+            "Name": "提拉纳"
+          }
+        },
+        {
+          "row_id": 36983,
+          "fields": {
+            "Icon": {
+              "id": 3483,
+              "path": "ui/icon/003000/003483.tex",
+              "path_hr1": "ui/icon/003000/003483_hr1.tex"
+            },
+            "Name": "落幕舞"
+          }
+        },
+        {
+          "row_id": 25791,
+          "fields": {
+            "Icon": {
+              "id": 3481,
+              "path": "ui/icon/003000/003481.tex",
+              "path_hr1": "ui/icon/003000/003481_hr1.tex"
+            },
+            "Name": "扇舞·终"
+          }
+        },
+        {
+          "row_id": 16007,
+          "fields": {
+            "Icon": {
+              "id": 3462,
+              "path": "ui/icon/003000/003462.tex",
+              "path_hr1": "ui/icon/003000/003462_hr1.tex"
+            },
+            "Name": "扇舞·序"
+          }
+        },
+        {
+          "row_id": 16015,
+          "fields": {
+            "Icon": {
+              "id": 3468,
+              "path": "ui/icon/003000/003468.tex",
+              "path_hr1": "ui/icon/003000/003468_hr1.tex"
+            },
+            "Name": "治疗之华尔兹"
+          }
+        },
+        {
+          "row_id": 3,
+          "fields": {
+            "Icon": {
+              "id": 104,
+              "path": "ui/icon/000000/000104.tex",
+              "path_hr1": "ui/icon/000000/000104_hr1.tex"
+            },
+            "Name": "冲刺"
+          }
+        },
+        {
+          "row_id": 16196,
+          "fields": {
+            "Icon": {
+              "id": 3474,
+              "path": "ui/icon/003000/003474.tex",
+              "path_hr1": "ui/icon/003000/003474_hr1.tex"
+            },
+            "Name": "四色技巧舞步结束"
+          }
+        },
+        {
+          "row_id": 16010,
+          "fields": {
+            "Icon": {
+              "id": 3467,
+              "path": "ui/icon/003000/003467.tex",
+              "path_hr1": "ui/icon/003000/003467_hr1.tex"
+            },
+            "Name": "前冲步"
+          }
+        },
+        {
+          "row_id": 16192,
+          "fields": {
+            "Icon": {
+              "id": 3459,
+              "path": "ui/icon/003000/003459.tex",
+              "path_hr1": "ui/icon/003000/003459_hr1.tex"
+            },
+            "Name": "双色标准舞步结束"
+          }
+        },
+        {
+          "row_id": 16002,
+          "fields": {
+            "Icon": {
+              "id": 3458,
+              "path": "ui/icon/003000/003458.tex",
+              "path_hr1": "ui/icon/003000/003458_hr1.tex"
+            },
+            "Name": "金冠趾尖转"
+          }
+        },
+        {
+          "row_id": 15999,
+          "fields": {
+            "Icon": {
+              "id": 3455,
+              "path": "ui/icon/003000/003455.tex",
+              "path_hr1": "ui/icon/003000/003455_hr1.tex"
+            },
+            "Name": "蔷薇曲脚步"
+          }
+        },
+        {
+          "row_id": 16000,
+          "fields": {
+            "Icon": {
+              "id": 3456,
+              "path": "ui/icon/003000/003456.tex",
+              "path_hr1": "ui/icon/003000/003456_hr1.tex"
+            },
+            "Name": "小鸟交叠跳"
+          }
+        },
+        {
+          "row_id": 16001,
+          "fields": {
+            "Icon": {
+              "id": 3457,
+              "path": "ui/icon/003000/003457.tex",
+              "path_hr1": "ui/icon/003000/003457_hr1.tex"
+            },
+            "Name": "绿叶小踢腿"
+          }
+        },
+        {
+          "row_id": 16014,
+          "fields": {
+            "Icon": {
+              "id": 3477,
+              "path": "ui/icon/003000/003477.tex",
+              "path_hr1": "ui/icon/003000/003477_hr1.tex"
+            },
+            "Name": "即兴表演"
+          }
+        },
+        {
+          "row_id": 7541,
+          "fields": {
+            "Icon": {
+              "id": 821,
+              "path": "ui/icon/000000/000821.tex",
+              "path_hr1": "ui/icon/000000/000821_hr1.tex"
+            },
+            "Name": "内丹"
+          }
+        }
+      ]
+    }
+  }
+}

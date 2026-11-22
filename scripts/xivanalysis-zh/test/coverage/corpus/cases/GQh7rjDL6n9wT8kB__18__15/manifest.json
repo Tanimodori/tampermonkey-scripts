@@ -1,0 +1,27 @@
+{
+  "formatVersion": 1,
+  "id": "GQh7rjDL6n9wT8kB/18/15",
+  "slug": "GQh7rjDL6n9wT8kB__18__15",
+  "url": "https://xivanalysis.com/fflogs/GQh7rjDL6n9wT8kB/18/15",
+  "job": "SCH",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "6722412633abccd3",
+      "4a8c5d74cdc3a828"
+    ],
+    "script": [
+      "0fe3bcfb67cfce90",
+      "16be1658de85a5b3",
+      "1ee552500e58900f",
+      "55b40930a06a85bf",
+      "5ea858e69a0c1fca",
+      "9b6b4a92cf7218f6",
+      "9c5fcff7bd23f0a0",
+      "bfa531340aa17526",
+      "c5a7573edda58880",
+      "ddca53245f8440df"
+    ]
+  }
+}

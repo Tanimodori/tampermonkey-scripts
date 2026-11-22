@@ -1,0 +1,16 @@
+{
+  "formatVersion": 1,
+  "id": "45f88cdfb541afe3",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Vicewinder+Combo&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": []
+  }
+}

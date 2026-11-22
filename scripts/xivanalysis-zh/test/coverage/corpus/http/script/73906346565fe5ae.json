@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "73906346565fe5ae",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/24386?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 24386,
+      "fields": {
+        "Icon": {
+          "id": 3614,
+          "path": "ui/icon/003000/003614.tex",
+          "path_hr1": "ui/icon/003000/003614_hr1.tex"
+        },
+        "Name": "勾刃"
+      },
+      "transient": {
+        "Description": "对目标发动无属性魔法攻击　威力：300\n追加效果：获得10点灵魂"
+      }
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "formatVersion": 1,
+  "id": "8297fea1b43ef31b",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Eukrasian+Prognosis+II&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "37034",
+        "obj": {
+          "i": 37034,
+          "n": "Eukrasian Prognosis II",
+          "c": 3689,
+          "j": 40,
+          "t": 2,
+          "l": 96
+        }
+      },
+      {
+        "type": "action",
+        "id": "37403",
+        "obj": {
+          "i": 37403,
+          "n": "Eukrasian Prognosis II",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "38916",
+        "obj": {
+          "i": 38916,
+          "n": "Eukrasian Prognosis II",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "49809",
+        "obj": {
+          "i": 49809,
+          "n": "Eukrasian Prognosis II",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "formatVersion": 1,
+  "id": "XCVzmb1NJQvhH4Ld/6/23",
+  "slug": "XCVzmb1NJQvhH4Ld__6__23",
+  "url": "https://xivanalysis.com/fflogs/XCVzmb1NJQvhH4Ld/6/23",
+  "job": "NIN",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "80d4131ff54c1631",
+      "9b5d17c554343a07"
+    ],
+    "script": [
+      "048249cf412caeb6",
+      "0bd1433b0f2d9286",
+      "5a5a5f210affbd28",
+      "5ea858e69a0c1fca",
+      "7fe6e9d854c3b3c0",
+      "8a8fa401ddb0dc5c",
+      "9b6b4a92cf7218f6",
+      "a6849bf33f1d33b5",
+      "a958530f1ac08fdd",
+      "d0e09060d31265a2",
+      "ddf74be4fb4b7054"
+    ]
+  }
+}

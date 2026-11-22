@@ -1,0 +1,43 @@
+{
+  "formatVersion": 1,
+  "id": "445594efea7a3d08",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=2720%2C2719&limit=2&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 2720,
+          "fields": {
+            "Icon": {
+              "id": 210303,
+              "path": "ui/icon/210000/210303.tex",
+              "path_hr1": "ui/icon/210000/210303_hr1.tex"
+            },
+            "Name": "龙枪"
+          }
+        },
+        {
+          "row_id": 2719,
+          "fields": {
+            "Icon": {
+              "id": 212586,
+              "path": "ui/icon/212000/212586.tex",
+              "path_hr1": "ui/icon/212000/212586_hr1.tex"
+            },
+            "Name": "樱花缭乱"
+          }
+        }
+      ]
+    }
+  }
+}

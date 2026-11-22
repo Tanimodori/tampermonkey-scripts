@@ -1,0 +1,76 @@
+{
+  "formatVersion": 1,
+  "id": "49aa935e6882bfb0",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=1871%2C158%2C150%2C1911%2C1219&limit=5&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 1871,
+          "fields": {
+            "Icon": {
+              "id": 212635,
+              "path": "ui/icon/212000/212635.tex",
+              "path_hr1": "ui/icon/212000/212635_hr1.tex"
+            },
+            "Name": "天辉"
+          }
+        },
+        {
+          "row_id": 158,
+          "fields": {
+            "Icon": {
+              "id": 212626,
+              "path": "ui/icon/212000/212626.tex",
+              "path_hr1": "ui/icon/212000/212626_hr1.tex"
+            },
+            "Name": "再生"
+          }
+        },
+        {
+          "row_id": 150,
+          "fields": {
+            "Icon": {
+              "id": 210413,
+              "path": "ui/icon/210000/210413.tex",
+              "path_hr1": "ui/icon/210000/210413_hr1.tex"
+            },
+            "Name": "医济"
+          }
+        },
+        {
+          "row_id": 1911,
+          "fields": {
+            "Icon": {
+              "id": 212629,
+              "path": "ui/icon/212000/212629.tex",
+              "path_hr1": "ui/icon/212000/212629_hr1.tex"
+            },
+            "Name": "庇护所"
+          }
+        },
+        {
+          "row_id": 1219,
+          "fields": {
+            "Icon": {
+              "id": 212637,
+              "path": "ui/icon/212000/212637.tex",
+              "path_hr1": "ui/icon/212000/212637_hr1.tex"
+            },
+            "Name": "告解"
+          }
+        }
+      ]
+    }
+  }
+}

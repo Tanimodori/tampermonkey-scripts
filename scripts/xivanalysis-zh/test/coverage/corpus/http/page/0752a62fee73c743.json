@@ -1,0 +1,65 @@
+{
+  "formatVersion": 1,
+  "id": "0752a62fee73c743",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=1842,1843,1844,3839&limit=4&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 1842,
+          "fields": {
+            "Icon": {
+              "id": 213611,
+              "path": "ui/icon/213000/213611.tex",
+              "path_hr1": "ui/icon/213000/213611_hr1.tex"
+            },
+            "Name": "Ready to Rip"
+          }
+        },
+        {
+          "row_id": 1843,
+          "fields": {
+            "Icon": {
+              "id": 213612,
+              "path": "ui/icon/213000/213612.tex",
+              "path_hr1": "ui/icon/213000/213612_hr1.tex"
+            },
+            "Name": "Ready to Tear"
+          }
+        },
+        {
+          "row_id": 1844,
+          "fields": {
+            "Icon": {
+              "id": 213613,
+              "path": "ui/icon/213000/213613.tex",
+              "path_hr1": "ui/icon/213000/213613_hr1.tex"
+            },
+            "Name": "Ready to Gouge"
+          }
+        },
+        {
+          "row_id": 3839,
+          "fields": {
+            "Icon": {
+              "id": 213620,
+              "path": "ui/icon/213000/213620.tex",
+              "path_hr1": "ui/icon/213000/213620_hr1.tex"
+            },
+            "Name": "Ready to Raze"
+          }
+        }
+      ]
+    }
+  }
+}

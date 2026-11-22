@@ -1,0 +1,302 @@
+{
+  "formatVersion": 1,
+  "id": "dgWJDPLaZyYk4A3z/5/74",
+  "url": "https://xivanalysis.com/fflogs/dgWJDPLaZyYk4A3z/5/74",
+  "job": "DRG",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Gauges",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Battle Litany",
+      "-4"
+    ],
+    [
+      "Dokumori",
+      "-4"
+    ],
+    [
+      "Starry Muse",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Battle Litany",
+      "-5"
+    ],
+    [
+      "Lance Charge",
+      "-5"
+    ],
+    [
+      "Life Surge",
+      "-5"
+    ],
+    [
+      "High Jump",
+      "-5"
+    ],
+    [
+      "Mirage Dive",
+      "-5"
+    ],
+    [
+      "Dragonfire Dive",
+      "-5"
+    ],
+    [
+      "Rise of the Dragon",
+      "-5"
+    ],
+    [
+      "Geirskogul",
+      "-5"
+    ],
+    [
+      "Nastrond",
+      "-5"
+    ],
+    [
+      "Stardiver",
+      "-5"
+    ],
+    [
+      "Starcross",
+      "-5"
+    ],
+    [
+      "Bloodbath",
+      "-5"
+    ],
+    [
+      "Wyrmwind Thrust",
+      "-5"
+    ],
+    [
+      "Second Wind",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Battle Litany",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212578_hr1.tex&format=png"
+    ],
+    [
+      "Dokumori",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212920_hr1.tex&format=png"
+    ],
+    [
+      "Starry Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213808_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "True Thrust",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000310_hr1.tex&format=png"
+    ],
+    [
+      "Spiral Blow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002077_hr1.tex&format=png"
+    ],
+    [
+      "Chaotic Spring",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002596_hr1.tex&format=png"
+    ],
+    [
+      "Wheeling Thrust",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002584_hr1.tex&format=png"
+    ],
+    [
+      "Drakesbane",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002599_hr1.tex&format=png"
+    ],
+    [
+      "Raiden Thrust",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002592_hr1.tex&format=png"
+    ],
+    [
+      "Lance Barrage",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002076_hr1.tex&format=png"
+    ],
+    [
+      "Heavens' Thrust",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002595_hr1.tex&format=png"
+    ],
+    [
+      "Fang and Claw",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002582_hr1.tex&format=png"
+    ],
+    [
+      "Drakesbane",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002599_hr1.tex&format=png"
+    ],
+    [
+      "Raiden Thrust",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002592_hr1.tex&format=png"
+    ],
+    [
+      "Spiral Blow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002077_hr1.tex&format=png"
+    ],
+    [
+      "Chaotic Spring",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002596_hr1.tex&format=png"
+    ],
+    [
+      "Wheeling Thrust",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002584_hr1.tex&format=png"
+    ],
+    [
+      "Drakesbane",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002599_hr1.tex&format=png"
+    ],
+    [
+      "Raiden Thrust",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002592_hr1.tex&format=png"
+    ],
+    [
+      "Lance Barrage",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002076_hr1.tex&format=png"
+    ],
+    [
+      "Heavens' Thrust",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002595_hr1.tex&format=png"
+    ],
+    [
+      "Fang and Claw",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002582_hr1.tex&format=png"
+    ],
+    [
+      "Drakesbane",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002599_hr1.tex&format=png"
+    ],
+    [
+      "Raiden Thrust",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002592_hr1.tex&format=png"
+    ],
+    [
+      "Spiral Blow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002077_hr1.tex&format=png"
+    ],
+    [
+      "Chaotic Spring",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002596_hr1.tex&format=png"
+    ],
+    [
+      "Wheeling Thrust",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002584_hr1.tex&format=png"
+    ],
+    [
+      "Drakesbane",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002599_hr1.tex&format=png"
+    ],
+    [
+      "Nastrond Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/218000/218151_hr1.tex&format=png"
+    ],
+    [
+      "Dive Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212583_hr1.tex&format=png"
+    ],
+    [
+      "Dive Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212583_hr1.tex&format=png"
+    ],
+    [
+      "Dragon's Flight",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212587_hr1.tex&format=png"
+    ],
+    [
+      "Starcross Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212588_hr1.tex&format=png"
+    ],
+    [
+      "Battle Litany",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002585_hr1.tex&format=png"
+    ],
+    [
+      "Lance Charge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000309_hr1.tex&format=png"
+    ],
+    [
+      "Life Surge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000304_hr1.tex&format=png"
+    ],
+    [
+      "Life Surge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000304_hr1.tex&format=png"
+    ],
+    [
+      "High Jump",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002591_hr1.tex&format=png"
+    ],
+    [
+      "High Jump",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002591_hr1.tex&format=png"
+    ],
+    [
+      "Mirage Dive",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002588_hr1.tex&format=png"
+    ],
+    [
+      "Mirage Dive",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002588_hr1.tex&format=png"
+    ],
+    [
+      "Dragonfire Dive",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002578_hr1.tex&format=png"
+    ],
+    [
+      "Rise of the Dragon",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002075_hr1.tex&format=png"
+    ],
+    [
+      "Geirskogul",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002583_hr1.tex&format=png"
+    ],
+    [
+      "Nastrond",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002589_hr1.tex&format=png"
+    ],
+    [
+      "Stardiver",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002593_hr1.tex&format=png"
+    ],
+    [
+      "Starcross",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002078_hr1.tex&format=png"
+    ],
+    [
+      "Wyrmwind Thrust",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002597_hr1.tex&format=png"
+    ],
+    [
+      "Wyrmwind Thrust",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002597_hr1.tex&format=png"
+    ]
+  ]
+}

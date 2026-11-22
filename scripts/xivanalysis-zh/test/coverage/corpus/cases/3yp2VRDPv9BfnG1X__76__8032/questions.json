@@ -1,0 +1,242 @@
+{
+  "formatVersion": 1,
+  "id": "3yp2VRDPv9BfnG1X/76/8032",
+  "url": "https://xivanalysis.com/fflogs/3yp2VRDPv9BfnG1X/76/8032",
+  "job": "WHM",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Gauges",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Battle Voice",
+      "-4"
+    ],
+    [
+      "Chain Stratagem",
+      "-4"
+    ],
+    [
+      "Starry Muse",
+      "-4"
+    ],
+    [
+      "Radiant Finale",
+      "-4"
+    ],
+    [
+      "Battle Litany",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Presence of Mind",
+      "-5"
+    ],
+    [
+      "Thin Air",
+      "-5"
+    ],
+    [
+      "Divine Benison",
+      "-5"
+    ],
+    [
+      "Tetragrammaton",
+      "-5"
+    ],
+    [
+      "Benediction",
+      "-5"
+    ],
+    [
+      "Aquaveil",
+      "-5"
+    ],
+    [
+      "Liturgy of the Bell",
+      "-5"
+    ],
+    [
+      "Assize",
+      "-5"
+    ],
+    [
+      "Asylum",
+      "-5"
+    ],
+    [
+      "Temperance",
+      "-5"
+    ],
+    [
+      "Plenary Indulgence",
+      "-5"
+    ],
+    [
+      "Lucid Dreaming",
+      "-5"
+    ],
+    [
+      "Swiftcast",
+      "-5"
+    ],
+    [
+      "Surecast",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Battle Voice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212601_hr1.tex&format=png"
+    ],
+    [
+      "Chain Stratagem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212809_hr1.tex&format=png"
+    ],
+    [
+      "Starry Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213808_hr1.tex&format=png"
+    ],
+    [
+      "Radiant Finale",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212622_hr1.tex&format=png"
+    ],
+    [
+      "Battle Litany",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212578_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Dia",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002641_hr1.tex&format=png"
+    ],
+    [
+      "Afflatus Misery",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002644_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Glare III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002646_hr1.tex&format=png"
+    ],
+    [
+      "Medica II",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000409_hr1.tex&format=png"
+    ],
+    [
+      "Afflatus Rapture",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002643_hr1.tex&format=png"
+    ],
+    [
+      "Medica II",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000409_hr1.tex&format=png"
+    ],
+    [
+      "Afflatus Rapture",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002643_hr1.tex&format=png"
+    ],
+    [
+      "Afflatus Rapture",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002643_hr1.tex&format=png"
+    ],
+    [
+      "Medica II",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000409_hr1.tex&format=png"
+    ],
+    [
+      "Presence of Mind",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002626_hr1.tex&format=png"
+    ],
+    [
+      "Benediction",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002627_hr1.tex&format=png"
+    ],
+    [
+      "Assize",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002634_hr1.tex&format=png"
+    ],
+    [
+      "Asylum",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002632_hr1.tex&format=png"
+    ],
+    [
+      "Temperance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002645_hr1.tex&format=png"
+    ],
+    [
+      "Swiftcast",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000866_hr1.tex&format=png"
+    ]
+  ]
+}

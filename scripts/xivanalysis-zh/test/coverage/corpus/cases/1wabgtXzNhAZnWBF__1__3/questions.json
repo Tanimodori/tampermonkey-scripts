@@ -1,0 +1,406 @@
+{
+  "formatVersion": 1,
+  "id": "1wabgtXzNhAZnWBF/1/3",
+  "url": "https://xivanalysis.com/fflogs/1wabgtXzNhAZnWBF/1/3",
+  "job": "MNK",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Fury Gauge",
+      "-5"
+    ],
+    [
+      "Beast Chakra",
+      "-5"
+    ],
+    [
+      "Nadi Gauge",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Dokumori",
+      "-4"
+    ],
+    [
+      "Starry Muse",
+      "-4"
+    ],
+    [
+      "Divination",
+      "-4"
+    ],
+    [
+      "Brotherhood",
+      "-4"
+    ],
+    [
+      "Chain Stratagem",
+      "-4"
+    ],
+    [
+      "Battle Voice",
+      "-4"
+    ],
+    [
+      "Radiant Finale",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Chakras",
+      "-5"
+    ],
+    [
+      "Riddle of Fire",
+      "-5"
+    ],
+    [
+      "Brotherhood",
+      "-5"
+    ],
+    [
+      "Perfect Balance",
+      "-5"
+    ],
+    [
+      "Riddle of Wind",
+      "-5"
+    ],
+    [
+      "Riddle of Earth",
+      "-5"
+    ],
+    [
+      "Mantra",
+      "-5"
+    ],
+    [
+      "Thunderclap",
+      "-5"
+    ],
+    [
+      "Feint",
+      "-5"
+    ],
+    [
+      "Earth's Reply",
+      "-5"
+    ],
+    [
+      "True North",
+      "-5"
+    ],
+    [
+      "Arm's Length",
+      "-5"
+    ],
+    [
+      "Bloodbath",
+      "-5"
+    ],
+    [
+      "Second Wind",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Dokumori",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212920_hr1.tex&format=png"
+    ],
+    [
+      "Starry Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213808_hr1.tex&format=png"
+    ],
+    [
+      "Divination",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213245_hr1.tex&format=png"
+    ],
+    [
+      "Brotherhood",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212532_hr1.tex&format=png"
+    ],
+    [
+      "Chain Stratagem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212809_hr1.tex&format=png"
+    ],
+    [
+      "Battle Voice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212601_hr1.tex&format=png"
+    ],
+    [
+      "Radiant Finale",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212622_hr1.tex&format=png"
+    ],
+    [
+      "Dragon Kick",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002528_hr1.tex&format=png"
+    ],
+    [
+      "Leaping Opo",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002982_hr1.tex&format=png"
+    ],
+    [
+      "Dragon Kick",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002528_hr1.tex&format=png"
+    ],
+    [
+      "Leaping Opo",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002982_hr1.tex&format=png"
+    ],
+    [
+      "Elixir Burst",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002985_hr1.tex&format=png"
+    ],
+    [
+      "Dragon Kick",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002528_hr1.tex&format=png"
+    ],
+    [
+      "Wind's Reply",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002986_hr1.tex&format=png"
+    ],
+    [
+      "Fire's Reply",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002987_hr1.tex&format=png"
+    ],
+    [
+      "Leaping Opo",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002982_hr1.tex&format=png"
+    ],
+    [
+      "Dragon Kick",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002528_hr1.tex&format=png"
+    ],
+    [
+      "Leaping Opo",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002982_hr1.tex&format=png"
+    ],
+    [
+      "Dragon Kick",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002528_hr1.tex&format=png"
+    ],
+    [
+      "Elixir Burst",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002985_hr1.tex&format=png"
+    ],
+    [
+      "Leaping Opo",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002982_hr1.tex&format=png"
+    ],
+    [
+      "Twin Snakes",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000213_hr1.tex&format=png"
+    ],
+    [
+      "Demolish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000204_hr1.tex&format=png"
+    ],
+    [
+      "Dragon Kick",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002528_hr1.tex&format=png"
+    ],
+    [
+      "Rising Raptor",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002983_hr1.tex&format=png"
+    ],
+    [
+      "Pouncing Coeurl",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002984_hr1.tex&format=png"
+    ],
+    [
+      "Leaping Opo",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002982_hr1.tex&format=png"
+    ],
+    [
+      "Twin Snakes",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000213_hr1.tex&format=png"
+    ],
+    [
+      "Pouncing Coeurl",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002984_hr1.tex&format=png"
+    ],
+    [
+      "Dragon Kick",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002528_hr1.tex&format=png"
+    ],
+    [
+      "Rising Raptor",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002983_hr1.tex&format=png"
+    ],
+    [
+      "Demolish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000204_hr1.tex&format=png"
+    ],
+    [
+      "Leaping Opo",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002982_hr1.tex&format=png"
+    ],
+    [
+      "Twin Snakes",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000213_hr1.tex&format=png"
+    ],
+    [
+      "Pouncing Coeurl",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002984_hr1.tex&format=png"
+    ],
+    [
+      "Dragon Kick",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002528_hr1.tex&format=png"
+    ],
+    [
+      "Rising Raptor",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002983_hr1.tex&format=png"
+    ],
+    [
+      "Pouncing Coeurl",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002984_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "The Forbidden Chakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002535_hr1.tex&format=png"
+    ],
+    [
+      "Riddle of Fire",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002541_hr1.tex&format=png"
+    ],
+    [
+      "Brotherhood",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002542_hr1.tex&format=png"
+    ],
+    [
+      "Perfect Balance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000217_hr1.tex&format=png"
+    ],
+    [
+      "Perfect Balance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000217_hr1.tex&format=png"
+    ],
+    [
+      "Riddle of Wind",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002978_hr1.tex&format=png"
+    ],
+    [
+      "Riddle of Earth",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002537_hr1.tex&format=png"
+    ],
+    [
+      "Thunderclap",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002975_hr1.tex&format=png"
+    ],
+    [
+      "Thunderclap",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002975_hr1.tex&format=png"
+    ],
+    [
+      "Feint",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000828_hr1.tex&format=png"
+    ]
+  ]
+}

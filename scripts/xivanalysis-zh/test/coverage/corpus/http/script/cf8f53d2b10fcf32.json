@@ -1,0 +1,101 @@
+{
+  "formatVersion": 1,
+  "id": "cf8f53d2b10fcf32",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Infernal+Slice&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "24375",
+        "obj": {
+          "i": 24375,
+          "n": "Infernal Slice",
+          "c": 3603,
+          "j": 39,
+          "t": 3,
+          "l": 30
+        }
+      },
+      {
+        "type": "action",
+        "id": "27610",
+        "obj": {
+          "i": 27610,
+          "n": "Infernal Slice",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "27797",
+        "obj": {
+          "i": 27797,
+          "n": "Infernal Slice",
+          "c": 784,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "29540",
+        "obj": {
+          "i": 29540,
+          "n": "Infernal Slice",
+          "c": 9542,
+          "j": 39,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "31142",
+        "obj": {
+          "i": 31142,
+          "n": "Infernal Slice",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "31788",
+        "obj": {
+          "i": 31788,
+          "n": "Infernal Slice",
+          "c": 64917,
+          "j": 0,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "32563",
+        "obj": {
+          "i": 32563,
+          "n": "Infernal Slice",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

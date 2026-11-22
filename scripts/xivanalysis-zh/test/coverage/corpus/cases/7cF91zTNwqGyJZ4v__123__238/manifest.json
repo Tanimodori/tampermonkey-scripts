@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "7cF91zTNwqGyJZ4v/123/238",
+  "slug": "7cF91zTNwqGyJZ4v__123__238",
+  "url": "https://xivanalysis.com/fflogs/7cF91zTNwqGyJZ4v/123/238",
+  "job": "MCH",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "51d4c9eb22728af5",
+      "e60fb7870023982d"
+    ],
+    "script": [
+      "0bd79ef7ebf1a99f",
+      "19f05088ab329af1",
+      "1f4b6ee6812dfcde",
+      "5c561fb6e5060606",
+      "5ea858e69a0c1fca",
+      "7fe6e9d854c3b3c0",
+      "86b44cca501832e8",
+      "9266eebe520f9127",
+      "98a9bddbb4f1a6be",
+      "9ac0ed03ec050088",
+      "9b6b4a92cf7218f6",
+      "a58cbacf7ddced83",
+      "a84874e1ebf74541",
+      "b54fa645203c68fa"
+    ]
+  }
+}

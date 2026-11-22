@@ -1,0 +1,329 @@
+{
+  "formatVersion": 1,
+  "id": "0904d5274a891089",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=7390%2C7393%2C3639%2C3643%2C3641%2C25757%2C16472%2C16470%2C16469%2C3632%2C7531%2C3634%2C3617%2C3623%2C36928%2C36929%2C36930%2C36931%2C25755%2C7535%2C16471%2C36932%2C3638%2C36926%2C7392%2C7391%2C25754%2C36927&limit=28&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 7390,
+          "fields": {
+            "Icon": {
+              "id": 3078,
+              "path": "ui/icon/003000/003078.tex",
+              "path_hr1": "ui/icon/003000/003078_hr1.tex"
+            },
+            "Name": "血乱"
+          }
+        },
+        {
+          "row_id": 7393,
+          "fields": {
+            "Icon": {
+              "id": 3081,
+              "path": "ui/icon/003000/003081.tex",
+              "path_hr1": "ui/icon/003000/003081_hr1.tex"
+            },
+            "Name": "至黑之夜"
+          }
+        },
+        {
+          "row_id": 3639,
+          "fields": {
+            "Icon": {
+              "id": 3066,
+              "path": "ui/icon/003000/003066.tex",
+              "path_hr1": "ui/icon/003000/003066_hr1.tex"
+            },
+            "Name": "腐秽大地"
+          }
+        },
+        {
+          "row_id": 3643,
+          "fields": {
+            "Icon": {
+              "id": 3058,
+              "path": "ui/icon/003000/003058.tex",
+              "path_hr1": "ui/icon/003000/003058_hr1.tex"
+            },
+            "Name": "精雕怒斩"
+          }
+        },
+        {
+          "row_id": 3641,
+          "fields": {
+            "Icon": {
+              "id": 3064,
+              "path": "ui/icon/003000/003064.tex",
+              "path_hr1": "ui/icon/003000/003064_hr1.tex"
+            },
+            "Name": "吸血深渊"
+          }
+        },
+        {
+          "row_id": 25757,
+          "fields": {
+            "Icon": {
+              "id": 3091,
+              "path": "ui/icon/003000/003091.tex",
+              "path_hr1": "ui/icon/003000/003091_hr1.tex"
+            },
+            "Name": "暗影使者"
+          }
+        },
+        {
+          "row_id": 16472,
+          "fields": {
+            "Icon": {
+              "id": 3088,
+              "path": "ui/icon/003000/003088.tex",
+              "path_hr1": "ui/icon/003000/003088_hr1.tex"
+            },
+            "Name": "掠影示现"
+          }
+        },
+        {
+          "row_id": 16470,
+          "fields": {
+            "Icon": {
+              "id": 3086,
+              "path": "ui/icon/003000/003086.tex",
+              "path_hr1": "ui/icon/003000/003086_hr1.tex"
+            },
+            "Name": "暗影锋"
+          }
+        },
+        {
+          "row_id": 16469,
+          "fields": {
+            "Icon": {
+              "id": 3085,
+              "path": "ui/icon/003000/003085.tex",
+              "path_hr1": "ui/icon/003000/003085_hr1.tex"
+            },
+            "Name": "暗影波动"
+          }
+        },
+        {
+          "row_id": 3632,
+          "fields": {
+            "Icon": {
+              "id": 3055,
+              "path": "ui/icon/003000/003055.tex",
+              "path_hr1": "ui/icon/003000/003055_hr1.tex"
+            },
+            "Name": "噬魂斩"
+          }
+        },
+        {
+          "row_id": 7531,
+          "fields": {
+            "Icon": {
+              "id": 801,
+              "path": "ui/icon/000000/000801.tex",
+              "path_hr1": "ui/icon/000000/000801_hr1.tex"
+            },
+            "Name": "铁壁"
+          }
+        },
+        {
+          "row_id": 3634,
+          "fields": {
+            "Icon": {
+              "id": 3076,
+              "path": "ui/icon/003000/003076.tex",
+              "path_hr1": "ui/icon/003000/003076_hr1.tex"
+            },
+            "Name": "弃明投暗"
+          }
+        },
+        {
+          "row_id": 3617,
+          "fields": {
+            "Icon": {
+              "id": 3051,
+              "path": "ui/icon/003000/003051.tex",
+              "path_hr1": "ui/icon/003000/003051_hr1.tex"
+            },
+            "Name": "重斩"
+          }
+        },
+        {
+          "row_id": 3623,
+          "fields": {
+            "Icon": {
+              "id": 3054,
+              "path": "ui/icon/003000/003054.tex",
+              "path_hr1": "ui/icon/003000/003054_hr1.tex"
+            },
+            "Name": "吸收斩"
+          }
+        },
+        {
+          "row_id": 36928,
+          "fields": {
+            "Icon": {
+              "id": 3095,
+              "path": "ui/icon/003000/003095.tex",
+              "path_hr1": "ui/icon/003000/003095_hr1.tex"
+            },
+            "Name": "血红乱"
+          }
+        },
+        {
+          "row_id": 36929,
+          "fields": {
+            "Icon": {
+              "id": 3096,
+              "path": "ui/icon/003000/003096.tex",
+              "path_hr1": "ui/icon/003000/003096_hr1.tex"
+            },
+            "Name": "报应"
+          }
+        },
+        {
+          "row_id": 36930,
+          "fields": {
+            "Icon": {
+              "id": 3097,
+              "path": "ui/icon/003000/003097.tex",
+              "path_hr1": "ui/icon/003000/003097_hr1.tex"
+            },
+            "Name": "戮山"
+          }
+        },
+        {
+          "row_id": 36931,
+          "fields": {
+            "Icon": {
+              "id": 3098,
+              "path": "ui/icon/003000/003098.tex",
+              "path_hr1": "ui/icon/003000/003098_hr1.tex"
+            },
+            "Name": "刺穿"
+          }
+        },
+        {
+          "row_id": 25755,
+          "fields": {
+            "Icon": {
+              "id": 3090,
+              "path": "ui/icon/003000/003090.tex",
+              "path_hr1": "ui/icon/003000/003090_hr1.tex"
+            },
+            "Name": "腐秽黑暗"
+          }
+        },
+        {
+          "row_id": 7535,
+          "fields": {
+            "Icon": {
+              "id": 806,
+              "path": "ui/icon/000000/000806.tex",
+              "path_hr1": "ui/icon/000000/000806_hr1.tex"
+            },
+            "Name": "雪仇"
+          }
+        },
+        {
+          "row_id": 16471,
+          "fields": {
+            "Icon": {
+              "id": 3087,
+              "path": "ui/icon/003000/003087.tex",
+              "path_hr1": "ui/icon/003000/003087_hr1.tex"
+            },
+            "Name": "暗黑布道"
+          }
+        },
+        {
+          "row_id": 36932,
+          "fields": {
+            "Icon": {
+              "id": 3099,
+              "path": "ui/icon/003000/003099.tex",
+              "path_hr1": "ui/icon/003000/003099_hr1.tex"
+            },
+            "Name": "掠影的蔑视"
+          }
+        },
+        {
+          "row_id": 3638,
+          "fields": {
+            "Icon": {
+              "id": 3077,
+              "path": "ui/icon/003000/003077.tex",
+              "path_hr1": "ui/icon/003000/003077_hr1.tex"
+            },
+            "Name": "行尸走肉"
+          }
+        },
+        {
+          "row_id": 36926,
+          "fields": {
+            "Icon": {
+              "id": 3093,
+              "path": "ui/icon/003000/003093.tex",
+              "path_hr1": "ui/icon/003000/003093_hr1.tex"
+            },
+            "Name": "暗影步"
+          }
+        },
+        {
+          "row_id": 7392,
+          "fields": {
+            "Icon": {
+              "id": 3080,
+              "path": "ui/icon/003000/003080.tex",
+              "path_hr1": "ui/icon/003000/003080_hr1.tex"
+            },
+            "Name": "血溅"
+          }
+        },
+        {
+          "row_id": 7391,
+          "fields": {
+            "Icon": {
+              "id": 3079,
+              "path": "ui/icon/003000/003079.tex",
+              "path_hr1": "ui/icon/003000/003079_hr1.tex"
+            },
+            "Name": "寂灭"
+          }
+        },
+        {
+          "row_id": 25754,
+          "fields": {
+            "Icon": {
+              "id": 3089,
+              "path": "ui/icon/003000/003089.tex",
+              "path_hr1": "ui/icon/003000/003089_hr1.tex"
+            },
+            "Name": "献奉"
+          }
+        },
+        {
+          "row_id": 36927,
+          "fields": {
+            "Icon": {
+              "id": 3094,
+              "path": "ui/icon/003000/003094.tex",
+              "path_hr1": "ui/icon/003000/003094_hr1.tex"
+            },
+            "Name": "暗影卫"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,384 @@
+{
+  "formatVersion": 1,
+  "id": "1c68f4746d5b9ee1",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=3541%2C7384%2C3539%2C16460%2C36918%2C36919%2C16457%2C16458%2C20%2C36921%2C25747%2C23%2C16461%2C24%2C3538%2C16459%2C25748%2C25749%2C25750%2C9%2C28%2C15%2C36920%2C25746%2C7382%2C36922%2C32065%2C7535%2C3540%2C30%2C7385%2C22%2C7531&limit=33&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 3541,
+          "fields": {
+            "Icon": {
+              "id": 2509,
+              "path": "ui/icon/002000/002509.tex",
+              "path_hr1": "ui/icon/002000/002509_hr1.tex"
+            },
+            "Name": "深仁厚泽"
+          }
+        },
+        {
+          "row_id": 7384,
+          "fields": {
+            "Icon": {
+              "id": 2514,
+              "path": "ui/icon/002000/002514.tex",
+              "path_hr1": "ui/icon/002000/002514_hr1.tex"
+            },
+            "Name": "圣灵"
+          }
+        },
+        {
+          "row_id": 3539,
+          "fields": {
+            "Icon": {
+              "id": 2507,
+              "path": "ui/icon/002000/002507.tex",
+              "path_hr1": "ui/icon/002000/002507_hr1.tex"
+            },
+            "Name": "王权剑"
+          }
+        },
+        {
+          "row_id": 16460,
+          "fields": {
+            "Icon": {
+              "id": 2519,
+              "path": "ui/icon/002000/002519.tex",
+              "path_hr1": "ui/icon/002000/002519_hr1.tex"
+            },
+            "Name": "赎罪剑"
+          }
+        },
+        {
+          "row_id": 36918,
+          "fields": {
+            "Icon": {
+              "id": 2522,
+              "path": "ui/icon/002000/002522.tex",
+              "path_hr1": "ui/icon/002000/002522_hr1.tex"
+            },
+            "Name": "祈告剑"
+          }
+        },
+        {
+          "row_id": 36919,
+          "fields": {
+            "Icon": {
+              "id": 2523,
+              "path": "ui/icon/002000/002523.tex",
+              "path_hr1": "ui/icon/002000/002523_hr1.tex"
+            },
+            "Name": "葬送剑"
+          }
+        },
+        {
+          "row_id": 16457,
+          "fields": {
+            "Icon": {
+              "id": 2516,
+              "path": "ui/icon/002000/002516.tex",
+              "path_hr1": "ui/icon/002000/002516_hr1.tex"
+            },
+            "Name": "日珥斩"
+          }
+        },
+        {
+          "row_id": 16458,
+          "fields": {
+            "Icon": {
+              "id": 2517,
+              "path": "ui/icon/002000/002517.tex",
+              "path_hr1": "ui/icon/002000/002517_hr1.tex"
+            },
+            "Name": "圣环"
+          }
+        },
+        {
+          "row_id": 20,
+          "fields": {
+            "Icon": {
+              "id": 166,
+              "path": "ui/icon/000000/000166.tex",
+              "path_hr1": "ui/icon/000000/000166_hr1.tex"
+            },
+            "Name": "战逃反应"
+          }
+        },
+        {
+          "row_id": 36921,
+          "fields": {
+            "Icon": {
+              "id": 2955,
+              "path": "ui/icon/002000/002955.tex",
+              "path_hr1": "ui/icon/002000/002955_hr1.tex"
+            },
+            "Name": "绝对统治"
+          }
+        },
+        {
+          "row_id": 25747,
+          "fields": {
+            "Icon": {
+              "id": 2951,
+              "path": "ui/icon/002000/002951.tex",
+              "path_hr1": "ui/icon/002000/002951_hr1.tex"
+            },
+            "Name": "偿赎剑"
+          }
+        },
+        {
+          "row_id": 23,
+          "fields": {
+            "Icon": {
+              "id": 161,
+              "path": "ui/icon/000000/000161.tex",
+              "path_hr1": "ui/icon/000000/000161_hr1.tex"
+            },
+            "Name": "厄运流转"
+          }
+        },
+        {
+          "row_id": 16461,
+          "fields": {
+            "Icon": {
+              "id": 2520,
+              "path": "ui/icon/002000/002520.tex",
+              "path_hr1": "ui/icon/002000/002520_hr1.tex"
+            },
+            "Name": "调停"
+          }
+        },
+        {
+          "row_id": 24,
+          "fields": {
+            "Icon": {
+              "id": 164,
+              "path": "ui/icon/000000/000164.tex",
+              "path_hr1": "ui/icon/000000/000164_hr1.tex"
+            },
+            "Name": "投盾"
+          }
+        },
+        {
+          "row_id": 3538,
+          "fields": {
+            "Icon": {
+              "id": 2506,
+              "path": "ui/icon/002000/002506.tex",
+              "path_hr1": "ui/icon/002000/002506_hr1.tex"
+            },
+            "Name": "沥血剑"
+          }
+        },
+        {
+          "row_id": 16459,
+          "fields": {
+            "Icon": {
+              "id": 2518,
+              "path": "ui/icon/002000/002518.tex",
+              "path_hr1": "ui/icon/002000/002518_hr1.tex"
+            },
+            "Name": "悔罪"
+          }
+        },
+        {
+          "row_id": 25748,
+          "fields": {
+            "Icon": {
+              "id": 2952,
+              "path": "ui/icon/002000/002952.tex",
+              "path_hr1": "ui/icon/002000/002952_hr1.tex"
+            },
+            "Name": "信念之剑"
+          }
+        },
+        {
+          "row_id": 25749,
+          "fields": {
+            "Icon": {
+              "id": 2953,
+              "path": "ui/icon/002000/002953.tex",
+              "path_hr1": "ui/icon/002000/002953_hr1.tex"
+            },
+            "Name": "真理之剑"
+          }
+        },
+        {
+          "row_id": 25750,
+          "fields": {
+            "Icon": {
+              "id": 2954,
+              "path": "ui/icon/002000/002954.tex",
+              "path_hr1": "ui/icon/002000/002954_hr1.tex"
+            },
+            "Name": "英勇之剑"
+          }
+        },
+        {
+          "row_id": 9,
+          "fields": {
+            "Icon": {
+              "id": 158,
+              "path": "ui/icon/000000/000158.tex",
+              "path_hr1": "ui/icon/000000/000158_hr1.tex"
+            },
+            "Name": "先锋剑"
+          }
+        },
+        {
+          "row_id": 28,
+          "fields": {
+            "Icon": {
+              "id": 2505,
+              "path": "ui/icon/002000/002505.tex",
+              "path_hr1": "ui/icon/002000/002505_hr1.tex"
+            },
+            "Name": "钢铁信念"
+          }
+        },
+        {
+          "row_id": 15,
+          "fields": {
+            "Icon": {
+              "id": 156,
+              "path": "ui/icon/000000/000156.tex",
+              "path_hr1": "ui/icon/000000/000156_hr1.tex"
+            },
+            "Name": "暴乱剑"
+          }
+        },
+        {
+          "row_id": 36920,
+          "fields": {
+            "Icon": {
+              "id": 2524,
+              "path": "ui/icon/002000/002524.tex",
+              "path_hr1": "ui/icon/002000/002524_hr1.tex"
+            },
+            "Name": "极致防御"
+          }
+        },
+        {
+          "row_id": 25746,
+          "fields": {
+            "Icon": {
+              "id": 2950,
+              "path": "ui/icon/002000/002950.tex",
+              "path_hr1": "ui/icon/002000/002950_hr1.tex"
+            },
+            "Name": "圣盾阵"
+          }
+        },
+        {
+          "row_id": 7382,
+          "fields": {
+            "Icon": {
+              "id": 2512,
+              "path": "ui/icon/002000/002512.tex",
+              "path_hr1": "ui/icon/002000/002512_hr1.tex"
+            },
+            "Name": "干预"
+          }
+        },
+        {
+          "row_id": 36922,
+          "fields": {
+            "Icon": {
+              "id": 2956,
+              "path": "ui/icon/002000/002956.tex",
+              "path_hr1": "ui/icon/002000/002956_hr1.tex"
+            },
+            "Name": "荣耀之剑"
+          }
+        },
+        {
+          "row_id": 32065,
+          "fields": {
+            "Icon": {
+              "id": 2521,
+              "path": "ui/icon/002000/002521.tex",
+              "path_hr1": "ui/icon/002000/002521_hr1.tex"
+            },
+            "Name": "解除钢铁信念"
+          }
+        },
+        {
+          "row_id": 7535,
+          "fields": {
+            "Icon": {
+              "id": 806,
+              "path": "ui/icon/000000/000806.tex",
+              "path_hr1": "ui/icon/000000/000806_hr1.tex"
+            },
+            "Name": "雪仇"
+          }
+        },
+        {
+          "row_id": 3540,
+          "fields": {
+            "Icon": {
+              "id": 2508,
+              "path": "ui/icon/002000/002508.tex",
+              "path_hr1": "ui/icon/002000/002508_hr1.tex"
+            },
+            "Name": "圣光幕帘"
+          }
+        },
+        {
+          "row_id": 30,
+          "fields": {
+            "Icon": {
+              "id": 2502,
+              "path": "ui/icon/002000/002502.tex",
+              "path_hr1": "ui/icon/002000/002502_hr1.tex"
+            },
+            "Name": "神圣领域"
+          }
+        },
+        {
+          "row_id": 7385,
+          "fields": {
+            "Icon": {
+              "id": 2515,
+              "path": "ui/icon/002000/002515.tex",
+              "path_hr1": "ui/icon/002000/002515_hr1.tex"
+            },
+            "Name": "武装戍卫"
+          }
+        },
+        {
+          "row_id": 22,
+          "fields": {
+            "Icon": {
+              "id": 167,
+              "path": "ui/icon/000000/000167.tex",
+              "path_hr1": "ui/icon/000000/000167_hr1.tex"
+            },
+            "Name": "壁垒"
+          }
+        },
+        {
+          "row_id": 7531,
+          "fields": {
+            "Icon": {
+              "id": 801,
+              "path": "ui/icon/000000/000801.tex",
+              "path_hr1": "ui/icon/000000/000801_hr1.tex"
+            },
+            "Name": "铁壁"
+          }
+        }
+      ]
+    }
+  }
+}

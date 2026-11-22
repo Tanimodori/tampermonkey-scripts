@@ -1,0 +1,32 @@
+{
+  "formatVersion": 1,
+  "id": "eb9f327e90026fec",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Trait?rows=169&limit=1&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 169,
+          "fields": {
+            "Icon": {
+              "id": 5310,
+              "path": "ui/icon/005000/005310.tex",
+              "path_hr1": "ui/icon/005000/005310_hr1.tex"
+            },
+            "Name": "九天连箭效果提高"
+          }
+        }
+      ]
+    }
+  }
+}

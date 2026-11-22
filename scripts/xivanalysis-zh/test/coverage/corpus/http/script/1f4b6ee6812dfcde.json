@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "1f4b6ee6812dfcde",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/17678?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 17678,
+      "fields": {
+        "Icon": {
+          "id": 784,
+          "path": "ui/icon/000000/000784.tex",
+          "path_hr1": "ui/icon/000000/000784_hr1.tex"
+        },
+        "Name": "伤腿"
+      },
+      "transient": {
+        "Description": "令目标陷入50%加重状态　持续时间：5秒"
+      }
+    }
+  }
+}

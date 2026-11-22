@@ -1,0 +1,53 @@
+{
+  "formatVersion": 1,
+  "id": "1ee552500e58900f",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Deployment+Tactics&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "29234",
+        "obj": {
+          "i": 29234,
+          "n": "Deployment Tactics",
+          "c": 9612,
+          "j": 28,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "3585",
+        "obj": {
+          "i": 3585,
+          "n": "Deployment Tactics",
+          "c": 2808,
+          "j": 28,
+          "t": 4,
+          "l": 56
+        }
+      },
+      {
+        "type": "action",
+        "id": "50494",
+        "obj": {
+          "i": 50494,
+          "n": "Enhanced Deployment Tactics",
+          "c": 5706,
+          "j": 28,
+          "t": -1,
+          "l": 88
+        }
+      }
+    ]
+  }
+}

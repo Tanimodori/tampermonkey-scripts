@@ -1,0 +1,87 @@
+{
+  "formatVersion": 1,
+  "id": "256f84cbb3f79bf7",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Maw+Motif&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "34667",
+        "obj": {
+          "i": 34667,
+          "n": "Maw Motif",
+          "c": 3818,
+          "j": 42,
+          "t": 2,
+          "l": 96
+        }
+      },
+      {
+        "type": "action",
+        "id": "38979",
+        "obj": {
+          "i": 38979,
+          "n": "Maw Motif",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "39203",
+        "obj": {
+          "i": 39203,
+          "n": "Maw Motif",
+          "c": 9743,
+          "j": 42,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "39580",
+        "obj": {
+          "i": 39580,
+          "n": "Maw Motif",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "status",
+        "id": "4108",
+        "obj": {
+          "i": 4108,
+          "n": "Maw Motif",
+          "c": 214704,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "47131",
+        "obj": {
+          "i": 47131,
+          "n": "Maw Motif",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

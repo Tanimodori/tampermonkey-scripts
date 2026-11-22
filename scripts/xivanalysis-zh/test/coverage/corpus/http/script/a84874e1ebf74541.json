@@ -1,0 +1,77 @@
+{
+  "formatVersion": 1,
+  "id": "a84874e1ebf74541",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Leg+Graze&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "17678",
+        "obj": {
+          "i": 17678,
+          "n": "Leg Graze",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "2877",
+        "obj": {
+          "i": 2877,
+          "n": "Leg Graze",
+          "c": 3013,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "6134",
+        "obj": {
+          "i": 6134,
+          "n": "Leg Graze",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "7554",
+        "obj": {
+          "i": 7554,
+          "n": "Leg Graze",
+          "c": 843,
+          "j": 5,
+          "t": 4,
+          "l": 6
+        }
+      },
+      {
+        "type": "action",
+        "id": "8854",
+        "obj": {
+          "i": 8854,
+          "n": "Leg Graze",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

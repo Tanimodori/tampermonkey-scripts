@@ -1,0 +1,343 @@
+{
+  "formatVersion": 1,
+  "id": "5ea858e69a0c1fca",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "classjob",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/ClassJob?fields=Name,Abbreviation&language=chs&limit=120",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 0,
+          "fields": {
+            "Abbreviation": "ADV",
+            "Name": "冒险者"
+          }
+        },
+        {
+          "row_id": 1,
+          "fields": {
+            "Abbreviation": "GLA",
+            "Name": "剑术师"
+          }
+        },
+        {
+          "row_id": 2,
+          "fields": {
+            "Abbreviation": "PGL",
+            "Name": "格斗家"
+          }
+        },
+        {
+          "row_id": 3,
+          "fields": {
+            "Abbreviation": "MRD",
+            "Name": "斧术师"
+          }
+        },
+        {
+          "row_id": 4,
+          "fields": {
+            "Abbreviation": "LNC",
+            "Name": "枪术师"
+          }
+        },
+        {
+          "row_id": 5,
+          "fields": {
+            "Abbreviation": "ARC",
+            "Name": "弓箭手"
+          }
+        },
+        {
+          "row_id": 6,
+          "fields": {
+            "Abbreviation": "CNJ",
+            "Name": "幻术师"
+          }
+        },
+        {
+          "row_id": 7,
+          "fields": {
+            "Abbreviation": "THM",
+            "Name": "咒术师"
+          }
+        },
+        {
+          "row_id": 8,
+          "fields": {
+            "Abbreviation": "CRP",
+            "Name": "刻木匠"
+          }
+        },
+        {
+          "row_id": 9,
+          "fields": {
+            "Abbreviation": "BSM",
+            "Name": "锻铁匠"
+          }
+        },
+        {
+          "row_id": 10,
+          "fields": {
+            "Abbreviation": "ARM",
+            "Name": "铸甲匠"
+          }
+        },
+        {
+          "row_id": 11,
+          "fields": {
+            "Abbreviation": "GSM",
+            "Name": "雕金匠"
+          }
+        },
+        {
+          "row_id": 12,
+          "fields": {
+            "Abbreviation": "LTW",
+            "Name": "制革匠"
+          }
+        },
+        {
+          "row_id": 13,
+          "fields": {
+            "Abbreviation": "WVR",
+            "Name": "裁衣匠"
+          }
+        },
+        {
+          "row_id": 14,
+          "fields": {
+            "Abbreviation": "ALC",
+            "Name": "炼金术士"
+          }
+        },
+        {
+          "row_id": 15,
+          "fields": {
+            "Abbreviation": "CUL",
+            "Name": "烹调师"
+          }
+        },
+        {
+          "row_id": 16,
+          "fields": {
+            "Abbreviation": "MIN",
+            "Name": "采矿工"
+          }
+        },
+        {
+          "row_id": 17,
+          "fields": {
+            "Abbreviation": "BTN",
+            "Name": "园艺工"
+          }
+        },
+        {
+          "row_id": 18,
+          "fields": {
+            "Abbreviation": "FSH",
+            "Name": "捕鱼人"
+          }
+        },
+        {
+          "row_id": 19,
+          "fields": {
+            "Abbreviation": "PLD",
+            "Name": "骑士"
+          }
+        },
+        {
+          "row_id": 20,
+          "fields": {
+            "Abbreviation": "MNK",
+            "Name": "武僧"
+          }
+        },
+        {
+          "row_id": 21,
+          "fields": {
+            "Abbreviation": "WAR",
+            "Name": "战士"
+          }
+        },
+        {
+          "row_id": 22,
+          "fields": {
+            "Abbreviation": "DRG",
+            "Name": "龙骑士"
+          }
+        },
+        {
+          "row_id": 23,
+          "fields": {
+            "Abbreviation": "BRD",
+            "Name": "吟游诗人"
+          }
+        },
+        {
+          "row_id": 24,
+          "fields": {
+            "Abbreviation": "WHM",
+            "Name": "白魔法师"
+          }
+        },
+        {
+          "row_id": 25,
+          "fields": {
+            "Abbreviation": "BLM",
+            "Name": "黑魔法师"
+          }
+        },
+        {
+          "row_id": 26,
+          "fields": {
+            "Abbreviation": "ACN",
+            "Name": "秘术师"
+          }
+        },
+        {
+          "row_id": 27,
+          "fields": {
+            "Abbreviation": "SMN",
+            "Name": "召唤师"
+          }
+        },
+        {
+          "row_id": 28,
+          "fields": {
+            "Abbreviation": "SCH",
+            "Name": "学者"
+          }
+        },
+        {
+          "row_id": 29,
+          "fields": {
+            "Abbreviation": "ROG",
+            "Name": "双剑师"
+          }
+        },
+        {
+          "row_id": 30,
+          "fields": {
+            "Abbreviation": "NIN",
+            "Name": "忍者"
+          }
+        },
+        {
+          "row_id": 31,
+          "fields": {
+            "Abbreviation": "MCH",
+            "Name": "机工士"
+          }
+        },
+        {
+          "row_id": 32,
+          "fields": {
+            "Abbreviation": "DRK",
+            "Name": "暗黑骑士"
+          }
+        },
+        {
+          "row_id": 33,
+          "fields": {
+            "Abbreviation": "AST",
+            "Name": "占星术士"
+          }
+        },
+        {
+          "row_id": 34,
+          "fields": {
+            "Abbreviation": "SAM",
+            "Name": "武士"
+          }
+        },
+        {
+          "row_id": 35,
+          "fields": {
+            "Abbreviation": "RDM",
+            "Name": "赤魔法师"
+          }
+        },
+        {
+          "row_id": 36,
+          "fields": {
+            "Abbreviation": "BLU",
+            "Name": "青魔法师"
+          }
+        },
+        {
+          "row_id": 37,
+          "fields": {
+            "Abbreviation": "GNB",
+            "Name": "绝枪战士"
+          }
+        },
+        {
+          "row_id": 38,
+          "fields": {
+            "Abbreviation": "DNC",
+            "Name": "舞者"
+          }
+        },
+        {
+          "row_id": 39,
+          "fields": {
+            "Abbreviation": "RPR",
+            "Name": "钐镰客"
+          }
+        },
+        {
+          "row_id": 40,
+          "fields": {
+            "Abbreviation": "SGE",
+            "Name": "贤者"
+          }
+        },
+        {
+          "row_id": 41,
+          "fields": {
+            "Abbreviation": "VPR",
+            "Name": "蝰蛇剑士"
+          }
+        },
+        {
+          "row_id": 42,
+          "fields": {
+            "Abbreviation": "PCT",
+            "Name": "绘灵法师"
+          }
+        },
+        {
+          "row_id": 43,
+          "fields": {
+            "Abbreviation": "BST",
+            "Name": "驯兽师"
+          }
+        },
+        {
+          "row_id": 44,
+          "fields": {
+            "Abbreviation": "",
+            "Name": ""
+          }
+        },
+        {
+          "row_id": 45,
+          "fields": {
+            "Abbreviation": "",
+            "Name": ""
+          }
+        }
+      ]
+    }
+  }
+}

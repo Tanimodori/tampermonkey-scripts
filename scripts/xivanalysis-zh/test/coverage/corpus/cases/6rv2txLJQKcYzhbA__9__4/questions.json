@@ -1,0 +1,526 @@
+{
+  "formatVersion": 1,
+  "id": "6rv2txLJQKcYzhbA/9/4",
+  "url": "https://xivanalysis.com/fflogs/6rv2txLJQKcYzhbA/9/4",
+  "job": "VPR",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Rattling Coils",
+      "-5"
+    ],
+    [
+      "Gauges",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Standard Finish",
+      "-4"
+    ],
+    [
+      "Embolden",
+      "-4"
+    ],
+    [
+      "Arcane Circle",
+      "-4"
+    ],
+    [
+      "Technical Finish",
+      "-4"
+    ],
+    [
+      "Devilment",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "oGCD Procs",
+      "-5"
+    ],
+    [
+      "Honed Procs",
+      "-5"
+    ],
+    [
+      "Finisher Procs",
+      "-5"
+    ],
+    [
+      "Death Rattle",
+      "-5"
+    ],
+    [
+      "Serpent's Ire",
+      "-5"
+    ],
+    [
+      "Vicewinder Combo",
+      "-5"
+    ],
+    [
+      "Vicewinder Procs",
+      "-5"
+    ],
+    [
+      "Uncoiled Fury",
+      "-5"
+    ],
+    [
+      "Uncoiled Procs",
+      "-5"
+    ],
+    [
+      "Reawaken Combo",
+      "-5"
+    ],
+    [
+      "Reawaken Procs",
+      "-5"
+    ],
+    [
+      "Feint",
+      "-5"
+    ],
+    [
+      "True North",
+      "-5"
+    ],
+    [
+      "Slither",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Standard Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213708_hr1.tex&format=png"
+    ],
+    [
+      "Embolden",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/218000/218941_hr1.tex&format=png"
+    ],
+    [
+      "Arcane Circle",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212936_hr1.tex&format=png"
+    ],
+    [
+      "Technical Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213709_hr1.tex&format=png"
+    ],
+    [
+      "Devilment",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213714_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Vicewinder",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003715_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Coil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003716_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Coil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003717_hr1.tex&format=png"
+    ],
+    [
+      "Reawaken",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003721_hr1.tex&format=png"
+    ],
+    [
+      "First Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003722_hr1.tex&format=png"
+    ],
+    [
+      "Second Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003723_hr1.tex&format=png"
+    ],
+    [
+      "Third Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003724_hr1.tex&format=png"
+    ],
+    [
+      "Fourth Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003725_hr1.tex&format=png"
+    ],
+    [
+      "Ouroboros",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003726_hr1.tex&format=png"
+    ],
+    [
+      "Vicewinder",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003715_hr1.tex&format=png"
+    ],
+    [
+      "Uncoiled Fury",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003728_hr1.tex&format=png"
+    ],
+    [
+      "Uncoiled Fury",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003728_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Coil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003716_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Coil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003717_hr1.tex&format=png"
+    ],
+    [
+      "Reaving Fangs",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003702_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Sting",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003704_hr1.tex&format=png"
+    ],
+    [
+      "Hindsting Strike",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003707_hr1.tex&format=png"
+    ],
+    [
+      "Steel Fangs",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003701_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Sting",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003703_hr1.tex&format=png"
+    ],
+    [
+      "Flanksbane Fang",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003706_hr1.tex&format=png"
+    ],
+    [
+      "Vicewinder",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003715_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Coil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003716_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Coil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003717_hr1.tex&format=png"
+    ],
+    [
+      "Reawaken",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003721_hr1.tex&format=png"
+    ],
+    [
+      "First Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003722_hr1.tex&format=png"
+    ],
+    [
+      "Second Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003723_hr1.tex&format=png"
+    ],
+    [
+      "Third Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003724_hr1.tex&format=png"
+    ],
+    [
+      "Poised for Twinblood",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213772_hr1.tex&format=png"
+    ],
+    [
+      "Poised for Twinblood",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213772_hr1.tex&format=png"
+    ],
+    [
+      "Poised for Twinfang",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213771_hr1.tex&format=png"
+    ],
+    [
+      "Poised for Twinfang",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213771_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213763_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213763_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213763_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213763_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213763_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213763_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213764_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213764_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213764_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213764_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213764_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213764_hr1.tex&format=png"
+    ],
+    [
+      "Honed Steel",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213757_hr1.tex&format=png"
+    ],
+    [
+      "Honed Reavers",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213758_hr1.tex&format=png"
+    ],
+    [
+      "Hindsbane Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213754_hr1.tex&format=png"
+    ],
+    [
+      "Flanksbane Venom",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213752_hr1.tex&format=png"
+    ],
+    [
+      "Death Rattle",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003729_hr1.tex&format=png"
+    ],
+    [
+      "Death Rattle",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003729_hr1.tex&format=png"
+    ],
+    [
+      "Serpent's Ire",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003742_hr1.tex&format=png"
+    ],
+    [
+      "Vicewinder",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003715_hr1.tex&format=png"
+    ],
+    [
+      "Vicewinder",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003715_hr1.tex&format=png"
+    ],
+    [
+      "Vicewinder",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003715_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Coil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003716_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Coil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003716_hr1.tex&format=png"
+    ],
+    [
+      "Hunter's Coil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003716_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Coil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003717_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Coil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003717_hr1.tex&format=png"
+    ],
+    [
+      "Swiftskin's Coil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003717_hr1.tex&format=png"
+    ],
+    [
+      "Vicewinder",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003715_hr1.tex&format=png"
+    ],
+    [
+      "Vicewinder",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003715_hr1.tex&format=png"
+    ],
+    [
+      "Vicewinder",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003715_hr1.tex&format=png"
+    ],
+    [
+      "Twinfang Bite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003731_hr1.tex&format=png"
+    ],
+    [
+      "Twinfang Bite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003731_hr1.tex&format=png"
+    ],
+    [
+      "Twinfang Bite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003731_hr1.tex&format=png"
+    ],
+    [
+      "Twinfang Bite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003731_hr1.tex&format=png"
+    ],
+    [
+      "Twinfang Bite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003731_hr1.tex&format=png"
+    ],
+    [
+      "Twinfang Bite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003731_hr1.tex&format=png"
+    ],
+    [
+      "Twinblood Bite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003732_hr1.tex&format=png"
+    ],
+    [
+      "Twinblood Bite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003732_hr1.tex&format=png"
+    ],
+    [
+      "Twinblood Bite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003732_hr1.tex&format=png"
+    ],
+    [
+      "Twinblood Bite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003732_hr1.tex&format=png"
+    ],
+    [
+      "Twinblood Bite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003732_hr1.tex&format=png"
+    ],
+    [
+      "Twinblood Bite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003732_hr1.tex&format=png"
+    ],
+    [
+      "Uncoiled Fury",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003728_hr1.tex&format=png"
+    ],
+    [
+      "Uncoiled Fury",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003728_hr1.tex&format=png"
+    ],
+    [
+      "Uncoiled Twinfang",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003739_hr1.tex&format=png"
+    ],
+    [
+      "Uncoiled Twinfang",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003739_hr1.tex&format=png"
+    ],
+    [
+      "Uncoiled Twinblood",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003740_hr1.tex&format=png"
+    ],
+    [
+      "Uncoiled Twinblood",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003740_hr1.tex&format=png"
+    ],
+    [
+      "Reawaken",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003721_hr1.tex&format=png"
+    ],
+    [
+      "Reawaken",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003721_hr1.tex&format=png"
+    ],
+    [
+      "First Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003722_hr1.tex&format=png"
+    ],
+    [
+      "First Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003722_hr1.tex&format=png"
+    ],
+    [
+      "Second Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003723_hr1.tex&format=png"
+    ],
+    [
+      "Second Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003723_hr1.tex&format=png"
+    ],
+    [
+      "Third Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003724_hr1.tex&format=png"
+    ],
+    [
+      "Third Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003724_hr1.tex&format=png"
+    ],
+    [
+      "Fourth Generation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003725_hr1.tex&format=png"
+    ],
+    [
+      "Ouroboros",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003726_hr1.tex&format=png"
+    ],
+    [
+      "First Legacy",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003735_hr1.tex&format=png"
+    ],
+    [
+      "First Legacy",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003735_hr1.tex&format=png"
+    ],
+    [
+      "Second Legacy",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003736_hr1.tex&format=png"
+    ],
+    [
+      "Second Legacy",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003736_hr1.tex&format=png"
+    ],
+    [
+      "Third Legacy",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003737_hr1.tex&format=png"
+    ],
+    [
+      "Fourth Legacy",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003738_hr1.tex&format=png"
+    ],
+    [
+      "True North",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000830_hr1.tex&format=png"
+    ],
+    [
+      "Slither",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003741_hr1.tex&format=png"
+    ]
+  ]
+}

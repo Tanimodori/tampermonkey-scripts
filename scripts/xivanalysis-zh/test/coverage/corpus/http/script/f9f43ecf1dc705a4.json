@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "f9f43ecf1dc705a4",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/24389?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 24389,
+      "fields": {
+        "Icon": {
+          "id": 3617,
+          "path": "ui/icon/003000/003617.tex",
+          "path_hr1": "ui/icon/003000/003617_hr1.tex"
+        },
+        "Name": "隐匿挥割"
+      },
+      "transient": {
+        "Description": "召唤化身对目标发动物理攻击\n威力：340\n追加效果：为自身附加1档妖异之镰状态\n持续时间：30秒\n若自身已附加妖异之镰状态，则档数刷新为1档\n无法与处刑人效果共存\n发动条件：灵魂50点\n该技能与暴食之外的化身技能共享复唱时间"
+      }
+    }
+  }
+}

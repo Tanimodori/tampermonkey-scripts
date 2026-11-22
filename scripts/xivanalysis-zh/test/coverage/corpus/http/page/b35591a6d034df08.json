@@ -1,0 +1,32 @@
+{
+  "formatVersion": 1,
+  "id": "b35591a6d034df08",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Trait?rows=169&limit=1&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 169,
+          "fields": {
+            "Icon": {
+              "id": 5310,
+              "path": "ui/icon/005000/005310.tex",
+              "path_hr1": "ui/icon/005000/005310_hr1.tex"
+            },
+            "Name": "Enhanced Empyreal Arrow"
+          }
+        }
+      ]
+    }
+  }
+}

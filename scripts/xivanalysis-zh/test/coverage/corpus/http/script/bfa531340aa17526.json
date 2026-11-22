@@ -1,0 +1,87 @@
+{
+  "formatVersion": 1,
+  "id": "bfa531340aa17526",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=1895%2C1220%2C1944%2C315%2C1874%2C1223&limit=6&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 1895,
+          "fields": {
+            "Icon": {
+              "id": 212812,
+              "path": "ui/icon/212000/212812.tex",
+              "path_hr1": "ui/icon/212000/212812_hr1.tex"
+            },
+            "Name": "蛊毒法"
+          }
+        },
+        {
+          "row_id": 1220,
+          "fields": {
+            "Icon": {
+              "id": 212808,
+              "path": "ui/icon/212000/212808.tex",
+              "path_hr1": "ui/icon/212000/212808_hr1.tex"
+            },
+            "Name": "深谋远虑之策"
+          }
+        },
+        {
+          "row_id": 1944,
+          "fields": {
+            "Icon": {
+              "id": 212802,
+              "path": "ui/icon/212000/212802.tex",
+              "path_hr1": "ui/icon/212000/212802_hr1.tex"
+            },
+            "Name": "野战治疗阵"
+          }
+        },
+        {
+          "row_id": 315,
+          "fields": {
+            "Icon": {
+              "id": 212826,
+              "path": "ui/icon/212000/212826.tex",
+              "path_hr1": "ui/icon/212000/212826_hr1.tex"
+            },
+            "Name": "仙光的低语"
+          }
+        },
+        {
+          "row_id": 1874,
+          "fields": {
+            "Icon": {
+              "id": 212846,
+              "path": "ui/icon/212000/212846.tex",
+              "path_hr1": "ui/icon/212000/212846_hr1.tex"
+            },
+            "Name": "天使的低语"
+          }
+        },
+        {
+          "row_id": 1223,
+          "fields": {
+            "Icon": {
+              "id": 212811,
+              "path": "ui/icon/212000/212811.tex",
+              "path_hr1": "ui/icon/212000/212811_hr1.tex"
+            },
+            "Name": "异想的融光"
+          }
+        }
+      ]
+    }
+  }
+}

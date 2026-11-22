@@ -1,0 +1,87 @@
+{
+  "formatVersion": 1,
+  "id": "a3c4794735ef95eb",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=1821,1824,2105,1825,1823,1822&limit=6&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 1821,
+          "fields": {
+            "Icon": {
+              "id": 213708,
+              "path": "ui/icon/213000/213708.tex",
+              "path_hr1": "ui/icon/213000/213708_hr1.tex"
+            },
+            "Name": "Standard Finish"
+          }
+        },
+        {
+          "row_id": 1824,
+          "fields": {
+            "Icon": {
+              "id": 213713,
+              "path": "ui/icon/213000/213713.tex",
+              "path_hr1": "ui/icon/213000/213713_hr1.tex"
+            },
+            "Name": "Dance Partner"
+          }
+        },
+        {
+          "row_id": 2105,
+          "fields": {
+            "Icon": {
+              "id": 213708,
+              "path": "ui/icon/213000/213708.tex",
+              "path_hr1": "ui/icon/213000/213708_hr1.tex"
+            },
+            "Name": "Standard Finish"
+          }
+        },
+        {
+          "row_id": 1825,
+          "fields": {
+            "Icon": {
+              "id": 213714,
+              "path": "ui/icon/213000/213714.tex",
+              "path_hr1": "ui/icon/213000/213714_hr1.tex"
+            },
+            "Name": "Devilment"
+          }
+        },
+        {
+          "row_id": 1823,
+          "fields": {
+            "Icon": {
+              "id": 213712,
+              "path": "ui/icon/213000/213712.tex",
+              "path_hr1": "ui/icon/213000/213712_hr1.tex"
+            },
+            "Name": "Closed Position"
+          }
+        },
+        {
+          "row_id": 1822,
+          "fields": {
+            "Icon": {
+              "id": 213709,
+              "path": "ui/icon/213000/213709.tex",
+              "path_hr1": "ui/icon/213000/213709_hr1.tex"
+            },
+            "Name": "Technical Finish"
+          }
+        }
+      ]
+    }
+  }
+}

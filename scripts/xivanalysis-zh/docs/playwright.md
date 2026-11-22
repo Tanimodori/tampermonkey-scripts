@@ -1,6 +1,6 @@
 # 用 Playwright 测用户脚本
 
-本仓的用户脚本一直只靠 vitest 测：直接 import 源码，从不过打包器，也从不进浏览器。`scripts/xivanalysis-zh` 是第一个补上浏览器侧 e2e 的包。e2e 现在按用途分成离线安装、真实上游、真实战报 smoke 与语料捕获，落在 `test/e2e/{offline,live}/`，运行方式与文件分工见[那里的 README](../test/e2e/README.md)。
+本仓的用户脚本一直只靠 vitest 测：直接 import 源码，从不过打包器，也从不进浏览器。`scripts/xivanalysis-zh` 是第一个补上浏览器侧 e2e 的包。e2e 现在按用途分成离线安装、真实上游、真实战报 smoke 与语料问题采集，落在 `test/e2e/{offline,live}/`，运行方式与文件分工见[那里的 README](../test/e2e/README.md)。
 
 这份文档写的是这两条路线本身：各自做了什么、执行路径长什么样、以及踩到的坑。坑点部分都是实测结论，不是推断；写"实测"的地方有具体现象，写"推断"的地方会注明。
 
@@ -18,7 +18,7 @@
 
 两者都只判安装语义，不是替代关系。拦截、UI 与权威覆盖分别由 `test/unit`、`test/dom`、`test/coverage` 验证；路线二补的是 `@match` 与真沙箱。
 
-离线安装组在 `offline/install-fast.spec.ts` 与 `offline/install-tampermonkey.spec.ts`；真实上游在 `live/upstream.spec.ts`；一条真实战报 smoke 在 `live/smoke.spec.ts`；33 条语料由 `live/corpus.spec.ts` 手工抓取。真实站点固定 `locale: 'en-US'`，否则 xivanalysis 自己的 i18n 会让“页面出现中文”失去判据。
+离线安装组在 `offline/install-fast.spec.ts` 与 `offline/install-tampermonkey.spec.ts`；真实上游在 `live/upstream.spec.ts`；一条真实战报 smoke 在 `live/smoke.spec.ts`；33 条问题由 `live/corpus-questions.spec.ts` 在**不注入脚本**的页面上采集，独立响应与逐元素答案分别由 Vitest 的 responses/expected 阶段生成。真实站点固定 `locale: 'en-US'`，否则 xivanalysis 自己的 i18n 会让“页面出现中文”失去判据。
 
 ## 路线一：注入（`addInitScript` + 假 GM）
 
@@ -121,21 +121,21 @@ await page.evaluate((id) => chrome.developerPrivate.updateExtensionConfiguration
 
 **8. 别断言界面文案。** Tampermonkey 的界面跟浏览器语言走（本机是中文，安装按钮的 value 是「安装」，`chrome://extensions` 标题是「扩展程序」）。定位一律用 `#allow-user-scripts` 这样的 id 和 `input.button.install` 这样的 class。
 
-**9. GM 请求拦不到。** `GM_xmlhttpRequest` 由扩展后台发出，不是页面请求，`page.route` 够不着。完整注入组因此只跑离线安装语义；garland 的适配逻辑归 unit 与上游契约，语料 capture 用 `page.route` 代发并补 CORS，模拟真 GM。
+**9. GM 请求拦不到。** `GM_xmlhttpRequest` 由扩展后台发出，不是页面请求，`page.route` 够不着。完整注入组因此只跑离线安装语义；garland 的适配逻辑归 unit 与上游契约。语料的 responses 阶段在 Vitest 里用 Node `fetch` 和生产 URL 构造；expected 阶段用已保存响应离线回放，不再出网。
 
 **10. 扩展拿不到时要能跳过而不是失败。** 离线或应用店改协议时下载会失败。本仓此时跳过整组并在输出里说明原因，而不是报一堆红。
 
 ## 两条路线各自测不到什么
 
-|                                     | 快速注入                           | 真 Tampermonkey            |
-| ----------------------------------- | ---------------------------------- | -------------------------- |
-| 安装与 `document-start` 注入        | 覆盖                               | 覆盖（冷启动可能推迟注入） |
-| `@match` 是否生效                   | 测不到                             | 覆盖                       |
-| 脚本能否被真管理器装上              | 测不到                             | 覆盖                       |
-| 隔离世界 / 沙箱语义                 | 测不到（注入在主世界）             | 覆盖                       |
-| 脚本逻辑（拦截、UI、权威覆盖）      | 不在这里判，归 unit / DOM / 覆盖率 | 不在这里判                 |
-| 真实 DOM 选择器漂移                 | 一条真实战报 smoke 覆盖            | 不跑真实页                 |
-| garland 兜底（`GM_xmlhttpRequest`） | 假 GM 走页面 fetch；capture 代发   | 真 GM，离线组不跑          |
+|                                     | 快速注入                                    | 真 Tampermonkey            |
+| ----------------------------------- | ------------------------------------------- | -------------------------- |
+| 安装与 `document-start` 注入        | 覆盖                                        | 覆盖（冷启动可能推迟注入） |
+| `@match` 是否生效                   | 测不到                                      | 覆盖                       |
+| 脚本能否被真管理器装上              | 测不到                                      | 覆盖                       |
+| 隔离世界 / 沙箱语义                 | 测不到（注入在主世界）                      | 覆盖                       |
+| 脚本逻辑（拦截、UI、权威覆盖）      | 不在这里判，归 unit / DOM / 覆盖率          | 不在这里判                 |
+| 真实 DOM 选择器漂移                 | 一条真实战报 smoke 覆盖                     | 不跑真实页                 |
+| garland 兜底（`GM_xmlhttpRequest`） | 假 GM 走页面 fetch；responses 用 Node fetch | 真 GM，离线组不跑          |
 
 安装语义与脚本逻辑现在分开验证：拦截、UI 与权威覆盖分别由 `test/unit`、`test/dom`、`test/coverage` 负责，e2e 只回答“产物在真实浏览器里跑不跑得起来”。真实 DOM 只留一条战报 smoke，不再用 33 页重复证明翻译覆盖。
 

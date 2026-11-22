@@ -1,0 +1,450 @@
+{
+  "formatVersion": 1,
+  "id": "55863adc8e3d538e",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=34620%2C34623%2C34621%2C34622%2C34637%2C34636%2C34624%2C34625%2C34639%2C34638%2C35920%2C34613%2C34612%2C34611%2C34610%2C34634%2C34618%2C34619%2C34635%2C34626%2C34640%2C34641%2C34642%2C34643%2C34633%2C34645%2C34644%2C34647%2C7546%2C34631%2C34627%2C34628%2C34629%2C34630%2C34606%2C7549%2C7542%2C7541%2C0&limit=39&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 34620,
+          "fields": {
+            "Icon": {
+              "id": 3715,
+              "path": "ui/icon/003000/003715.tex",
+              "path_hr1": "ui/icon/003000/003715_hr1.tex"
+            },
+            "Name": "强碎灵蛇"
+          }
+        },
+        {
+          "row_id": 34623,
+          "fields": {
+            "Icon": {
+              "id": 3718,
+              "path": "ui/icon/003000/003718.tex",
+              "path_hr1": "ui/icon/003000/003718_hr1.tex"
+            },
+            "Name": "强碎灵蝰"
+          }
+        },
+        {
+          "row_id": 34621,
+          "fields": {
+            "Icon": {
+              "id": 3716,
+              "path": "ui/icon/003000/003716.tex",
+              "path_hr1": "ui/icon/003000/003716_hr1.tex"
+            },
+            "Name": "猛袭盘蛇"
+          }
+        },
+        {
+          "row_id": 34622,
+          "fields": {
+            "Icon": {
+              "id": 3717,
+              "path": "ui/icon/003000/003717.tex",
+              "path_hr1": "ui/icon/003000/003717_hr1.tex"
+            },
+            "Name": "疾速盘蛇"
+          }
+        },
+        {
+          "row_id": 34637,
+          "fields": {
+            "Icon": {
+              "id": 3732,
+              "path": "ui/icon/003000/003732.tex",
+              "path_hr1": "ui/icon/003000/003732_hr1.tex"
+            },
+            "Name": "双牙乱击"
+          }
+        },
+        {
+          "row_id": 34636,
+          "fields": {
+            "Icon": {
+              "id": 3731,
+              "path": "ui/icon/003000/003731.tex",
+              "path_hr1": "ui/icon/003000/003731_hr1.tex"
+            },
+            "Name": "双牙连击"
+          }
+        },
+        {
+          "row_id": 34624,
+          "fields": {
+            "Icon": {
+              "id": 3719,
+              "path": "ui/icon/003000/003719.tex",
+              "path_hr1": "ui/icon/003000/003719_hr1.tex"
+            },
+            "Name": "猛袭盘蝰"
+          }
+        },
+        {
+          "row_id": 34625,
+          "fields": {
+            "Icon": {
+              "id": 3720,
+              "path": "ui/icon/003000/003720.tex",
+              "path_hr1": "ui/icon/003000/003720_hr1.tex"
+            },
+            "Name": "疾速盘蝰"
+          }
+        },
+        {
+          "row_id": 34639,
+          "fields": {
+            "Icon": {
+              "id": 3734,
+              "path": "ui/icon/003000/003734.tex",
+              "path_hr1": "ui/icon/003000/003734_hr1.tex"
+            },
+            "Name": "双牙乱闪"
+          }
+        },
+        {
+          "row_id": 34638,
+          "fields": {
+            "Icon": {
+              "id": 3733,
+              "path": "ui/icon/003000/003733.tex",
+              "path_hr1": "ui/icon/003000/003733_hr1.tex"
+            },
+            "Name": "双牙连闪"
+          }
+        },
+        {
+          "row_id": 35920,
+          "fields": {
+            "Icon": {
+              "id": 3743,
+              "path": "ui/icon/003000/003743.tex",
+              "path_hr1": "ui/icon/003000/003743_hr1.tex"
+            },
+            "Name": "蛇尾术"
+          }
+        },
+        {
+          "row_id": 34613,
+          "fields": {
+            "Icon": {
+              "id": 3708,
+              "path": "ui/icon/003000/003708.tex",
+              "path_hr1": "ui/icon/003000/003708_hr1.tex"
+            },
+            "Name": "背裂獠齿"
+          }
+        },
+        {
+          "row_id": 34612,
+          "fields": {
+            "Icon": {
+              "id": 3707,
+              "path": "ui/icon/003000/003707.tex",
+              "path_hr1": "ui/icon/003000/003707_hr1.tex"
+            },
+            "Name": "背击獠齿"
+          }
+        },
+        {
+          "row_id": 34611,
+          "fields": {
+            "Icon": {
+              "id": 3706,
+              "path": "ui/icon/003000/003706.tex",
+              "path_hr1": "ui/icon/003000/003706_hr1.tex"
+            },
+            "Name": "侧裂獠齿"
+          }
+        },
+        {
+          "row_id": 34610,
+          "fields": {
+            "Icon": {
+              "id": 3705,
+              "path": "ui/icon/003000/003705.tex",
+              "path_hr1": "ui/icon/003000/003705_hr1.tex"
+            },
+            "Name": "侧击獠齿"
+          }
+        },
+        {
+          "row_id": 34634,
+          "fields": {
+            "Icon": {
+              "id": 3729,
+              "path": "ui/icon/003000/003729.tex",
+              "path_hr1": "ui/icon/003000/003729_hr1.tex"
+            },
+            "Name": "蛇尾击"
+          }
+        },
+        {
+          "row_id": 34618,
+          "fields": {
+            "Icon": {
+              "id": 3713,
+              "path": "ui/icon/003000/003713.tex",
+              "path_hr1": "ui/icon/003000/003713_hr1.tex"
+            },
+            "Name": "乱击獠牙"
+          }
+        },
+        {
+          "row_id": 34619,
+          "fields": {
+            "Icon": {
+              "id": 3714,
+              "path": "ui/icon/003000/003714.tex",
+              "path_hr1": "ui/icon/003000/003714_hr1.tex"
+            },
+            "Name": "乱裂獠牙"
+          }
+        },
+        {
+          "row_id": 34635,
+          "fields": {
+            "Icon": {
+              "id": 3730,
+              "path": "ui/icon/003000/003730.tex",
+              "path_hr1": "ui/icon/003000/003730_hr1.tex"
+            },
+            "Name": "蛇尾闪"
+          }
+        },
+        {
+          "row_id": 34626,
+          "fields": {
+            "Icon": {
+              "id": 3721,
+              "path": "ui/icon/003000/003721.tex",
+              "path_hr1": "ui/icon/003000/003721_hr1.tex"
+            },
+            "Name": "祖灵降临"
+          }
+        },
+        {
+          "row_id": 34640,
+          "fields": {
+            "Icon": {
+              "id": 3735,
+              "path": "ui/icon/003000/003735.tex",
+              "path_hr1": "ui/icon/003000/003735_hr1.tex"
+            },
+            "Name": "祖灵之蛇一式"
+          }
+        },
+        {
+          "row_id": 34641,
+          "fields": {
+            "Icon": {
+              "id": 3736,
+              "path": "ui/icon/003000/003736.tex",
+              "path_hr1": "ui/icon/003000/003736_hr1.tex"
+            },
+            "Name": "祖灵之蛇二式"
+          }
+        },
+        {
+          "row_id": 34642,
+          "fields": {
+            "Icon": {
+              "id": 3737,
+              "path": "ui/icon/003000/003737.tex",
+              "path_hr1": "ui/icon/003000/003737_hr1.tex"
+            },
+            "Name": "祖灵之蛇三式"
+          }
+        },
+        {
+          "row_id": 34643,
+          "fields": {
+            "Icon": {
+              "id": 3738,
+              "path": "ui/icon/003000/003738.tex",
+              "path_hr1": "ui/icon/003000/003738_hr1.tex"
+            },
+            "Name": "祖灵之蛇四式"
+          }
+        },
+        {
+          "row_id": 34633,
+          "fields": {
+            "Icon": {
+              "id": 3728,
+              "path": "ui/icon/003000/003728.tex",
+              "path_hr1": "ui/icon/003000/003728_hr1.tex"
+            },
+            "Name": "飞蛇之尾"
+          }
+        },
+        {
+          "row_id": 34645,
+          "fields": {
+            "Icon": {
+              "id": 3740,
+              "path": "ui/icon/003000/003740.tex",
+              "path_hr1": "ui/icon/003000/003740_hr1.tex"
+            },
+            "Name": "飞蛇乱尾击"
+          }
+        },
+        {
+          "row_id": 34644,
+          "fields": {
+            "Icon": {
+              "id": 3739,
+              "path": "ui/icon/003000/003739.tex",
+              "path_hr1": "ui/icon/003000/003739_hr1.tex"
+            },
+            "Name": "飞蛇连尾击"
+          }
+        },
+        {
+          "row_id": 34647,
+          "fields": {
+            "Icon": {
+              "id": 3742,
+              "path": "ui/icon/003000/003742.tex",
+              "path_hr1": "ui/icon/003000/003742_hr1.tex"
+            },
+            "Name": "蛇灵气"
+          }
+        },
+        {
+          "row_id": 7546,
+          "fields": {
+            "Icon": {
+              "id": 830,
+              "path": "ui/icon/000000/000830.tex",
+              "path_hr1": "ui/icon/000000/000830_hr1.tex"
+            },
+            "Name": "真北"
+          }
+        },
+        {
+          "row_id": 34631,
+          "fields": {
+            "Icon": {
+              "id": 3726,
+              "path": "ui/icon/003000/003726.tex",
+              "path_hr1": "ui/icon/003000/003726_hr1.tex"
+            },
+            "Name": "祖灵大蛇牙"
+          }
+        },
+        {
+          "row_id": 34627,
+          "fields": {
+            "Icon": {
+              "id": 3722,
+              "path": "ui/icon/003000/003722.tex",
+              "path_hr1": "ui/icon/003000/003722_hr1.tex"
+            },
+            "Name": "祖灵之牙一式"
+          }
+        },
+        {
+          "row_id": 34628,
+          "fields": {
+            "Icon": {
+              "id": 3723,
+              "path": "ui/icon/003000/003723.tex",
+              "path_hr1": "ui/icon/003000/003723_hr1.tex"
+            },
+            "Name": "祖灵之牙二式"
+          }
+        },
+        {
+          "row_id": 34629,
+          "fields": {
+            "Icon": {
+              "id": 3724,
+              "path": "ui/icon/003000/003724.tex",
+              "path_hr1": "ui/icon/003000/003724_hr1.tex"
+            },
+            "Name": "祖灵之牙三式"
+          }
+        },
+        {
+          "row_id": 34630,
+          "fields": {
+            "Icon": {
+              "id": 3725,
+              "path": "ui/icon/003000/003725.tex",
+              "path_hr1": "ui/icon/003000/003725_hr1.tex"
+            },
+            "Name": "祖灵之牙四式"
+          }
+        },
+        {
+          "row_id": 34606,
+          "fields": {
+            "Icon": {
+              "id": 3701,
+              "path": "ui/icon/003000/003701.tex",
+              "path_hr1": "ui/icon/003000/003701_hr1.tex"
+            },
+            "Name": "咬噬尖齿"
+          }
+        },
+        {
+          "row_id": 7549,
+          "fields": {
+            "Icon": {
+              "id": 828,
+              "path": "ui/icon/000000/000828.tex",
+              "path_hr1": "ui/icon/000000/000828_hr1.tex"
+            },
+            "Name": "牵制"
+          }
+        },
+        {
+          "row_id": 7542,
+          "fields": {
+            "Icon": {
+              "id": 823,
+              "path": "ui/icon/000000/000823.tex",
+              "path_hr1": "ui/icon/000000/000823_hr1.tex"
+            },
+            "Name": "浴血"
+          }
+        },
+        {
+          "row_id": 7541,
+          "fields": {
+            "Icon": {
+              "id": 821,
+              "path": "ui/icon/000000/000821.tex",
+              "path_hr1": "ui/icon/000000/000821_hr1.tex"
+            },
+            "Name": "内丹"
+          }
+        },
+        {
+          "row_id": 0,
+          "fields": {
+            "Icon": {
+              "id": 405,
+              "path": "ui/icon/000000/000405.tex",
+              "path_hr1": "ui/icon/000000/000405_hr1.tex"
+            },
+            "Name": ""
+          }
+        }
+      ]
+    }
+  }
+}

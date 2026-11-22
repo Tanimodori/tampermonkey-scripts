@@ -1,0 +1,113 @@
+{
+  "formatVersion": 1,
+  "id": "1f9b682ab39a4681",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Tomahawk&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "13238",
+        "obj": {
+          "i": 13238,
+          "n": "Tomahawk",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "29295",
+        "obj": {
+          "i": 29295,
+          "n": "Tomahawk",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "29777",
+        "obj": {
+          "i": 29777,
+          "n": "Tomahawk",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "30895",
+        "obj": {
+          "i": 30895,
+          "n": "Tomahawk",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "46",
+        "obj": {
+          "i": 46,
+          "n": "Tomahawk",
+          "c": 261,
+          "j": 3,
+          "t": 3,
+          "l": 15
+        }
+      },
+      {
+        "type": "action",
+        "id": "8390",
+        "obj": {
+          "i": 8390,
+          "n": "Tomahawk",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "8764",
+        "obj": {
+          "i": 8764,
+          "n": "Tomahawk",
+          "c": 784,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "9126",
+        "obj": {
+          "i": 9126,
+          "n": "Tomahawk",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

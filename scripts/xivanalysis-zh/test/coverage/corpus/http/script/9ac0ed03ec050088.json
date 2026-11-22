@@ -1,0 +1,32 @@
+{
+  "formatVersion": 1,
+  "id": "9ac0ed03ec050088",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Item?rows=19887&limit=1&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 19887,
+          "fields": {
+            "Icon": {
+              "id": 20702,
+              "path": "ui/icon/020000/020702.tex",
+              "path_hr1": "ui/icon/020000/020702_hr1.tex"
+            },
+            "Name": "巧力之药汤"
+          }
+        }
+      ]
+    }
+  }
+}

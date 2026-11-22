@@ -1,0 +1,307 @@
+{
+  "formatVersion": 1,
+  "id": "93f80eddee310458",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=87%2C7397%2C25772%2C16478%2C3555%2C96%2C83%2C85%2C3557%2C7546%2C3556%2C3554%2C36954%2C36956%2C25771%2C7399%2C36953%2C7400%2C16480%2C36952%2C16479%2C25773%2C36955%2C7549%2C7542%2C7541&limit=26&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 87,
+          "fields": {
+            "Icon": {
+              "id": 317,
+              "path": "ui/icon/000000/000317.tex",
+              "path_hr1": "ui/icon/000000/000317_hr1.tex"
+            },
+            "Name": "开膛枪"
+          }
+        },
+        {
+          "row_id": 7397,
+          "fields": {
+            "Icon": {
+              "id": 2586,
+              "path": "ui/icon/002000/002586.tex",
+              "path_hr1": "ui/icon/002000/002586_hr1.tex"
+            },
+            "Name": "音速刺"
+          }
+        },
+        {
+          "row_id": 25772,
+          "fields": {
+            "Icon": {
+              "id": 2596,
+              "path": "ui/icon/002000/002596.tex",
+              "path_hr1": "ui/icon/002000/002596_hr1.tex"
+            },
+            "Name": "樱花缭乱"
+          }
+        },
+        {
+          "row_id": 16478,
+          "fields": {
+            "Icon": {
+              "id": 2591,
+              "path": "ui/icon/002000/002591.tex",
+              "path_hr1": "ui/icon/002000/002591_hr1.tex"
+            },
+            "Name": "高跳"
+          }
+        },
+        {
+          "row_id": 3555,
+          "fields": {
+            "Icon": {
+              "id": 2583,
+              "path": "ui/icon/002000/002583.tex",
+              "path_hr1": "ui/icon/002000/002583_hr1.tex"
+            },
+            "Name": "武神枪"
+          }
+        },
+        {
+          "row_id": 96,
+          "fields": {
+            "Icon": {
+              "id": 2578,
+              "path": "ui/icon/002000/002578.tex",
+              "path_hr1": "ui/icon/002000/002578_hr1.tex"
+            },
+            "Name": "龙炎冲"
+          }
+        },
+        {
+          "row_id": 83,
+          "fields": {
+            "Icon": {
+              "id": 304,
+              "path": "ui/icon/000000/000304.tex",
+              "path_hr1": "ui/icon/000000/000304_hr1.tex"
+            },
+            "Name": "龙剑"
+          }
+        },
+        {
+          "row_id": 85,
+          "fields": {
+            "Icon": {
+              "id": 309,
+              "path": "ui/icon/000000/000309.tex",
+              "path_hr1": "ui/icon/000000/000309_hr1.tex"
+            },
+            "Name": "猛枪"
+          }
+        },
+        {
+          "row_id": 3557,
+          "fields": {
+            "Icon": {
+              "id": 2585,
+              "path": "ui/icon/002000/002585.tex",
+              "path_hr1": "ui/icon/002000/002585_hr1.tex"
+            },
+            "Name": "战斗连祷"
+          }
+        },
+        {
+          "row_id": 7546,
+          "fields": {
+            "Icon": {
+              "id": 830,
+              "path": "ui/icon/000000/000830.tex",
+              "path_hr1": "ui/icon/000000/000830_hr1.tex"
+            },
+            "Name": "真北"
+          }
+        },
+        {
+          "row_id": 3556,
+          "fields": {
+            "Icon": {
+              "id": 2584,
+              "path": "ui/icon/002000/002584.tex",
+              "path_hr1": "ui/icon/002000/002584_hr1.tex"
+            },
+            "Name": "龙尾大回旋"
+          }
+        },
+        {
+          "row_id": 3554,
+          "fields": {
+            "Icon": {
+              "id": 2582,
+              "path": "ui/icon/002000/002582.tex",
+              "path_hr1": "ui/icon/002000/002582_hr1.tex"
+            },
+            "Name": "龙牙龙爪"
+          }
+        },
+        {
+          "row_id": 36954,
+          "fields": {
+            "Icon": {
+              "id": 2076,
+              "path": "ui/icon/002000/002076.tex",
+              "path_hr1": "ui/icon/002000/002076_hr1.tex"
+            },
+            "Name": "前冲刺"
+          }
+        },
+        {
+          "row_id": 36956,
+          "fields": {
+            "Icon": {
+              "id": 2078,
+              "path": "ui/icon/002000/002078.tex",
+              "path_hr1": "ui/icon/002000/002078_hr1.tex"
+            },
+            "Name": "渡星冲"
+          }
+        },
+        {
+          "row_id": 25771,
+          "fields": {
+            "Icon": {
+              "id": 2595,
+              "path": "ui/icon/002000/002595.tex",
+              "path_hr1": "ui/icon/002000/002595_hr1.tex"
+            },
+            "Name": "苍穹刺"
+          }
+        },
+        {
+          "row_id": 7399,
+          "fields": {
+            "Icon": {
+              "id": 2588,
+              "path": "ui/icon/002000/002588.tex",
+              "path_hr1": "ui/icon/002000/002588_hr1.tex"
+            },
+            "Name": "幻象冲"
+          }
+        },
+        {
+          "row_id": 36953,
+          "fields": {
+            "Icon": {
+              "id": 2075,
+              "path": "ui/icon/002000/002075.tex",
+              "path_hr1": "ui/icon/002000/002075_hr1.tex"
+            },
+            "Name": "龙炎升"
+          }
+        },
+        {
+          "row_id": 7400,
+          "fields": {
+            "Icon": {
+              "id": 2589,
+              "path": "ui/icon/002000/002589.tex",
+              "path_hr1": "ui/icon/002000/002589_hr1.tex"
+            },
+            "Name": "死者之岸"
+          }
+        },
+        {
+          "row_id": 16480,
+          "fields": {
+            "Icon": {
+              "id": 2593,
+              "path": "ui/icon/002000/002593.tex",
+              "path_hr1": "ui/icon/002000/002593_hr1.tex"
+            },
+            "Name": "坠星冲"
+          }
+        },
+        {
+          "row_id": 36952,
+          "fields": {
+            "Icon": {
+              "id": 2599,
+              "path": "ui/icon/002000/002599.tex",
+              "path_hr1": "ui/icon/002000/002599_hr1.tex"
+            },
+            "Name": "云蒸龙变"
+          }
+        },
+        {
+          "row_id": 16479,
+          "fields": {
+            "Icon": {
+              "id": 2592,
+              "path": "ui/icon/002000/002592.tex",
+              "path_hr1": "ui/icon/002000/002592_hr1.tex"
+            },
+            "Name": "龙眼雷电"
+          }
+        },
+        {
+          "row_id": 25773,
+          "fields": {
+            "Icon": {
+              "id": 2597,
+              "path": "ui/icon/002000/002597.tex",
+              "path_hr1": "ui/icon/002000/002597_hr1.tex"
+            },
+            "Name": "天龙点睛"
+          }
+        },
+        {
+          "row_id": 36955,
+          "fields": {
+            "Icon": {
+              "id": 2077,
+              "path": "ui/icon/002000/002077.tex",
+              "path_hr1": "ui/icon/002000/002077_hr1.tex"
+            },
+            "Name": "螺旋击"
+          }
+        },
+        {
+          "row_id": 7549,
+          "fields": {
+            "Icon": {
+              "id": 828,
+              "path": "ui/icon/000000/000828.tex",
+              "path_hr1": "ui/icon/000000/000828_hr1.tex"
+            },
+            "Name": "牵制"
+          }
+        },
+        {
+          "row_id": 7542,
+          "fields": {
+            "Icon": {
+              "id": 823,
+              "path": "ui/icon/000000/000823.tex",
+              "path_hr1": "ui/icon/000000/000823_hr1.tex"
+            },
+            "Name": "浴血"
+          }
+        },
+        {
+          "row_id": 7541,
+          "fields": {
+            "Icon": {
+              "id": 821,
+              "path": "ui/icon/000000/000821.tex",
+              "path_hr1": "ui/icon/000000/000821_hr1.tex"
+            },
+            "Name": "内丹"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "formatVersion": 1,
+  "id": "84ca0b05614b635f",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Ammo&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "item",
+        "id": "47516",
+        "obj": {
+          "i": 47516,
+          "n": "Ammochronologist",
+          "l": 1,
+          "c": 29503,
+          "t": 47,
+          "g": 7,
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "12738",
+        "obj": {
+          "i": 12738,
+          "n": "Ammonite",
+          "l": 133,
+          "c": 29811,
+          "t": 47,
+          "g": 7,
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "45747",
+        "obj": {
+          "i": 45747,
+          "n": "Ammoonite",
+          "l": 1,
+          "c": "t/28676",
+          "t": 47,
+          "g": 7,
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "47427",
+        "obj": {
+          "i": 47427,
+          "n": "Opal Ammonite",
+          "l": 1,
+          "c": 29188,
+          "t": 47,
+          "g": 7,
+          "r": 1
+        }
+      }
+    ]
+  }
+}

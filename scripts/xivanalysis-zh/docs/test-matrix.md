@@ -4,13 +4,13 @@
 
 ## 维度说明
 
-| 维度 | 回答的问题                                         | 形态                          | 不测什么                   |
-| ---- | -------------------------------------------------- | ----------------------------- | -------------------------- |
-| 拦截 | 目标请求能否被识别、改写、合并、降级               | 纯函数单元测试                | 不启动浏览器，不碰 DOM     |
-| UI   | 目标节点能否被找到、读出、改对                     | jsdom 测试                    | 不发网络请求，不测安装     |
-| 安装 | 产物能否在快速注入和真管理器里跑起来               | Playwright 离线夹具           | 不测翻译细节               |
-| 上游 | 真实英文、国服、ClassJob、garland 能否返回可用数据 | live 契约测试                 | 不打开战报页，不跑全量战报 |
-| 权威 | 真实战报上出现的待翻内容是否都有译文               | 一次 capture 加离线覆盖率测试 | 不重复测拦截、UI、安装     |
+| 维度 | 回答的问题                                         | 形态                                               | 不测什么                   |
+| ---- | -------------------------------------------------- | -------------------------------------------------- | -------------------------- |
+| 拦截 | 目标请求能否被识别、改写、合并、降级               | 纯函数单元测试                                     | 不启动浏览器，不碰 DOM     |
+| UI   | 目标节点能否被找到、读出、改对                     | jsdom 测试                                         | 不发网络请求，不测安装     |
+| 安装 | 产物能否在快速注入和真管理器里跑起来               | Playwright 离线夹具                                | 不测翻译细节               |
+| 上游 | 真实英文、国服、ClassJob、garland 能否返回可用数据 | live 契约测试                                      | 不打开战报页，不跑全量战报 |
+| 权威 | 真实战报上出现的待翻内容是否都有译文               | questions + responses + Vitest expected + 离线覆盖 | 不重复测拦截、UI、安装     |
 
 形态列是维度层面的概括，逐条用例的类型以各矩阵的类型列为准。live 指访问真实站点与接口，夹具指 Playwright 的离线页面与路由桩。
 
@@ -81,18 +81,18 @@ garland 没有 ACAO，走 Node `fetch` 验证形状。
 
 | 维度 | 名称 | 内容 | 类型 | 预期 |
 | --- | --- | --- | --- | --- |
-| 权威 | 语料完整性 | 战报条数、字段齐全、去重、计数与语料清单一致 | 单元测试 | 条数与语料清单一致，无重复、无空值 |
-| 权威 | 终态无待翻英文 | capture 后每个时间轴文本与图标 `alt` | 单元测试 | 只允许显式同文白名单（override 中 `en === zh`） |
-| 权威 | 标签有译文 | 每个捕获前的待翻标签：sheet、override、baked 走真实来源，兜底读语料条目 | 单元测试 | 0 漏；终态另有检查 |
-| 权威 | sheet 类型受支持 | capture 中实际出现的 sheet 类型 | 单元测试 | 全部在 `Action`、`Item`、`Status`、`Addon`、`Trait` 白名单内 |
-| 权威 | 表行名称覆盖 | 捕获的每行英文与中文，同名或缺失 | 单元测试 | 待翻行都有中文，例外在白名单 |
-| 权威 | 职业缩写覆盖 | ClassJob 全表与捕获到的缩写 | 单元测试 | 全部有中文全名 |
-| 权威 | 运行时告警 | capture 期间的 `[xiv-warn]` | 单元测试 | 0 条，或白名单且有原因 |
-| 权威 | 捕获冲突 | capture 期间的 `label conflict` | 单元测试 | 0 条；不允许白名单 |
+| 权威 | 问题完整性 | 无脚本页面的请求、默认 EN 响应、待处理元素 | Playwright 采集 + 单元测试 | 页/元素/请求非空，默认响应 2xx 且 rows 覆盖请求 row_id |
+| 权威 | 独立响应 | CN sheet、ClassJob、garland 由生产 URL 派生并保存完整 body | Vitest 采集 + 单元测试 | 每个 sheet 请求都有 CN 响应，EN/CN row_id 配对完整，ClassJob 存在 |
+| 权威 | expected 覆盖 | Vitest 调用生产函数计算逐元素答案 | Vitest 计算 | 每个待翻元素有答案或 allowlist；答案不是残留英文；失败不写文件 |
+| 权威 | 离线答案 | case expected 与根 manifest 的 digest、页/数组对齐 | 单元测试 | digest 一致，null 只对应跳过/allowlist，allowlist 双向一致 |
+| 权威 | sheet 类型受支持 | questions 中实际出现的 sheet 类型 | 单元测试 | 全部走生产 `parseSheetRequest`，CN URL 可派生 |
+| 权威 | 表行名称覆盖 | EN 默认响应与 CN 响应的同名 row_id | 单元测试 | 每个 EN 行有 CN 行，缺失/多余逐条报出 |
+| 权威 | 职业缩写覆盖 | ClassJob 响应全表与 `JOBS` fixture；Action 行若带缩写也检查 | 单元测试 | 至少 44 行，21 个战斗职业都有中文全名，缩写/全名非空且不同 |
+| 权威 | 未翻译策略 | `untranslated.allowlist.json` 的 queryKey | 单元测试 | 未译文必须登记，登记项不得过期，理由非空 |
 | 权威 | override 完整性 | 每条 `override` 有 `zh` 或 `modifier`，`en` 不重复 | 单元测试 | 0 异常 |
 | 权威 | 烘焙表完整性 | `hash`、条目数、`formatVersion`、id 唯一且升序、元组行与稀疏例外（`enNames`/`enIcons`/`zhIcons`）、大小写匹配、名称优先与三方图标消歧 | 单元测试 | 与烘焙表元数据一致；meta 不再含 warnings/diagnostics/counts |
 
-权威用例读 `test/coverage/corpus/` 的语料，基线为 33 条战报，由 `test:corpus:capture` 生成。capture 指按基线战报抓取页面终态与接口数据的过程。语料记录真实战报的页面终态与接口数据，覆盖率测试在离线环境检查这些内容是否都有译文，因此不需要在每次测试中重跑全部真实战报。真实页面请求 Action 时未带 `ClassJob` 字段，`abbreviations.json` 通常为空；职业缩写覆盖以 ClassJob 全表为准。
+权威用例读 `test/coverage/corpus/` 的根 `manifest.json`、`http/<kind>/<id>.json` 与 `cases/<slug>/`。HTTP 包统一为 page/script 两种 origin：page 包含无脚本页面实际发出的请求、默认 EN 响应；script 包含独立采集脚本派生的 CN/ClassJob/garland 完整响应。case manifest 引用该 case 需要的 page/script 包，questions 存元素，expected 存 Vitest 调用生产函数算出的逐元素答案。普通 `test:unit` 离线读这些文件做覆盖检查，不重新调用 resolve；答案阶段本身通过 `test:corpus:expected` 执行，覆盖判据不通过时不写 expected。旧 labels/sheets/classjobs/abbreviations/garland/warnings/manifest 语料、`warnings.allowlist.json`、`test/coverage/coverage.spec.ts` 与 `test/e2e/live/corpus.spec.ts` 已删除。
 
 `statuses.json` 的 `id` 是游戏 `Status` 表 row_id，不是 FFLogs 的 `+1,000,000` ID。数据用 `rows` 元组保存 `[id, upstream 名, upstream 图标, 国服名]`；`enNames`/`enIcons` 只存与 upstream 不同的例外，`zhIcons` 只存与当前 en/upstream 图标不同的例外。源文件的 `rows` 每行一条，Vite 构建时转成紧凑的 `JSON.parse`。运行时页面没有 row_id，先按 upstream name、再按 en name 匹配，同名多 id 时用 upstream/en/zh 图标消歧。烘焙告警只写 stderr，不进入 meta。数据源与采集边界见 [data-sources.md](data-sources.md)。
 
@@ -104,16 +104,19 @@ garland 没有 ACAO，走 Node `fetch` 验证形状。
 
 ## 测试脚本
 
-| 脚本                  | 内容                             | 何时运行                        | 估算成本    |
-| --------------------- | -------------------------------- | ------------------------------- | ----------- |
-| `test:unit`           | vitest 运行 unit、dom、coverage  | 每次离线门禁                    | 1–2 秒      |
-| `test:e2e:fast`       | 构建后跑离线快速注入组           | 每次离线门禁                    | 约 5 秒     |
-| `test:e2e:full`       | 构建后跑离线真 Tampermonkey 组   | 每次离线门禁                    | 约 30 秒    |
-| `test:live:upstream`  | 上游契约全部用例                 | 在线门禁                        | 约 5 秒     |
-| `test:live:smoke`     | 真实战报 smoke                   | 在线门禁                        | 约 15–60 秒 |
-| `test:corpus:capture` | 串行捕获基线战报的页面与接口数据 | 手工刷新语料                    | 约 50 分钟  |
-| `test:gate:offline`   | 离线部分的所有测试               | 本地提交前；CI 只跑 `test:unit` | 约 40 秒    |
-| `test:gate:live`      | 在线部分的所有测试               | 发布前或手动                    | 约 1 分钟   |
+| 脚本                    | 内容                                      | 何时运行                        | 估算成本              |
+| ----------------------- | ----------------------------------------- | ------------------------------- | --------------------- |
+| `test:unit`             | vitest 运行 unit、dom、coverage           | 每次离线门禁                    | 1–2 秒                |
+| `test:e2e:fast`         | 构建后跑离线快速注入组                    | 每次离线门禁                    | 约 5 秒               |
+| `test:e2e:full`         | 构建后跑离线真 Tampermonkey 组            | 每次离线门禁                    | 约 30 秒              |
+| `test:live:upstream`    | 上游契约全部用例                          | 在线门禁                        | 约 5 秒               |
+| `test:live:smoke`       | 真实战报 smoke                            | 在线门禁                        | 约 15–60 秒           |
+| `test:corpus:capture`   | questions → responses → expected 全量刷新 | 手工刷新语料                    | 约 50 分钟 + 接口请求 |
+| `test:corpus:questions` | 只采集无脚本问题                          | 手工刷新问题                    | 约 50 分钟            |
+| `test:corpus:responses` | 只采集独立响应                            | questions 更新后                | 约数分钟              |
+| `test:corpus:expected`  | 只重算逐元素答案                          | responses 或生产逻辑更新后      | 1–2 秒                |
+| `test:gate:offline`     | 离线部分的所有测试                        | 本地提交前；CI 只跑 `test:unit` | 约 40 秒              |
+| `test:gate:live`        | 在线部分的所有测试                        | 发布前或手动                    | 约 1 分钟             |
 
 离线组只保证页面与接口不出网。真 Tampermonkey 组首次运行仍需下载扩展。
 

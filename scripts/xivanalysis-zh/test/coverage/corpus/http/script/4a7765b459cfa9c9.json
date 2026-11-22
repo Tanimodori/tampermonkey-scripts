@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "4a7765b459cfa9c9",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/34666?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 34666,
+      "fields": {
+        "Icon": {
+          "id": 3817,
+          "path": "ui/icon/003000/003817.tex",
+          "path_hr1": "ui/icon/003000/003817_hr1.tex"
+        },
+        "Name": "兽爪彩绘"
+      },
+      "transient": {
+        "Description": "绘画兽爪\n非战斗状态下发动该技能不需要咏唱时间\n发动条件：动物画布上没有彩绘\n该魔法有单独计算的复唱时间，不受装备和状态的影响\n发动后其他战技与魔法会进入与该魔法相同的复唱时间\n\n※该技能无法设置到热键栏\n　满足发动条件后，动物彩绘变为兽爪彩绘"
+      }
+    }
+  }
+}

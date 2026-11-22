@@ -1,0 +1,32 @@
+{
+  "formatVersion": 1,
+  "id": "60d51822cb8d4da6",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=2677&limit=1&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 2677,
+          "fields": {
+            "Icon": {
+              "id": 212561,
+              "path": "ui/icon/212000/212561.tex",
+              "path_hr1": "ui/icon/212000/212561_hr1.tex"
+            },
+            "Name": "战场风暴"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,450 @@
+{
+  "formatVersion": 1,
+  "id": "f227e0be9cfe6441",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Action?rows=7427,25831,36992,16508,16510,25801,25836,25824,25833,36991,25820,181,25805,7426,25818,3579,25817,25840,25839,25838,25821,3582,7429,25823,25832,25835,25885,25825,25834,25837,25826,7561,25806,25807,173,7562,25819,25799,7560&limit=39&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 7427,
+          "fields": {
+            "Icon": {
+              "id": 2691,
+              "path": "ui/icon/002000/002691.tex",
+              "path_hr1": "ui/icon/002000/002691_hr1.tex"
+            },
+            "Name": "Summon Bahamut"
+          }
+        },
+        {
+          "row_id": 25831,
+          "fields": {
+            "Icon": {
+              "id": 2765,
+              "path": "ui/icon/002000/002765.tex",
+              "path_hr1": "ui/icon/002000/002765_hr1.tex"
+            },
+            "Name": "Summon Phoenix"
+          }
+        },
+        {
+          "row_id": 36992,
+          "fields": {
+            "Icon": {
+              "id": 2782,
+              "path": "ui/icon/002000/002782.tex",
+              "path_hr1": "ui/icon/002000/002782_hr1.tex"
+            },
+            "Name": "Summon Solar Bahamut"
+          }
+        },
+        {
+          "row_id": 16508,
+          "fields": {
+            "Icon": {
+              "id": 514,
+              "path": "ui/icon/000000/000514.tex",
+              "path_hr1": "ui/icon/000000/000514_hr1.tex"
+            },
+            "Name": "Energy Drain"
+          }
+        },
+        {
+          "row_id": 16510,
+          "fields": {
+            "Icon": {
+              "id": 2697,
+              "path": "ui/icon/002000/002697.tex",
+              "path_hr1": "ui/icon/002000/002697_hr1.tex"
+            },
+            "Name": "Energy Siphon"
+          }
+        },
+        {
+          "row_id": 25801,
+          "fields": {
+            "Icon": {
+              "id": 2780,
+              "path": "ui/icon/002000/002780.tex",
+              "path_hr1": "ui/icon/002000/002780_hr1.tex"
+            },
+            "Name": "Searing Light"
+          }
+        },
+        {
+          "row_id": 25836,
+          "fields": {
+            "Icon": {
+              "id": 2770,
+              "path": "ui/icon/002000/002770.tex",
+              "path_hr1": "ui/icon/002000/002770_hr1.tex"
+            },
+            "Name": "Mountain Buster"
+          }
+        },
+        {
+          "row_id": 25824,
+          "fields": {
+            "Icon": {
+              "id": 2761,
+              "path": "ui/icon/002000/002761.tex",
+              "path_hr1": "ui/icon/002000/002761_hr1.tex"
+            },
+            "Name": "Topaz Rite"
+          }
+        },
+        {
+          "row_id": 25833,
+          "fields": {
+            "Icon": {
+              "id": 2767,
+              "path": "ui/icon/002000/002767.tex",
+              "path_hr1": "ui/icon/002000/002767_hr1.tex"
+            },
+            "Name": "Topaz Catastrophe"
+          }
+        },
+        {
+          "row_id": 36991,
+          "fields": {
+            "Icon": {
+              "id": 2781,
+              "path": "ui/icon/002000/002781.tex",
+              "path_hr1": "ui/icon/002000/002781_hr1.tex"
+            },
+            "Name": "Searing Flash"
+          }
+        },
+        {
+          "row_id": 25820,
+          "fields": {
+            "Icon": {
+              "id": 2757,
+              "path": "ui/icon/002000/002757.tex",
+              "path_hr1": "ui/icon/002000/002757_hr1.tex"
+            },
+            "Name": "Astral Impulse"
+          }
+        },
+        {
+          "row_id": 181,
+          "fields": {
+            "Icon": {
+              "id": 2676,
+              "path": "ui/icon/002000/002676.tex",
+              "path_hr1": "ui/icon/002000/002676_hr1.tex"
+            },
+            "Name": "Fester"
+          }
+        },
+        {
+          "row_id": 25805,
+          "fields": {
+            "Icon": {
+              "id": 2680,
+              "path": "ui/icon/002000/002680.tex",
+              "path_hr1": "ui/icon/002000/002680_hr1.tex"
+            },
+            "Name": "Summon Ifrit"
+          }
+        },
+        {
+          "row_id": 7426,
+          "fields": {
+            "Icon": {
+              "id": 2686,
+              "path": "ui/icon/002000/002686.tex",
+              "path_hr1": "ui/icon/002000/002686_hr1.tex"
+            },
+            "Name": "Ruin IV"
+          }
+        },
+        {
+          "row_id": 25818,
+          "fields": {
+            "Icon": {
+              "id": 2682,
+              "path": "ui/icon/002000/002682.tex",
+              "path_hr1": "ui/icon/002000/002682_hr1.tex"
+            },
+            "Name": "Topaz Ruin III"
+          }
+        },
+        {
+          "row_id": 3579,
+          "fields": {
+            "Icon": {
+              "id": 2682,
+              "path": "ui/icon/002000/002682.tex",
+              "path_hr1": "ui/icon/002000/002682_hr1.tex"
+            },
+            "Name": "Ruin III"
+          }
+        },
+        {
+          "row_id": 25817,
+          "fields": {
+            "Icon": {
+              "id": 2682,
+              "path": "ui/icon/002000/002682.tex",
+              "path_hr1": "ui/icon/002000/002682_hr1.tex"
+            },
+            "Name": "Ruby Ruin III"
+          }
+        },
+        {
+          "row_id": 25840,
+          "fields": {
+            "Icon": {
+              "id": 2774,
+              "path": "ui/icon/002000/002774.tex",
+              "path_hr1": "ui/icon/002000/002774_hr1.tex"
+            },
+            "Name": "Summon Garuda II"
+          }
+        },
+        {
+          "row_id": 25839,
+          "fields": {
+            "Icon": {
+              "id": 2773,
+              "path": "ui/icon/002000/002773.tex",
+              "path_hr1": "ui/icon/002000/002773_hr1.tex"
+            },
+            "Name": "Summon Titan II"
+          }
+        },
+        {
+          "row_id": 25838,
+          "fields": {
+            "Icon": {
+              "id": 2772,
+              "path": "ui/icon/002000/002772.tex",
+              "path_hr1": "ui/icon/002000/002772_hr1.tex"
+            },
+            "Name": "Summon Ifrit II"
+          }
+        },
+        {
+          "row_id": 25821,
+          "fields": {
+            "Icon": {
+              "id": 2758,
+              "path": "ui/icon/002000/002758.tex",
+              "path_hr1": "ui/icon/002000/002758_hr1.tex"
+            },
+            "Name": "Astral Flare"
+          }
+        },
+        {
+          "row_id": 3582,
+          "fields": {
+            "Icon": {
+              "id": 2685,
+              "path": "ui/icon/002000/002685.tex",
+              "path_hr1": "ui/icon/002000/002685_hr1.tex"
+            },
+            "Name": "Deathflare"
+          }
+        },
+        {
+          "row_id": 7429,
+          "fields": {
+            "Icon": {
+              "id": 2693,
+              "path": "ui/icon/002000/002693.tex",
+              "path_hr1": "ui/icon/002000/002693_hr1.tex"
+            },
+            "Name": "Enkindle Bahamut"
+          }
+        },
+        {
+          "row_id": 25823,
+          "fields": {
+            "Icon": {
+              "id": 2760,
+              "path": "ui/icon/002000/002760.tex",
+              "path_hr1": "ui/icon/002000/002760_hr1.tex"
+            },
+            "Name": "Ruby Rite"
+          }
+        },
+        {
+          "row_id": 25832,
+          "fields": {
+            "Icon": {
+              "id": 2766,
+              "path": "ui/icon/002000/002766.tex",
+              "path_hr1": "ui/icon/002000/002766_hr1.tex"
+            },
+            "Name": "Ruby Catastrophe"
+          }
+        },
+        {
+          "row_id": 25835,
+          "fields": {
+            "Icon": {
+              "id": 2769,
+              "path": "ui/icon/002000/002769.tex",
+              "path_hr1": "ui/icon/002000/002769_hr1.tex"
+            },
+            "Name": "Crimson Cyclone"
+          }
+        },
+        {
+          "row_id": 25885,
+          "fields": {
+            "Icon": {
+              "id": 2779,
+              "path": "ui/icon/002000/002779.tex",
+              "path_hr1": "ui/icon/002000/002779_hr1.tex"
+            },
+            "Name": "Crimson Strike"
+          }
+        },
+        {
+          "row_id": 25825,
+          "fields": {
+            "Icon": {
+              "id": 2762,
+              "path": "ui/icon/002000/002762.tex",
+              "path_hr1": "ui/icon/002000/002762_hr1.tex"
+            },
+            "Name": "Emerald Rite"
+          }
+        },
+        {
+          "row_id": 25834,
+          "fields": {
+            "Icon": {
+              "id": 2768,
+              "path": "ui/icon/002000/002768.tex",
+              "path_hr1": "ui/icon/002000/002768_hr1.tex"
+            },
+            "Name": "Emerald Catastrophe"
+          }
+        },
+        {
+          "row_id": 25837,
+          "fields": {
+            "Icon": {
+              "id": 2771,
+              "path": "ui/icon/002000/002771.tex",
+              "path_hr1": "ui/icon/002000/002771_hr1.tex"
+            },
+            "Name": "Slipstream"
+          }
+        },
+        {
+          "row_id": 25826,
+          "fields": {
+            "Icon": {
+              "id": 2763,
+              "path": "ui/icon/002000/002763.tex",
+              "path_hr1": "ui/icon/002000/002763_hr1.tex"
+            },
+            "Name": "Tri-disaster"
+          }
+        },
+        {
+          "row_id": 7561,
+          "fields": {
+            "Icon": {
+              "id": 866,
+              "path": "ui/icon/000000/000866.tex",
+              "path_hr1": "ui/icon/000000/000866_hr1.tex"
+            },
+            "Name": "Swiftcast"
+          }
+        },
+        {
+          "row_id": 25806,
+          "fields": {
+            "Icon": {
+              "id": 2755,
+              "path": "ui/icon/002000/002755.tex",
+              "path_hr1": "ui/icon/002000/002755_hr1.tex"
+            },
+            "Name": "Summon Titan"
+          }
+        },
+        {
+          "row_id": 25807,
+          "fields": {
+            "Icon": {
+              "id": 2756,
+              "path": "ui/icon/002000/002756.tex",
+              "path_hr1": "ui/icon/002000/002756_hr1.tex"
+            },
+            "Name": "Summon Garuda"
+          }
+        },
+        {
+          "row_id": 173,
+          "fields": {
+            "Icon": {
+              "id": 511,
+              "path": "ui/icon/000000/000511.tex",
+              "path_hr1": "ui/icon/000000/000511_hr1.tex"
+            },
+            "Name": "Resurrection"
+          }
+        },
+        {
+          "row_id": 7562,
+          "fields": {
+            "Icon": {
+              "id": 865,
+              "path": "ui/icon/000000/000865.tex",
+              "path_hr1": "ui/icon/000000/000865_hr1.tex"
+            },
+            "Name": "Lucid Dreaming"
+          }
+        },
+        {
+          "row_id": 25819,
+          "fields": {
+            "Icon": {
+              "id": 2682,
+              "path": "ui/icon/002000/002682.tex",
+              "path_hr1": "ui/icon/002000/002682_hr1.tex"
+            },
+            "Name": "Emerald Ruin III"
+          }
+        },
+        {
+          "row_id": 25799,
+          "fields": {
+            "Icon": {
+              "id": 2750,
+              "path": "ui/icon/002000/002750.tex",
+              "path_hr1": "ui/icon/002000/002750_hr1.tex"
+            },
+            "Name": "Radiant Aegis"
+          }
+        },
+        {
+          "row_id": 7560,
+          "fields": {
+            "Icon": {
+              "id": 861,
+              "path": "ui/icon/000000/000861.tex",
+              "path_hr1": "ui/icon/000000/000861_hr1.tex"
+            },
+            "Name": "Addle"
+          }
+        }
+      ]
+    }
+  }
+}

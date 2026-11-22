@@ -1,0 +1,340 @@
+{
+  "formatVersion": 1,
+  "id": "44bbc6b60ec6bddd",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=7489%2C16482%2C25781%2C25782%2C7499%2C36966%2C36968%2C36965%2C36967%2C7867%2C16483%2C16487%2C7496%2C16481%2C7546%2C7482%2C7481%2C7480%2C7549%2C36964%2C36962%2C7490%2C36963%2C7487%2C16486%2C7492%2C7541%2C7542%2C7495&limit=29&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 7489,
+          "fields": {
+            "Icon": {
+              "id": 3160,
+              "path": "ui/icon/003000/003160.tex",
+              "path_hr1": "ui/icon/003000/003160_hr1.tex"
+            },
+            "Name": "彼岸花"
+          }
+        },
+        {
+          "row_id": 16482,
+          "fields": {
+            "Icon": {
+              "id": 3179,
+              "path": "ui/icon/003000/003179.tex",
+              "path_hr1": "ui/icon/003000/003179_hr1.tex"
+            },
+            "Name": "意气冲天"
+          }
+        },
+        {
+          "row_id": 25781,
+          "fields": {
+            "Icon": {
+              "id": 3187,
+              "path": "ui/icon/003000/003187.tex",
+              "path_hr1": "ui/icon/003000/003187_hr1.tex"
+            },
+            "Name": "奥义斩浪"
+          }
+        },
+        {
+          "row_id": 25782,
+          "fields": {
+            "Icon": {
+              "id": 3188,
+              "path": "ui/icon/003000/003188.tex",
+              "path_hr1": "ui/icon/003000/003188_hr1.tex"
+            },
+            "Name": "回返斩浪"
+          }
+        },
+        {
+          "row_id": 7499,
+          "fields": {
+            "Icon": {
+              "id": 3167,
+              "path": "ui/icon/003000/003167.tex",
+              "path_hr1": "ui/icon/003000/003167_hr1.tex"
+            },
+            "Name": "明镜止水"
+          }
+        },
+        {
+          "row_id": 36966,
+          "fields": {
+            "Icon": {
+              "id": 3194,
+              "path": "ui/icon/003000/003194.tex",
+              "path_hr1": "ui/icon/003000/003194_hr1.tex"
+            },
+            "Name": "天道雪月花"
+          }
+        },
+        {
+          "row_id": 36968,
+          "fields": {
+            "Icon": {
+              "id": 3196,
+              "path": "ui/icon/003000/003196.tex",
+              "path_hr1": "ui/icon/003000/003196_hr1.tex"
+            },
+            "Name": "天道回返雪月花"
+          }
+        },
+        {
+          "row_id": 36965,
+          "fields": {
+            "Icon": {
+              "id": 3193,
+              "path": "ui/icon/003000/003193.tex",
+              "path_hr1": "ui/icon/003000/003193_hr1.tex"
+            },
+            "Name": "天道五剑"
+          }
+        },
+        {
+          "row_id": 36967,
+          "fields": {
+            "Icon": {
+              "id": 3195,
+              "path": "ui/icon/003000/003195.tex",
+              "path_hr1": "ui/icon/003000/003195_hr1.tex"
+            },
+            "Name": "天道回返五剑"
+          }
+        },
+        {
+          "row_id": 7867,
+          "fields": {
+            "Icon": {
+              "id": 3159,
+              "path": "ui/icon/003000/003159.tex",
+              "path_hr1": "ui/icon/003000/003159_hr1.tex"
+            },
+            "Name": "居合术"
+          }
+        },
+        {
+          "row_id": 16483,
+          "fields": {
+            "Icon": {
+              "id": 3180,
+              "path": "ui/icon/003000/003180.tex",
+              "path_hr1": "ui/icon/003000/003180_hr1.tex"
+            },
+            "Name": "燕回返"
+          }
+        },
+        {
+          "row_id": 16487,
+          "fields": {
+            "Icon": {
+              "id": 3184,
+              "path": "ui/icon/003000/003184.tex",
+              "path_hr1": "ui/icon/003000/003184_hr1.tex"
+            },
+            "Name": "照破"
+          }
+        },
+        {
+          "row_id": 7496,
+          "fields": {
+            "Icon": {
+              "id": 3177,
+              "path": "ui/icon/003000/003177.tex",
+              "path_hr1": "ui/icon/003000/003177_hr1.tex"
+            },
+            "Name": "必杀剑·红莲"
+          }
+        },
+        {
+          "row_id": 16481,
+          "fields": {
+            "Icon": {
+              "id": 3178,
+              "path": "ui/icon/003000/003178.tex",
+              "path_hr1": "ui/icon/003000/003178_hr1.tex"
+            },
+            "Name": "必杀剑·闪影"
+          }
+        },
+        {
+          "row_id": 7546,
+          "fields": {
+            "Icon": {
+              "id": 830,
+              "path": "ui/icon/000000/000830.tex",
+              "path_hr1": "ui/icon/000000/000830_hr1.tex"
+            },
+            "Name": "真北"
+          }
+        },
+        {
+          "row_id": 7482,
+          "fields": {
+            "Icon": {
+              "id": 3164,
+              "path": "ui/icon/003000/003164.tex",
+              "path_hr1": "ui/icon/003000/003164_hr1.tex"
+            },
+            "Name": "花车"
+          }
+        },
+        {
+          "row_id": 7481,
+          "fields": {
+            "Icon": {
+              "id": 3158,
+              "path": "ui/icon/003000/003158.tex",
+              "path_hr1": "ui/icon/003000/003158_hr1.tex"
+            },
+            "Name": "月光"
+          }
+        },
+        {
+          "row_id": 7480,
+          "fields": {
+            "Icon": {
+              "id": 3166,
+              "path": "ui/icon/003000/003166.tex",
+              "path_hr1": "ui/icon/003000/003166_hr1.tex"
+            },
+            "Name": "雪风"
+          }
+        },
+        {
+          "row_id": 7549,
+          "fields": {
+            "Icon": {
+              "id": 828,
+              "path": "ui/icon/000000/000828.tex",
+              "path_hr1": "ui/icon/000000/000828_hr1.tex"
+            },
+            "Name": "牵制"
+          }
+        },
+        {
+          "row_id": 36964,
+          "fields": {
+            "Icon": {
+              "id": 3192,
+              "path": "ui/icon/003000/003192.tex",
+              "path_hr1": "ui/icon/003000/003192_hr1.tex"
+            },
+            "Name": "残心"
+          }
+        },
+        {
+          "row_id": 36962,
+          "fields": {
+            "Icon": {
+              "id": 3190,
+              "path": "ui/icon/003000/003190.tex",
+              "path_hr1": "ui/icon/003000/003190_hr1.tex"
+            },
+            "Name": "天眼通"
+          }
+        },
+        {
+          "row_id": 7490,
+          "fields": {
+            "Icon": {
+              "id": 3173,
+              "path": "ui/icon/003000/003173.tex",
+              "path_hr1": "ui/icon/003000/003173_hr1.tex"
+            },
+            "Name": "必杀剑·震天"
+          }
+        },
+        {
+          "row_id": 36963,
+          "fields": {
+            "Icon": {
+              "id": 3191,
+              "path": "ui/icon/003000/003191.tex",
+              "path_hr1": "ui/icon/003000/003191_hr1.tex"
+            },
+            "Name": "晓风"
+          }
+        },
+        {
+          "row_id": 7487,
+          "fields": {
+            "Icon": {
+              "id": 3162,
+              "path": "ui/icon/003000/003162.tex",
+              "path_hr1": "ui/icon/003000/003162_hr1.tex"
+            },
+            "Name": "纷乱雪月花"
+          }
+        },
+        {
+          "row_id": 16486,
+          "fields": {
+            "Icon": {
+              "id": 3183,
+              "path": "ui/icon/003000/003183.tex",
+              "path_hr1": "ui/icon/003000/003183_hr1.tex"
+            },
+            "Name": "回返雪月花"
+          }
+        },
+        {
+          "row_id": 7492,
+          "fields": {
+            "Icon": {
+              "id": 3169,
+              "path": "ui/icon/003000/003169.tex",
+              "path_hr1": "ui/icon/003000/003169_hr1.tex"
+            },
+            "Name": "必杀剑·晓天"
+          }
+        },
+        {
+          "row_id": 7541,
+          "fields": {
+            "Icon": {
+              "id": 821,
+              "path": "ui/icon/000000/000821.tex",
+              "path_hr1": "ui/icon/000000/000821_hr1.tex"
+            },
+            "Name": "内丹"
+          }
+        },
+        {
+          "row_id": 7542,
+          "fields": {
+            "Icon": {
+              "id": 823,
+              "path": "ui/icon/000000/000823.tex",
+              "path_hr1": "ui/icon/000000/000823_hr1.tex"
+            },
+            "Name": "浴血"
+          }
+        },
+        {
+          "row_id": 7495,
+          "fields": {
+            "Icon": {
+              "id": 3176,
+              "path": "ui/icon/003000/003176.tex",
+              "path_hr1": "ui/icon/003000/003176_hr1.tex"
+            },
+            "Name": "叶隐"
+          }
+        }
+      ]
+    }
+  }
+}

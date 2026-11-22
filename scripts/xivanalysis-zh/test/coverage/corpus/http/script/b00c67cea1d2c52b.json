@@ -1,0 +1,87 @@
+{
+  "formatVersion": 1,
+  "id": "b00c67cea1d2c52b",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Pom+Motif&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "34664",
+        "obj": {
+          "i": 34664,
+          "n": "Pom Motif",
+          "c": 3815,
+          "j": 42,
+          "t": 2,
+          "l": 30
+        }
+      },
+      {
+        "type": "action",
+        "id": "38976",
+        "obj": {
+          "i": 38976,
+          "n": "Pom Motif",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "39200",
+        "obj": {
+          "i": 39200,
+          "n": "Pom Motif",
+          "c": 9740,
+          "j": 42,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "39577",
+        "obj": {
+          "i": 39577,
+          "n": "Pom Motif",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "status",
+        "id": "4105",
+        "obj": {
+          "i": 4105,
+          "n": "Pom Motif",
+          "c": 214701,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "47128",
+        "obj": {
+          "i": 47128,
+          "n": "Pom Motif",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "formatVersion": 1,
+  "id": "e9a52de418e89a6a",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Water+in+Blue&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "34652",
+        "obj": {
+          "i": 34652,
+          "n": "Water in Blue",
+          "c": 3803,
+          "j": 42,
+          "t": 2,
+          "l": 15
+        }
+      },
+      {
+        "type": "action",
+        "id": "38963",
+        "obj": {
+          "i": 38963,
+          "n": "Water in Blue",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "39193",
+        "obj": {
+          "i": 39193,
+          "n": "Water in Blue",
+          "c": 9734,
+          "j": 42,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "39564",
+        "obj": {
+          "i": 39564,
+          "n": "Water in Blue",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "46758",
+        "obj": {
+          "i": 46758,
+          "n": "Water in Blue",
+          "c": 64945,
+          "j": 0,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "47115",
+        "obj": {
+          "i": 47115,
+          "n": "Water in Blue",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

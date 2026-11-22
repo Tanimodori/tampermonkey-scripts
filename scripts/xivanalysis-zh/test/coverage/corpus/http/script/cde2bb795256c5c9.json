@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "cde2bb795256c5c9",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/34669?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 34669,
+      "fields": {
+        "Icon": {
+          "id": 3820,
+          "path": "ui/icon/003000/003820.tex",
+          "path_hr1": "ui/icon/003000/003820_hr1.tex"
+        },
+        "Name": "星空彩绘"
+      },
+      "transient": {
+        "Description": "绘画星空\n非战斗状态下发动该技能不需要咏唱时间\n发动条件：非星空构想状态中且风景画布上没有彩绘\n该魔法有单独计算的复唱时间，不受装备和状态的影响\n发动后其他战技与魔法会进入与该魔法相同的复唱时间\n\n※该技能无法设置到热键栏\n　满足发动条件后，风景彩绘变为星空彩绘"
+      }
+    }
+  }
+}

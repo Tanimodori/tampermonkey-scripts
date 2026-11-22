@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 数据更新入口：默认只跑 status 烘焙；语料 capture 是约 50 分钟的手工步骤，显式加 --corpus 才跑。
+ * 数据更新入口：默认只跑 status 烘焙；语料刷新是约 50 分钟的手工步骤，显式加 --corpus 才跑 questions → responses → expected。
  */
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
@@ -31,17 +31,17 @@ run([resolve(PKG_DIR, 'scripts/bake-statuses.mjs')]);
 console.log('[update-data] status 烘焙完成。');
 
 if (argv.includes('--corpus')) {
-  console.log('[update-data] 开始语料 capture（约 50 分钟，串行访问真实战报）...');
+  console.log('[update-data] 开始语料刷新（questions 约 50 分钟，随后 responses/expected）...');
   run([resolve(PKG_DIR, '../../common/scripts/install-run-rushx.js'), 'test:corpus:capture']);
-  console.log('[update-data] 语料 capture 完成。');
+  console.log('[update-data] 语料刷新完成。');
 } else {
-  console.log('[update-data] 未运行语料 capture。需要时加 --corpus，或运行 rushx test:corpus:capture。');
+  console.log('[update-data] 未运行语料刷新。需要时加 --corpus，或运行 rushx test:corpus:capture。');
 }
 
 function printHelp() {
   console.log(`用法: node scripts/update-data.mjs [选项]
 
-  --corpus  同时运行 33 条战报的语料 capture（约 50 分钟）
+  --corpus  刷新 33 条战报的 questions → responses → expected（questions 约 50 分钟）
   --help    显示本帮助
 `);
 }

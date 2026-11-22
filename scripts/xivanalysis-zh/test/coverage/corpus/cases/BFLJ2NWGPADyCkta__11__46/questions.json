@@ -1,0 +1,298 @@
+{
+  "formatVersion": 1,
+  "id": "BFLJ2NWGPADyCkta/11/46",
+  "url": "https://xivanalysis.com/fflogs/BFLJ2NWGPADyCkta/11/46",
+  "job": "PLD",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Oath Gauge",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Brotherhood",
+      "-4"
+    ],
+    [
+      "Searing Light",
+      "-4"
+    ],
+    [
+      "Technical Finish",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Fight Or Flight",
+      "-5"
+    ],
+    [
+      "Imperator",
+      "-5"
+    ],
+    [
+      "Expiacion",
+      "-5"
+    ],
+    [
+      "Circle Of Scorn",
+      "-5"
+    ],
+    [
+      "Intervene",
+      "-5"
+    ],
+    [
+      "Blade of Honor",
+      "-5"
+    ],
+    [
+      "Holy Sheltron",
+      "-5"
+    ],
+    [
+      "Intervention",
+      "-5"
+    ],
+    [
+      "Hallowed Ground",
+      "-5"
+    ],
+    [
+      "Guardian",
+      "-5"
+    ],
+    [
+      "Rampart",
+      "-5"
+    ],
+    [
+      "Passage Of Arms",
+      "-5"
+    ],
+    [
+      "Divine Veil",
+      "-5"
+    ],
+    [
+      "Reprisal",
+      "-5"
+    ],
+    [
+      "Provoke",
+      "-5"
+    ],
+    [
+      "Shirk",
+      "-5"
+    ],
+    [
+      "Iron Will",
+      "-5"
+    ],
+    [
+      "Release Iron Will",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Brotherhood",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212532_hr1.tex&format=png"
+    ],
+    [
+      "Searing Light",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212699_hr1.tex&format=png"
+    ],
+    [
+      "Technical Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213709_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Holy Spirit",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002514_hr1.tex&format=png"
+    ],
+    [
+      "Fast Blade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000158_hr1.tex&format=png"
+    ],
+    [
+      "Riot Blade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000156_hr1.tex&format=png"
+    ],
+    [
+      "Royal Authority",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002507_hr1.tex&format=png"
+    ],
+    [
+      "Goring Blade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002506_hr1.tex&format=png"
+    ],
+    [
+      "Confiteor",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002518_hr1.tex&format=png"
+    ],
+    [
+      "Blade of Faith",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002952_hr1.tex&format=png"
+    ],
+    [
+      "Blade of Truth",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002953_hr1.tex&format=png"
+    ],
+    [
+      "Blade of Valor",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002954_hr1.tex&format=png"
+    ],
+    [
+      "Atonement",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002519_hr1.tex&format=png"
+    ],
+    [
+      "Supplication",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002522_hr1.tex&format=png"
+    ],
+    [
+      "Sepulchre",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002523_hr1.tex&format=png"
+    ],
+    [
+      "Holy Spirit",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002514_hr1.tex&format=png"
+    ],
+    [
+      "Fast Blade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000158_hr1.tex&format=png"
+    ],
+    [
+      "Riot Blade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000156_hr1.tex&format=png"
+    ],
+    [
+      "Royal Authority",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002507_hr1.tex&format=png"
+    ],
+    [
+      "Fast Blade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000158_hr1.tex&format=png"
+    ],
+    [
+      "Riot Blade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000156_hr1.tex&format=png"
+    ],
+    [
+      "Atonement",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002519_hr1.tex&format=png"
+    ],
+    [
+      "Supplication",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002522_hr1.tex&format=png"
+    ],
+    [
+      "Sepulchre",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002523_hr1.tex&format=png"
+    ],
+    [
+      "Holy Spirit",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002514_hr1.tex&format=png"
+    ],
+    [
+      "Royal Authority",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002507_hr1.tex&format=png"
+    ],
+    [
+      "Fast Blade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000158_hr1.tex&format=png"
+    ],
+    [
+      "Riot Blade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000156_hr1.tex&format=png"
+    ],
+    [
+      "Fight Or Flight",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000166_hr1.tex&format=png"
+    ],
+    [
+      "Imperator",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002955_hr1.tex&format=png"
+    ],
+    [
+      "Expiacion",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002951_hr1.tex&format=png"
+    ],
+    [
+      "Expiacion",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002951_hr1.tex&format=png"
+    ],
+    [
+      "Circle Of Scorn",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000161_hr1.tex&format=png"
+    ],
+    [
+      "Circle Of Scorn",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000161_hr1.tex&format=png"
+    ],
+    [
+      "Intervene",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002520_hr1.tex&format=png"
+    ],
+    [
+      "Intervene",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002520_hr1.tex&format=png"
+    ],
+    [
+      "Blade of Honor",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002956_hr1.tex&format=png"
+    ],
+    [
+      "Holy Sheltron",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002950_hr1.tex&format=png"
+    ],
+    [
+      "Intervention",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002512_hr1.tex&format=png"
+    ],
+    [
+      "Guardian",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002524_hr1.tex&format=png"
+    ],
+    [
+      "Divine Veil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002508_hr1.tex&format=png"
+    ],
+    [
+      "Reprisal",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000806_hr1.tex&format=png"
+    ],
+    [
+      "Iron Will",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002505_hr1.tex&format=png"
+    ],
+    [
+      "Iron Will",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002505_hr1.tex&format=png"
+    ],
+    [
+      "Release Iron Will",
+      "https://xivapi.com/i/002000/002521.png"
+    ]
+  ]
+}

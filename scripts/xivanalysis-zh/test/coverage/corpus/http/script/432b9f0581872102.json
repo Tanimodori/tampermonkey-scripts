@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "432b9f0581872102",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/7478?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 7478,
+      "fields": {
+        "Icon": {
+          "id": 3152,
+          "path": "ui/icon/003000/003152.tex",
+          "path_hr1": "ui/icon/003000/003152_hr1.tex"
+        },
+        "Name": "阵风"
+      },
+      "transient": {
+        "Description": "对目标发动物理攻击　威力：140\n连击条件：晓风　连击中威力：300\n连击成功：风月\n持续时间：40秒\n风月效果：自身发动攻击造成的伤害提高13%\n连击成功：获得5点剑气"
+      }
+    }
+  }
+}

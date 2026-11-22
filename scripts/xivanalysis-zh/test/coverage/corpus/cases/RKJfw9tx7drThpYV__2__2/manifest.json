@@ -1,0 +1,27 @@
+{
+  "formatVersion": 1,
+  "id": "RKJfw9tx7drThpYV/2/2",
+  "slug": "RKJfw9tx7drThpYV__2__2",
+  "url": "https://xivanalysis.com/fflogs/RKJfw9tx7drThpYV/2/2",
+  "job": "BLM",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "f66acecaf1df82d3",
+      "ca26098a7cf450fc"
+    ],
+    "script": [
+      "2bcc84ef10bbcd8b",
+      "4f86fea60993a7c2",
+      "5d9af7349065aa37",
+      "5ea858e69a0c1fca",
+      "7fe6e9d854c3b3c0",
+      "9b6b4a92cf7218f6",
+      "9c5fcff7bd23f0a0",
+      "c4dd6c7265c04412",
+      "e3aaa2cd703bad38",
+      "ec424eda44bc3ced"
+    ]
+  }
+}

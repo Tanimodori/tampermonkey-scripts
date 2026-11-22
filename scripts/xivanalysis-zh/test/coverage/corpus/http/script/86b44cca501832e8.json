@@ -1,0 +1,227 @@
+{
+  "formatVersion": 1,
+  "id": "86b44cca501832e8",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Battery&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "37159",
+        "obj": {
+          "i": 37159,
+          "n": "Battery Circuit",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "37344",
+        "obj": {
+          "i": 37344,
+          "n": "Battery Circuit",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "37351",
+        "obj": {
+          "i": 37351,
+          "n": "Battery Circuit",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "34994",
+        "obj": {
+          "i": 34994,
+          "n": "Duplicitous Battery",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36057",
+        "obj": {
+          "i": 36057,
+          "n": "Duplicitous Battery",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "item",
+        "id": "49083",
+        "obj": {
+          "i": 49083,
+          "n": "Experimental Storage Battery",
+          "l": 1,
+          "c": 23541,
+          "t": 63,
+          "g": 5,
+          "f": [
+            {
+              "id": 37425,
+              "job": 14,
+              "lvl": 100
+            }
+          ],
+          "r": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "22547",
+        "obj": {
+          "i": 22547,
+          "n": "Relentless Battery",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "22565",
+        "obj": {
+          "i": 22565,
+          "n": "Relentless Battery",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "22580",
+        "obj": {
+          "i": 22580,
+          "n": "Relentless Battery",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "22596",
+        "obj": {
+          "i": 22596,
+          "n": "Relentless Battery",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "23439",
+        "obj": {
+          "i": 23439,
+          "n": "Relentless Battery",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "23440",
+        "obj": {
+          "i": 23440,
+          "n": "Relentless Battery",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "23441",
+        "obj": {
+          "i": 23441,
+          "n": "Relentless Battery",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "23442",
+        "obj": {
+          "i": 23442,
+          "n": "Relentless Battery",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "item",
+        "id": "48784",
+        "obj": {
+          "i": 48784,
+          "n": "Survey Battery Pack",
+          "l": 1,
+          "c": "t/23553",
+          "t": 63,
+          "g": 5,
+          "f": [
+            {
+              "id": 37049,
+              "job": 9,
+              "lvl": 100,
+              "stars": 3
+            },
+            {
+              "id": 37106,
+              "job": 10,
+              "lvl": 100,
+              "stars": 3
+            },
+            {
+              "id": 37163,
+              "job": 11,
+              "lvl": 100,
+              "stars": 3
+            }
+          ],
+          "r": 1,
+          "o": 1
+        }
+      }
+    ]
+  }
+}

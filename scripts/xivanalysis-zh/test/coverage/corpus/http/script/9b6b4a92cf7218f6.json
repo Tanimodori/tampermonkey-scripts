@@ -1,0 +1,16 @@
+{
+  "formatVersion": 1,
+  "id": "9b6b4a92cf7218f6",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Resources&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": []
+  }
+}

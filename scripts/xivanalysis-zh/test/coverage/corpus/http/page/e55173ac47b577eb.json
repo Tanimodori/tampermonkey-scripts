@@ -1,0 +1,98 @@
+{
+  "formatVersion": 1,
+  "id": "e55173ac47b577eb",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=1200,1201,3861,125,141,2964,1932&limit=7&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 1200,
+          "fields": {
+            "Icon": {
+              "id": 212616,
+              "path": "ui/icon/212000/212616.tex",
+              "path_hr1": "ui/icon/212000/212616_hr1.tex"
+            },
+            "Name": "Caustic Bite"
+          }
+        },
+        {
+          "row_id": 1201,
+          "fields": {
+            "Icon": {
+              "id": 212617,
+              "path": "ui/icon/212000/212617.tex",
+              "path_hr1": "ui/icon/212000/212617_hr1.tex"
+            },
+            "Name": "Stormbite"
+          }
+        },
+        {
+          "row_id": 3861,
+          "fields": {
+            "Icon": {
+              "id": 213075,
+              "path": "ui/icon/213000/213075.tex",
+              "path_hr1": "ui/icon/213000/213075_hr1.tex"
+            },
+            "Name": "Hawk's Eye"
+          }
+        },
+        {
+          "row_id": 125,
+          "fields": {
+            "Icon": {
+              "id": 210354,
+              "path": "ui/icon/210000/210354.tex",
+              "path_hr1": "ui/icon/210000/210354_hr1.tex"
+            },
+            "Name": "Raging Strikes"
+          }
+        },
+        {
+          "row_id": 141,
+          "fields": {
+            "Icon": {
+              "id": 212601,
+              "path": "ui/icon/212000/212601.tex",
+              "path_hr1": "ui/icon/212000/212601_hr1.tex"
+            },
+            "Name": "Battle Voice"
+          }
+        },
+        {
+          "row_id": 2964,
+          "fields": {
+            "Icon": {
+              "id": 212624,
+              "path": "ui/icon/212000/212624.tex",
+              "path_hr1": "ui/icon/212000/212624_hr1.tex"
+            },
+            "Name": "Radiant Finale"
+          }
+        },
+        {
+          "row_id": 1932,
+          "fields": {
+            "Icon": {
+              "id": 212619,
+              "path": "ui/icon/212000/212619.tex",
+              "path_hr1": "ui/icon/212000/212619_hr1.tex"
+            },
+            "Name": "Army's Muse"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,334 @@
+{
+  "formatVersion": 1,
+  "id": "PF9aA7xQ2kMNn8G4/44/1208",
+  "url": "https://xivanalysis.com/fflogs/PF9aA7xQ2kMNn8G4/44/1208",
+  "job": "WAR",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Beast Gauge",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Brotherhood",
+      "-4"
+    ],
+    [
+      "Technical Finish",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Infuriate",
+      "-5"
+    ],
+    [
+      "Inner Release",
+      "-5"
+    ],
+    [
+      "Upheaval",
+      "-5"
+    ],
+    [
+      "Onslaught",
+      "-5"
+    ],
+    [
+      "Rampart",
+      "-5"
+    ],
+    [
+      "Nascent Flash",
+      "-5"
+    ],
+    [
+      "Thrill of Battle",
+      "-5"
+    ],
+    [
+      "Equilibrium",
+      "-5"
+    ],
+    [
+      "Holmgang",
+      "-5"
+    ],
+    [
+      "Shake It Off",
+      "-5"
+    ],
+    [
+      "Reprisal",
+      "-5"
+    ],
+    [
+      "Provoke",
+      "-5"
+    ],
+    [
+      "Shirk",
+      "-5"
+    ],
+    [
+      "Defiance",
+      "-5"
+    ],
+    [
+      "Interject",
+      "-5"
+    ],
+    [
+      "Low Blow",
+      "-5"
+    ],
+    [
+      "Vengeance",
+      "-5"
+    ],
+    [
+      "Arm's Length",
+      "-5"
+    ],
+    [
+      "Release Defiance",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Brotherhood",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212532_hr1.tex&format=png"
+    ],
+    [
+      "Technical Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213709_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Tomahawk",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000261_hr1.tex&format=png"
+    ],
+    [
+      "Heavy Swing",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000260_hr1.tex&format=png"
+    ],
+    [
+      "Maim",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000255_hr1.tex&format=png"
+    ],
+    [
+      "Storm's Eye",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000264_hr1.tex&format=png"
+    ],
+    [
+      "Inner Chaos",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002568_hr1.tex&format=png"
+    ],
+    [
+      "Fell Cleave",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002557_hr1.tex&format=png"
+    ],
+    [
+      "Fell Cleave",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002557_hr1.tex&format=png"
+    ],
+    [
+      "Fell Cleave",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002557_hr1.tex&format=png"
+    ],
+    [
+      "Inner Chaos",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002568_hr1.tex&format=png"
+    ],
+    [
+      "Heavy Swing",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000260_hr1.tex&format=png"
+    ],
+    [
+      "Maim",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000255_hr1.tex&format=png"
+    ],
+    [
+      "Storm's Path",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000258_hr1.tex&format=png"
+    ],
+    [
+      "Fell Cleave",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002557_hr1.tex&format=png"
+    ],
+    [
+      "Inner Chaos",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002568_hr1.tex&format=png"
+    ],
+    [
+      "Heavy Swing",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000260_hr1.tex&format=png"
+    ],
+    [
+      "Maim",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000255_hr1.tex&format=png"
+    ],
+    [
+      "Storm's Eye",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000264_hr1.tex&format=png"
+    ],
+    [
+      "Heavy Swing",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000260_hr1.tex&format=png"
+    ],
+    [
+      "Maim",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000255_hr1.tex&format=png"
+    ],
+    [
+      "Storm's Path",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000258_hr1.tex&format=png"
+    ],
+    [
+      "Fell Cleave",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002557_hr1.tex&format=png"
+    ],
+    [
+      "Heavy Swing",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000260_hr1.tex&format=png"
+    ],
+    [
+      "Maim",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000255_hr1.tex&format=png"
+    ],
+    [
+      "Storm's Path",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000258_hr1.tex&format=png"
+    ],
+    [
+      "Heavy Swing",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000260_hr1.tex&format=png"
+    ],
+    [
+      "Inner Release",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/217000/217247_hr1.tex&format=png"
+    ],
+    [
+      "Nascent Chaos",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212560_hr1.tex&format=png"
+    ],
+    [
+      "Nascent Chaos",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212560_hr1.tex&format=png"
+    ],
+    [
+      "Nascent Chaos",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212560_hr1.tex&format=png"
+    ],
+    [
+      "Infuriate",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002555_hr1.tex&format=png"
+    ],
+    [
+      "Infuriate",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002555_hr1.tex&format=png"
+    ],
+    [
+      "Infuriate",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002555_hr1.tex&format=png"
+    ],
+    [
+      "Inner Release",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002564_hr1.tex&format=png"
+    ],
+    [
+      "Upheaval",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002562_hr1.tex&format=png"
+    ],
+    [
+      "Upheaval",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002562_hr1.tex&format=png"
+    ],
+    [
+      "Upheaval",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002562_hr1.tex&format=png"
+    ],
+    [
+      "Upheaval",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002562_hr1.tex&format=png"
+    ],
+    [
+      "Onslaught",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002561_hr1.tex&format=png"
+    ],
+    [
+      "Onslaught",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002561_hr1.tex&format=png"
+    ],
+    [
+      "Rampart",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000801_hr1.tex&format=png"
+    ],
+    [
+      "Holmgang",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000266_hr1.tex&format=png"
+    ],
+    [
+      "Shake It Off",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002563_hr1.tex&format=png"
+    ],
+    [
+      "Reprisal",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000806_hr1.tex&format=png"
+    ],
+    [
+      "Provoke",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000803_hr1.tex&format=png"
+    ],
+    [
+      "Defiance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002551_hr1.tex&format=png"
+    ],
+    [
+      "Interject",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000808_hr1.tex&format=png"
+    ],
+    [
+      "Interject",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000808_hr1.tex&format=png"
+    ],
+    [
+      "Low Blow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000802_hr1.tex&format=png"
+    ],
+    [
+      "Low Blow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000802_hr1.tex&format=png"
+    ],
+    [
+      "Vengeance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000267_hr1.tex&format=png"
+    ]
+  ]
+}

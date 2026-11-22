@@ -1,0 +1,28 @@
+{
+  "formatVersion": 1,
+  "id": "mn7bYWMQf9vhABrG/4/3",
+  "slug": "mn7bYWMQf9vhABrG__4__3",
+  "url": "https://xivanalysis.com/fflogs/mn7bYWMQf9vhABrG/4/3",
+  "job": "SAM",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "3092674543ca0d70",
+      "e9f97f2d183771bd"
+    ],
+    "script": [
+      "00679c93c90aae87",
+      "2f2030428518f0e0",
+      "432b9f0581872102",
+      "44bbc6b60ec6bddd",
+      "537d4d4cfe878f81",
+      "5ea858e69a0c1fca",
+      "7fe6e9d854c3b3c0",
+      "9b6b4a92cf7218f6",
+      "9c5fcff7bd23f0a0",
+      "b12260de7c512fc0",
+      "f201d0731ff145a6"
+    ]
+  }
+}

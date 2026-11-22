@@ -1,0 +1,89 @@
+{
+  "formatVersion": 1,
+  "id": "2cea8b448d83cd1b",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Aetherial+Manipulation&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "155",
+        "obj": {
+          "i": 155,
+          "n": "Aetherial Manipulation",
+          "c": 467,
+          "j": 7,
+          "t": 4,
+          "l": 50
+        }
+      },
+      {
+        "type": "action",
+        "id": "17041",
+        "obj": {
+          "i": 17041,
+          "n": "Aetherial Manipulation",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "17263",
+        "obj": {
+          "i": 17263,
+          "n": "Aetherial Manipulation",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "29660",
+        "obj": {
+          "i": 29660,
+          "n": "Aetherial Manipulation",
+          "c": 9245,
+          "j": 25,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "8869",
+        "obj": {
+          "i": 8869,
+          "n": "Aetherial Manipulation",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "12982",
+        "obj": {
+          "i": 12982,
+          "n": "Aetherial Manipulation L",
+          "c": 64622,
+          "j": 19,
+          "t": 4,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

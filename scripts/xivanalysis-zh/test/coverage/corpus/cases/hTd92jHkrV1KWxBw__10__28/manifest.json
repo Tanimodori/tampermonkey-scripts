@@ -1,0 +1,26 @@
+{
+  "formatVersion": 1,
+  "id": "hTd92jHkrV1KWxBw/10/28",
+  "slug": "hTd92jHkrV1KWxBw__10__28",
+  "url": "https://xivanalysis.com/fflogs/hTd92jHkrV1KWxBw/10/28",
+  "job": "AST",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "9b831ec0dcbe9ab4",
+      "3ce48f6cf7c7edbb"
+    ],
+    "script": [
+      "3fa3a9c52b44fb0a",
+      "5ea858e69a0c1fca",
+      "68663e7e005949bc",
+      "826bbf908efd9a56",
+      "9b6b4a92cf7218f6",
+      "cd4389eb1609e271",
+      "e24fc2dee69dea80",
+      "edcd2ba62e5fa1c4",
+      "fcb9ea302d13d728"
+    ]
+  }
+}

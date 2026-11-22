@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "aa903335f6f7579e",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/7449?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 7449,
+      "fields": {
+        "Icon": {
+          "id": 2694,
+          "path": "ui/icon/002000/002694.tex",
+          "path_hr1": "ui/icon/002000/002694_hr1.tex"
+        },
+        "Name": "死亡轮回"
+      },
+      "transient": {
+        "Description": "对目标及其周围敌人发动无属性范围魔法攻击　威力：1300\n攻击复数敌人时，对目标之外的敌人威力降低50%\n发动条件：亚灵神巴哈姆特显现中\n\n※该技能无法设置到热键栏"
+      }
+    }
+  }
+}

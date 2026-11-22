@@ -1,0 +1,63 @@
+{
+  "formatVersion": 1,
+  "id": "42ba2198e7873466",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Shadow+of+Death&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "24378",
+        "obj": {
+          "i": 24378,
+          "n": "Shadow of Death",
+          "c": 3606,
+          "j": 39,
+          "t": 3,
+          "l": 10
+        }
+      },
+      {
+        "type": "status",
+        "id": "4518",
+        "obj": {
+          "i": 4518,
+          "n": "Shadow of Death",
+          "c": 214289,
+          "t": 2
+        }
+      },
+      {
+        "type": "action",
+        "id": "8458",
+        "obj": {
+          "i": 8458,
+          "n": "Shadow of Death",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "8459",
+        "obj": {
+          "i": 8459,
+          "n": "Shadow of Death",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

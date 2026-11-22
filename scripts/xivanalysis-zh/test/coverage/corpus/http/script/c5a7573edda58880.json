@@ -1,0 +1,795 @@
+{
+  "formatVersion": 1,
+  "id": "c5a7573edda58880",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Embrace&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "1325",
+        "obj": {
+          "i": 1325,
+          "n": "Embrace",
+          "c": 405,
+          "j": null,
+          "t": 1,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "14520",
+        "obj": {
+          "i": 14520,
+          "n": "Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "14521",
+        "obj": {
+          "i": 14521,
+          "n": "Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "14522",
+        "obj": {
+          "i": 14522,
+          "n": "Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "802",
+        "obj": {
+          "i": 802,
+          "n": "Embrace",
+          "c": 2826,
+          "j": 28,
+          "t": 2,
+          "l": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "806",
+        "obj": {
+          "i": 806,
+          "n": "Embrace",
+          "c": 2836,
+          "j": null,
+          "t": 2,
+          "l": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "9127",
+        "obj": {
+          "i": 9127,
+          "n": "Embrace",
+          "c": 784,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "9861",
+        "obj": {
+          "i": 9861,
+          "n": "Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "9862",
+        "obj": {
+          "i": 9862,
+          "n": "Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "9863",
+        "obj": {
+          "i": 9863,
+          "n": "Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "fate",
+        "id": "971",
+        "obj": {
+          "i": 971,
+          "n": "Embrace of the Serpent",
+          "l": 60,
+          "t": "Notorious Monster"
+        }
+      },
+      {
+        "type": "item",
+        "id": "8372",
+        "obj": {
+          "i": 8372,
+          "n": "Embrace of the Vortex",
+          "l": 95,
+          "c": 33452,
+          "t": 98,
+          "g": 0,
+          "f": [
+            {
+              "id": 30466,
+              "job": 14,
+              "lvl": 50,
+              "stars": 3
+            }
+          ],
+          "j": 29,
+          "r": 3,
+          "e": 50
+        }
+      },
+      {
+        "type": "quest",
+        "id": "70328",
+        "obj": {
+          "i": 70328,
+          "n": "Embraced by Gods",
+          "g": 31,
+          "l": "The Twelve's Embrace",
+          "s": 200,
+          "f": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "31365",
+        "obj": {
+          "i": 31365,
+          "n": "Albion's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "8537",
+        "obj": {
+          "i": 8537,
+          "n": "Alluring Embrace",
+          "c": 405,
+          "j": null,
+          "t": 0,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "9027",
+        "obj": {
+          "i": 9027,
+          "n": "Alluring Embrace",
+          "c": 405,
+          "j": null,
+          "t": 0,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "9358",
+        "obj": {
+          "i": 9358,
+          "n": "Alluring Embrace",
+          "c": 405,
+          "j": null,
+          "t": 0,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "9366",
+        "obj": {
+          "i": 9366,
+          "n": "Alluring Embrace",
+          "c": 405,
+          "j": null,
+          "t": 0,
+          "l": 0
+        }
+      },
+      {
+        "type": "status",
+        "id": "4181",
+        "obj": {
+          "i": 4181,
+          "n": "Deadly Embrace",
+          "c": 214242,
+          "t": 2
+        }
+      },
+      {
+        "type": "action",
+        "id": "26185",
+        "obj": {
+          "i": 26185,
+          "n": "Death's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "26187",
+        "obj": {
+          "i": 26187,
+          "n": "Death's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "mob",
+        "id": "15620000001895",
+        "obj": {
+          "i": 15620000001895,
+          "n": "Death's Embrace Assassin",
+          "l": "47",
+          "z": 63
+        }
+      },
+      {
+        "type": "mob",
+        "id": "45600000001895",
+        "obj": {
+          "i": 45600000001895,
+          "n": "Death's Embrace Assassin",
+          "l": "54",
+          "z": 2200
+        }
+      },
+      {
+        "type": "mob",
+        "id": "50430000001895",
+        "obj": {
+          "i": 50430000001895,
+          "n": "Death's Embrace Assassin",
+          "l": "52",
+          "z": 2200
+        }
+      },
+      {
+        "type": "mob",
+        "id": "45610000004232",
+        "obj": {
+          "i": 45610000004232,
+          "n": "Death's Embrace Controller",
+          "l": "54",
+          "z": 2200
+        }
+      },
+      {
+        "type": "mob",
+        "id": "15600000001893",
+        "obj": {
+          "i": 15600000001893,
+          "n": "Death's Embrace Executioner",
+          "l": "50",
+          "z": 63
+        }
+      },
+      {
+        "type": "mob",
+        "id": "45590000001893",
+        "obj": {
+          "i": 45590000001893,
+          "n": "Death's Embrace Executioner",
+          "l": "54",
+          "z": 2200
+        }
+      },
+      {
+        "type": "mob",
+        "id": "46190000001893",
+        "obj": {
+          "i": 46190000001893,
+          "n": "Death's Embrace Executioner",
+          "l": "52 - 54",
+          "z": 2200
+        }
+      },
+      {
+        "type": "mob",
+        "id": "50480000001893",
+        "obj": {
+          "i": 50480000001893,
+          "n": "Death's Embrace Executioner",
+          "l": "58",
+          "z": 2100
+        }
+      },
+      {
+        "type": "npc",
+        "id": "1007144",
+        "obj": {
+          "i": 1007144,
+          "n": "Death's Embrace Master"
+        }
+      },
+      {
+        "type": "mob",
+        "id": "15610000001894",
+        "obj": {
+          "i": 15610000001894,
+          "n": "Death's Embrace Master",
+          "l": "50",
+          "z": 63
+        }
+      },
+      {
+        "type": "mob",
+        "id": "43600000004097",
+        "obj": {
+          "i": 43600000004097,
+          "n": "Death's Embrace Poisoner",
+          "l": "54",
+          "z": 2200
+        }
+      },
+      {
+        "type": "mob",
+        "id": "50490000004097",
+        "obj": {
+          "i": 50490000004097,
+          "n": "Death's Embrace Poisoner",
+          "l": "58",
+          "z": 2100
+        }
+      },
+      {
+        "type": "mob",
+        "id": "46870000004098",
+        "obj": {
+          "i": 46870000004098,
+          "n": "Death's Embrace Torturer",
+          "l": "58",
+          "z": 2100
+        }
+      },
+      {
+        "type": "action",
+        "id": "2123",
+        "obj": {
+          "i": 2123,
+          "n": "Divine Embrace",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "item",
+        "id": "14277",
+        "obj": {
+          "i": 14277,
+          "n": "Faded Copy of The Dark's Embrace",
+          "l": 1,
+          "c": 25958,
+          "t": 94,
+          "g": 16,
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "2206",
+        "obj": {
+          "i": 2206,
+          "n": "Garuda's Embrace",
+          "l": 70,
+          "c": 33452,
+          "t": 98,
+          "g": 0,
+          "j": 29,
+          "r": 3,
+          "e": 50
+        }
+      },
+      {
+        "type": "action",
+        "id": "40505",
+        "obj": {
+          "i": 40505,
+          "n": "Grim Embrace",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "40506",
+        "obj": {
+          "i": 40506,
+          "n": "Grim Embrace",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "40507",
+        "obj": {
+          "i": 40507,
+          "n": "Grim Embrace",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "40508",
+        "obj": {
+          "i": 40508,
+          "n": "Grim Embrace",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "44343",
+        "obj": {
+          "i": 44343,
+          "n": "Gusion's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "item",
+        "id": "48224",
+        "obj": {
+          "i": 48224,
+          "n": "In Dawn's Embrace Orchestrion Roll",
+          "l": 1,
+          "c": 25945,
+          "t": 94,
+          "g": 16,
+          "r": 1
+        }
+      },
+      {
+        "type": "quest",
+        "id": "65977",
+        "obj": {
+          "i": 65977,
+          "n": "In Nature's Embrace",
+          "g": 162,
+          "l": "Gridania",
+          "s": 300,
+          "f": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "6599",
+        "obj": {
+          "i": 6599,
+          "n": "Llymlaen's Embrace",
+          "l": 50,
+          "c": 52426,
+          "t": 57,
+          "g": 9,
+          "f": [
+            {
+              "id": 1825,
+              "job": 11,
+              "lvl": 48
+            }
+          ],
+          "r": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "25943",
+        "obj": {
+          "i": 25943,
+          "n": "Loving Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "25944",
+        "obj": {
+          "i": 25944,
+          "n": "Loving Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "quest",
+        "id": "68326",
+        "obj": {
+          "i": 68326,
+          "n": "Nhaama's Sweet Embrace",
+          "g": 131,
+          "l": "The Azim Steppe",
+          "s": 6120
+        }
+      },
+      {
+        "type": "action",
+        "id": "26751",
+        "obj": {
+          "i": 26751,
+          "n": "Serpent's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "25947",
+        "obj": {
+          "i": 25947,
+          "n": "Still Embrace",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "25948",
+        "obj": {
+          "i": 25948,
+          "n": "Still Embrace",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "item",
+        "id": "14243",
+        "obj": {
+          "i": 14243,
+          "n": "The Dark's Embrace Orchestrion Roll",
+          "l": 1,
+          "c": 25945,
+          "t": 94,
+          "g": 16,
+          "f": [
+            {
+              "id": 2872,
+              "job": 14,
+              "lvl": 30
+            }
+          ],
+          "r": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "44597",
+        "obj": {
+          "i": 44597,
+          "n": "The End's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "44598",
+        "obj": {
+          "i": 44598,
+          "n": "The End's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "instance",
+        "id": "20105",
+        "obj": {
+          "i": 20105,
+          "n": "The Minstrel's Ballad: Necron's Embrace",
+          "c": 61804,
+          "t": "Trials",
+          "min_lvl": 100,
+          "max_lvl": 100,
+          "min_ilvl": 740
+        }
+      },
+      {
+        "type": "action",
+        "id": "16960",
+        "obj": {
+          "i": 16960,
+          "n": "the Ram's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "6280",
+        "obj": {
+          "i": 6280,
+          "n": "the Widow's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "10007",
+        "obj": {
+          "i": 10007,
+          "n": "Tight Embrace",
+          "c": 405,
+          "j": null,
+          "t": 0,
+          "l": 0
+        }
+      },
+      {
+        "type": "status",
+        "id": "3955",
+        "obj": {
+          "i": 3955,
+          "n": "Tural's Embrace",
+          "c": 216306,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "10512",
+        "obj": {
+          "i": 10512,
+          "n": "Ultimate Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "49740",
+        "obj": {
+          "i": 49740,
+          "n": "Ultimate Embrace",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "15663",
+        "obj": {
+          "i": 15663,
+          "n": "Wood's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "15696",
+        "obj": {
+          "i": 15696,
+          "n": "Wood's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "18164",
+        "obj": {
+          "i": 18164,
+          "n": "Wood's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "43462",
+        "obj": {
+          "i": 43462,
+          "n": "Wood's Embrace",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

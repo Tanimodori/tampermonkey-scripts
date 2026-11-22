@@ -20,6 +20,11 @@ lib-cov/
 coverage/
 !scripts/xivanalysis-zh/test/coverage/
 /scripts/xivanalysis-zh/test/coverage/corpus.debug/
+/scripts/xivanalysis-zh/test/coverage/corpus/*.tmp
+/scripts/xivanalysis-zh/test/coverage/corpus.tmp/
+/scripts/xivanalysis-zh/test/coverage/corpus.bak/
+/scripts/xivanalysis-zh/test/coverage/corpus.debug.tmp/
+/scripts/xivanalysis-zh/test/coverage/corpus.debug.bak/
 
 # nyc test coverage
 .nyc_output/

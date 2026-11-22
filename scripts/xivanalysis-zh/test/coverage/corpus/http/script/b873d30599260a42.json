@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "b873d30599260a42",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/46?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 46,
+      "fields": {
+        "Icon": {
+          "id": 261,
+          "path": "ui/icon/000000/000261.tex",
+          "path_hr1": "ui/icon/000000/000261_hr1.tex"
+        },
+        "Name": "飞斧"
+      },
+      "transient": {
+        "Description": "对目标发动远距离物理攻击　威力：150\n追加效果：提升仇恨"
+      }
+    }
+  }
+}

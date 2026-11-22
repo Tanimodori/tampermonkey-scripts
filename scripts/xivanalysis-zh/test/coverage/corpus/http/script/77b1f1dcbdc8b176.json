@@ -1,0 +1,41 @@
+{
+  "formatVersion": 1,
+  "id": "77b1f1dcbdc8b176",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Swiftskin%27s+Sting&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "34609",
+        "obj": {
+          "i": 34609,
+          "n": "Swiftskin's Sting",
+          "c": 3704,
+          "j": 41,
+          "t": 3,
+          "l": 20
+        }
+      },
+      {
+        "type": "action",
+        "id": "39160",
+        "obj": {
+          "i": 39160,
+          "n": "Swiftskin's Sting",
+          "c": 9701,
+          "j": 41,
+          "t": 3,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

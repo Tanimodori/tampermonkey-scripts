@@ -1,0 +1,61 @@
+{
+  "formatVersion": 1,
+  "id": "5c561fb6e5060606",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Peloton&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "status",
+        "id": "1199",
+        "obj": {
+          "i": 1199,
+          "n": "Peloton",
+          "c": 213908,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "17682",
+        "obj": {
+          "i": 17682,
+          "n": "Peloton",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "status",
+        "id": "1985",
+        "obj": {
+          "i": 1985,
+          "n": "Peloton",
+          "c": 213908,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "7557",
+        "obj": {
+          "i": 7557,
+          "n": "Peloton",
+          "c": 844,
+          "j": 5,
+          "t": 4,
+          "l": 20
+        }
+      }
+    ]
+  }
+}

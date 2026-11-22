@@ -1,0 +1,175 @@
+{
+  "formatVersion": 1,
+  "id": "0514bfd7b8701381",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=3668%2C3669%2C3672%2C3772%2C3648%2C3647%2C3646%2C3645%2C3666%2C3665%2C3657%2C3658%2C3649%2C3650&limit=14&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 3668,
+          "fields": {
+            "Icon": {
+              "id": 213774,
+              "path": "ui/icon/213000/213774.tex",
+              "path_hr1": "ui/icon/213000/213774_hr1.tex"
+            },
+            "Name": "猛袭"
+          }
+        },
+        {
+          "row_id": 3669,
+          "fields": {
+            "Icon": {
+              "id": 213775,
+              "path": "ui/icon/213000/213775.tex",
+              "path_hr1": "ui/icon/213000/213775_hr1.tex"
+            },
+            "Name": "疾速"
+          }
+        },
+        {
+          "row_id": 3672,
+          "fields": {
+            "Icon": {
+              "id": 213757,
+              "path": "ui/icon/213000/213757.tex",
+              "path_hr1": "ui/icon/213000/213757_hr1.tex"
+            },
+            "Name": "咬噬锐牙"
+          }
+        },
+        {
+          "row_id": 3772,
+          "fields": {
+            "Icon": {
+              "id": 213758,
+              "path": "ui/icon/213000/213758.tex",
+              "path_hr1": "ui/icon/213000/213758_hr1.tex"
+            },
+            "Name": "穿裂锐牙"
+          }
+        },
+        {
+          "row_id": 3648,
+          "fields": {
+            "Icon": {
+              "id": 213754,
+              "path": "ui/icon/213000/213754.tex",
+              "path_hr1": "ui/icon/213000/213754_hr1.tex"
+            },
+            "Name": "背裂锐牙"
+          }
+        },
+        {
+          "row_id": 3647,
+          "fields": {
+            "Icon": {
+              "id": 213753,
+              "path": "ui/icon/213000/213753.tex",
+              "path_hr1": "ui/icon/213000/213753_hr1.tex"
+            },
+            "Name": "背击锐牙"
+          }
+        },
+        {
+          "row_id": 3646,
+          "fields": {
+            "Icon": {
+              "id": 213752,
+              "path": "ui/icon/213000/213752.tex",
+              "path_hr1": "ui/icon/213000/213752_hr1.tex"
+            },
+            "Name": "侧裂锐牙"
+          }
+        },
+        {
+          "row_id": 3645,
+          "fields": {
+            "Icon": {
+              "id": 213751,
+              "path": "ui/icon/213000/213751.tex",
+              "path_hr1": "ui/icon/213000/213751_hr1.tex"
+            },
+            "Name": "侧击锐牙"
+          }
+        },
+        {
+          "row_id": 3666,
+          "fields": {
+            "Icon": {
+              "id": 213772,
+              "path": "ui/icon/213000/213772.tex",
+              "path_hr1": "ui/icon/213000/213772_hr1.tex"
+            },
+            "Name": "乱尾锐尾"
+          }
+        },
+        {
+          "row_id": 3665,
+          "fields": {
+            "Icon": {
+              "id": 213771,
+              "path": "ui/icon/213000/213771.tex",
+              "path_hr1": "ui/icon/213000/213771_hr1.tex"
+            },
+            "Name": "连尾锐尾"
+          }
+        },
+        {
+          "row_id": 3657,
+          "fields": {
+            "Icon": {
+              "id": 213763,
+              "path": "ui/icon/213000/213763.tex",
+              "path_hr1": "ui/icon/213000/213763_hr1.tex"
+            },
+            "Name": "连击双锐牙"
+          }
+        },
+        {
+          "row_id": 3658,
+          "fields": {
+            "Icon": {
+              "id": 213764,
+              "path": "ui/icon/213000/213764.tex",
+              "path_hr1": "ui/icon/213000/213764_hr1.tex"
+            },
+            "Name": "乱击双锐牙"
+          }
+        },
+        {
+          "row_id": 3649,
+          "fields": {
+            "Icon": {
+              "id": 213755,
+              "path": "ui/icon/213000/213755.tex",
+              "path_hr1": "ui/icon/213000/213755_hr1.tex"
+            },
+            "Name": "乱击锐牙"
+          }
+        },
+        {
+          "row_id": 3650,
+          "fields": {
+            "Icon": {
+              "id": 213756,
+              "path": "ui/icon/213000/213756.tex",
+              "path_hr1": "ui/icon/213000/213756_hr1.tex"
+            },
+            "Name": "乱裂锐牙"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "formatVersion": 1,
+  "id": "65f1047255901a09",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Shirk&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "17426",
+        "obj": {
+          "i": 17426,
+          "n": "Shirk",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "7537",
+        "obj": {
+          "i": 7537,
+          "n": "Shirk",
+          "c": 810,
+          "j": 1,
+          "t": 4,
+          "l": 48
+        }
+      },
+      {
+        "type": "quest",
+        "id": "69031",
+        "obj": {
+          "i": 69031,
+          "n": "Whistle While You Shirk",
+          "g": 136,
+          "l": "Amh Araeng",
+          "s": 6090
+        }
+      }
+    ]
+  }
+}

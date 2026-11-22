@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "f16f79cb14d6aa09",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/24859?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 24859,
+      "fields": {
+        "Icon": {
+          "id": 103,
+          "path": "ui/icon/000000/000103.tex",
+          "path_hr1": "ui/icon/000000/000103_hr1.tex"
+        },
+        "Name": "术道恒久"
+      },
+      "transient": {
+        "Description": ""
+      }
+    }
+  }
+}

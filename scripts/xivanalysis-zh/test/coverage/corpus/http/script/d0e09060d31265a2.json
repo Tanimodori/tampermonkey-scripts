@@ -1,0 +1,97 @@
+{
+  "formatVersion": 1,
+  "id": "d0e09060d31265a2",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Mudra&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "status",
+        "id": "496",
+        "obj": {
+          "i": 496,
+          "n": "Mudra",
+          "c": 212901,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "33673",
+        "obj": {
+          "i": 33673,
+          "n": "Mudrain",
+          "c": 405,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "33674",
+        "obj": {
+          "i": 33674,
+          "n": "Mudrain",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "quest",
+        "id": "65749",
+        "obj": {
+          "i": 65749,
+          "n": "My First Mudra",
+          "g": 181,
+          "l": "Eastern La Noscea",
+          "s": 2,
+          "f": 1
+        }
+      },
+      {
+        "type": "status",
+        "id": "1317",
+        "obj": {
+          "i": 1317,
+          "n": "Three Mudra",
+          "c": 212902,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "29507",
+        "obj": {
+          "i": 29507,
+          "n": "Three Mudra",
+          "c": 9189,
+          "j": 30,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "8816",
+        "obj": {
+          "i": 8816,
+          "n": "Three Mudra",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

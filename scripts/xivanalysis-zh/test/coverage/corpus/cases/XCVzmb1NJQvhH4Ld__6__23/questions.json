@@ -1,0 +1,326 @@
+{
+  "formatVersion": 1,
+  "id": "XCVzmb1NJQvhH4Ld/6/23",
+  "url": "https://xivanalysis.com/fflogs/XCVzmb1NJQvhH4Ld/6/23",
+  "job": "NIN",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Gauges",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Standard Finish",
+      "-4"
+    ],
+    [
+      "Dokumori",
+      "-4"
+    ],
+    [
+      "Brotherhood",
+      "-4"
+    ],
+    [
+      "Technical Finish",
+      "-4"
+    ],
+    [
+      "Devilment",
+      "-4"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Mudra",
+      "-5"
+    ],
+    [
+      "Kassatsu",
+      "-5"
+    ],
+    [
+      "Ten Chi Jin",
+      "-5"
+    ],
+    [
+      "Tenri Jindo",
+      "-5"
+    ],
+    [
+      "Kunai's Bane",
+      "-5"
+    ],
+    [
+      "Dream Within A Dream",
+      "-5"
+    ],
+    [
+      "Bunshin",
+      "-5"
+    ],
+    [
+      "Bhavacakra",
+      "-5"
+    ],
+    [
+      "Zesho Meppo",
+      "-5"
+    ],
+    [
+      "Dokumori",
+      "-5"
+    ],
+    [
+      "Meisui",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Standard Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213708_hr1.tex&format=png"
+    ],
+    [
+      "Dokumori",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212920_hr1.tex&format=png"
+    ],
+    [
+      "Brotherhood",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212532_hr1.tex&format=png"
+    ],
+    [
+      "Technical Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213709_hr1.tex&format=png"
+    ],
+    [
+      "Devilment",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213714_hr1.tex&format=png"
+    ],
+    [
+      "Suiton",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002913_hr1.tex&format=png"
+    ],
+    [
+      "Spinning Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000601_hr1.tex&format=png"
+    ],
+    [
+      "Gust Slash",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000602_hr1.tex&format=png"
+    ],
+    [
+      "Phantom Kamaitachi",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002929_hr1.tex&format=png"
+    ],
+    [
+      "Armor Crush",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002915_hr1.tex&format=png"
+    ],
+    [
+      "Chi",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002902_hr1.tex&format=png"
+    ],
+    [
+      "Jin",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002903_hr1.tex&format=png"
+    ],
+    [
+      "Hyosho Ranryu",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002926_hr1.tex&format=png"
+    ],
+    [
+      "Ten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002901_hr1.tex&format=png"
+    ],
+    [
+      "Chi",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002902_hr1.tex&format=png"
+    ],
+    [
+      "Raiton",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002912_hr1.tex&format=png"
+    ],
+    [
+      "Fuma Shuriken",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002907_hr1.tex&format=png"
+    ],
+    [
+      "Raiton",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002912_hr1.tex&format=png"
+    ],
+    [
+      "Suiton",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002913_hr1.tex&format=png"
+    ],
+    [
+      "Ten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002901_hr1.tex&format=png"
+    ],
+    [
+      "Chi",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002902_hr1.tex&format=png"
+    ],
+    [
+      "Raiton",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002912_hr1.tex&format=png"
+    ],
+    [
+      "Fleeting Raiju",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002932_hr1.tex&format=png"
+    ],
+    [
+      "Fleeting Raiju",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002932_hr1.tex&format=png"
+    ],
+    [
+      "Fleeting Raiju",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002932_hr1.tex&format=png"
+    ],
+    [
+      "Spinning Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000601_hr1.tex&format=png"
+    ],
+    [
+      "Gust Slash",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000602_hr1.tex&format=png"
+    ],
+    [
+      "Armor Crush",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002915_hr1.tex&format=png"
+    ],
+    [
+      "Spinning Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000601_hr1.tex&format=png"
+    ],
+    [
+      "Gust Slash",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000602_hr1.tex&format=png"
+    ],
+    [
+      "Aeolian Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000605_hr1.tex&format=png"
+    ],
+    [
+      "Spinning Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000601_hr1.tex&format=png"
+    ],
+    [
+      "Gust Slash",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000602_hr1.tex&format=png"
+    ],
+    [
+      "Armor Crush",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002915_hr1.tex&format=png"
+    ],
+    [
+      "Spinning Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000601_hr1.tex&format=png"
+    ],
+    [
+      "Gust Slash",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000602_hr1.tex&format=png"
+    ],
+    [
+      "Aeolian Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000605_hr1.tex&format=png"
+    ],
+    [
+      "Ten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002901_hr1.tex&format=png"
+    ],
+    [
+      "Chi",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002902_hr1.tex&format=png"
+    ],
+    [
+      "Jin",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002903_hr1.tex&format=png"
+    ],
+    [
+      "Suiton",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002913_hr1.tex&format=png"
+    ],
+    [
+      "Spinning Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000601_hr1.tex&format=png"
+    ],
+    [
+      "Gust Slash",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000602_hr1.tex&format=png"
+    ],
+    [
+      "Aeolian Edge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000605_hr1.tex&format=png"
+    ],
+    [
+      "Ten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002901_hr1.tex&format=png"
+    ],
+    [
+      "Ten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002901_hr1.tex&format=png"
+    ],
+    [
+      "Ten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002901_hr1.tex&format=png"
+    ],
+    [
+      "Kassatsu",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002906_hr1.tex&format=png"
+    ],
+    [
+      "Ten Chi Jin",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002922_hr1.tex&format=png"
+    ],
+    [
+      "Tenri Jindo",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002935_hr1.tex&format=png"
+    ],
+    [
+      "Kunai's Bane",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000620_hr1.tex&format=png"
+    ],
+    [
+      "Dream Within A Dream",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002918_hr1.tex&format=png"
+    ],
+    [
+      "Bunshin",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002927_hr1.tex&format=png"
+    ],
+    [
+      "Bhavacakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002921_hr1.tex&format=png"
+    ],
+    [
+      "Bhavacakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002921_hr1.tex&format=png"
+    ],
+    [
+      "Bhavacakra",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002921_hr1.tex&format=png"
+    ],
+    [
+      "Zesho Meppo",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002933_hr1.tex&format=png"
+    ],
+    [
+      "Dokumori",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000619_hr1.tex&format=png"
+    ],
+    [
+      "Meisui",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002924_hr1.tex&format=png"
+    ]
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "fcac966fe345a256",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/32068?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 32068,
+      "fields": {
+        "Icon": {
+          "id": 3433,
+          "path": "ui/icon/003000/003433.tex",
+          "path_hr1": "ui/icon/003000/003433_hr1.tex"
+        },
+        "Name": "解除王室亲卫"
+      },
+      "transient": {
+        "Description": "解除王室亲卫状态"
+      }
+    }
+  }
+}

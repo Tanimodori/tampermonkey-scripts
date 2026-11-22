@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "252383d9b6e49381",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/152?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 152,
+      "fields": {
+        "Icon": {
+          "id": 453,
+          "path": "ui/icon/000000/000453.tex",
+          "path_hr1": "ui/icon/000000/000453_hr1.tex"
+        },
+        "Name": "爆炎"
+      },
+      "transient": {
+        "Description": "对目标发动火属性魔法攻击　威力：290\n追加效果：星极火最大档数　持续时间：永久\n在处于灵极冰状态时会同时解除该状态"
+      }
+    }
+  }
+}

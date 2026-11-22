@@ -1,0 +1,41 @@
+{
+  "formatVersion": 1,
+  "id": "59c2370404070bc5",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Blood+Stalk&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "24389",
+        "obj": {
+          "i": 24389,
+          "n": "Blood Stalk",
+          "c": 3617,
+          "j": 39,
+          "t": 4,
+          "l": 50
+        }
+      },
+      {
+        "type": "action",
+        "id": "27810",
+        "obj": {
+          "i": 27810,
+          "n": "Blood Stalk",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

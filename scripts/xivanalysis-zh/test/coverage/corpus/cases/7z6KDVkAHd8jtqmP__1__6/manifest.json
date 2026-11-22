@@ -1,0 +1,23 @@
+{
+  "formatVersion": 1,
+  "id": "7z6KDVkAHd8jtqmP/1/6",
+  "slug": "7z6KDVkAHd8jtqmP__1__6",
+  "url": "https://xivanalysis.com/fflogs/7z6KDVkAHd8jtqmP/1/6",
+  "job": "SMN",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "f227e0be9cfe6441"
+    ],
+    "script": [
+      "3953dfa8a709acfe",
+      "58f31cc63f978c81",
+      "5ea858e69a0c1fca",
+      "613abcd6a99d687d",
+      "74f4054c5604a07e",
+      "9b6b4a92cf7218f6",
+      "aa903335f6f7579e"
+    ]
+  }
+}

@@ -1,0 +1,450 @@
+{
+  "formatVersion": 1,
+  "id": "613abcd6a99d687d",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=7427%2C25831%2C36992%2C16508%2C16510%2C25801%2C25836%2C25824%2C25833%2C36991%2C25820%2C181%2C25805%2C7426%2C25818%2C3579%2C25817%2C25840%2C25839%2C25838%2C25821%2C3582%2C7429%2C25823%2C25832%2C25835%2C25885%2C25825%2C25834%2C25837%2C25826%2C7561%2C25806%2C25807%2C173%2C7562%2C25819%2C25799%2C7560&limit=39&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 7427,
+          "fields": {
+            "Icon": {
+              "id": 2691,
+              "path": "ui/icon/002000/002691.tex",
+              "path_hr1": "ui/icon/002000/002691_hr1.tex"
+            },
+            "Name": "龙神召唤"
+          }
+        },
+        {
+          "row_id": 25831,
+          "fields": {
+            "Icon": {
+              "id": 2765,
+              "path": "ui/icon/002000/002765.tex",
+              "path_hr1": "ui/icon/002000/002765_hr1.tex"
+            },
+            "Name": "不死鸟召唤"
+          }
+        },
+        {
+          "row_id": 36992,
+          "fields": {
+            "Icon": {
+              "id": 2782,
+              "path": "ui/icon/002000/002782.tex",
+              "path_hr1": "ui/icon/002000/002782_hr1.tex"
+            },
+            "Name": "烈日龙神召唤"
+          }
+        },
+        {
+          "row_id": 16508,
+          "fields": {
+            "Icon": {
+              "id": 514,
+              "path": "ui/icon/000000/000514.tex",
+              "path_hr1": "ui/icon/000000/000514_hr1.tex"
+            },
+            "Name": "能量吸收"
+          }
+        },
+        {
+          "row_id": 16510,
+          "fields": {
+            "Icon": {
+              "id": 2697,
+              "path": "ui/icon/002000/002697.tex",
+              "path_hr1": "ui/icon/002000/002697_hr1.tex"
+            },
+            "Name": "能量抽取"
+          }
+        },
+        {
+          "row_id": 25801,
+          "fields": {
+            "Icon": {
+              "id": 2780,
+              "path": "ui/icon/002000/002780.tex",
+              "path_hr1": "ui/icon/002000/002780_hr1.tex"
+            },
+            "Name": "灼热之光"
+          }
+        },
+        {
+          "row_id": 25836,
+          "fields": {
+            "Icon": {
+              "id": 2770,
+              "path": "ui/icon/002000/002770.tex",
+              "path_hr1": "ui/icon/002000/002770_hr1.tex"
+            },
+            "Name": "山崩"
+          }
+        },
+        {
+          "row_id": 25824,
+          "fields": {
+            "Icon": {
+              "id": 2761,
+              "path": "ui/icon/002000/002761.tex",
+              "path_hr1": "ui/icon/002000/002761_hr1.tex"
+            },
+            "Name": "黄宝石之仪"
+          }
+        },
+        {
+          "row_id": 25833,
+          "fields": {
+            "Icon": {
+              "id": 2767,
+              "path": "ui/icon/002000/002767.tex",
+              "path_hr1": "ui/icon/002000/002767_hr1.tex"
+            },
+            "Name": "黄宝石灾变"
+          }
+        },
+        {
+          "row_id": 36991,
+          "fields": {
+            "Icon": {
+              "id": 2781,
+              "path": "ui/icon/002000/002781.tex",
+              "path_hr1": "ui/icon/002000/002781_hr1.tex"
+            },
+            "Name": "灼热之闪"
+          }
+        },
+        {
+          "row_id": 25820,
+          "fields": {
+            "Icon": {
+              "id": 2757,
+              "path": "ui/icon/002000/002757.tex",
+              "path_hr1": "ui/icon/002000/002757_hr1.tex"
+            },
+            "Name": "星极脉冲"
+          }
+        },
+        {
+          "row_id": 181,
+          "fields": {
+            "Icon": {
+              "id": 2676,
+              "path": "ui/icon/002000/002676.tex",
+              "path_hr1": "ui/icon/002000/002676_hr1.tex"
+            },
+            "Name": "溃烂爆发"
+          }
+        },
+        {
+          "row_id": 25805,
+          "fields": {
+            "Icon": {
+              "id": 2680,
+              "path": "ui/icon/002000/002680.tex",
+              "path_hr1": "ui/icon/002000/002680_hr1.tex"
+            },
+            "Name": "火神召唤"
+          }
+        },
+        {
+          "row_id": 7426,
+          "fields": {
+            "Icon": {
+              "id": 2686,
+              "path": "ui/icon/002000/002686.tex",
+              "path_hr1": "ui/icon/002000/002686_hr1.tex"
+            },
+            "Name": "毁绝"
+          }
+        },
+        {
+          "row_id": 25818,
+          "fields": {
+            "Icon": {
+              "id": 2682,
+              "path": "ui/icon/002000/002682.tex",
+              "path_hr1": "ui/icon/002000/002682_hr1.tex"
+            },
+            "Name": "黄宝石毁荡"
+          }
+        },
+        {
+          "row_id": 3579,
+          "fields": {
+            "Icon": {
+              "id": 2682,
+              "path": "ui/icon/002000/002682.tex",
+              "path_hr1": "ui/icon/002000/002682_hr1.tex"
+            },
+            "Name": "毁荡"
+          }
+        },
+        {
+          "row_id": 25817,
+          "fields": {
+            "Icon": {
+              "id": 2682,
+              "path": "ui/icon/002000/002682.tex",
+              "path_hr1": "ui/icon/002000/002682_hr1.tex"
+            },
+            "Name": "红宝石毁荡"
+          }
+        },
+        {
+          "row_id": 25840,
+          "fields": {
+            "Icon": {
+              "id": 2774,
+              "path": "ui/icon/002000/002774.tex",
+              "path_hr1": "ui/icon/002000/002774_hr1.tex"
+            },
+            "Name": "风神召唤II"
+          }
+        },
+        {
+          "row_id": 25839,
+          "fields": {
+            "Icon": {
+              "id": 2773,
+              "path": "ui/icon/002000/002773.tex",
+              "path_hr1": "ui/icon/002000/002773_hr1.tex"
+            },
+            "Name": "土神召唤II"
+          }
+        },
+        {
+          "row_id": 25838,
+          "fields": {
+            "Icon": {
+              "id": 2772,
+              "path": "ui/icon/002000/002772.tex",
+              "path_hr1": "ui/icon/002000/002772_hr1.tex"
+            },
+            "Name": "火神召唤II"
+          }
+        },
+        {
+          "row_id": 25821,
+          "fields": {
+            "Icon": {
+              "id": 2758,
+              "path": "ui/icon/002000/002758.tex",
+              "path_hr1": "ui/icon/002000/002758_hr1.tex"
+            },
+            "Name": "星极核爆"
+          }
+        },
+        {
+          "row_id": 3582,
+          "fields": {
+            "Icon": {
+              "id": 2685,
+              "path": "ui/icon/002000/002685.tex",
+              "path_hr1": "ui/icon/002000/002685_hr1.tex"
+            },
+            "Name": "死星核爆"
+          }
+        },
+        {
+          "row_id": 7429,
+          "fields": {
+            "Icon": {
+              "id": 2693,
+              "path": "ui/icon/002000/002693.tex",
+              "path_hr1": "ui/icon/002000/002693_hr1.tex"
+            },
+            "Name": "龙神迸发"
+          }
+        },
+        {
+          "row_id": 25823,
+          "fields": {
+            "Icon": {
+              "id": 2760,
+              "path": "ui/icon/002000/002760.tex",
+              "path_hr1": "ui/icon/002000/002760_hr1.tex"
+            },
+            "Name": "红宝石之仪"
+          }
+        },
+        {
+          "row_id": 25832,
+          "fields": {
+            "Icon": {
+              "id": 2766,
+              "path": "ui/icon/002000/002766.tex",
+              "path_hr1": "ui/icon/002000/002766_hr1.tex"
+            },
+            "Name": "红宝石灾变"
+          }
+        },
+        {
+          "row_id": 25835,
+          "fields": {
+            "Icon": {
+              "id": 2769,
+              "path": "ui/icon/002000/002769.tex",
+              "path_hr1": "ui/icon/002000/002769_hr1.tex"
+            },
+            "Name": "深红旋风"
+          }
+        },
+        {
+          "row_id": 25885,
+          "fields": {
+            "Icon": {
+              "id": 2779,
+              "path": "ui/icon/002000/002779.tex",
+              "path_hr1": "ui/icon/002000/002779_hr1.tex"
+            },
+            "Name": "深红强袭"
+          }
+        },
+        {
+          "row_id": 25825,
+          "fields": {
+            "Icon": {
+              "id": 2762,
+              "path": "ui/icon/002000/002762.tex",
+              "path_hr1": "ui/icon/002000/002762_hr1.tex"
+            },
+            "Name": "绿宝石之仪"
+          }
+        },
+        {
+          "row_id": 25834,
+          "fields": {
+            "Icon": {
+              "id": 2768,
+              "path": "ui/icon/002000/002768.tex",
+              "path_hr1": "ui/icon/002000/002768_hr1.tex"
+            },
+            "Name": "绿宝石灾变"
+          }
+        },
+        {
+          "row_id": 25837,
+          "fields": {
+            "Icon": {
+              "id": 2771,
+              "path": "ui/icon/002000/002771.tex",
+              "path_hr1": "ui/icon/002000/002771_hr1.tex"
+            },
+            "Name": "螺旋气流"
+          }
+        },
+        {
+          "row_id": 25826,
+          "fields": {
+            "Icon": {
+              "id": 2763,
+              "path": "ui/icon/002000/002763.tex",
+              "path_hr1": "ui/icon/002000/002763_hr1.tex"
+            },
+            "Name": "三重灾祸"
+          }
+        },
+        {
+          "row_id": 7561,
+          "fields": {
+            "Icon": {
+              "id": 866,
+              "path": "ui/icon/000000/000866.tex",
+              "path_hr1": "ui/icon/000000/000866_hr1.tex"
+            },
+            "Name": "即刻咏唱"
+          }
+        },
+        {
+          "row_id": 25806,
+          "fields": {
+            "Icon": {
+              "id": 2755,
+              "path": "ui/icon/002000/002755.tex",
+              "path_hr1": "ui/icon/002000/002755_hr1.tex"
+            },
+            "Name": "土神召唤"
+          }
+        },
+        {
+          "row_id": 25807,
+          "fields": {
+            "Icon": {
+              "id": 2756,
+              "path": "ui/icon/002000/002756.tex",
+              "path_hr1": "ui/icon/002000/002756_hr1.tex"
+            },
+            "Name": "风神召唤"
+          }
+        },
+        {
+          "row_id": 173,
+          "fields": {
+            "Icon": {
+              "id": 511,
+              "path": "ui/icon/000000/000511.tex",
+              "path_hr1": "ui/icon/000000/000511_hr1.tex"
+            },
+            "Name": "复生"
+          }
+        },
+        {
+          "row_id": 7562,
+          "fields": {
+            "Icon": {
+              "id": 865,
+              "path": "ui/icon/000000/000865.tex",
+              "path_hr1": "ui/icon/000000/000865_hr1.tex"
+            },
+            "Name": "醒梦"
+          }
+        },
+        {
+          "row_id": 25819,
+          "fields": {
+            "Icon": {
+              "id": 2682,
+              "path": "ui/icon/002000/002682.tex",
+              "path_hr1": "ui/icon/002000/002682_hr1.tex"
+            },
+            "Name": "绿宝石毁荡"
+          }
+        },
+        {
+          "row_id": 25799,
+          "fields": {
+            "Icon": {
+              "id": 2750,
+              "path": "ui/icon/002000/002750.tex",
+              "path_hr1": "ui/icon/002000/002750_hr1.tex"
+            },
+            "Name": "守护之光"
+          }
+        },
+        {
+          "row_id": 7560,
+          "fields": {
+            "Icon": {
+              "id": 861,
+              "path": "ui/icon/000000/000861.tex",
+              "path_hr1": "ui/icon/000000/000861_hr1.tex"
+            },
+            "Name": "昏乱"
+          }
+        }
+      ]
+    }
+  }
+}

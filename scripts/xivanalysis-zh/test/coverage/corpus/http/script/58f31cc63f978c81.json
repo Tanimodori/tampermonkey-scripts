@@ -1,0 +1,53 @@
+{
+  "formatVersion": 1,
+  "id": "58f31cc63f978c81",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Wyrmwave&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "29676",
+        "obj": {
+          "i": 29676,
+          "n": "Wyrmwave",
+          "c": 9255,
+          "j": 27,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "7428",
+        "obj": {
+          "i": 7428,
+          "n": "Wyrmwave",
+          "c": 2692,
+          "j": 27,
+          "t": 2,
+          "l": 70
+        }
+      },
+      {
+        "type": "action",
+        "id": "8879",
+        "obj": {
+          "i": 8879,
+          "n": "Wyrmwave",
+          "c": 784,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

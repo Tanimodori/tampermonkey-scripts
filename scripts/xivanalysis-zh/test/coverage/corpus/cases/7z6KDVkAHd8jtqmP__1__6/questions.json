@@ -1,0 +1,334 @@
+{
+  "formatVersion": 1,
+  "id": "7z6KDVkAHd8jtqmP/1/6",
+  "url": "https://xivanalysis.com/fflogs/7z6KDVkAHd8jtqmP/1/6",
+  "job": "SMN",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Standard Finish",
+      "-4"
+    ],
+    [
+      "Divination",
+      "-4"
+    ],
+    [
+      "Searing Light",
+      "-4"
+    ],
+    [
+      "Technical Finish",
+      "-4"
+    ],
+    [
+      "Devilment",
+      "-4"
+    ],
+    [
+      "Arcanum",
+      "-4"
+    ],
+    [
+      "Battle Litany",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "Pet",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Energy Drain/Siphon",
+      "-5"
+    ],
+    [
+      "Fester",
+      "-5"
+    ],
+    [
+      "Demi",
+      "-5"
+    ],
+    [
+      "Deathflare",
+      "-5"
+    ],
+    [
+      "Enkindle Bahamut",
+      "-5"
+    ],
+    [
+      "Searing Light",
+      "-5"
+    ],
+    [
+      "Radiant Aegis",
+      "-5"
+    ],
+    [
+      "Swiftcast",
+      "-5"
+    ],
+    [
+      "Lucid Dreaming",
+      "-5"
+    ],
+    [
+      "Radiant Aegis",
+      "-5"
+    ],
+    [
+      "Addle",
+      "-5"
+    ],
+    [
+      "Ruby Ruin III",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Standard Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213708_hr1.tex&format=png"
+    ],
+    [
+      "Divination",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213245_hr1.tex&format=png"
+    ],
+    [
+      "Searing Light",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212699_hr1.tex&format=png"
+    ],
+    [
+      "Technical Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213709_hr1.tex&format=png"
+    ],
+    [
+      "Devilment",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213714_hr1.tex&format=png"
+    ],
+    [
+      "The Spear",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213207_hr1.tex&format=png"
+    ],
+    [
+      "Battle Litany",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212578_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Wyrmwave",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002692_hr1.tex&format=png"
+    ],
+    [
+      "Wyrmwave",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002692_hr1.tex&format=png"
+    ],
+    [
+      "Akh Morn",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002694_hr1.tex&format=png"
+    ],
+    [
+      "Wyrmwave",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002692_hr1.tex&format=png"
+    ],
+    [
+      "Wyrmwave",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002692_hr1.tex&format=png"
+    ],
+    [
+      "Akh Morn",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002694_hr1.tex&format=png"
+    ],
+    [
+      "Wyrmwave",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002692_hr1.tex&format=png"
+    ],
+    [
+      "Wyrmwave",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002692_hr1.tex&format=png"
+    ],
+    [
+      "Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Summon Bahamut",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002691_hr1.tex&format=png"
+    ],
+    [
+      "Astral Impulse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002757_hr1.tex&format=png"
+    ],
+    [
+      "Astral Impulse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002757_hr1.tex&format=png"
+    ],
+    [
+      "Astral Impulse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002757_hr1.tex&format=png"
+    ],
+    [
+      "Astral Impulse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002757_hr1.tex&format=png"
+    ],
+    [
+      "Astral Impulse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002757_hr1.tex&format=png"
+    ],
+    [
+      "Astral Impulse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002757_hr1.tex&format=png"
+    ],
+    [
+      "Summon Ifrit",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002680_hr1.tex&format=png"
+    ],
+    [
+      "Ruin IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002686_hr1.tex&format=png"
+    ],
+    [
+      "Ruby Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Ruby Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Summon Titan",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002755_hr1.tex&format=png"
+    ],
+    [
+      "Topaz Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Topaz Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Topaz Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Topaz Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Summon Garuda",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002756_hr1.tex&format=png"
+    ],
+    [
+      "Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Emerald Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Summon Bahamut",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002691_hr1.tex&format=png"
+    ],
+    [
+      "Astral Impulse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002757_hr1.tex&format=png"
+    ],
+    [
+      "Astral Impulse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002757_hr1.tex&format=png"
+    ],
+    [
+      "Astral Impulse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002757_hr1.tex&format=png"
+    ],
+    [
+      "Energy Drain",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000514_hr1.tex&format=png"
+    ],
+    [
+      "Fester",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002676_hr1.tex&format=png"
+    ],
+    [
+      "Fester",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002676_hr1.tex&format=png"
+    ],
+    [
+      "Summon Bahamut",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002691_hr1.tex&format=png"
+    ],
+    [
+      "Summon Bahamut",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002691_hr1.tex&format=png"
+    ],
+    [
+      "Deathflare",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002685_hr1.tex&format=png"
+    ],
+    [
+      "Deathflare",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002685_hr1.tex&format=png"
+    ],
+    [
+      "Enkindle Bahamut",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002693_hr1.tex&format=png"
+    ],
+    [
+      "Enkindle Bahamut",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002693_hr1.tex&format=png"
+    ],
+    [
+      "Searing Light",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002780_hr1.tex&format=png"
+    ],
+    [
+      "Swiftcast",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000866_hr1.tex&format=png"
+    ],
+    [
+      "Ruby Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ],
+    [
+      "Ruby Ruin III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002682_hr1.tex&format=png"
+    ]
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "0da491def7035335",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/37034?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 37034,
+      "fields": {
+        "Icon": {
+          "id": 3689,
+          "path": "ui/icon/003000/003689.tex",
+          "path_hr1": "ui/icon/003000/003689_hr1.tex"
+        },
+        "Name": "均衡预后II"
+      },
+      "transient": {
+        "Description": "恢复自身及周围队员的体力\n恢复力：100\n追加效果：为目标附加能够抵御一定伤害的防护罩\n该防护罩能够抵消相当于治疗量360%的伤害\n持续时间：30秒\n无法与均衡诊断及学者的鼓舞效果共存\n发动条件：均衡状态中\n\n※该技能无法设置到热键栏\n　满足发动条件后，预后变为均衡预后II"
+      }
+    }
+  }
+}

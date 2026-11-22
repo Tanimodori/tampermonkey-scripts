@@ -1,0 +1,310 @@
+{
+  "formatVersion": 1,
+  "id": "hTd92jHkrV1KWxBw/10/28",
+  "url": "https://xivanalysis.com/fflogs/hTd92jHkrV1KWxBw/10/28",
+  "job": "AST",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Chain Stratagem",
+      "-4"
+    ],
+    [
+      "Dokumori",
+      "-4"
+    ],
+    [
+      "Battle Voice",
+      "-4"
+    ],
+    [
+      "Divination",
+      "-4"
+    ],
+    [
+      "Starry Muse",
+      "-4"
+    ],
+    [
+      "Radiant Finale",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Divination",
+      "-5"
+    ],
+    [
+      "Lightspeed",
+      "-5"
+    ],
+    [
+      "Draw",
+      "-5"
+    ],
+    [
+      "Offensive Cards",
+      "-5"
+    ],
+    [
+      "Minor Arcana",
+      "-5"
+    ],
+    [
+      "Essential Dignity",
+      "-5"
+    ],
+    [
+      "Celestial Intersection",
+      "-5"
+    ],
+    [
+      "Celestial Opposition",
+      "-5"
+    ],
+    [
+      "Earthly Star",
+      "-5"
+    ],
+    [
+      "Macrocosmos",
+      "-5"
+    ],
+    [
+      "Exaltation",
+      "-5"
+    ],
+    [
+      "Horoscope",
+      "-5"
+    ],
+    [
+      "Neutral Sect",
+      "-5"
+    ],
+    [
+      "Collective Unconscious",
+      "-5"
+    ],
+    [
+      "Lucid Dreaming",
+      "-5"
+    ],
+    [
+      "Surecast",
+      "-5"
+    ],
+    [
+      "The Spire",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Chain Stratagem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212809_hr1.tex&format=png"
+    ],
+    [
+      "Dokumori",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212920_hr1.tex&format=png"
+    ],
+    [
+      "Battle Voice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212601_hr1.tex&format=png"
+    ],
+    [
+      "Divination",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213245_hr1.tex&format=png"
+    ],
+    [
+      "Starry Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213808_hr1.tex&format=png"
+    ],
+    [
+      "Radiant Finale",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212622_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Combust III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003554_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Combust III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003554_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Combust III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003554_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Fall Malefic",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003559_hr1.tex&format=png"
+    ],
+    [
+      "Divination",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003553_hr1.tex&format=png"
+    ],
+    [
+      "Oracle",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003566_hr1.tex&format=png"
+    ],
+    [
+      "Oracle",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003566_hr1.tex&format=png"
+    ],
+    [
+      "Lightspeed",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003135_hr1.tex&format=png"
+    ],
+    [
+      "Lightspeed",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003135_hr1.tex&format=png"
+    ],
+    [
+      "Umbral Draw",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003565_hr1.tex&format=png"
+    ],
+    [
+      "Umbral Draw",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003565_hr1.tex&format=png"
+    ],
+    [
+      "The Balance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003110_hr1.tex&format=png"
+    ],
+    [
+      "The Spear",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003113_hr1.tex&format=png"
+    ],
+    [
+      "Lord Of Crowns",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003147_hr1.tex&format=png"
+    ],
+    [
+      "Celestial Intersection",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003556_hr1.tex&format=png"
+    ],
+    [
+      "Celestial Intersection",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003556_hr1.tex&format=png"
+    ],
+    [
+      "Celestial Opposition",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003142_hr1.tex&format=png"
+    ],
+    [
+      "Earthly Star",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003143_hr1.tex&format=png"
+    ],
+    [
+      "Earthly Star",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003143_hr1.tex&format=png"
+    ],
+    [
+      "Lucid Dreaming",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000865_hr1.tex&format=png"
+    ]
+  ]
+}

@@ -1,0 +1,296 @@
+{
+  "formatVersion": 1,
+  "id": "80575adc12882e2e",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=7396%2C69%2C7395%2C25766%2C36945%2C25767%2C74%2C36950%2C7546%2C66%2C36947%2C25764%2C25769%2C25768%2C36948%2C25765%2C25762%2C61%2C36946%2C36949%2C3547%2C7549%2C7394%2C7542%2C7541&limit=25&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 7396,
+          "fields": {
+            "Icon": {
+              "id": 2542,
+              "path": "ui/icon/002000/002542.tex",
+              "path_hr1": "ui/icon/002000/002542_hr1.tex"
+            },
+            "Name": "义结金兰"
+          }
+        },
+        {
+          "row_id": 69,
+          "fields": {
+            "Icon": {
+              "id": 217,
+              "path": "ui/icon/000000/000217.tex",
+              "path_hr1": "ui/icon/000000/000217_hr1.tex"
+            },
+            "Name": "震脚"
+          }
+        },
+        {
+          "row_id": 7395,
+          "fields": {
+            "Icon": {
+              "id": 2541,
+              "path": "ui/icon/002000/002541.tex",
+              "path_hr1": "ui/icon/002000/002541_hr1.tex"
+            },
+            "Name": "红莲极意"
+          }
+        },
+        {
+          "row_id": 25766,
+          "fields": {
+            "Icon": {
+              "id": 2978,
+              "path": "ui/icon/002000/002978.tex",
+              "path_hr1": "ui/icon/002000/002978_hr1.tex"
+            },
+            "Name": "疾风极意"
+          }
+        },
+        {
+          "row_id": 36945,
+          "fields": {
+            "Icon": {
+              "id": 2982,
+              "path": "ui/icon/002000/002982.tex",
+              "path_hr1": "ui/icon/002000/002982_hr1.tex"
+            },
+            "Name": "猿舞连击"
+          }
+        },
+        {
+          "row_id": 25767,
+          "fields": {
+            "Icon": {
+              "id": 2979,
+              "path": "ui/icon/002000/002979.tex",
+              "path_hr1": "ui/icon/002000/002979_hr1.tex"
+            },
+            "Name": "破坏神脚"
+          }
+        },
+        {
+          "row_id": 74,
+          "fields": {
+            "Icon": {
+              "id": 2528,
+              "path": "ui/icon/002000/002528.tex",
+              "path_hr1": "ui/icon/002000/002528_hr1.tex"
+            },
+            "Name": "双龙脚"
+          }
+        },
+        {
+          "row_id": 36950,
+          "fields": {
+            "Icon": {
+              "id": 2987,
+              "path": "ui/icon/002000/002987.tex",
+              "path_hr1": "ui/icon/002000/002987_hr1.tex"
+            },
+            "Name": "乾坤斗气弹"
+          }
+        },
+        {
+          "row_id": 7546,
+          "fields": {
+            "Icon": {
+              "id": 830,
+              "path": "ui/icon/000000/000830.tex",
+              "path_hr1": "ui/icon/000000/000830_hr1.tex"
+            },
+            "Name": "真北"
+          }
+        },
+        {
+          "row_id": 66,
+          "fields": {
+            "Icon": {
+              "id": 204,
+              "path": "ui/icon/000000/000204.tex",
+              "path_hr1": "ui/icon/000000/000204_hr1.tex"
+            },
+            "Name": "破碎拳"
+          }
+        },
+        {
+          "row_id": 36947,
+          "fields": {
+            "Icon": {
+              "id": 2984,
+              "path": "ui/icon/002000/002984.tex",
+              "path_hr1": "ui/icon/002000/002984_hr1.tex"
+            },
+            "Name": "豹袭崩拳"
+          }
+        },
+        {
+          "row_id": 25764,
+          "fields": {
+            "Icon": {
+              "id": 2976,
+              "path": "ui/icon/002000/002976.tex",
+              "path_hr1": "ui/icon/002000/002976_hr1.tex"
+            },
+            "Name": "必杀技"
+          }
+        },
+        {
+          "row_id": 25769,
+          "fields": {
+            "Icon": {
+              "id": 2981,
+              "path": "ui/icon/002000/002981.tex",
+              "path_hr1": "ui/icon/002000/002981_hr1.tex"
+            },
+            "Name": "梦幻斗舞"
+          }
+        },
+        {
+          "row_id": 25768,
+          "fields": {
+            "Icon": {
+              "id": 2980,
+              "path": "ui/icon/002000/002980.tex",
+              "path_hr1": "ui/icon/002000/002980_hr1.tex"
+            },
+            "Name": "凤凰舞"
+          }
+        },
+        {
+          "row_id": 36948,
+          "fields": {
+            "Icon": {
+              "id": 2985,
+              "path": "ui/icon/002000/002985.tex",
+              "path_hr1": "ui/icon/002000/002985_hr1.tex"
+            },
+            "Name": "真空波"
+          }
+        },
+        {
+          "row_id": 25765,
+          "fields": {
+            "Icon": {
+              "id": 2977,
+              "path": "ui/icon/002000/002977.tex",
+              "path_hr1": "ui/icon/002000/002977_hr1.tex"
+            },
+            "Name": "翻天脚"
+          }
+        },
+        {
+          "row_id": 25762,
+          "fields": {
+            "Icon": {
+              "id": 2975,
+              "path": "ui/icon/002000/002975.tex",
+              "path_hr1": "ui/icon/002000/002975_hr1.tex"
+            },
+            "Name": "轻身步法"
+          }
+        },
+        {
+          "row_id": 61,
+          "fields": {
+            "Icon": {
+              "id": 213,
+              "path": "ui/icon/000000/000213.tex",
+              "path_hr1": "ui/icon/000000/000213_hr1.tex"
+            },
+            "Name": "双掌打"
+          }
+        },
+        {
+          "row_id": 36946,
+          "fields": {
+            "Icon": {
+              "id": 2983,
+              "path": "ui/icon/002000/002983.tex",
+              "path_hr1": "ui/icon/002000/002983_hr1.tex"
+            },
+            "Name": "龙颚正拳"
+          }
+        },
+        {
+          "row_id": 36949,
+          "fields": {
+            "Icon": {
+              "id": 2986,
+              "path": "ui/icon/002000/002986.tex",
+              "path_hr1": "ui/icon/002000/002986_hr1.tex"
+            },
+            "Name": "绝空拳"
+          }
+        },
+        {
+          "row_id": 3547,
+          "fields": {
+            "Icon": {
+              "id": 2535,
+              "path": "ui/icon/002000/002535.tex",
+              "path_hr1": "ui/icon/002000/002535_hr1.tex"
+            },
+            "Name": "阴阳斗气斩"
+          }
+        },
+        {
+          "row_id": 7549,
+          "fields": {
+            "Icon": {
+              "id": 828,
+              "path": "ui/icon/000000/000828.tex",
+              "path_hr1": "ui/icon/000000/000828_hr1.tex"
+            },
+            "Name": "牵制"
+          }
+        },
+        {
+          "row_id": 7394,
+          "fields": {
+            "Icon": {
+              "id": 2537,
+              "path": "ui/icon/002000/002537.tex",
+              "path_hr1": "ui/icon/002000/002537_hr1.tex"
+            },
+            "Name": "金刚极意"
+          }
+        },
+        {
+          "row_id": 7542,
+          "fields": {
+            "Icon": {
+              "id": 823,
+              "path": "ui/icon/000000/000823.tex",
+              "path_hr1": "ui/icon/000000/000823_hr1.tex"
+            },
+            "Name": "浴血"
+          }
+        },
+        {
+          "row_id": 7541,
+          "fields": {
+            "Icon": {
+              "id": 821,
+              "path": "ui/icon/000000/000821.tex",
+              "path_hr1": "ui/icon/000000/000821_hr1.tex"
+            },
+            "Name": "内丹"
+          }
+        }
+      ]
+    }
+  }
+}

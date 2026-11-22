@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "c808250a998a0179",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/17425?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 17425,
+      "fields": {
+        "Icon": {
+          "id": 405,
+          "path": "ui/icon/000000/000405.tex",
+          "path_hr1": "ui/icon/000000/000405_hr1.tex"
+        },
+        "Name": "挑衅"
+      },
+      "transient": {
+        "Description": ""
+      }
+    }
+  }
+}

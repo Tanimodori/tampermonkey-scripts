@@ -1,0 +1,346 @@
+{
+  "formatVersion": 1,
+  "id": "wvPqDfzVjLKCZrX3/10/274",
+  "url": "https://xivanalysis.com/fflogs/wvPqDfzVjLKCZrX3/10/274",
+  "job": "RDM",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Gauges",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Arcane Circle",
+      "-4"
+    ],
+    [
+      "Embolden",
+      "-4"
+    ],
+    [
+      "Technical Finish",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Swiftcast",
+      "-5"
+    ],
+    [
+      "Acceleration",
+      "-5"
+    ],
+    [
+      "Embolden",
+      "-5"
+    ],
+    [
+      "Manafication",
+      "-5"
+    ],
+    [
+      "Addle",
+      "-5"
+    ],
+    [
+      "Magick Barrier",
+      "-5"
+    ],
+    [
+      "Lucid Dreaming",
+      "-5"
+    ],
+    [
+      "Fleche",
+      "-5"
+    ],
+    [
+      "Contre Sixte",
+      "-5"
+    ],
+    [
+      "Engagement",
+      "-5"
+    ],
+    [
+      "Corps-a-corps",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Arcane Circle",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212936_hr1.tex&format=png"
+    ],
+    [
+      "Embolden",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/218000/218921_hr1.tex&format=png"
+    ],
+    [
+      "Technical Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213709_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Veraero III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003236_hr1.tex&format=png"
+    ],
+    [
+      "Verthunder III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003235_hr1.tex&format=png"
+    ],
+    [
+      "Verthunder III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003235_hr1.tex&format=png"
+    ],
+    [
+      "Verthunder III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003235_hr1.tex&format=png"
+    ],
+    [
+      "Enchanted Riposte",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003225_hr1.tex&format=png"
+    ],
+    [
+      "Enchanted Zwerchhau",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003226_hr1.tex&format=png"
+    ],
+    [
+      "Enchanted Redoublement",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003227_hr1.tex&format=png"
+    ],
+    [
+      "Verholy",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003224_hr1.tex&format=png"
+    ],
+    [
+      "Scorch",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003234_hr1.tex&format=png"
+    ],
+    [
+      "Resolution",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003238_hr1.tex&format=png"
+    ],
+    [
+      "Grand Impact",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003243_hr1.tex&format=png"
+    ],
+    [
+      "Verstone",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003209_hr1.tex&format=png"
+    ],
+    [
+      "Veraero III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003236_hr1.tex&format=png"
+    ],
+    [
+      "Veraero III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003236_hr1.tex&format=png"
+    ],
+    [
+      "Verfire",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003208_hr1.tex&format=png"
+    ],
+    [
+      "Verthunder III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003235_hr1.tex&format=png"
+    ],
+    [
+      "Verstone",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003209_hr1.tex&format=png"
+    ],
+    [
+      "Veraero III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003236_hr1.tex&format=png"
+    ],
+    [
+      "Grand Impact",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003243_hr1.tex&format=png"
+    ],
+    [
+      "Verthunder III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003235_hr1.tex&format=png"
+    ],
+    [
+      "Jolt III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003241_hr1.tex&format=png"
+    ],
+    [
+      "Verthunder III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003235_hr1.tex&format=png"
+    ],
+    [
+      "Jolt III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003241_hr1.tex&format=png"
+    ],
+    [
+      "Jolt III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003241_hr1.tex&format=png"
+    ],
+    [
+      "Verthunder III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003235_hr1.tex&format=png"
+    ],
+    [
+      "Verfire",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003208_hr1.tex&format=png"
+    ],
+    [
+      "Enchanted Reprise",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003232_hr1.tex&format=png"
+    ],
+    [
+      "Thorned Flourish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213411_hr1.tex&format=png"
+    ],
+    [
+      "Prefulgence Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213413_hr1.tex&format=png"
+    ],
+    [
+      "Magicked Swordplay",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/218000/218665_hr1.tex&format=png"
+    ],
+    [
+      "Verstone Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213403_hr1.tex&format=png"
+    ],
+    [
+      "Verstone Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213403_hr1.tex&format=png"
+    ],
+    [
+      "Verstone Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213403_hr1.tex&format=png"
+    ],
+    [
+      "Verfire Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213402_hr1.tex&format=png"
+    ],
+    [
+      "Verfire Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213402_hr1.tex&format=png"
+    ],
+    [
+      "Verfire Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213402_hr1.tex&format=png"
+    ],
+    [
+      "Grand Impact Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213412_hr1.tex&format=png"
+    ],
+    [
+      "Grand Impact Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213412_hr1.tex&format=png"
+    ],
+    [
+      "Grand Impact Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213412_hr1.tex&format=png"
+    ],
+    [
+      "Swiftcast",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000866_hr1.tex&format=png"
+    ],
+    [
+      "Swiftcast",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000866_hr1.tex&format=png"
+    ],
+    [
+      "Acceleration",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003214_hr1.tex&format=png"
+    ],
+    [
+      "Acceleration",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003214_hr1.tex&format=png"
+    ],
+    [
+      "Acceleration",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003214_hr1.tex&format=png"
+    ],
+    [
+      "Embolden",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003218_hr1.tex&format=png"
+    ],
+    [
+      "Manafication",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003219_hr1.tex&format=png"
+    ],
+    [
+      "Addle",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000861_hr1.tex&format=png"
+    ],
+    [
+      "Magick Barrier",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003237_hr1.tex&format=png"
+    ],
+    [
+      "Fleche",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003212_hr1.tex&format=png"
+    ],
+    [
+      "Fleche",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003212_hr1.tex&format=png"
+    ],
+    [
+      "Fleche",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003212_hr1.tex&format=png"
+    ],
+    [
+      "Contre Sixte",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003217_hr1.tex&format=png"
+    ],
+    [
+      "Contre Sixte",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003217_hr1.tex&format=png"
+    ],
+    [
+      "Engagement",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003231_hr1.tex&format=png"
+    ],
+    [
+      "Engagement",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003231_hr1.tex&format=png"
+    ],
+    [
+      "Corps-a-corps",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003204_hr1.tex&format=png"
+    ],
+    [
+      "Corps-a-corps",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003204_hr1.tex&format=png"
+    ]
+  ]
+}

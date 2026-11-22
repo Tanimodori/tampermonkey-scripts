@@ -1,0 +1,54 @@
+{
+  "formatVersion": 1,
+  "id": "b402846649b807d1",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=2513,1185,1181&limit=3&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 2513,
+          "fields": {
+            "Icon": {
+              "id": 212535,
+              "path": "ui/icon/212000/212535.tex",
+              "path_hr1": "ui/icon/212000/212535_hr1.tex"
+            },
+            "Name": "Formless Fist"
+          }
+        },
+        {
+          "row_id": 1185,
+          "fields": {
+            "Icon": {
+              "id": 212532,
+              "path": "ui/icon/212000/212532.tex",
+              "path_hr1": "ui/icon/212000/212532_hr1.tex"
+            },
+            "Name": "Brotherhood"
+          }
+        },
+        {
+          "row_id": 1181,
+          "fields": {
+            "Icon": {
+              "id": 212528,
+              "path": "ui/icon/212000/212528.tex",
+              "path_hr1": "ui/icon/212000/212528_hr1.tex"
+            },
+            "Name": "Riddle of Fire"
+          }
+        }
+      ]
+    }
+  }
+}

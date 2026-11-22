@@ -1,0 +1,318 @@
+{
+  "formatVersion": 1,
+  "id": "433567162a144938",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=24313%2C24312%2C37033%2C24316%2C24314%2C24290%2C24318%2C24311%2C24298%2C24296%2C24299%2C24284%2C24285%2C3%2C24302%2C7562%2C24310%2C24305%2C24309%2C24303%2C24292%2C24286%2C27524%2C37035%2C24294%2C24317%2C7561&limit=27&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 24313,
+          "fields": {
+            "Icon": {
+              "id": 3681,
+              "path": "ui/icon/003000/003681.tex",
+              "path_hr1": "ui/icon/003000/003681_hr1.tex"
+            },
+            "Name": "发炎III"
+          }
+        },
+        {
+          "row_id": 24312,
+          "fields": {
+            "Icon": {
+              "id": 3680,
+              "path": "ui/icon/003000/003680.tex",
+              "path_hr1": "ui/icon/003000/003680_hr1.tex"
+            },
+            "Name": "注药III"
+          }
+        },
+        {
+          "row_id": 37033,
+          "fields": {
+            "Icon": {
+              "id": 3688,
+              "path": "ui/icon/003000/003688.tex",
+              "path_hr1": "ui/icon/003000/003688_hr1.tex"
+            },
+            "Name": "心神风息"
+          }
+        },
+        {
+          "row_id": 24316,
+          "fields": {
+            "Icon": {
+              "id": 3684,
+              "path": "ui/icon/003000/003684.tex",
+              "path_hr1": "ui/icon/003000/003684_hr1.tex"
+            },
+            "Name": "箭毒II"
+          }
+        },
+        {
+          "row_id": 24314,
+          "fields": {
+            "Icon": {
+              "id": 3682,
+              "path": "ui/icon/003000/003682.tex",
+              "path_hr1": "ui/icon/003000/003682_hr1.tex"
+            },
+            "Name": "均衡注药III"
+          }
+        },
+        {
+          "row_id": 24290,
+          "fields": {
+            "Icon": {
+              "id": 3658,
+              "path": "ui/icon/003000/003658.tex",
+              "path_hr1": "ui/icon/003000/003658_hr1.tex"
+            },
+            "Name": "均衡"
+          }
+        },
+        {
+          "row_id": 24318,
+          "fields": {
+            "Icon": {
+              "id": 3686,
+              "path": "ui/icon/003000/003686.tex",
+              "path_hr1": "ui/icon/003000/003686_hr1.tex"
+            },
+            "Name": "魂灵风息"
+          }
+        },
+        {
+          "row_id": 24311,
+          "fields": {
+            "Icon": {
+              "id": 3679,
+              "path": "ui/icon/003000/003679.tex",
+              "path_hr1": "ui/icon/003000/003679_hr1.tex"
+            },
+            "Name": "泛输血"
+          }
+        },
+        {
+          "row_id": 24298,
+          "fields": {
+            "Icon": {
+              "id": 3666,
+              "path": "ui/icon/003000/003666.tex",
+              "path_hr1": "ui/icon/003000/003666_hr1.tex"
+            },
+            "Name": "坚角清汁"
+          }
+        },
+        {
+          "row_id": 24296,
+          "fields": {
+            "Icon": {
+              "id": 3664,
+              "path": "ui/icon/003000/003664.tex",
+              "path_hr1": "ui/icon/003000/003664_hr1.tex"
+            },
+            "Name": "灵橡清汁"
+          }
+        },
+        {
+          "row_id": 24299,
+          "fields": {
+            "Icon": {
+              "id": 3667,
+              "path": "ui/icon/003000/003667.tex",
+              "path_hr1": "ui/icon/003000/003667_hr1.tex"
+            },
+            "Name": "寄生清汁"
+          }
+        },
+        {
+          "row_id": 24284,
+          "fields": {
+            "Icon": {
+              "id": 3652,
+              "path": "ui/icon/003000/003652.tex",
+              "path_hr1": "ui/icon/003000/003652_hr1.tex"
+            },
+            "Name": "诊断"
+          }
+        },
+        {
+          "row_id": 24285,
+          "fields": {
+            "Icon": {
+              "id": 3653,
+              "path": "ui/icon/003000/003653.tex",
+              "path_hr1": "ui/icon/003000/003653_hr1.tex"
+            },
+            "Name": "心关"
+          }
+        },
+        {
+          "row_id": 3,
+          "fields": {
+            "Icon": {
+              "id": 104,
+              "path": "ui/icon/000000/000104.tex",
+              "path_hr1": "ui/icon/000000/000104_hr1.tex"
+            },
+            "Name": "冲刺"
+          }
+        },
+        {
+          "row_id": 24302,
+          "fields": {
+            "Icon": {
+              "id": 3670,
+              "path": "ui/icon/003000/003670.tex",
+              "path_hr1": "ui/icon/003000/003670_hr1.tex"
+            },
+            "Name": "自生II"
+          }
+        },
+        {
+          "row_id": 7562,
+          "fields": {
+            "Icon": {
+              "id": 865,
+              "path": "ui/icon/000000/000865.tex",
+              "path_hr1": "ui/icon/000000/000865_hr1.tex"
+            },
+            "Name": "醒梦"
+          }
+        },
+        {
+          "row_id": 24310,
+          "fields": {
+            "Icon": {
+              "id": 3678,
+              "path": "ui/icon/003000/003678.tex",
+              "path_hr1": "ui/icon/003000/003678_hr1.tex"
+            },
+            "Name": "整体论"
+          }
+        },
+        {
+          "row_id": 24305,
+          "fields": {
+            "Icon": {
+              "id": 3673,
+              "path": "ui/icon/003000/003673.tex",
+              "path_hr1": "ui/icon/003000/003673_hr1.tex"
+            },
+            "Name": "输血"
+          }
+        },
+        {
+          "row_id": 24309,
+          "fields": {
+            "Icon": {
+              "id": 3677,
+              "path": "ui/icon/003000/003677.tex",
+              "path_hr1": "ui/icon/003000/003677_hr1.tex"
+            },
+            "Name": "根素"
+          }
+        },
+        {
+          "row_id": 24303,
+          "fields": {
+            "Icon": {
+              "id": 3671,
+              "path": "ui/icon/003000/003671.tex",
+              "path_hr1": "ui/icon/003000/003671_hr1.tex"
+            },
+            "Name": "白牛清汁"
+          }
+        },
+        {
+          "row_id": 24292,
+          "fields": {
+            "Icon": {
+              "id": 3660,
+              "path": "ui/icon/003000/003660.tex",
+              "path_hr1": "ui/icon/003000/003660_hr1.tex"
+            },
+            "Name": "均衡预后"
+          }
+        },
+        {
+          "row_id": 24286,
+          "fields": {
+            "Icon": {
+              "id": 3654,
+              "path": "ui/icon/003000/003654.tex",
+              "path_hr1": "ui/icon/003000/003654_hr1.tex"
+            },
+            "Name": "预后"
+          }
+        },
+        {
+          "row_id": 27524,
+          "fields": {
+            "Icon": {
+              "id": 405,
+              "path": "ui/icon/000000/000405.tex",
+              "path_hr1": "ui/icon/000000/000405_hr1.tex"
+            },
+            "Name": "魂灵风息"
+          }
+        },
+        {
+          "row_id": 37035,
+          "fields": {
+            "Icon": {
+              "id": 3690,
+              "path": "ui/icon/003000/003690.tex",
+              "path_hr1": "ui/icon/003000/003690_hr1.tex"
+            },
+            "Name": "智慧之爱"
+          }
+        },
+        {
+          "row_id": 24294,
+          "fields": {
+            "Icon": {
+              "id": 3662,
+              "path": "ui/icon/003000/003662.tex",
+              "path_hr1": "ui/icon/003000/003662_hr1.tex"
+            },
+            "Name": "拯救"
+          }
+        },
+        {
+          "row_id": 24317,
+          "fields": {
+            "Icon": {
+              "id": 3685,
+              "path": "ui/icon/003000/003685.tex",
+              "path_hr1": "ui/icon/003000/003685_hr1.tex"
+            },
+            "Name": "混合"
+          }
+        },
+        {
+          "row_id": 7561,
+          "fields": {
+            "Icon": {
+              "id": 866,
+              "path": "ui/icon/000000/000866.tex",
+              "path_hr1": "ui/icon/000000/000866_hr1.tex"
+            },
+            "Name": "即刻咏唱"
+          }
+        }
+      ]
+    }
+  }
+}

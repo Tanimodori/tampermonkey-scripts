@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "eab32931a93c3c6c",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/34608?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 34608,
+      "fields": {
+        "Icon": {
+          "id": 3703,
+          "path": "ui/icon/003000/003703.tex",
+          "path_hr1": "ui/icon/003000/003703_hr1.tex"
+        },
+        "Name": "猛袭利齿"
+      },
+      "transient": {
+        "Description": "对目标发动物理攻击　威力：300\n追加效果：猛袭\n持续时间：40秒\n猛袭效果：自身发动攻击造成的伤害提高10%\n发动条件：咬噬尖齿或穿裂尖齿命中时\n\n※该技能无法设置到热键栏\n　满足发动条件后，咬噬尖齿变为猛袭利齿"
+      }
+    }
+  }
+}

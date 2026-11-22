@@ -1,0 +1,24 @@
+{
+  "formatVersion": 1,
+  "id": "VWJv7x9DbRa4ktH6/7/4",
+  "slug": "VWJv7x9DbRa4ktH6__7__4",
+  "url": "https://xivanalysis.com/fflogs/VWJv7x9DbRa4ktH6/7/4",
+  "job": "DNC",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "47fc7a97955b1c42",
+      "a3c4794735ef95eb"
+    ],
+    "script": [
+      "5ea858e69a0c1fca",
+      "7c81bb6c41b3256e",
+      "7fe6e9d854c3b3c0",
+      "8c26efd36ccf097a",
+      "9b6b4a92cf7218f6",
+      "9c5fcff7bd23f0a0",
+      "d44054c2ee6ac0e2"
+    ]
+  }
+}

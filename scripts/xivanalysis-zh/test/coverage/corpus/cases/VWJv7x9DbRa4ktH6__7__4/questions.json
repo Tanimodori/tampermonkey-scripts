@@ -1,0 +1,322 @@
+{
+  "formatVersion": 1,
+  "id": "VWJv7x9DbRa4ktH6/7/4",
+  "url": "https://xivanalysis.com/fflogs/VWJv7x9DbRa4ktH6/7/4",
+  "job": "DNC",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Gauges",
+      "-5"
+    ],
+    [
+      "Feathers",
+      "-4"
+    ],
+    [
+      "Esprit",
+      "-4"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Arcane Circle",
+      "-4"
+    ],
+    [
+      "Technical Finish",
+      "-4"
+    ],
+    [
+      "Devilment",
+      "-4"
+    ],
+    [
+      "Searing Light",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Technical Step",
+      "-5"
+    ],
+    [
+      "Devilment",
+      "-5"
+    ],
+    [
+      "Flourish",
+      "-5"
+    ],
+    [
+      "Shield Samba",
+      "-5"
+    ],
+    [
+      "Standard Step",
+      "-5"
+    ],
+    [
+      "Improvisation",
+      "-5"
+    ],
+    [
+      "Improvised Finish",
+      "-5"
+    ],
+    [
+      "Fan Dance III",
+      "-5"
+    ],
+    [
+      "Fan Dance IV",
+      "-5"
+    ],
+    [
+      "Second Wind",
+      "-5"
+    ],
+    [
+      "Curing Waltz",
+      "-5"
+    ],
+    [
+      "Fan Dance",
+      "-5"
+    ],
+    [
+      "En Avant",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Arcane Circle",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212936_hr1.tex&format=png"
+    ],
+    [
+      "Technical Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213709_hr1.tex&format=png"
+    ],
+    [
+      "Devilment",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213714_hr1.tex&format=png"
+    ],
+    [
+      "Searing Light",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212699_hr1.tex&format=png"
+    ],
+    [
+      "Technical Step",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003473_hr1.tex&format=png"
+    ],
+    [
+      "Double Standard Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003459_hr1.tex&format=png"
+    ],
+    [
+      "Quadruple Technical Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003474_hr1.tex&format=png"
+    ],
+    [
+      "Tillana",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003480_hr1.tex&format=png"
+    ],
+    [
+      "Finishing Move",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003484_hr1.tex&format=png"
+    ],
+    [
+      "Dance of the Dawn",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003485_hr1.tex&format=png"
+    ],
+    [
+      "Last Dance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003483_hr1.tex&format=png"
+    ],
+    [
+      "Starfall Dance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003482_hr1.tex&format=png"
+    ],
+    [
+      "Saber Dance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003476_hr1.tex&format=png"
+    ],
+    [
+      "Saber Dance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003476_hr1.tex&format=png"
+    ],
+    [
+      "Saber Dance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003476_hr1.tex&format=png"
+    ],
+    [
+      "Fountainfall",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003464_hr1.tex&format=png"
+    ],
+    [
+      "Reverse Cascade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003460_hr1.tex&format=png"
+    ],
+    [
+      "Cascade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003451_hr1.tex&format=png"
+    ],
+    [
+      "Reverse Cascade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003460_hr1.tex&format=png"
+    ],
+    [
+      "Fountain",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003452_hr1.tex&format=png"
+    ],
+    [
+      "Standard Step",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003454_hr1.tex&format=png"
+    ],
+    [
+      "Entrechat",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003456_hr1.tex&format=png"
+    ],
+    [
+      "Emboite",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003455_hr1.tex&format=png"
+    ],
+    [
+      "Double Standard Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003459_hr1.tex&format=png"
+    ],
+    [
+      "Last Dance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003483_hr1.tex&format=png"
+    ],
+    [
+      "Saber Dance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003476_hr1.tex&format=png"
+    ],
+    [
+      "Fountainfall",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003464_hr1.tex&format=png"
+    ],
+    [
+      "Cascade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003451_hr1.tex&format=png"
+    ],
+    [
+      "Fountain",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003452_hr1.tex&format=png"
+    ],
+    [
+      "Cascade",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003451_hr1.tex&format=png"
+    ],
+    [
+      "Fountain",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003452_hr1.tex&format=png"
+    ],
+    [
+      "Saber Dance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003476_hr1.tex&format=png"
+    ],
+    [
+      "Fountainfall",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003464_hr1.tex&format=png"
+    ],
+    [
+      "Threefold Fan Dance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213707_hr1.tex&format=png"
+    ],
+    [
+      "Fourfold Fan Dance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213723_hr1.tex&format=png"
+    ],
+    [
+      "Silken Symmetry",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213718_hr1.tex&format=png"
+    ],
+    [
+      "Silken Flow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213719_hr1.tex&format=png"
+    ],
+    [
+      "Silken Flow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213719_hr1.tex&format=png"
+    ],
+    [
+      "Flourishing Symmetry",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213725_hr1.tex&format=png"
+    ],
+    [
+      "Flourishing Flow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213726_hr1.tex&format=png"
+    ],
+    [
+      "Flourishing Starfall",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213724_hr1.tex&format=png"
+    ],
+    [
+      "Flourishing Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213722_hr1.tex&format=png"
+    ],
+    [
+      "Technical Step",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003473_hr1.tex&format=png"
+    ],
+    [
+      "Devilment",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003471_hr1.tex&format=png"
+    ],
+    [
+      "Flourish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003475_hr1.tex&format=png"
+    ],
+    [
+      "Shield Samba",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003469_hr1.tex&format=png"
+    ],
+    [
+      "Finishing Move",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003484_hr1.tex&format=png"
+    ],
+    [
+      "Standard Step",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003454_hr1.tex&format=png"
+    ],
+    [
+      "Improvisation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003477_hr1.tex&format=png"
+    ],
+    [
+      "Improvised Finish",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003479_hr1.tex&format=png"
+    ],
+    [
+      "Fan Dance III",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003472_hr1.tex&format=png"
+    ],
+    [
+      "Fan Dance IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003481_hr1.tex&format=png"
+    ],
+    [
+      "Second Wind",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000821_hr1.tex&format=png"
+    ]
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "formatVersion": 1,
+  "id": "ec424eda44bc3ced",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=3871%2C738%2C737%2C165&limit=4&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 3871,
+          "fields": {
+            "Icon": {
+              "id": 212661,
+              "path": "ui/icon/212000/212661.tex",
+              "path_hr1": "ui/icon/212000/212661_hr1.tex"
+            },
+            "Name": "高闪雷"
+          }
+        },
+        {
+          "row_id": 738,
+          "fields": {
+            "Icon": {
+              "id": 212654,
+              "path": "ui/icon/212000/212654.tex",
+              "path_hr1": "ui/icon/212000/212654_hr1.tex"
+            },
+            "Name": "魔纹环"
+          }
+        },
+        {
+          "row_id": 737,
+          "fields": {
+            "Icon": {
+              "id": 212653,
+              "path": "ui/icon/212000/212653.tex",
+              "path_hr1": "ui/icon/212000/212653_hr1.tex"
+            },
+            "Name": "黑魔纹"
+          }
+        },
+        {
+          "row_id": 165,
+          "fields": {
+            "Icon": {
+              "id": 210460,
+              "path": "ui/icon/210000/210460.tex",
+              "path_hr1": "ui/icon/210000/210460_hr1.tex"
+            },
+            "Name": "火苗"
+          }
+        }
+      ]
+    }
+  }
+}

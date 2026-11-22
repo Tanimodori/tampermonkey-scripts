@@ -1,0 +1,65 @@
+{
+  "formatVersion": 1,
+  "id": "fb098a48cb8c73df",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=3871,738,165,737&limit=4&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 3871,
+          "fields": {
+            "Icon": {
+              "id": 212661,
+              "path": "ui/icon/212000/212661.tex",
+              "path_hr1": "ui/icon/212000/212661_hr1.tex"
+            },
+            "Name": "High Thunder"
+          }
+        },
+        {
+          "row_id": 738,
+          "fields": {
+            "Icon": {
+              "id": 212654,
+              "path": "ui/icon/212000/212654.tex",
+              "path_hr1": "ui/icon/212000/212654_hr1.tex"
+            },
+            "Name": "Circle of Power"
+          }
+        },
+        {
+          "row_id": 165,
+          "fields": {
+            "Icon": {
+              "id": 210460,
+              "path": "ui/icon/210000/210460.tex",
+              "path_hr1": "ui/icon/210000/210460_hr1.tex"
+            },
+            "Name": "Firestarter"
+          }
+        },
+        {
+          "row_id": 737,
+          "fields": {
+            "Icon": {
+              "id": 212653,
+              "path": "ui/icon/212000/212653.tex",
+              "path_hr1": "ui/icon/212000/212653_hr1.tex"
+            },
+            "Name": "Ley Lines"
+          }
+        }
+      ]
+    }
+  }
+}

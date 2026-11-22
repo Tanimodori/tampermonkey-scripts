@@ -20,11 +20,35 @@ Playwright 分组：
 - `rushx test:e2e:full` —— 离线夹具 + 真 Tampermonkey，判安装与 `@match`。
 - `rushx test:live:upstream` —— 真实英文、国服、ClassJob 与 garland 契约。
 - `rushx test:live:smoke` —— 一条真实战报 + 快速注入。
-- `rushx test:corpus:capture` —— 手工刷新 33 条战报语料，约 50 分钟，不属于门禁。
+- `rushx test:corpus:capture` —— 依次刷新 questions、responses、expected（约 50 分钟 + 接口请求），不属于门禁。
+- `rushx test:corpus:questions` —— 只跑无脚本问题采集。
+- `rushx test:corpus:responses` —— 只按 questions 采集独立响应。
+- `rushx test:corpus:expected` —— 只用 Vitest 调用生产函数计算逐元素答案。
 - `rushx test:gate:offline` —— unit + typecheck + build + 两组离线 e2e。
 - `rushx test:gate:live` —— 上游契约 + 一条真实战报 smoke。
 
 测试维度、每条用例与预期见 [docs/test-matrix.md](docs/test-matrix.md)；e2e 的分组与踩坑见 [test/e2e/README.md](test/e2e/README.md)。
+
+## 权威语料
+
+`test/coverage/corpus/` 是可直接组合的 HTTP 包仓库与 case：
+
+- `http/page/<id>.json`：页面自己发出的 EN 请求 + 默认 EN 响应，是问题上下文；
+- `http/script/<id>.json`：脚本派生的 CN sheet、ClassJob、garland 响应，是答案侧数据；
+- `cases/<slug>/questions.json`：该 case 实际生成的待处理元素；
+- `cases/<slug>/manifest.json`：该 case 引用的 page/script 包 ID，以及 questions/expected 文件；
+- `cases/<slug>/expected.json`：Vitest 调用生产函数算出的逐元素答案，只存答案；
+- `manifest.json`：整轮捕获的 `captureId`、case 列表、全部包 ID、完整性与三份 digest。
+
+HTTP 包使用同一 schema，`kind`/`origin` 为 `page` 或 `script`，`purpose` 区分 `sheet-en`、`sheet-cn`、`classjob`、`garland-search`、`garland-row`。包按请求 URL 去重，多个 case 可以引用同一个包；case manifest 决定该 case 实际调用哪些包。文件不保存 headers，只有 method/url/status/body。
+
+expected 的 icon 答案只存最终 `alt`；生成阶段校验生产 `applyEntry` 写入的 `title` 与 `alt` 相同，不再重复保存一份 title。
+
+`test/coverage/untranslated.allowlist.json` 是人工策略表，键为 `timeline:<en>` 或 `icon:<en>|<iconId>`（比较时 trim + lowercase），用于登记允许保持英文的量谱/UI 标记。普通 `test:unit` 离线读取 `manifest.json`、`http/`、`cases/`，检查每个待翻元素都有答案或命中 allowlist，不重新计算。
+
+采集顺序不能颠倒：questions 采集 page 包与 case questions；responses 采集 script 包并把 case 引用写进 case manifest；expected 只消费这些包并生成 case expected。
+
+旧的 labels/sheets/classjobs/abbreviations/garland/warnings/manifest 语料、`warnings.allowlist.json`、`test/coverage/coverage.spec.ts` 与 `test/e2e/live/corpus.spec.ts` 已删除。缺 `manifest.json`/`http`/`cases` 时新套件 skip；结构存在但内容坏会正常失败。
 
 ## 状态表烘焙
 
@@ -50,7 +74,7 @@ en 名与 en 图标未列例外时回落到 upstream；国服图标未列 `zhIco
 
 ```bash
 rushx update:data                   # 只更新 status 烘焙（同 bake:statuses）
-rushx update:data:corpus            # 同时跑约 50 分钟的语料 capture
+rushx update:data:corpus            # 先 status 烘焙，再 questions → responses → expected 全量刷新
 rushx bake:statuses                 # 重新生成 status 数据（联网）
 rushx bake:statuses:verify          # 离线校验 data 与 meta 的 hash/条目数/字段
 rushx bake:statuses:check-upstream  # 只比较 meta 里的上游 commit

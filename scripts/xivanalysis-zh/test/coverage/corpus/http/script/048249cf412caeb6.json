@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "048249cf412caeb6",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/18807?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 18807,
+      "fields": {
+        "Icon": {
+          "id": 2903,
+          "path": "ui/icon/002000/002903.tex",
+          "path_hr1": "ui/icon/002000/002903_hr1.tex"
+        },
+        "Name": "人之印"
+      },
+      "transient": {
+        "Description": "结成人之印手势　持续时间：6秒\n此能力类技能发动时会受到公共复唱时间的影响\n此能力类技能发动后会产生公共复唱时间"
+      }
+    }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "formatVersion": 1,
+  "id": "58fea9352c8043ed",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Lemure&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "24400",
+        "obj": {
+          "i": 24400,
+          "n": "Lemure's Scythe",
+          "c": 3628,
+          "j": 39,
+          "t": 4,
+          "l": 86
+        }
+      },
+      {
+        "type": "action",
+        "id": "27816",
+        "obj": {
+          "i": 27816,
+          "n": "Lemure's Scythe",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "24399",
+        "obj": {
+          "i": 24399,
+          "n": "Lemure's Slice",
+          "c": 3627,
+          "j": 39,
+          "t": 4,
+          "l": 86
+        }
+      },
+      {
+        "type": "action",
+        "id": "27815",
+        "obj": {
+          "i": 27815,
+          "n": "Lemure's Slice",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "29548",
+        "obj": {
+          "i": 29548,
+          "n": "Lemure's Slice",
+          "c": 9561,
+          "j": 39,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "npc",
+        "id": "1035468",
+        "obj": {
+          "i": 1035468,
+          "n": "Loyal Lemure"
+        }
+      }
+    ]
+  }
+}

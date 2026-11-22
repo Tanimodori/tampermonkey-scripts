@@ -1,0 +1,76 @@
+{
+  "formatVersion": 1,
+  "id": "1541ae02065f9efd",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=1902,3827,3828,2673,1368&limit=5&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 1902,
+          "fields": {
+            "Icon": {
+              "id": 212522,
+              "path": "ui/icon/212000/212522.tex",
+              "path_hr1": "ui/icon/212000/212522_hr1.tex"
+            },
+            "Name": "Atonement Ready"
+          }
+        },
+        {
+          "row_id": 3827,
+          "fields": {
+            "Icon": {
+              "id": 212523,
+              "path": "ui/icon/212000/212523.tex",
+              "path_hr1": "ui/icon/212000/212523_hr1.tex"
+            },
+            "Name": "Supplication Ready"
+          }
+        },
+        {
+          "row_id": 3828,
+          "fields": {
+            "Icon": {
+              "id": 212524,
+              "path": "ui/icon/212000/212524.tex",
+              "path_hr1": "ui/icon/212000/212524_hr1.tex"
+            },
+            "Name": "Sepulchre Ready"
+          }
+        },
+        {
+          "row_id": 2673,
+          "fields": {
+            "Icon": {
+              "id": 212521,
+              "path": "ui/icon/212000/212521.tex",
+              "path_hr1": "ui/icon/212000/212521_hr1.tex"
+            },
+            "Name": "Divine Might"
+          }
+        },
+        {
+          "row_id": 1368,
+          "fields": {
+            "Icon": {
+              "id": 218345,
+              "path": "ui/icon/218000/218345.tex",
+              "path_hr1": "ui/icon/218000/218345_hr1.tex"
+            },
+            "Name": "Requiescat"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "formatVersion": 1,
+  "id": "312d9479923b0411",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=1235,1234&limit=2&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 1235,
+          "fields": {
+            "Icon": {
+              "id": 213403,
+              "path": "ui/icon/213000/213403.tex",
+              "path_hr1": "ui/icon/213000/213403_hr1.tex"
+            },
+            "Name": "Verstone Ready"
+          }
+        },
+        {
+          "row_id": 1234,
+          "fields": {
+            "Icon": {
+              "id": 213402,
+              "path": "ui/icon/213000/213402.tex",
+              "path_hr1": "ui/icon/213000/213402_hr1.tex"
+            },
+            "Name": "Verfire Ready"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "8ff646a0cf311c07",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/24375?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 24375,
+      "fields": {
+        "Icon": {
+          "id": 3603,
+          "path": "ui/icon/003000/003603.tex",
+          "path_hr1": "ui/icon/003000/003603_hr1.tex"
+        },
+        "Name": "地狱切割"
+      },
+      "transient": {
+        "Description": "对目标发动物理攻击　威力：280\n连击条件：增盈切割　连击中威力：600\n连击成功：获得10点灵魂"
+      }
+    }
+  }
+}

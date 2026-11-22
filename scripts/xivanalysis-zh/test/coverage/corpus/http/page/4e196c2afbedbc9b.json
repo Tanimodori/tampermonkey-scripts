@@ -1,0 +1,406 @@
+{
+  "formatVersion": 1,
+  "id": "4e196c2afbedbc9b",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Action?rows=52,7389,7387,25752,7386,3549,40,31,41,3,16464,16462,42,7548,37,7388,3552,7537,7540,7533,44,7535,16465,25753,36925,36924,16463,3550,43,7538,48,45,36923,25751,7531&limit=35&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 52,
+          "fields": {
+            "Icon": {
+              "id": 2555,
+              "path": "ui/icon/002000/002555.tex",
+              "path_hr1": "ui/icon/002000/002555_hr1.tex"
+            },
+            "Name": "Infuriate"
+          }
+        },
+        {
+          "row_id": 7389,
+          "fields": {
+            "Icon": {
+              "id": 2564,
+              "path": "ui/icon/002000/002564.tex",
+              "path_hr1": "ui/icon/002000/002564_hr1.tex"
+            },
+            "Name": "Inner Release"
+          }
+        },
+        {
+          "row_id": 7387,
+          "fields": {
+            "Icon": {
+              "id": 2562,
+              "path": "ui/icon/002000/002562.tex",
+              "path_hr1": "ui/icon/002000/002562_hr1.tex"
+            },
+            "Name": "Upheaval"
+          }
+        },
+        {
+          "row_id": 25752,
+          "fields": {
+            "Icon": {
+              "id": 2570,
+              "path": "ui/icon/002000/002570.tex",
+              "path_hr1": "ui/icon/002000/002570_hr1.tex"
+            },
+            "Name": "Orogeny"
+          }
+        },
+        {
+          "row_id": 7386,
+          "fields": {
+            "Icon": {
+              "id": 2561,
+              "path": "ui/icon/002000/002561.tex",
+              "path_hr1": "ui/icon/002000/002561_hr1.tex"
+            },
+            "Name": "Onslaught"
+          }
+        },
+        {
+          "row_id": 3549,
+          "fields": {
+            "Icon": {
+              "id": 2557,
+              "path": "ui/icon/002000/002557.tex",
+              "path_hr1": "ui/icon/002000/002557_hr1.tex"
+            },
+            "Name": "Fell Cleave"
+          }
+        },
+        {
+          "row_id": 40,
+          "fields": {
+            "Icon": {
+              "id": 263,
+              "path": "ui/icon/000000/000263.tex",
+              "path_hr1": "ui/icon/000000/000263_hr1.tex"
+            },
+            "Name": "Thrill of Battle"
+          }
+        },
+        {
+          "row_id": 31,
+          "fields": {
+            "Icon": {
+              "id": 260,
+              "path": "ui/icon/000000/000260.tex",
+              "path_hr1": "ui/icon/000000/000260_hr1.tex"
+            },
+            "Name": "Heavy Swing"
+          }
+        },
+        {
+          "row_id": 41,
+          "fields": {
+            "Icon": {
+              "id": 254,
+              "path": "ui/icon/000000/000254.tex",
+              "path_hr1": "ui/icon/000000/000254_hr1.tex"
+            },
+            "Name": "Overpower"
+          }
+        },
+        {
+          "row_id": 3,
+          "fields": {
+            "Icon": {
+              "id": 104,
+              "path": "ui/icon/000000/000104.tex",
+              "path_hr1": "ui/icon/000000/000104_hr1.tex"
+            },
+            "Name": "Sprint"
+          }
+        },
+        {
+          "row_id": 16464,
+          "fields": {
+            "Icon": {
+              "id": 2567,
+              "path": "ui/icon/002000/002567.tex",
+              "path_hr1": "ui/icon/002000/002567_hr1.tex"
+            },
+            "Name": "Nascent Flash"
+          }
+        },
+        {
+          "row_id": 16462,
+          "fields": {
+            "Icon": {
+              "id": 2565,
+              "path": "ui/icon/002000/002565.tex",
+              "path_hr1": "ui/icon/002000/002565_hr1.tex"
+            },
+            "Name": "Mythril Tempest"
+          }
+        },
+        {
+          "row_id": 42,
+          "fields": {
+            "Icon": {
+              "id": 258,
+              "path": "ui/icon/000000/000258.tex",
+              "path_hr1": "ui/icon/000000/000258_hr1.tex"
+            },
+            "Name": "Storm's Path"
+          }
+        },
+        {
+          "row_id": 7548,
+          "fields": {
+            "Icon": {
+              "id": 822,
+              "path": "ui/icon/000000/000822.tex",
+              "path_hr1": "ui/icon/000000/000822_hr1.tex"
+            },
+            "Name": "Arm's Length"
+          }
+        },
+        {
+          "row_id": 37,
+          "fields": {
+            "Icon": {
+              "id": 255,
+              "path": "ui/icon/000000/000255.tex",
+              "path_hr1": "ui/icon/000000/000255_hr1.tex"
+            },
+            "Name": "Maim"
+          }
+        },
+        {
+          "row_id": 7388,
+          "fields": {
+            "Icon": {
+              "id": 2563,
+              "path": "ui/icon/002000/002563.tex",
+              "path_hr1": "ui/icon/002000/002563_hr1.tex"
+            },
+            "Name": "Shake It Off"
+          }
+        },
+        {
+          "row_id": 3552,
+          "fields": {
+            "Icon": {
+              "id": 2560,
+              "path": "ui/icon/002000/002560.tex",
+              "path_hr1": "ui/icon/002000/002560_hr1.tex"
+            },
+            "Name": "Equilibrium"
+          }
+        },
+        {
+          "row_id": 7537,
+          "fields": {
+            "Icon": {
+              "id": 810,
+              "path": "ui/icon/000000/000810.tex",
+              "path_hr1": "ui/icon/000000/000810_hr1.tex"
+            },
+            "Name": "Shirk"
+          }
+        },
+        {
+          "row_id": 7540,
+          "fields": {
+            "Icon": {
+              "id": 802,
+              "path": "ui/icon/000000/000802.tex",
+              "path_hr1": "ui/icon/000000/000802_hr1.tex"
+            },
+            "Name": "Low Blow"
+          }
+        },
+        {
+          "row_id": 7533,
+          "fields": {
+            "Icon": {
+              "id": 803,
+              "path": "ui/icon/000000/000803.tex",
+              "path_hr1": "ui/icon/000000/000803_hr1.tex"
+            },
+            "Name": "Provoke"
+          }
+        },
+        {
+          "row_id": 44,
+          "fields": {
+            "Icon": {
+              "id": 267,
+              "path": "ui/icon/000000/000267.tex",
+              "path_hr1": "ui/icon/000000/000267_hr1.tex"
+            },
+            "Name": "Vengeance"
+          }
+        },
+        {
+          "row_id": 7535,
+          "fields": {
+            "Icon": {
+              "id": 806,
+              "path": "ui/icon/000000/000806.tex",
+              "path_hr1": "ui/icon/000000/000806_hr1.tex"
+            },
+            "Name": "Reprisal"
+          }
+        },
+        {
+          "row_id": 16465,
+          "fields": {
+            "Icon": {
+              "id": 2568,
+              "path": "ui/icon/002000/002568.tex",
+              "path_hr1": "ui/icon/002000/002568_hr1.tex"
+            },
+            "Name": "Inner Chaos"
+          }
+        },
+        {
+          "row_id": 25753,
+          "fields": {
+            "Icon": {
+              "id": 2571,
+              "path": "ui/icon/002000/002571.tex",
+              "path_hr1": "ui/icon/002000/002571_hr1.tex"
+            },
+            "Name": "Primal Rend"
+          }
+        },
+        {
+          "row_id": 36925,
+          "fields": {
+            "Icon": {
+              "id": 2050,
+              "path": "ui/icon/002000/002050.tex",
+              "path_hr1": "ui/icon/002000/002050_hr1.tex"
+            },
+            "Name": "Primal Ruination"
+          }
+        },
+        {
+          "row_id": 36924,
+          "fields": {
+            "Icon": {
+              "id": 2574,
+              "path": "ui/icon/002000/002574.tex",
+              "path_hr1": "ui/icon/002000/002574_hr1.tex"
+            },
+            "Name": "Primal Wrath"
+          }
+        },
+        {
+          "row_id": 16463,
+          "fields": {
+            "Icon": {
+              "id": 2566,
+              "path": "ui/icon/002000/002566.tex",
+              "path_hr1": "ui/icon/002000/002566_hr1.tex"
+            },
+            "Name": "Chaotic Cyclone"
+          }
+        },
+        {
+          "row_id": 3550,
+          "fields": {
+            "Icon": {
+              "id": 2558,
+              "path": "ui/icon/002000/002558.tex",
+              "path_hr1": "ui/icon/002000/002558_hr1.tex"
+            },
+            "Name": "Decimate"
+          }
+        },
+        {
+          "row_id": 43,
+          "fields": {
+            "Icon": {
+              "id": 266,
+              "path": "ui/icon/000000/000266.tex",
+              "path_hr1": "ui/icon/000000/000266_hr1.tex"
+            },
+            "Name": "Holmgang"
+          }
+        },
+        {
+          "row_id": 7538,
+          "fields": {
+            "Icon": {
+              "id": 808,
+              "path": "ui/icon/000000/000808.tex",
+              "path_hr1": "ui/icon/000000/000808_hr1.tex"
+            },
+            "Name": "Interject"
+          }
+        },
+        {
+          "row_id": 48,
+          "fields": {
+            "Icon": {
+              "id": 2551,
+              "path": "ui/icon/002000/002551.tex",
+              "path_hr1": "ui/icon/002000/002551_hr1.tex"
+            },
+            "Name": "Defiance"
+          }
+        },
+        {
+          "row_id": 45,
+          "fields": {
+            "Icon": {
+              "id": 264,
+              "path": "ui/icon/000000/000264.tex",
+              "path_hr1": "ui/icon/000000/000264_hr1.tex"
+            },
+            "Name": "Storm's Eye"
+          }
+        },
+        {
+          "row_id": 36923,
+          "fields": {
+            "Icon": {
+              "id": 2573,
+              "path": "ui/icon/002000/002573.tex",
+              "path_hr1": "ui/icon/002000/002573_hr1.tex"
+            },
+            "Name": "Damnation"
+          }
+        },
+        {
+          "row_id": 25751,
+          "fields": {
+            "Icon": {
+              "id": 2569,
+              "path": "ui/icon/002000/002569.tex",
+              "path_hr1": "ui/icon/002000/002569_hr1.tex"
+            },
+            "Name": "Bloodwhetting"
+          }
+        },
+        {
+          "row_id": 7531,
+          "fields": {
+            "Icon": {
+              "id": 801,
+              "path": "ui/icon/000000/000801.tex",
+              "path_hr1": "ui/icon/000000/000801_hr1.tex"
+            },
+            "Name": "Rampart"
+          }
+        }
+      ]
+    }
+  }
+}

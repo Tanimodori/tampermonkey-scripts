@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "3dd2ef1599920ad0",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/34607?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 34607,
+      "fields": {
+        "Icon": {
+          "id": 3702,
+          "path": "ui/icon/003000/003702.tex",
+          "path_hr1": "ui/icon/003000/003702_hr1.tex"
+        },
+        "Name": "穿裂尖齿"
+      },
+      "transient": {
+        "Description": "对目标发动物理攻击　威力：200\n穿裂锐牙状态中威力：300\n追加效果：咬噬锐牙\n持续时间：60秒\n咬噬锐牙效果：咬噬尖齿的威力提升100，咬噬尖牙的威力提升20\n无法与穿裂锐牙效果共存"
+      }
+    }
+  }
+}

@@ -1,0 +1,351 @@
+{
+  "formatVersion": 1,
+  "id": "6722412633abccd3",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Action?rows=7436,166,3586,16540,17870,25865,16546,16537,37014,7561,3583,37013,3587,167,37012,7562,25867,7437,16543,16542,16538,189,7434,188,185,16544,16547,16548,16545,25868&limit=30&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 7436,
+          "fields": {
+            "Icon": {
+              "id": 2815,
+              "path": "ui/icon/002000/002815.tex",
+              "path_hr1": "ui/icon/002000/002815_hr1.tex"
+            },
+            "Name": "Chain Stratagem"
+          }
+        },
+        {
+          "row_id": 166,
+          "fields": {
+            "Icon": {
+              "id": 510,
+              "path": "ui/icon/000000/000510.tex",
+              "path_hr1": "ui/icon/000000/000510_hr1.tex"
+            },
+            "Name": "Aetherflow"
+          }
+        },
+        {
+          "row_id": 3586,
+          "fields": {
+            "Icon": {
+              "id": 2809,
+              "path": "ui/icon/002000/002809.tex",
+              "path_hr1": "ui/icon/002000/002809_hr1.tex"
+            },
+            "Name": "Emergency Tactics"
+          }
+        },
+        {
+          "row_id": 16540,
+          "fields": {
+            "Icon": {
+              "id": 2820,
+              "path": "ui/icon/002000/002820.tex",
+              "path_hr1": "ui/icon/002000/002820_hr1.tex"
+            },
+            "Name": "Biolysis"
+          }
+        },
+        {
+          "row_id": 17870,
+          "fields": {
+            "Icon": {
+              "id": 502,
+              "path": "ui/icon/000000/000502.tex",
+              "path_hr1": "ui/icon/000000/000502_hr1.tex"
+            },
+            "Name": "Ruin II"
+          }
+        },
+        {
+          "row_id": 25865,
+          "fields": {
+            "Icon": {
+              "id": 2875,
+              "path": "ui/icon/002000/002875.tex",
+              "path_hr1": "ui/icon/002000/002875_hr1.tex"
+            },
+            "Name": "Broil IV"
+          }
+        },
+        {
+          "row_id": 16546,
+          "fields": {
+            "Icon": {
+              "id": 2851,
+              "path": "ui/icon/002000/002851.tex",
+              "path_hr1": "ui/icon/002000/002851_hr1.tex"
+            },
+            "Name": "Consolation"
+          }
+        },
+        {
+          "row_id": 16537,
+          "fields": {
+            "Icon": {
+              "id": 2852,
+              "path": "ui/icon/002000/002852.tex",
+              "path_hr1": "ui/icon/002000/002852_hr1.tex"
+            },
+            "Name": "Whispering Dawn"
+          }
+        },
+        {
+          "row_id": 37014,
+          "fields": {
+            "Icon": {
+              "id": 2881,
+              "path": "ui/icon/002000/002881.tex",
+              "path_hr1": "ui/icon/002000/002881_hr1.tex"
+            },
+            "Name": "Seraphism"
+          }
+        },
+        {
+          "row_id": 7561,
+          "fields": {
+            "Icon": {
+              "id": 866,
+              "path": "ui/icon/000000/000866.tex",
+              "path_hr1": "ui/icon/000000/000866_hr1.tex"
+            },
+            "Name": "Swiftcast"
+          }
+        },
+        {
+          "row_id": 3583,
+          "fields": {
+            "Icon": {
+              "id": 2806,
+              "path": "ui/icon/002000/002806.tex",
+              "path_hr1": "ui/icon/002000/002806_hr1.tex"
+            },
+            "Name": "Indomitability"
+          }
+        },
+        {
+          "row_id": 37013,
+          "fields": {
+            "Icon": {
+              "id": 2880,
+              "path": "ui/icon/002000/002880.tex",
+              "path_hr1": "ui/icon/002000/002880_hr1.tex"
+            },
+            "Name": "Concitation"
+          }
+        },
+        {
+          "row_id": 3587,
+          "fields": {
+            "Icon": {
+              "id": 2810,
+              "path": "ui/icon/002000/002810.tex",
+              "path_hr1": "ui/icon/002000/002810_hr1.tex"
+            },
+            "Name": "Dissipation"
+          }
+        },
+        {
+          "row_id": 167,
+          "fields": {
+            "Icon": {
+              "id": 514,
+              "path": "ui/icon/000000/000514.tex",
+              "path_hr1": "ui/icon/000000/000514_hr1.tex"
+            },
+            "Name": "Energy Drain"
+          }
+        },
+        {
+          "row_id": 37012,
+          "fields": {
+            "Icon": {
+              "id": 2879,
+              "path": "ui/icon/002000/002879.tex",
+              "path_hr1": "ui/icon/002000/002879_hr1.tex"
+            },
+            "Name": "Baneful Impaction"
+          }
+        },
+        {
+          "row_id": 7562,
+          "fields": {
+            "Icon": {
+              "id": 865,
+              "path": "ui/icon/000000/000865.tex",
+              "path_hr1": "ui/icon/000000/000865_hr1.tex"
+            },
+            "Name": "Lucid Dreaming"
+          }
+        },
+        {
+          "row_id": 25867,
+          "fields": {
+            "Icon": {
+              "id": 2877,
+              "path": "ui/icon/002000/002877.tex",
+              "path_hr1": "ui/icon/002000/002877_hr1.tex"
+            },
+            "Name": "Protraction"
+          }
+        },
+        {
+          "row_id": 7437,
+          "fields": {
+            "Icon": {
+              "id": 2816,
+              "path": "ui/icon/002000/002816.tex",
+              "path_hr1": "ui/icon/002000/002816_hr1.tex"
+            },
+            "Name": "Aetherpact"
+          }
+        },
+        {
+          "row_id": 16543,
+          "fields": {
+            "Icon": {
+              "id": 2854,
+              "path": "ui/icon/002000/002854.tex",
+              "path_hr1": "ui/icon/002000/002854_hr1.tex"
+            },
+            "Name": "Fey Blessing"
+          }
+        },
+        {
+          "row_id": 16542,
+          "fields": {
+            "Icon": {
+              "id": 2822,
+              "path": "ui/icon/002000/002822.tex",
+              "path_hr1": "ui/icon/002000/002822_hr1.tex"
+            },
+            "Name": "Recitation"
+          }
+        },
+        {
+          "row_id": 16538,
+          "fields": {
+            "Icon": {
+              "id": 2853,
+              "path": "ui/icon/002000/002853.tex",
+              "path_hr1": "ui/icon/002000/002853_hr1.tex"
+            },
+            "Name": "Fey Illumination"
+          }
+        },
+        {
+          "row_id": 189,
+          "fields": {
+            "Icon": {
+              "id": 2805,
+              "path": "ui/icon/002000/002805.tex",
+              "path_hr1": "ui/icon/002000/002805_hr1.tex"
+            },
+            "Name": "Lustrate"
+          }
+        },
+        {
+          "row_id": 7434,
+          "fields": {
+            "Icon": {
+              "id": 2813,
+              "path": "ui/icon/002000/002813.tex",
+              "path_hr1": "ui/icon/002000/002813_hr1.tex"
+            },
+            "Name": "Excogitation"
+          }
+        },
+        {
+          "row_id": 188,
+          "fields": {
+            "Icon": {
+              "id": 2804,
+              "path": "ui/icon/002000/002804.tex",
+              "path_hr1": "ui/icon/002000/002804_hr1.tex"
+            },
+            "Name": "Sacred Soil"
+          }
+        },
+        {
+          "row_id": 185,
+          "fields": {
+            "Icon": {
+              "id": 2801,
+              "path": "ui/icon/002000/002801.tex",
+              "path_hr1": "ui/icon/002000/002801_hr1.tex"
+            },
+            "Name": "Adloquium"
+          }
+        },
+        {
+          "row_id": 16544,
+          "fields": {
+            "Icon": {
+              "id": 2855,
+              "path": "ui/icon/002000/002855.tex",
+              "path_hr1": "ui/icon/002000/002855_hr1.tex"
+            },
+            "Name": "Fey Blessing"
+          }
+        },
+        {
+          "row_id": 16547,
+          "fields": {
+            "Icon": {
+              "id": 2846,
+              "path": "ui/icon/002000/002846.tex",
+              "path_hr1": "ui/icon/002000/002846_hr1.tex"
+            },
+            "Name": "Consolation"
+          }
+        },
+        {
+          "row_id": 16548,
+          "fields": {
+            "Icon": {
+              "id": 2847,
+              "path": "ui/icon/002000/002847.tex",
+              "path_hr1": "ui/icon/002000/002847_hr1.tex"
+            },
+            "Name": "Seraphic Veil"
+          }
+        },
+        {
+          "row_id": 16545,
+          "fields": {
+            "Icon": {
+              "id": 2850,
+              "path": "ui/icon/002000/002850.tex",
+              "path_hr1": "ui/icon/002000/002850_hr1.tex"
+            },
+            "Name": "Summon Seraph"
+          }
+        },
+        {
+          "row_id": 25868,
+          "fields": {
+            "Icon": {
+              "id": 2878,
+              "path": "ui/icon/002000/002878.tex",
+              "path_hr1": "ui/icon/002000/002878_hr1.tex"
+            },
+            "Name": "Expedient"
+          }
+        }
+      ]
+    }
+  }
+}

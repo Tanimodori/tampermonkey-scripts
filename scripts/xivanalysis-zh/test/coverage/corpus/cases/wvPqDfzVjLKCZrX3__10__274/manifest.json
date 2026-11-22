@@ -1,0 +1,23 @@
+{
+  "formatVersion": 1,
+  "id": "wvPqDfzVjLKCZrX3/10/274",
+  "slug": "wvPqDfzVjLKCZrX3__10__274",
+  "url": "https://xivanalysis.com/fflogs/wvPqDfzVjLKCZrX3/10/274",
+  "job": "RDM",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "7257a335471b0f7c",
+      "312d9479923b0411"
+    ],
+    "script": [
+      "5ea858e69a0c1fca",
+      "7fe6e9d854c3b3c0",
+      "9b6b4a92cf7218f6",
+      "9c5fcff7bd23f0a0",
+      "a85d236f5e0bd629",
+      "ca8cdbaa05d00d01"
+    ]
+  }
+}

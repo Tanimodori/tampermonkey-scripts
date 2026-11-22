@@ -1,0 +1,28 @@
+{
+  "formatVersion": 1,
+  "id": "5d9af7349065aa37",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status/3169?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 3169,
+      "fields": {
+        "Icon": {
+          "id": 214984,
+          "path": "ui/icon/214000/214984.tex",
+          "path_hr1": "ui/icon/214000/214984_hr1.tex"
+        },
+        "Name": "通晓"
+      }
+    }
+  }
+}

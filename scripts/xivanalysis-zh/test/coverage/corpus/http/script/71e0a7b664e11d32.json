@@ -1,0 +1,65 @@
+{
+  "formatVersion": 1,
+  "id": "71e0a7b664e11d32",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=1842%2C1843%2C1844%2C3839&limit=4&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 1842,
+          "fields": {
+            "Icon": {
+              "id": 213611,
+              "path": "ui/icon/213000/213611.tex",
+              "path_hr1": "ui/icon/213000/213611_hr1.tex"
+            },
+            "Name": "撕喉预备"
+          }
+        },
+        {
+          "row_id": 1843,
+          "fields": {
+            "Icon": {
+              "id": 213612,
+              "path": "ui/icon/213000/213612.tex",
+              "path_hr1": "ui/icon/213000/213612_hr1.tex"
+            },
+            "Name": "裂膛预备"
+          }
+        },
+        {
+          "row_id": 1844,
+          "fields": {
+            "Icon": {
+              "id": 213613,
+              "path": "ui/icon/213000/213613.tex",
+              "path_hr1": "ui/icon/213000/213613_hr1.tex"
+            },
+            "Name": "穿目预备"
+          }
+        },
+        {
+          "row_id": 3839,
+          "fields": {
+            "Icon": {
+              "id": 213620,
+              "path": "ui/icon/213000/213620.tex",
+              "path_hr1": "ui/icon/213000/213620_hr1.tex"
+            },
+            "Name": "命运之印预备"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "formatVersion": 1,
+  "id": "1wabgtXzNhAZnWBF/1/3",
+  "slug": "1wabgtXzNhAZnWBF__1__3",
+  "url": "https://xivanalysis.com/fflogs/1wabgtXzNhAZnWBF/1/3",
+  "job": "MNK",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "6603df98c0e05785",
+      "b402846649b807d1"
+    ],
+    "script": [
+      "37700ebb44601499",
+      "5ea858e69a0c1fca",
+      "80575adc12882e2e",
+      "9b6b4a92cf7218f6",
+      "abd74d6a63de2ce6",
+      "d3a353d80ea3ed6d",
+      "e3e9e0d711c4e080",
+      "e61b6ae4790b74bc"
+    ]
+  }
+}

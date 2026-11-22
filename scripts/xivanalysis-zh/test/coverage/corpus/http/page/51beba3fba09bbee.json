@@ -1,0 +1,395 @@
+{
+  "formatVersion": 1,
+  "id": "51beba3fba09bbee",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Action?rows=24387,24388,24405,24380,24381,24393,7546,36971,36970,24383,24382,24386,24403,24373,24394,24378,24374,36973,24396,24395,24397,24399,24400,36969,24385,24398,7549,24404,24390,24391,7542,7541,36972,24376&limit=34&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 24387,
+          "fields": {
+            "Icon": {
+              "id": 3615,
+              "path": "ui/icon/003000/003615.tex",
+              "path_hr1": "ui/icon/003000/003615_hr1.tex"
+            },
+            "Name": "Soulsow"
+          }
+        },
+        {
+          "row_id": 24388,
+          "fields": {
+            "Icon": {
+              "id": 3616,
+              "path": "ui/icon/003000/003616.tex",
+              "path_hr1": "ui/icon/003000/003616_hr1.tex"
+            },
+            "Name": "Harvest Moon"
+          }
+        },
+        {
+          "row_id": 24405,
+          "fields": {
+            "Icon": {
+              "id": 3633,
+              "path": "ui/icon/003000/003633.tex",
+              "path_hr1": "ui/icon/003000/003633_hr1.tex"
+            },
+            "Name": "Arcane Circle"
+          }
+        },
+        {
+          "row_id": 24380,
+          "fields": {
+            "Icon": {
+              "id": 3608,
+              "path": "ui/icon/003000/003608.tex",
+              "path_hr1": "ui/icon/003000/003608_hr1.tex"
+            },
+            "Name": "Soul Slice"
+          }
+        },
+        {
+          "row_id": 24381,
+          "fields": {
+            "Icon": {
+              "id": 3609,
+              "path": "ui/icon/003000/003609.tex",
+              "path_hr1": "ui/icon/003000/003609_hr1.tex"
+            },
+            "Name": "Soul Scythe"
+          }
+        },
+        {
+          "row_id": 24393,
+          "fields": {
+            "Icon": {
+              "id": 3621,
+              "path": "ui/icon/003000/003621.tex",
+              "path_hr1": "ui/icon/003000/003621_hr1.tex"
+            },
+            "Name": "Gluttony"
+          }
+        },
+        {
+          "row_id": 7546,
+          "fields": {
+            "Icon": {
+              "id": 830,
+              "path": "ui/icon/000000/000830.tex",
+              "path_hr1": "ui/icon/000000/000830_hr1.tex"
+            },
+            "Name": "True North"
+          }
+        },
+        {
+          "row_id": 36971,
+          "fields": {
+            "Icon": {
+              "id": 3636,
+              "path": "ui/icon/003000/003636.tex",
+              "path_hr1": "ui/icon/003000/003636_hr1.tex"
+            },
+            "Name": "Executioner's Gallows"
+          }
+        },
+        {
+          "row_id": 36970,
+          "fields": {
+            "Icon": {
+              "id": 3635,
+              "path": "ui/icon/003000/003635.tex",
+              "path_hr1": "ui/icon/003000/003635_hr1.tex"
+            },
+            "Name": "Executioner's Gibbet"
+          }
+        },
+        {
+          "row_id": 24383,
+          "fields": {
+            "Icon": {
+              "id": 3611,
+              "path": "ui/icon/003000/003611.tex",
+              "path_hr1": "ui/icon/003000/003611_hr1.tex"
+            },
+            "Name": "Gallows"
+          }
+        },
+        {
+          "row_id": 24382,
+          "fields": {
+            "Icon": {
+              "id": 3610,
+              "path": "ui/icon/003000/003610.tex",
+              "path_hr1": "ui/icon/003000/003610_hr1.tex"
+            },
+            "Name": "Gibbet"
+          }
+        },
+        {
+          "row_id": 24386,
+          "fields": {
+            "Icon": {
+              "id": 3614,
+              "path": "ui/icon/003000/003614.tex",
+              "path_hr1": "ui/icon/003000/003614_hr1.tex"
+            },
+            "Name": "Harpe"
+          }
+        },
+        {
+          "row_id": 24403,
+          "fields": {
+            "Icon": {
+              "id": 3631,
+              "path": "ui/icon/003000/003631.tex",
+              "path_hr1": "ui/icon/003000/003631_hr1.tex"
+            },
+            "Name": "Regress"
+          }
+        },
+        {
+          "row_id": 24373,
+          "fields": {
+            "Icon": {
+              "id": 3601,
+              "path": "ui/icon/003000/003601.tex",
+              "path_hr1": "ui/icon/003000/003601_hr1.tex"
+            },
+            "Name": "Slice"
+          }
+        },
+        {
+          "row_id": 24394,
+          "fields": {
+            "Icon": {
+              "id": 3622,
+              "path": "ui/icon/003000/003622.tex",
+              "path_hr1": "ui/icon/003000/003622_hr1.tex"
+            },
+            "Name": "Enshroud"
+          }
+        },
+        {
+          "row_id": 24378,
+          "fields": {
+            "Icon": {
+              "id": 3606,
+              "path": "ui/icon/003000/003606.tex",
+              "path_hr1": "ui/icon/003000/003606_hr1.tex"
+            },
+            "Name": "Shadow of Death"
+          }
+        },
+        {
+          "row_id": 24374,
+          "fields": {
+            "Icon": {
+              "id": 3602,
+              "path": "ui/icon/003000/003602.tex",
+              "path_hr1": "ui/icon/003000/003602_hr1.tex"
+            },
+            "Name": "Waxing Slice"
+          }
+        },
+        {
+          "row_id": 36973,
+          "fields": {
+            "Icon": {
+              "id": 3638,
+              "path": "ui/icon/003000/003638.tex",
+              "path_hr1": "ui/icon/003000/003638_hr1.tex"
+            },
+            "Name": "Perfectio"
+          }
+        },
+        {
+          "row_id": 24396,
+          "fields": {
+            "Icon": {
+              "id": 3624,
+              "path": "ui/icon/003000/003624.tex",
+              "path_hr1": "ui/icon/003000/003624_hr1.tex"
+            },
+            "Name": "Cross Reaping"
+          }
+        },
+        {
+          "row_id": 24395,
+          "fields": {
+            "Icon": {
+              "id": 3623,
+              "path": "ui/icon/003000/003623.tex",
+              "path_hr1": "ui/icon/003000/003623_hr1.tex"
+            },
+            "Name": "Void Reaping"
+          }
+        },
+        {
+          "row_id": 24397,
+          "fields": {
+            "Icon": {
+              "id": 3625,
+              "path": "ui/icon/003000/003625.tex",
+              "path_hr1": "ui/icon/003000/003625_hr1.tex"
+            },
+            "Name": "Grim Reaping"
+          }
+        },
+        {
+          "row_id": 24399,
+          "fields": {
+            "Icon": {
+              "id": 3627,
+              "path": "ui/icon/003000/003627.tex",
+              "path_hr1": "ui/icon/003000/003627_hr1.tex"
+            },
+            "Name": "Lemure's Slice"
+          }
+        },
+        {
+          "row_id": 24400,
+          "fields": {
+            "Icon": {
+              "id": 3628,
+              "path": "ui/icon/003000/003628.tex",
+              "path_hr1": "ui/icon/003000/003628_hr1.tex"
+            },
+            "Name": "Lemure's Scythe"
+          }
+        },
+        {
+          "row_id": 36969,
+          "fields": {
+            "Icon": {
+              "id": 3634,
+              "path": "ui/icon/003000/003634.tex",
+              "path_hr1": "ui/icon/003000/003634_hr1.tex"
+            },
+            "Name": "Sacrificium"
+          }
+        },
+        {
+          "row_id": 24385,
+          "fields": {
+            "Icon": {
+              "id": 3613,
+              "path": "ui/icon/003000/003613.tex",
+              "path_hr1": "ui/icon/003000/003613_hr1.tex"
+            },
+            "Name": "Plentiful Harvest"
+          }
+        },
+        {
+          "row_id": 24398,
+          "fields": {
+            "Icon": {
+              "id": 3626,
+              "path": "ui/icon/003000/003626.tex",
+              "path_hr1": "ui/icon/003000/003626_hr1.tex"
+            },
+            "Name": "Communio"
+          }
+        },
+        {
+          "row_id": 7549,
+          "fields": {
+            "Icon": {
+              "id": 828,
+              "path": "ui/icon/000000/000828.tex",
+              "path_hr1": "ui/icon/000000/000828_hr1.tex"
+            },
+            "Name": "Feint"
+          }
+        },
+        {
+          "row_id": 24404,
+          "fields": {
+            "Icon": {
+              "id": 3632,
+              "path": "ui/icon/003000/003632.tex",
+              "path_hr1": "ui/icon/003000/003632_hr1.tex"
+            },
+            "Name": "Arcane Crest"
+          }
+        },
+        {
+          "row_id": 24390,
+          "fields": {
+            "Icon": {
+              "id": 3618,
+              "path": "ui/icon/003000/003618.tex",
+              "path_hr1": "ui/icon/003000/003618_hr1.tex"
+            },
+            "Name": "Unveiled Gibbet"
+          }
+        },
+        {
+          "row_id": 24391,
+          "fields": {
+            "Icon": {
+              "id": 3619,
+              "path": "ui/icon/003000/003619.tex",
+              "path_hr1": "ui/icon/003000/003619_hr1.tex"
+            },
+            "Name": "Unveiled Gallows"
+          }
+        },
+        {
+          "row_id": 7542,
+          "fields": {
+            "Icon": {
+              "id": 823,
+              "path": "ui/icon/000000/000823.tex",
+              "path_hr1": "ui/icon/000000/000823_hr1.tex"
+            },
+            "Name": "Bloodbath"
+          }
+        },
+        {
+          "row_id": 7541,
+          "fields": {
+            "Icon": {
+              "id": 821,
+              "path": "ui/icon/000000/000821.tex",
+              "path_hr1": "ui/icon/000000/000821_hr1.tex"
+            },
+            "Name": "Second Wind"
+          }
+        },
+        {
+          "row_id": 36972,
+          "fields": {
+            "Icon": {
+              "id": 3637,
+              "path": "ui/icon/003000/003637.tex",
+              "path_hr1": "ui/icon/003000/003637_hr1.tex"
+            },
+            "Name": "Executioner's Guillotine"
+          }
+        },
+        {
+          "row_id": 24376,
+          "fields": {
+            "Icon": {
+              "id": 3604,
+              "path": "ui/icon/003000/003604.tex",
+              "path_hr1": "ui/icon/003000/003604_hr1.tex"
+            },
+            "Name": "Spinning Scythe"
+          }
+        }
+      ]
+    }
+  }
+}

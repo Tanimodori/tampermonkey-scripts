@@ -1,0 +1,98 @@
+{
+  "formatVersion": 1,
+  "id": "24797c24ec50d56e",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=3685%2C3674%2C3680%2C3676%2C3688%2C3689%2C3679&limit=7&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 3685,
+          "fields": {
+            "Icon": {
+              "id": 213808,
+              "path": "ui/icon/213000/213808.tex",
+              "path_hr1": "ui/icon/213000/213808_hr1.tex"
+            },
+            "Name": "星空构想"
+          }
+        },
+        {
+          "row_id": 3674,
+          "fields": {
+            "Icon": {
+              "id": 218673,
+              "path": "ui/icon/218000/218673.tex",
+              "path_hr1": "ui/icon/218000/218673_hr1.tex"
+            },
+            "Name": "减色混合"
+          }
+        },
+        {
+          "row_id": 3680,
+          "fields": {
+            "Icon": {
+              "id": 218677,
+              "path": "ui/icon/218000/218677.tex",
+              "path_hr1": "ui/icon/218000/218677_hr1.tex"
+            },
+            "Name": "重锤连击"
+          }
+        },
+        {
+          "row_id": 3676,
+          "fields": {
+            "Icon": {
+              "id": 213802,
+              "path": "ui/icon/213000/213802.tex",
+              "path_hr1": "ui/icon/213000/213802_hr1.tex"
+            },
+            "Name": "以太色调II"
+          }
+        },
+        {
+          "row_id": 3688,
+          "fields": {
+            "Icon": {
+              "id": 218155,
+              "path": "ui/icon/218000/218155.tex",
+              "path_hr1": "ui/icon/218000/218155_hr1.tex"
+            },
+            "Name": "绘灵幻景"
+          }
+        },
+        {
+          "row_id": 3689,
+          "fields": {
+            "Icon": {
+              "id": 213811,
+              "path": "ui/icon/213000/213811.tex",
+              "path_hr1": "ui/icon/213000/213811_hr1.tex"
+            },
+            "Name": "绘画装置"
+          }
+        },
+        {
+          "row_id": 3679,
+          "fields": {
+            "Icon": {
+              "id": 213805,
+              "path": "ui/icon/213000/213805.tex",
+              "path_hr1": "ui/icon/213000/213805_hr1.tex"
+            },
+            "Name": "彩虹点滴效果提高"
+          }
+        }
+      ]
+    }
+  }
+}

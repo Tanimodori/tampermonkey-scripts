@@ -1,0 +1,39 @@
+{
+  "formatVersion": 1,
+  "id": "6bd98fb2e0c10f7a",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Addersting&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "status",
+        "id": "3115",
+        "obj": {
+          "i": 3115,
+          "n": "Addersting",
+          "c": 214909,
+          "t": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "50373",
+        "obj": {
+          "i": 50373,
+          "n": "Addersting",
+          "c": 6454,
+          "j": 40,
+          "t": -1,
+          "l": 66
+        }
+      }
+    ]
+  }
+}

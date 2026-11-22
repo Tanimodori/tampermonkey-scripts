@@ -1,0 +1,394 @@
+{
+  "formatVersion": 1,
+  "id": "mn7bYWMQf9vhABrG/4/3",
+  "url": "https://xivanalysis.com/fflogs/mn7bYWMQf9vhABrG/4/3",
+  "job": "SAM",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Sen",
+      "-5"
+    ],
+    [
+      "Gauges",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Dokumori",
+      "-4"
+    ],
+    [
+      "Starry Muse",
+      "-4"
+    ],
+    [
+      "Chain Stratagem",
+      "-4"
+    ],
+    [
+      "Battle Voice",
+      "-4"
+    ],
+    [
+      "Divination",
+      "-4"
+    ],
+    [
+      "Radiant Finale",
+      "-4"
+    ],
+    [
+      "Arcanum",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Meikyo Shisui",
+      "-5"
+    ],
+    [
+      "True North",
+      "-5"
+    ],
+    [
+      "Ikishoten",
+      "-5"
+    ],
+    [
+      "Feint",
+      "-5"
+    ],
+    [
+      "Tengentsu",
+      "-5"
+    ],
+    [
+      "Bloodbath",
+      "-5"
+    ],
+    [
+      "Tendo Setsugekka",
+      "-5"
+    ],
+    [
+      "Hissatsu: Senei",
+      "-5"
+    ],
+    [
+      "Tendo Kaeshi Setsugekka",
+      "-5"
+    ],
+    [
+      "Zanshin",
+      "-5"
+    ],
+    [
+      "Hissatsu: Shinten",
+      "-5"
+    ],
+    [
+      "Shoha",
+      "-5"
+    ],
+    [
+      "Hissatsu: Gyoten",
+      "-5"
+    ],
+    [
+      "Kaeshi: Setsugekka",
+      "-5"
+    ],
+    [
+      "Second Wind",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Dokumori",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212920_hr1.tex&format=png"
+    ],
+    [
+      "Starry Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213808_hr1.tex&format=png"
+    ],
+    [
+      "Chain Stratagem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212809_hr1.tex&format=png"
+    ],
+    [
+      "Battle Voice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212601_hr1.tex&format=png"
+    ],
+    [
+      "Divination",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213245_hr1.tex&format=png"
+    ],
+    [
+      "Radiant Finale",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212622_hr1.tex&format=png"
+    ],
+    [
+      "The Balance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213204_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Kasha",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003164_hr1.tex&format=png"
+    ],
+    [
+      "Gekko",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003158_hr1.tex&format=png"
+    ],
+    [
+      "Yukikaze",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003166_hr1.tex&format=png"
+    ],
+    [
+      "Tendo Setsugekka",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003194_hr1.tex&format=png"
+    ],
+    [
+      "Tendo Kaeshi Setsugekka",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003196_hr1.tex&format=png"
+    ],
+    [
+      "Gekko",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003158_hr1.tex&format=png"
+    ],
+    [
+      "Kasha",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003164_hr1.tex&format=png"
+    ],
+    [
+      "Yukikaze",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003166_hr1.tex&format=png"
+    ],
+    [
+      "Tendo Setsugekka",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003194_hr1.tex&format=png"
+    ],
+    [
+      "Tendo Kaeshi Setsugekka",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003196_hr1.tex&format=png"
+    ],
+    [
+      "Ogi Namikiri",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003187_hr1.tex&format=png"
+    ],
+    [
+      "Kaeshi: Namikiri",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003188_hr1.tex&format=png"
+    ],
+    [
+      "Gyofu",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003191_hr1.tex&format=png"
+    ],
+    [
+      "Yukikaze",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003166_hr1.tex&format=png"
+    ],
+    [
+      "Higanbana",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003160_hr1.tex&format=png"
+    ],
+    [
+      "Gyofu",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003191_hr1.tex&format=png"
+    ],
+    [
+      "Yukikaze",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003166_hr1.tex&format=png"
+    ],
+    [
+      "Gyofu",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003191_hr1.tex&format=png"
+    ],
+    [
+      "Jinpu",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003152_hr1.tex&format=png"
+    ],
+    [
+      "Gekko",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003158_hr1.tex&format=png"
+    ],
+    [
+      "Gyofu",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003191_hr1.tex&format=png"
+    ],
+    [
+      "Shifu",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003156_hr1.tex&format=png"
+    ],
+    [
+      "Kasha",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003164_hr1.tex&format=png"
+    ],
+    [
+      "Midare Setsugekka",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003162_hr1.tex&format=png"
+    ],
+    [
+      "Kaeshi: Setsugekka",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003183_hr1.tex&format=png"
+    ],
+    [
+      "Gyofu",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003191_hr1.tex&format=png"
+    ],
+    [
+      "Yukikaze",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003166_hr1.tex&format=png"
+    ],
+    [
+      "Gekko",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003158_hr1.tex&format=png"
+    ],
+    [
+      "Zanshin Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213318_hr1.tex&format=png"
+    ],
+    [
+      "Ogi Namikiri Ready",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213313_hr1.tex&format=png"
+    ],
+    [
+      "Tendo",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213319_hr1.tex&format=png"
+    ],
+    [
+      "Tendo",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213319_hr1.tex&format=png"
+    ],
+    [
+      "Tendo",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213319_hr1.tex&format=png"
+    ],
+    [
+      "Tsubame-Gaeshi",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213315_hr1.tex&format=png"
+    ],
+    [
+      "Tsubame-Gaeshi",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213315_hr1.tex&format=png"
+    ],
+    [
+      "Tsubame-Gaeshi",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213315_hr1.tex&format=png"
+    ],
+    [
+      "Meikyo Shisui",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003167_hr1.tex&format=png"
+    ],
+    [
+      "Meikyo Shisui",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003167_hr1.tex&format=png"
+    ],
+    [
+      "Meikyo Shisui",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003167_hr1.tex&format=png"
+    ],
+    [
+      "True North",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000830_hr1.tex&format=png"
+    ],
+    [
+      "Ikishoten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003179_hr1.tex&format=png"
+    ],
+    [
+      "Feint",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000828_hr1.tex&format=png"
+    ],
+    [
+      "Tengentsu",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003190_hr1.tex&format=png"
+    ],
+    [
+      "Tengentsu",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003190_hr1.tex&format=png"
+    ],
+    [
+      "Bloodbath",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000823_hr1.tex&format=png"
+    ],
+    [
+      "Tendo Setsugekka",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003194_hr1.tex&format=png"
+    ],
+    [
+      "Tendo Setsugekka",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003194_hr1.tex&format=png"
+    ],
+    [
+      "Hissatsu: Senei",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003178_hr1.tex&format=png"
+    ],
+    [
+      "Tendo Kaeshi Setsugekka",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003196_hr1.tex&format=png"
+    ],
+    [
+      "Tendo Kaeshi Setsugekka",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003196_hr1.tex&format=png"
+    ],
+    [
+      "Zanshin",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003192_hr1.tex&format=png"
+    ],
+    [
+      "Hissatsu: Shinten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003173_hr1.tex&format=png"
+    ],
+    [
+      "Hissatsu: Shinten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003173_hr1.tex&format=png"
+    ],
+    [
+      "Hissatsu: Shinten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003173_hr1.tex&format=png"
+    ],
+    [
+      "Hissatsu: Shinten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003173_hr1.tex&format=png"
+    ],
+    [
+      "Shoha",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003184_hr1.tex&format=png"
+    ],
+    [
+      "Hissatsu: Gyoten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003169_hr1.tex&format=png"
+    ],
+    [
+      "Hissatsu: Gyoten",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003169_hr1.tex&format=png"
+    ],
+    [
+      "Kaeshi: Setsugekka",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003183_hr1.tex&format=png"
+    ]
+  ]
+}

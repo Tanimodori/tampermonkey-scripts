@@ -1,0 +1,351 @@
+{
+  "formatVersion": 1,
+  "id": "55b40930a06a85bf",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=7436%2C166%2C3586%2C16540%2C17870%2C25865%2C16546%2C16537%2C37014%2C7561%2C3583%2C37013%2C3587%2C167%2C37012%2C7562%2C25867%2C7437%2C16543%2C16542%2C16538%2C189%2C7434%2C188%2C185%2C16544%2C16547%2C16548%2C16545%2C25868&limit=30&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 7436,
+          "fields": {
+            "Icon": {
+              "id": 2815,
+              "path": "ui/icon/002000/002815.tex",
+              "path_hr1": "ui/icon/002000/002815_hr1.tex"
+            },
+            "Name": "连环计"
+          }
+        },
+        {
+          "row_id": 166,
+          "fields": {
+            "Icon": {
+              "id": 510,
+              "path": "ui/icon/000000/000510.tex",
+              "path_hr1": "ui/icon/000000/000510_hr1.tex"
+            },
+            "Name": "以太超流"
+          }
+        },
+        {
+          "row_id": 3586,
+          "fields": {
+            "Icon": {
+              "id": 2809,
+              "path": "ui/icon/002000/002809.tex",
+              "path_hr1": "ui/icon/002000/002809_hr1.tex"
+            },
+            "Name": "应急战术"
+          }
+        },
+        {
+          "row_id": 16540,
+          "fields": {
+            "Icon": {
+              "id": 2820,
+              "path": "ui/icon/002000/002820.tex",
+              "path_hr1": "ui/icon/002000/002820_hr1.tex"
+            },
+            "Name": "蛊毒法"
+          }
+        },
+        {
+          "row_id": 17870,
+          "fields": {
+            "Icon": {
+              "id": 502,
+              "path": "ui/icon/000000/000502.tex",
+              "path_hr1": "ui/icon/000000/000502_hr1.tex"
+            },
+            "Name": "毁坏"
+          }
+        },
+        {
+          "row_id": 25865,
+          "fields": {
+            "Icon": {
+              "id": 2875,
+              "path": "ui/icon/002000/002875.tex",
+              "path_hr1": "ui/icon/002000/002875_hr1.tex"
+            },
+            "Name": "极炎法"
+          }
+        },
+        {
+          "row_id": 16546,
+          "fields": {
+            "Icon": {
+              "id": 2851,
+              "path": "ui/icon/002000/002851.tex",
+              "path_hr1": "ui/icon/002000/002851_hr1.tex"
+            },
+            "Name": "慰藉"
+          }
+        },
+        {
+          "row_id": 16537,
+          "fields": {
+            "Icon": {
+              "id": 2852,
+              "path": "ui/icon/002000/002852.tex",
+              "path_hr1": "ui/icon/002000/002852_hr1.tex"
+            },
+            "Name": "仙光的低语"
+          }
+        },
+        {
+          "row_id": 37014,
+          "fields": {
+            "Icon": {
+              "id": 2881,
+              "path": "ui/icon/002000/002881.tex",
+              "path_hr1": "ui/icon/002000/002881_hr1.tex"
+            },
+            "Name": "炽天附体"
+          }
+        },
+        {
+          "row_id": 7561,
+          "fields": {
+            "Icon": {
+              "id": 866,
+              "path": "ui/icon/000000/000866.tex",
+              "path_hr1": "ui/icon/000000/000866_hr1.tex"
+            },
+            "Name": "即刻咏唱"
+          }
+        },
+        {
+          "row_id": 3583,
+          "fields": {
+            "Icon": {
+              "id": 2806,
+              "path": "ui/icon/002000/002806.tex",
+              "path_hr1": "ui/icon/002000/002806_hr1.tex"
+            },
+            "Name": "不屈不挠之策"
+          }
+        },
+        {
+          "row_id": 37013,
+          "fields": {
+            "Icon": {
+              "id": 2880,
+              "path": "ui/icon/002000/002880.tex",
+              "path_hr1": "ui/icon/002000/002880_hr1.tex"
+            },
+            "Name": "意气轩昂之策"
+          }
+        },
+        {
+          "row_id": 3587,
+          "fields": {
+            "Icon": {
+              "id": 2810,
+              "path": "ui/icon/002000/002810.tex",
+              "path_hr1": "ui/icon/002000/002810_hr1.tex"
+            },
+            "Name": "转化"
+          }
+        },
+        {
+          "row_id": 167,
+          "fields": {
+            "Icon": {
+              "id": 514,
+              "path": "ui/icon/000000/000514.tex",
+              "path_hr1": "ui/icon/000000/000514_hr1.tex"
+            },
+            "Name": "能量吸收"
+          }
+        },
+        {
+          "row_id": 37012,
+          "fields": {
+            "Icon": {
+              "id": 2879,
+              "path": "ui/icon/002000/002879.tex",
+              "path_hr1": "ui/icon/002000/002879_hr1.tex"
+            },
+            "Name": "埋伏之毒"
+          }
+        },
+        {
+          "row_id": 7562,
+          "fields": {
+            "Icon": {
+              "id": 865,
+              "path": "ui/icon/000000/000865.tex",
+              "path_hr1": "ui/icon/000000/000865_hr1.tex"
+            },
+            "Name": "醒梦"
+          }
+        },
+        {
+          "row_id": 25867,
+          "fields": {
+            "Icon": {
+              "id": 2877,
+              "path": "ui/icon/002000/002877.tex",
+              "path_hr1": "ui/icon/002000/002877_hr1.tex"
+            },
+            "Name": "生命回生法"
+          }
+        },
+        {
+          "row_id": 7437,
+          "fields": {
+            "Icon": {
+              "id": 2816,
+              "path": "ui/icon/002000/002816.tex",
+              "path_hr1": "ui/icon/002000/002816_hr1.tex"
+            },
+            "Name": "以太契约"
+          }
+        },
+        {
+          "row_id": 16543,
+          "fields": {
+            "Icon": {
+              "id": 2854,
+              "path": "ui/icon/002000/002854.tex",
+              "path_hr1": "ui/icon/002000/002854_hr1.tex"
+            },
+            "Name": "异想的祥光"
+          }
+        },
+        {
+          "row_id": 16542,
+          "fields": {
+            "Icon": {
+              "id": 2822,
+              "path": "ui/icon/002000/002822.tex",
+              "path_hr1": "ui/icon/002000/002822_hr1.tex"
+            },
+            "Name": "秘策"
+          }
+        },
+        {
+          "row_id": 16538,
+          "fields": {
+            "Icon": {
+              "id": 2853,
+              "path": "ui/icon/002000/002853.tex",
+              "path_hr1": "ui/icon/002000/002853_hr1.tex"
+            },
+            "Name": "异想的幻光"
+          }
+        },
+        {
+          "row_id": 189,
+          "fields": {
+            "Icon": {
+              "id": 2805,
+              "path": "ui/icon/002000/002805.tex",
+              "path_hr1": "ui/icon/002000/002805_hr1.tex"
+            },
+            "Name": "生命活性法"
+          }
+        },
+        {
+          "row_id": 7434,
+          "fields": {
+            "Icon": {
+              "id": 2813,
+              "path": "ui/icon/002000/002813.tex",
+              "path_hr1": "ui/icon/002000/002813_hr1.tex"
+            },
+            "Name": "深谋远虑之策"
+          }
+        },
+        {
+          "row_id": 188,
+          "fields": {
+            "Icon": {
+              "id": 2804,
+              "path": "ui/icon/002000/002804.tex",
+              "path_hr1": "ui/icon/002000/002804_hr1.tex"
+            },
+            "Name": "野战治疗阵"
+          }
+        },
+        {
+          "row_id": 185,
+          "fields": {
+            "Icon": {
+              "id": 2801,
+              "path": "ui/icon/002000/002801.tex",
+              "path_hr1": "ui/icon/002000/002801_hr1.tex"
+            },
+            "Name": "鼓舞激励之策"
+          }
+        },
+        {
+          "row_id": 16544,
+          "fields": {
+            "Icon": {
+              "id": 2855,
+              "path": "ui/icon/002000/002855.tex",
+              "path_hr1": "ui/icon/002000/002855_hr1.tex"
+            },
+            "Name": "异想的祥光"
+          }
+        },
+        {
+          "row_id": 16547,
+          "fields": {
+            "Icon": {
+              "id": 2846,
+              "path": "ui/icon/002000/002846.tex",
+              "path_hr1": "ui/icon/002000/002846_hr1.tex"
+            },
+            "Name": "慰藉"
+          }
+        },
+        {
+          "row_id": 16548,
+          "fields": {
+            "Icon": {
+              "id": 2847,
+              "path": "ui/icon/002000/002847.tex",
+              "path_hr1": "ui/icon/002000/002847_hr1.tex"
+            },
+            "Name": "炽天的幕帘"
+          }
+        },
+        {
+          "row_id": 16545,
+          "fields": {
+            "Icon": {
+              "id": 2850,
+              "path": "ui/icon/002000/002850.tex",
+              "path_hr1": "ui/icon/002000/002850_hr1.tex"
+            },
+            "Name": "炽天召唤"
+          }
+        },
+        {
+          "row_id": 25868,
+          "fields": {
+            "Icon": {
+              "id": 2878,
+              "path": "ui/icon/002000/002878.tex",
+              "path_hr1": "ui/icon/002000/002878_hr1.tex"
+            },
+            "Name": "疾风怒涛之计"
+          }
+        }
+      ]
+    }
+  }
+}

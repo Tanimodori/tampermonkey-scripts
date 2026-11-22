@@ -1,0 +1,275 @@
+{
+  "formatVersion": 1,
+  "id": "a96022aed39c91ae",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Slither&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "33820",
+        "obj": {
+          "i": 33820,
+          "n": "Slither",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "33859",
+        "obj": {
+          "i": 33859,
+          "n": "Slither",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "34646",
+        "obj": {
+          "i": 34646,
+          "n": "Slither",
+          "c": 3741,
+          "j": 41,
+          "t": 4,
+          "l": 40
+        }
+      },
+      {
+        "type": "action",
+        "id": "39184",
+        "obj": {
+          "i": 39184,
+          "n": "Slither",
+          "c": 9724,
+          "j": 41,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "status",
+        "id": "4095",
+        "obj": {
+          "i": 4095,
+          "n": "Slither",
+          "c": 214991,
+          "t": 1
+        }
+      },
+      {
+        "type": "quest",
+        "id": "69193",
+        "obj": {
+          "i": 69193,
+          "n": "Slither Along",
+          "g": 138,
+          "l": "The Rak'tika Greatwood",
+          "s": 4240,
+          "f": 1
+        }
+      },
+      {
+        "type": "action",
+        "id": "36589",
+        "obj": {
+          "i": 36589,
+          "n": "Slitherbane Foreguard",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36592",
+        "obj": {
+          "i": 36592,
+          "n": "Slitherbane Foreguard",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36590",
+        "obj": {
+          "i": 36590,
+          "n": "Slitherbane Rearguard",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36593",
+        "obj": {
+          "i": 36593,
+          "n": "Slitherbane Rearguard",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "npc",
+        "id": "1031878",
+        "obj": {
+          "i": 1031878,
+          "n": "Slitherbough Girl",
+          "l": 2957
+        }
+      },
+      {
+        "type": "action",
+        "id": "36157",
+        "obj": {
+          "i": 36157,
+          "n": "Slithering Strike",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36158",
+        "obj": {
+          "i": 36158,
+          "n": "Slithering Strike",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36809",
+        "obj": {
+          "i": 36809,
+          "n": "Slithering Strike",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36810",
+        "obj": {
+          "i": 36810,
+          "n": "Slithering Strike",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36811",
+        "obj": {
+          "i": 36811,
+          "n": "Slithering Strike",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36812",
+        "obj": {
+          "i": 36812,
+          "n": "Slithering Strike",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "item",
+        "id": "31320",
+        "obj": {
+          "i": 31320,
+          "n": "Slithersand",
+          "l": 490,
+          "c": 22691,
+          "t": 54,
+          "g": 5,
+          "r": 1
+        }
+      },
+      {
+        "type": "mob",
+        "id": "5290000000463",
+        "obj": {
+          "i": 5290000000463,
+          "n": "Slithertwine",
+          "l": "25",
+          "z": 54
+        }
+      },
+      {
+        "type": "action",
+        "id": "50529",
+        "obj": {
+          "i": 50529,
+          "n": "Enhanced Slither",
+          "c": 6506,
+          "j": 41,
+          "t": -1,
+          "l": 84
+        }
+      },
+      {
+        "type": "action",
+        "id": "12528",
+        "obj": {
+          "i": 12528,
+          "n": "Eye of the Slithered",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "6446",
+        "obj": {
+          "i": 6446,
+          "n": "Eye of the Slithered",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

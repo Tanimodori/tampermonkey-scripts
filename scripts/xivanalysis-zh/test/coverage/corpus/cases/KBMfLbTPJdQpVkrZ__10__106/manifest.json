@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "KBMfLbTPJdQpVkrZ/10/106",
+  "slug": "KBMfLbTPJdQpVkrZ__10__106",
+  "url": "https://xivanalysis.com/fflogs/KBMfLbTPJdQpVkrZ/10/106",
+  "job": "RPR",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "34f03b12b83aeb10",
+      "782620f48bb61759"
+    ],
+    "script": [
+      "02fc74b13f197364",
+      "1049ff75b65b62bc",
+      "52cff746bbbb0564",
+      "58fea9352c8043ed",
+      "59c2370404070bc5",
+      "5ea858e69a0c1fca",
+      "73906346565fe5ae",
+      "7902c6e70d2202fd",
+      "7c21f1cd44d8b732",
+      "7f280b7c52bb060d",
+      "7fe6e9d854c3b3c0",
+      "9b6b4a92cf7218f6",
+      "cc71da267aef4219",
+      "f9f43ecf1dc705a4"
+    ]
+  }
+}

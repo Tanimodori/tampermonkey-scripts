@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "61b211a6926ceceb",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/24378?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 24378,
+      "fields": {
+        "Icon": {
+          "id": 3606,
+          "path": "ui/icon/003000/003606.tex",
+          "path_hr1": "ui/icon/003000/003606_hr1.tex"
+        },
+        "Name": "死亡之影"
+      },
+      "transient": {
+        "Description": "对目标发动物理攻击　威力：300\n追加效果：为目标附加死亡烙印状态\n持续时间：30秒\n死亡烙印效果：自身对目标造成的伤害提高10%\n持续时间内目标被打倒时，获得10点灵魂\n若已经附加死亡烙印状态，则持续时间延长30秒\n最多可延长至60秒"
+      }
+    }
+  }
+}

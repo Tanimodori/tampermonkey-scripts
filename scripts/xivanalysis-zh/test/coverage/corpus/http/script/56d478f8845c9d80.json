@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "56d478f8845c9d80",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/110?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 110,
+      "fields": {
+        "Icon": {
+          "id": 361,
+          "path": "ui/icon/000000/000361.tex",
+          "path_hr1": "ui/icon/000000/000361_hr1.tex"
+        },
+        "Name": "失血箭"
+      },
+      "transient": {
+        "Description": "对目标发动物理攻击　威力：130\n积蓄次数：3\n与死亡箭雨共享复唱时间"
+      }
+    }
+  }
+}

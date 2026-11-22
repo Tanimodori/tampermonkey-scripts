@@ -1,0 +1,89 @@
+{
+  "formatVersion": 1,
+  "id": "466d0ce3e2acb6c9",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Aero+in+Green&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "34651",
+        "obj": {
+          "i": 34651,
+          "n": "Aero in Green",
+          "c": 3802,
+          "j": 42,
+          "t": 2,
+          "l": 5
+        }
+      },
+      {
+        "type": "action",
+        "id": "38962",
+        "obj": {
+          "i": 38962,
+          "n": "Aero in Green",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "39192",
+        "obj": {
+          "i": 39192,
+          "n": "Aero in Green",
+          "c": 9733,
+          "j": 42,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "39563",
+        "obj": {
+          "i": 39563,
+          "n": "Aero in Green",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "46757",
+        "obj": {
+          "i": 46757,
+          "n": "Aero in Green",
+          "c": 64944,
+          "j": 0,
+          "t": 2,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "47114",
+        "obj": {
+          "i": 47114,
+          "n": "Aero in Green",
+          "c": 405,
+          "j": null,
+          "t": 2,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

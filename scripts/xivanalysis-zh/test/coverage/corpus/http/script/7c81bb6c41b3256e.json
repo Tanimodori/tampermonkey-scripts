@@ -1,0 +1,87 @@
+{
+  "formatVersion": 1,
+  "id": "7c81bb6c41b3256e",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Status?rows=1821%2C1824%2C2105%2C1825%2C1823%2C1822&limit=6&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 1821,
+          "fields": {
+            "Icon": {
+              "id": 213708,
+              "path": "ui/icon/213000/213708.tex",
+              "path_hr1": "ui/icon/213000/213708_hr1.tex"
+            },
+            "Name": "标准舞步结束"
+          }
+        },
+        {
+          "row_id": 1824,
+          "fields": {
+            "Icon": {
+              "id": 213713,
+              "path": "ui/icon/213000/213713.tex",
+              "path_hr1": "ui/icon/213000/213713_hr1.tex"
+            },
+            "Name": "舞伴"
+          }
+        },
+        {
+          "row_id": 2105,
+          "fields": {
+            "Icon": {
+              "id": 213708,
+              "path": "ui/icon/213000/213708.tex",
+              "path_hr1": "ui/icon/213000/213708_hr1.tex"
+            },
+            "Name": "标准舞步结束"
+          }
+        },
+        {
+          "row_id": 1825,
+          "fields": {
+            "Icon": {
+              "id": 213714,
+              "path": "ui/icon/213000/213714.tex",
+              "path_hr1": "ui/icon/213000/213714_hr1.tex"
+            },
+            "Name": "进攻之探戈"
+          }
+        },
+        {
+          "row_id": 1823,
+          "fields": {
+            "Icon": {
+              "id": 213712,
+              "path": "ui/icon/213000/213712.tex",
+              "path_hr1": "ui/icon/213000/213712_hr1.tex"
+            },
+            "Name": "闭式舞姿"
+          }
+        },
+        {
+          "row_id": 1822,
+          "fields": {
+            "Icon": {
+              "id": 213709,
+              "path": "ui/icon/213000/213709.tex",
+              "path_hr1": "ui/icon/213000/213709_hr1.tex"
+            },
+            "Name": "技巧舞步结束"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,329 @@
+{
+  "formatVersion": 1,
+  "id": "a6849bf33f1d33b5",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=2264%2C36957%2C16493%2C36958%2C3566%2C7403%2C16489%2C7546%2C3563%2C2255%2C25774%2C7402%2C2240%2C2242%2C2259%2C16492%2C16491%2C2267%2C36961%2C18873%2C18877%2C18881%2C36960%2C25778%2C2241%2C7549%2C7542%2C7541&limit=28&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 2264,
+          "fields": {
+            "Icon": {
+              "id": 2906,
+              "path": "ui/icon/002000/002906.tex",
+              "path_hr1": "ui/icon/002000/002906_hr1.tex"
+            },
+            "Name": "生杀予夺"
+          }
+        },
+        {
+          "row_id": 36957,
+          "fields": {
+            "Icon": {
+              "id": 619,
+              "path": "ui/icon/000000/000619.tex",
+              "path_hr1": "ui/icon/000000/000619_hr1.tex"
+            },
+            "Name": "介毒之术"
+          }
+        },
+        {
+          "row_id": 16493,
+          "fields": {
+            "Icon": {
+              "id": 2927,
+              "path": "ui/icon/002000/002927.tex",
+              "path_hr1": "ui/icon/002000/002927_hr1.tex"
+            },
+            "Name": "分身之术"
+          }
+        },
+        {
+          "row_id": 36958,
+          "fields": {
+            "Icon": {
+              "id": 620,
+              "path": "ui/icon/000000/000620.tex",
+              "path_hr1": "ui/icon/000000/000620_hr1.tex"
+            },
+            "Name": "百雷铳"
+          }
+        },
+        {
+          "row_id": 3566,
+          "fields": {
+            "Icon": {
+              "id": 2918,
+              "path": "ui/icon/002000/002918.tex",
+              "path_hr1": "ui/icon/002000/002918_hr1.tex"
+            },
+            "Name": "梦幻三段"
+          }
+        },
+        {
+          "row_id": 7403,
+          "fields": {
+            "Icon": {
+              "id": 2922,
+              "path": "ui/icon/002000/002922.tex",
+              "path_hr1": "ui/icon/002000/002922_hr1.tex"
+            },
+            "Name": "天地人"
+          }
+        },
+        {
+          "row_id": 16489,
+          "fields": {
+            "Icon": {
+              "id": 2924,
+              "path": "ui/icon/002000/002924.tex",
+              "path_hr1": "ui/icon/002000/002924_hr1.tex"
+            },
+            "Name": "命水"
+          }
+        },
+        {
+          "row_id": 7546,
+          "fields": {
+            "Icon": {
+              "id": 830,
+              "path": "ui/icon/000000/000830.tex",
+              "path_hr1": "ui/icon/000000/000830_hr1.tex"
+            },
+            "Name": "真北"
+          }
+        },
+        {
+          "row_id": 3563,
+          "fields": {
+            "Icon": {
+              "id": 2915,
+              "path": "ui/icon/002000/002915.tex",
+              "path_hr1": "ui/icon/002000/002915_hr1.tex"
+            },
+            "Name": "强甲破点突"
+          }
+        },
+        {
+          "row_id": 2255,
+          "fields": {
+            "Icon": {
+              "id": 605,
+              "path": "ui/icon/000000/000605.tex",
+              "path_hr1": "ui/icon/000000/000605_hr1.tex"
+            },
+            "Name": "旋风刃"
+          }
+        },
+        {
+          "row_id": 25774,
+          "fields": {
+            "Icon": {
+              "id": 2929,
+              "path": "ui/icon/002000/002929.tex",
+              "path_hr1": "ui/icon/002000/002929_hr1.tex"
+            },
+            "Name": "残影镰鼬"
+          }
+        },
+        {
+          "row_id": 7402,
+          "fields": {
+            "Icon": {
+              "id": 2921,
+              "path": "ui/icon/002000/002921.tex",
+              "path_hr1": "ui/icon/002000/002921_hr1.tex"
+            },
+            "Name": "六道轮回"
+          }
+        },
+        {
+          "row_id": 2240,
+          "fields": {
+            "Icon": {
+              "id": 601,
+              "path": "ui/icon/000000/000601.tex",
+              "path_hr1": "ui/icon/000000/000601_hr1.tex"
+            },
+            "Name": "双刃旋"
+          }
+        },
+        {
+          "row_id": 2242,
+          "fields": {
+            "Icon": {
+              "id": 602,
+              "path": "ui/icon/000000/000602.tex",
+              "path_hr1": "ui/icon/000000/000602_hr1.tex"
+            },
+            "Name": "绝风"
+          }
+        },
+        {
+          "row_id": 2259,
+          "fields": {
+            "Icon": {
+              "id": 2901,
+              "path": "ui/icon/002000/002901.tex",
+              "path_hr1": "ui/icon/002000/002901_hr1.tex"
+            },
+            "Name": "天之印"
+          }
+        },
+        {
+          "row_id": 16492,
+          "fields": {
+            "Icon": {
+              "id": 2926,
+              "path": "ui/icon/002000/002926.tex",
+              "path_hr1": "ui/icon/002000/002926_hr1.tex"
+            },
+            "Name": "冰晶乱流之术"
+          }
+        },
+        {
+          "row_id": 16491,
+          "fields": {
+            "Icon": {
+              "id": 2925,
+              "path": "ui/icon/002000/002925.tex",
+              "path_hr1": "ui/icon/002000/002925_hr1.tex"
+            },
+            "Name": "劫火灭却之术"
+          }
+        },
+        {
+          "row_id": 2267,
+          "fields": {
+            "Icon": {
+              "id": 2912,
+              "path": "ui/icon/002000/002912.tex",
+              "path_hr1": "ui/icon/002000/002912_hr1.tex"
+            },
+            "Name": "雷遁之术"
+          }
+        },
+        {
+          "row_id": 36961,
+          "fields": {
+            "Icon": {
+              "id": 2935,
+              "path": "ui/icon/002000/002935.tex",
+              "path_hr1": "ui/icon/002000/002935_hr1.tex"
+            },
+            "Name": "天理人道"
+          }
+        },
+        {
+          "row_id": 18873,
+          "fields": {
+            "Icon": {
+              "id": 2907,
+              "path": "ui/icon/002000/002907.tex",
+              "path_hr1": "ui/icon/002000/002907_hr1.tex"
+            },
+            "Name": "风魔手里剑"
+          }
+        },
+        {
+          "row_id": 18877,
+          "fields": {
+            "Icon": {
+              "id": 2912,
+              "path": "ui/icon/002000/002912.tex",
+              "path_hr1": "ui/icon/002000/002912_hr1.tex"
+            },
+            "Name": "雷遁之术"
+          }
+        },
+        {
+          "row_id": 18881,
+          "fields": {
+            "Icon": {
+              "id": 2913,
+              "path": "ui/icon/002000/002913.tex",
+              "path_hr1": "ui/icon/002000/002913_hr1.tex"
+            },
+            "Name": "水遁之术"
+          }
+        },
+        {
+          "row_id": 36960,
+          "fields": {
+            "Icon": {
+              "id": 2933,
+              "path": "ui/icon/002000/002933.tex",
+              "path_hr1": "ui/icon/002000/002933_hr1.tex"
+            },
+            "Name": "是生灭法"
+          }
+        },
+        {
+          "row_id": 25778,
+          "fields": {
+            "Icon": {
+              "id": 2932,
+              "path": "ui/icon/002000/002932.tex",
+              "path_hr1": "ui/icon/002000/002932_hr1.tex"
+            },
+            "Name": "月影雷兽牙"
+          }
+        },
+        {
+          "row_id": 2241,
+          "fields": {
+            "Icon": {
+              "id": 607,
+              "path": "ui/icon/000000/000607.tex",
+              "path_hr1": "ui/icon/000000/000607_hr1.tex"
+            },
+            "Name": "残影"
+          }
+        },
+        {
+          "row_id": 7549,
+          "fields": {
+            "Icon": {
+              "id": 828,
+              "path": "ui/icon/000000/000828.tex",
+              "path_hr1": "ui/icon/000000/000828_hr1.tex"
+            },
+            "Name": "牵制"
+          }
+        },
+        {
+          "row_id": 7542,
+          "fields": {
+            "Icon": {
+              "id": 823,
+              "path": "ui/icon/000000/000823.tex",
+              "path_hr1": "ui/icon/000000/000823_hr1.tex"
+            },
+            "Name": "浴血"
+          }
+        },
+        {
+          "row_id": 7541,
+          "fields": {
+            "Icon": {
+              "id": 821,
+              "path": "ui/icon/000000/000821.tex",
+              "path_hr1": "ui/icon/000000/000821_hr1.tex"
+            },
+            "Name": "内丹"
+          }
+        }
+      ]
+    }
+  }
+}

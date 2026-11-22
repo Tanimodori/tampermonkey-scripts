@@ -1,0 +1,252 @@
+{
+  "formatVersion": 1,
+  "id": "d44054c2ee6ac0e2",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Feathers&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "quest",
+        "id": "66792",
+        "obj": {
+          "i": 66792,
+          "n": "Feathers and Folly",
+          "g": 42,
+          "l": "East Shroud",
+          "s": 0,
+          "f": 1
+        }
+      },
+      {
+        "type": "leve",
+        "id": "885",
+        "obj": {
+          "i": 885,
+          "n": "Feathers Unsullied",
+          "l": 52,
+          "j": 34,
+          "p": 2000
+        }
+      },
+      {
+        "type": "action",
+        "id": "4247",
+        "obj": {
+          "i": 4247,
+          "n": "Angel Feathers",
+          "c": 103,
+          "j": 0,
+          "t": 9,
+          "l": 0
+        }
+      },
+      {
+        "type": "quest",
+        "id": "69009",
+        "obj": {
+          "i": 69009,
+          "n": "Down Feathers",
+          "g": 138,
+          "l": "The Rak'tika Greatwood",
+          "s": 5130
+        }
+      },
+      {
+        "type": "action",
+        "id": "36170",
+        "obj": {
+          "i": 36170,
+          "n": "Hail of Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36171",
+        "obj": {
+          "i": 36171,
+          "n": "Hail of Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36361",
+        "obj": {
+          "i": 36361,
+          "n": "Hail of Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36829",
+        "obj": {
+          "i": 36829,
+          "n": "Hail of Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36830",
+        "obj": {
+          "i": 36830,
+          "n": "Hail of Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36893",
+        "obj": {
+          "i": 36893,
+          "n": "Hail of Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36894",
+        "obj": {
+          "i": 36894,
+          "n": "Hail of Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36895",
+        "obj": {
+          "i": 36895,
+          "n": "Hail of Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36896",
+        "obj": {
+          "i": 36896,
+          "n": "Hail of Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36897",
+        "obj": {
+          "i": 36897,
+          "n": "Hail of Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "36898",
+        "obj": {
+          "i": 36898,
+          "n": "Hail of Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "18685",
+        "obj": {
+          "i": 18685,
+          "n": "Ruffled Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "quest",
+        "id": "65692",
+        "obj": {
+          "i": 65692,
+          "n": "Ruffled Feathers",
+          "g": 0,
+          "l": "Central Shroud",
+          "s": 70
+        }
+      },
+      {
+        "type": "fate",
+        "id": "1935",
+        "obj": {
+          "i": 1935,
+          "n": "Ruffling Feathers",
+          "l": 92,
+          "t": "Slay Enemies"
+        }
+      },
+      {
+        "type": "action",
+        "id": "34895",
+        "obj": {
+          "i": 34895,
+          "n": "Ruffling of Feathers",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "quest",
+        "id": "68588",
+        "obj": {
+          "i": 68588,
+          "n": "When Feathers Fly",
+          "g": 59,
+          "l": "The Fringes",
+          "s": 16,
+          "r": 1
+        }
+      }
+    ]
+  }
+}

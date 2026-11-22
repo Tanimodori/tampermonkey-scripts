@@ -1,0 +1,318 @@
+{
+  "formatVersion": 1,
+  "id": "16dd342ce63ee5ab",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Action?rows=3571,136,16534,16531,3569,25861,7432,16532,25859,16536,25862,133,16535,131,7562,7433,28509,7561,3,37009,140,7430,37010,125,3570,25863,25864&limit=27&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 3571,
+          "fields": {
+            "Icon": {
+              "id": 2634,
+              "path": "ui/icon/002000/002634.tex",
+              "path_hr1": "ui/icon/002000/002634_hr1.tex"
+            },
+            "Name": "Assize"
+          }
+        },
+        {
+          "row_id": 136,
+          "fields": {
+            "Icon": {
+              "id": 2626,
+              "path": "ui/icon/002000/002626.tex",
+              "path_hr1": "ui/icon/002000/002626_hr1.tex"
+            },
+            "Name": "Presence of Mind"
+          }
+        },
+        {
+          "row_id": 16534,
+          "fields": {
+            "Icon": {
+              "id": 2643,
+              "path": "ui/icon/002000/002643.tex",
+              "path_hr1": "ui/icon/002000/002643_hr1.tex"
+            },
+            "Name": "Afflatus Rapture"
+          }
+        },
+        {
+          "row_id": 16531,
+          "fields": {
+            "Icon": {
+              "id": 2640,
+              "path": "ui/icon/002000/002640.tex",
+              "path_hr1": "ui/icon/002000/002640_hr1.tex"
+            },
+            "Name": "Afflatus Solace"
+          }
+        },
+        {
+          "row_id": 3569,
+          "fields": {
+            "Icon": {
+              "id": 2632,
+              "path": "ui/icon/002000/002632.tex",
+              "path_hr1": "ui/icon/002000/002632_hr1.tex"
+            },
+            "Name": "Asylum"
+          }
+        },
+        {
+          "row_id": 25861,
+          "fields": {
+            "Icon": {
+              "id": 2648,
+              "path": "ui/icon/002000/002648.tex",
+              "path_hr1": "ui/icon/002000/002648_hr1.tex"
+            },
+            "Name": "Aquaveil"
+          }
+        },
+        {
+          "row_id": 7432,
+          "fields": {
+            "Icon": {
+              "id": 2638,
+              "path": "ui/icon/002000/002638.tex",
+              "path_hr1": "ui/icon/002000/002638_hr1.tex"
+            },
+            "Name": "Divine Benison"
+          }
+        },
+        {
+          "row_id": 16532,
+          "fields": {
+            "Icon": {
+              "id": 2641,
+              "path": "ui/icon/002000/002641.tex",
+              "path_hr1": "ui/icon/002000/002641_hr1.tex"
+            },
+            "Name": "Dia"
+          }
+        },
+        {
+          "row_id": 25859,
+          "fields": {
+            "Icon": {
+              "id": 2646,
+              "path": "ui/icon/002000/002646.tex",
+              "path_hr1": "ui/icon/002000/002646_hr1.tex"
+            },
+            "Name": "Glare III"
+          }
+        },
+        {
+          "row_id": 16536,
+          "fields": {
+            "Icon": {
+              "id": 2645,
+              "path": "ui/icon/002000/002645.tex",
+              "path_hr1": "ui/icon/002000/002645_hr1.tex"
+            },
+            "Name": "Temperance"
+          }
+        },
+        {
+          "row_id": 25862,
+          "fields": {
+            "Icon": {
+              "id": 2649,
+              "path": "ui/icon/002000/002649.tex",
+              "path_hr1": "ui/icon/002000/002649_hr1.tex"
+            },
+            "Name": "Liturgy of the Bell"
+          }
+        },
+        {
+          "row_id": 133,
+          "fields": {
+            "Icon": {
+              "id": 409,
+              "path": "ui/icon/000000/000409.tex",
+              "path_hr1": "ui/icon/000000/000409_hr1.tex"
+            },
+            "Name": "Medica II"
+          }
+        },
+        {
+          "row_id": 16535,
+          "fields": {
+            "Icon": {
+              "id": 2644,
+              "path": "ui/icon/002000/002644.tex",
+              "path_hr1": "ui/icon/002000/002644_hr1.tex"
+            },
+            "Name": "Afflatus Misery"
+          }
+        },
+        {
+          "row_id": 131,
+          "fields": {
+            "Icon": {
+              "id": 407,
+              "path": "ui/icon/000000/000407.tex",
+              "path_hr1": "ui/icon/000000/000407_hr1.tex"
+            },
+            "Name": "Cure III"
+          }
+        },
+        {
+          "row_id": 7562,
+          "fields": {
+            "Icon": {
+              "id": 865,
+              "path": "ui/icon/000000/000865.tex",
+              "path_hr1": "ui/icon/000000/000865_hr1.tex"
+            },
+            "Name": "Lucid Dreaming"
+          }
+        },
+        {
+          "row_id": 7433,
+          "fields": {
+            "Icon": {
+              "id": 2639,
+              "path": "ui/icon/002000/002639.tex",
+              "path_hr1": "ui/icon/002000/002639_hr1.tex"
+            },
+            "Name": "Plenary Indulgence"
+          }
+        },
+        {
+          "row_id": 28509,
+          "fields": {
+            "Icon": {
+              "id": 2649,
+              "path": "ui/icon/002000/002649.tex",
+              "path_hr1": "ui/icon/002000/002649_hr1.tex"
+            },
+            "Name": "Liturgy of the Bell"
+          }
+        },
+        {
+          "row_id": 7561,
+          "fields": {
+            "Icon": {
+              "id": 866,
+              "path": "ui/icon/000000/000866.tex",
+              "path_hr1": "ui/icon/000000/000866_hr1.tex"
+            },
+            "Name": "Swiftcast"
+          }
+        },
+        {
+          "row_id": 3,
+          "fields": {
+            "Icon": {
+              "id": 104,
+              "path": "ui/icon/000000/000104.tex",
+              "path_hr1": "ui/icon/000000/000104_hr1.tex"
+            },
+            "Name": "Sprint"
+          }
+        },
+        {
+          "row_id": 37009,
+          "fields": {
+            "Icon": {
+              "id": 2126,
+              "path": "ui/icon/002000/002126.tex",
+              "path_hr1": "ui/icon/002000/002126_hr1.tex"
+            },
+            "Name": "Glare IV"
+          }
+        },
+        {
+          "row_id": 140,
+          "fields": {
+            "Icon": {
+              "id": 2627,
+              "path": "ui/icon/002000/002627.tex",
+              "path_hr1": "ui/icon/002000/002627_hr1.tex"
+            },
+            "Name": "Benediction"
+          }
+        },
+        {
+          "row_id": 7430,
+          "fields": {
+            "Icon": {
+              "id": 2636,
+              "path": "ui/icon/002000/002636.tex",
+              "path_hr1": "ui/icon/002000/002636_hr1.tex"
+            },
+            "Name": "Thin Air"
+          }
+        },
+        {
+          "row_id": 37010,
+          "fields": {
+            "Icon": {
+              "id": 2127,
+              "path": "ui/icon/002000/002127.tex",
+              "path_hr1": "ui/icon/002000/002127_hr1.tex"
+            },
+            "Name": "Medica III"
+          }
+        },
+        {
+          "row_id": 125,
+          "fields": {
+            "Icon": {
+              "id": 411,
+              "path": "ui/icon/000000/000411.tex",
+              "path_hr1": "ui/icon/000000/000411_hr1.tex"
+            },
+            "Name": "Raise"
+          }
+        },
+        {
+          "row_id": 3570,
+          "fields": {
+            "Icon": {
+              "id": 2633,
+              "path": "ui/icon/002000/002633.tex",
+              "path_hr1": "ui/icon/002000/002633_hr1.tex"
+            },
+            "Name": "Tetragrammaton"
+          }
+        },
+        {
+          "row_id": 25863,
+          "fields": {
+            "Icon": {
+              "id": 405,
+              "path": "ui/icon/000000/000405.tex",
+              "path_hr1": "ui/icon/000000/000405_hr1.tex"
+            },
+            "Name": "Liturgy of the Bell"
+          }
+        },
+        {
+          "row_id": 25864,
+          "fields": {
+            "Icon": {
+              "id": 405,
+              "path": "ui/icon/000000/000405.tex",
+              "path_hr1": "ui/icon/000000/000405_hr1.tex"
+            },
+            "Name": "Liturgy of the Bell"
+          }
+        }
+      ]
+    }
+  }
+}

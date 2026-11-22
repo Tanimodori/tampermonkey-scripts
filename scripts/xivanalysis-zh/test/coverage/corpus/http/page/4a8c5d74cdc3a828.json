@@ -1,0 +1,87 @@
+{
+  "formatVersion": 1,
+  "id": "4a8c5d74cdc3a828",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Status?rows=1895,1220,1944,315,1874,1223&limit=6&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 1895,
+          "fields": {
+            "Icon": {
+              "id": 212812,
+              "path": "ui/icon/212000/212812.tex",
+              "path_hr1": "ui/icon/212000/212812_hr1.tex"
+            },
+            "Name": "Biolysis"
+          }
+        },
+        {
+          "row_id": 1220,
+          "fields": {
+            "Icon": {
+              "id": 212808,
+              "path": "ui/icon/212000/212808.tex",
+              "path_hr1": "ui/icon/212000/212808_hr1.tex"
+            },
+            "Name": "Excogitation"
+          }
+        },
+        {
+          "row_id": 1944,
+          "fields": {
+            "Icon": {
+              "id": 212802,
+              "path": "ui/icon/212000/212802.tex",
+              "path_hr1": "ui/icon/212000/212802_hr1.tex"
+            },
+            "Name": "Sacred Soil"
+          }
+        },
+        {
+          "row_id": 315,
+          "fields": {
+            "Icon": {
+              "id": 212826,
+              "path": "ui/icon/212000/212826.tex",
+              "path_hr1": "ui/icon/212000/212826_hr1.tex"
+            },
+            "Name": "Whispering Dawn"
+          }
+        },
+        {
+          "row_id": 1874,
+          "fields": {
+            "Icon": {
+              "id": 212846,
+              "path": "ui/icon/212000/212846.tex",
+              "path_hr1": "ui/icon/212000/212846_hr1.tex"
+            },
+            "Name": "Angel's Whisper"
+          }
+        },
+        {
+          "row_id": 1223,
+          "fields": {
+            "Icon": {
+              "id": 212811,
+              "path": "ui/icon/212000/212811.tex",
+              "path_hr1": "ui/icon/212000/212811_hr1.tex"
+            },
+            "Name": "Fey Union"
+          }
+        }
+      ]
+    }
+  }
+}

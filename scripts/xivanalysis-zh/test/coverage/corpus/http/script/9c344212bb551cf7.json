@@ -1,0 +1,296 @@
+{
+  "formatVersion": 1,
+  "id": "9c344212bb551cf7",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=3577%2C3573%2C158%2C25796%2C25797%2C7561%2C7422%2C162%2C154%2C7560%2C3576%2C36989%2C152%2C16505%2C149%2C16506%2C155%2C16507%2C36988%2C36986%2C157%2C7421%2C7562%2C159%2C141&limit=25&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 3577,
+          "fields": {
+            "Icon": {
+              "id": 2660,
+              "path": "ui/icon/002000/002660.tex",
+              "path_hr1": "ui/icon/002000/002660_hr1.tex"
+            },
+            "Name": "炽炎"
+          }
+        },
+        {
+          "row_id": 3573,
+          "fields": {
+            "Icon": {
+              "id": 2656,
+              "path": "ui/icon/002000/002656.tex",
+              "path_hr1": "ui/icon/002000/002656_hr1.tex"
+            },
+            "Name": "黑魔纹"
+          }
+        },
+        {
+          "row_id": 158,
+          "fields": {
+            "Icon": {
+              "id": 2651,
+              "path": "ui/icon/002000/002651.tex",
+              "path_hr1": "ui/icon/002000/002651_hr1.tex"
+            },
+            "Name": "魔泉"
+          }
+        },
+        {
+          "row_id": 25796,
+          "fields": {
+            "Icon": {
+              "id": 2671,
+              "path": "ui/icon/002000/002671.tex",
+              "path_hr1": "ui/icon/002000/002671_hr1.tex"
+            },
+            "Name": "详述"
+          }
+        },
+        {
+          "row_id": 25797,
+          "fields": {
+            "Icon": {
+              "id": 2672,
+              "path": "ui/icon/002000/002672.tex",
+              "path_hr1": "ui/icon/002000/002672_hr1.tex"
+            },
+            "Name": "悖论"
+          }
+        },
+        {
+          "row_id": 7561,
+          "fields": {
+            "Icon": {
+              "id": 866,
+              "path": "ui/icon/000000/000866.tex",
+              "path_hr1": "ui/icon/000000/000866_hr1.tex"
+            },
+            "Name": "即刻咏唱"
+          }
+        },
+        {
+          "row_id": 7422,
+          "fields": {
+            "Icon": {
+              "id": 2664,
+              "path": "ui/icon/002000/002664.tex",
+              "path_hr1": "ui/icon/002000/002664_hr1.tex"
+            },
+            "Name": "秽浊"
+          }
+        },
+        {
+          "row_id": 162,
+          "fields": {
+            "Icon": {
+              "id": 2652,
+              "path": "ui/icon/002000/002652.tex",
+              "path_hr1": "ui/icon/002000/002652_hr1.tex"
+            },
+            "Name": "核爆"
+          }
+        },
+        {
+          "row_id": 154,
+          "fields": {
+            "Icon": {
+              "id": 456,
+              "path": "ui/icon/000000/000456.tex",
+              "path_hr1": "ui/icon/000000/000456_hr1.tex"
+            },
+            "Name": "冰封"
+          }
+        },
+        {
+          "row_id": 7560,
+          "fields": {
+            "Icon": {
+              "id": 861,
+              "path": "ui/icon/000000/000861.tex",
+              "path_hr1": "ui/icon/000000/000861_hr1.tex"
+            },
+            "Name": "昏乱"
+          }
+        },
+        {
+          "row_id": 3576,
+          "fields": {
+            "Icon": {
+              "id": 2659,
+              "path": "ui/icon/002000/002659.tex",
+              "path_hr1": "ui/icon/002000/002659_hr1.tex"
+            },
+            "Name": "冰澈"
+          }
+        },
+        {
+          "row_id": 36989,
+          "fields": {
+            "Icon": {
+              "id": 2151,
+              "path": "ui/icon/002000/002151.tex",
+              "path_hr1": "ui/icon/002000/002151_hr1.tex"
+            },
+            "Name": "耀星"
+          }
+        },
+        {
+          "row_id": 152,
+          "fields": {
+            "Icon": {
+              "id": 453,
+              "path": "ui/icon/000000/000453.tex",
+              "path_hr1": "ui/icon/000000/000453_hr1.tex"
+            },
+            "Name": "爆炎"
+          }
+        },
+        {
+          "row_id": 16505,
+          "fields": {
+            "Icon": {
+              "id": 2665,
+              "path": "ui/icon/002000/002665.tex",
+              "path_hr1": "ui/icon/002000/002665_hr1.tex"
+            },
+            "Name": "绝望"
+          }
+        },
+        {
+          "row_id": 149,
+          "fields": {
+            "Icon": {
+              "id": 466,
+              "path": "ui/icon/000000/000466.tex",
+              "path_hr1": "ui/icon/000000/000466_hr1.tex"
+            },
+            "Name": "星灵移位"
+          }
+        },
+        {
+          "row_id": 16506,
+          "fields": {
+            "Icon": {
+              "id": 2666,
+              "path": "ui/icon/002000/002666.tex",
+              "path_hr1": "ui/icon/002000/002666_hr1.tex"
+            },
+            "Name": "灵极魂"
+          }
+        },
+        {
+          "row_id": 155,
+          "fields": {
+            "Icon": {
+              "id": 467,
+              "path": "ui/icon/000000/000467.tex",
+              "path_hr1": "ui/icon/000000/000467_hr1.tex"
+            },
+            "Name": "以太步"
+          }
+        },
+        {
+          "row_id": 16507,
+          "fields": {
+            "Icon": {
+              "id": 2667,
+              "path": "ui/icon/002000/002667.tex",
+              "path_hr1": "ui/icon/002000/002667_hr1.tex"
+            },
+            "Name": "异言"
+          }
+        },
+        {
+          "row_id": 36988,
+          "fields": {
+            "Icon": {
+              "id": 2150,
+              "path": "ui/icon/002000/002150.tex",
+              "path_hr1": "ui/icon/002000/002150_hr1.tex"
+            },
+            "Name": "魔纹重置"
+          }
+        },
+        {
+          "row_id": 36986,
+          "fields": {
+            "Icon": {
+              "id": 2673,
+              "path": "ui/icon/002000/002673.tex",
+              "path_hr1": "ui/icon/002000/002673_hr1.tex"
+            },
+            "Name": "高闪雷"
+          }
+        },
+        {
+          "row_id": 157,
+          "fields": {
+            "Icon": {
+              "id": 463,
+              "path": "ui/icon/000000/000463.tex",
+              "path_hr1": "ui/icon/000000/000463_hr1.tex"
+            },
+            "Name": "魔罩"
+          }
+        },
+        {
+          "row_id": 7421,
+          "fields": {
+            "Icon": {
+              "id": 2663,
+              "path": "ui/icon/002000/002663.tex",
+              "path_hr1": "ui/icon/002000/002663_hr1.tex"
+            },
+            "Name": "三连咏唱"
+          }
+        },
+        {
+          "row_id": 7562,
+          "fields": {
+            "Icon": {
+              "id": 865,
+              "path": "ui/icon/000000/000865.tex",
+              "path_hr1": "ui/icon/000000/000865_hr1.tex"
+            },
+            "Name": "醒梦"
+          }
+        },
+        {
+          "row_id": 159,
+          "fields": {
+            "Icon": {
+              "id": 2653,
+              "path": "ui/icon/002000/002653.tex",
+              "path_hr1": "ui/icon/002000/002653_hr1.tex"
+            },
+            "Name": "玄冰"
+          }
+        },
+        {
+          "row_id": 141,
+          "fields": {
+            "Icon": {
+              "id": 451,
+              "path": "ui/icon/000000/000451.tex",
+              "path_hr1": "ui/icon/000000/000451_hr1.tex"
+            },
+            "Name": "火炎"
+          }
+        }
+      ]
+    }
+  }
+}

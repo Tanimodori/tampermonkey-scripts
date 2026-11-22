@@ -1,0 +1,340 @@
+{
+  "formatVersion": 1,
+  "id": "51d4c9eb22728af5",
+  "kind": "page",
+  "origin": "page",
+  "purpose": "sheet-en",
+  "request": {
+    "method": "GET",
+    "url": "https://v2.xivapi.com/api/sheet/Action?rows=2878,7414,2876,16500,16498,16499,25788,36979,36980,17209,7413,7411,7412,16501,16504,16503,25787,17206,36981,36978,36982,16889,2887,7410,16497,2874,2890,3,7541&limit=29&fields=Name,Icon&transient=&language=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "0874aee069e1e7c4",
+      "rows": [
+        {
+          "row_id": 2878,
+          "fields": {
+            "Icon": {
+              "id": 3018,
+              "path": "ui/icon/003000/003018.tex",
+              "path_hr1": "ui/icon/003000/003018_hr1.tex"
+            },
+            "Name": "Wildfire"
+          }
+        },
+        {
+          "row_id": 7414,
+          "fields": {
+            "Icon": {
+              "id": 3034,
+              "path": "ui/icon/003000/003034.tex",
+              "path_hr1": "ui/icon/003000/003034_hr1.tex"
+            },
+            "Name": "Barrel Stabilizer"
+          }
+        },
+        {
+          "row_id": 2876,
+          "fields": {
+            "Icon": {
+              "id": 3022,
+              "path": "ui/icon/003000/003022.tex",
+              "path_hr1": "ui/icon/003000/003022_hr1.tex"
+            },
+            "Name": "Reassemble"
+          }
+        },
+        {
+          "row_id": 16500,
+          "fields": {
+            "Icon": {
+              "id": 3045,
+              "path": "ui/icon/003000/003045.tex",
+              "path_hr1": "ui/icon/003000/003045_hr1.tex"
+            },
+            "Name": "Air Anchor"
+          }
+        },
+        {
+          "row_id": 16498,
+          "fields": {
+            "Icon": {
+              "id": 3043,
+              "path": "ui/icon/003000/003043.tex",
+              "path_hr1": "ui/icon/003000/003043_hr1.tex"
+            },
+            "Name": "Drill"
+          }
+        },
+        {
+          "row_id": 16499,
+          "fields": {
+            "Icon": {
+              "id": 3044,
+              "path": "ui/icon/003000/003044.tex",
+              "path_hr1": "ui/icon/003000/003044_hr1.tex"
+            },
+            "Name": "Bioblaster"
+          }
+        },
+        {
+          "row_id": 25788,
+          "fields": {
+            "Icon": {
+              "id": 3048,
+              "path": "ui/icon/003000/003048.tex",
+              "path_hr1": "ui/icon/003000/003048_hr1.tex"
+            },
+            "Name": "Chain Saw"
+          }
+        },
+        {
+          "row_id": 36979,
+          "fields": {
+            "Icon": {
+              "id": 3507,
+              "path": "ui/icon/003000/003507.tex",
+              "path_hr1": "ui/icon/003000/003507_hr1.tex"
+            },
+            "Name": "Double Check"
+          }
+        },
+        {
+          "row_id": 36980,
+          "fields": {
+            "Icon": {
+              "id": 3508,
+              "path": "ui/icon/003000/003508.tex",
+              "path_hr1": "ui/icon/003000/003508_hr1.tex"
+            },
+            "Name": "Checkmate"
+          }
+        },
+        {
+          "row_id": 17209,
+          "fields": {
+            "Icon": {
+              "id": 3041,
+              "path": "ui/icon/003000/003041.tex",
+              "path_hr1": "ui/icon/003000/003041_hr1.tex"
+            },
+            "Name": "Hypercharge"
+          }
+        },
+        {
+          "row_id": 7413,
+          "fields": {
+            "Icon": {
+              "id": 3033,
+              "path": "ui/icon/003000/003033.tex",
+              "path_hr1": "ui/icon/003000/003033_hr1.tex"
+            },
+            "Name": "Heated Clean Shot"
+          }
+        },
+        {
+          "row_id": 7411,
+          "fields": {
+            "Icon": {
+              "id": 3031,
+              "path": "ui/icon/003000/003031.tex",
+              "path_hr1": "ui/icon/003000/003031_hr1.tex"
+            },
+            "Name": "Heated Split Shot"
+          }
+        },
+        {
+          "row_id": 7412,
+          "fields": {
+            "Icon": {
+              "id": 3032,
+              "path": "ui/icon/003000/003032.tex",
+              "path_hr1": "ui/icon/003000/003032_hr1.tex"
+            },
+            "Name": "Heated Slug Shot"
+          }
+        },
+        {
+          "row_id": 16501,
+          "fields": {
+            "Icon": {
+              "id": 3501,
+              "path": "ui/icon/003000/003501.tex",
+              "path_hr1": "ui/icon/003000/003501_hr1.tex"
+            },
+            "Name": "Automaton Queen"
+          }
+        },
+        {
+          "row_id": 16504,
+          "fields": {
+            "Icon": {
+              "id": 3504,
+              "path": "ui/icon/003000/003504.tex",
+              "path_hr1": "ui/icon/003000/003504_hr1.tex"
+            },
+            "Name": "Arm Punch"
+          }
+        },
+        {
+          "row_id": 16503,
+          "fields": {
+            "Icon": {
+              "id": 3503,
+              "path": "ui/icon/003000/003503.tex",
+              "path_hr1": "ui/icon/003000/003503_hr1.tex"
+            },
+            "Name": "Pile Bunker"
+          }
+        },
+        {
+          "row_id": 25787,
+          "fields": {
+            "Icon": {
+              "id": 3047,
+              "path": "ui/icon/003000/003047.tex",
+              "path_hr1": "ui/icon/003000/003047_hr1.tex"
+            },
+            "Name": "Crowned Collider"
+          }
+        },
+        {
+          "row_id": 17206,
+          "fields": {
+            "Icon": {
+              "id": 3505,
+              "path": "ui/icon/003000/003505.tex",
+              "path_hr1": "ui/icon/003000/003505_hr1.tex"
+            },
+            "Name": "Roller Dash"
+          }
+        },
+        {
+          "row_id": 36981,
+          "fields": {
+            "Icon": {
+              "id": 3500,
+              "path": "ui/icon/003000/003500.tex",
+              "path_hr1": "ui/icon/003000/003500_hr1.tex"
+            },
+            "Name": "Excavator"
+          }
+        },
+        {
+          "row_id": 36978,
+          "fields": {
+            "Icon": {
+              "id": 3506,
+              "path": "ui/icon/003000/003506.tex",
+              "path_hr1": "ui/icon/003000/003506_hr1.tex"
+            },
+            "Name": "Blazing Shot"
+          }
+        },
+        {
+          "row_id": 36982,
+          "fields": {
+            "Icon": {
+              "id": 3049,
+              "path": "ui/icon/003000/003049.tex",
+              "path_hr1": "ui/icon/003000/003049_hr1.tex"
+            },
+            "Name": "Full Metal Field"
+          }
+        },
+        {
+          "row_id": 16889,
+          "fields": {
+            "Icon": {
+              "id": 3040,
+              "path": "ui/icon/003000/003040.tex",
+              "path_hr1": "ui/icon/003000/003040_hr1.tex"
+            },
+            "Name": "Tactician"
+          }
+        },
+        {
+          "row_id": 2887,
+          "fields": {
+            "Icon": {
+              "id": 3011,
+              "path": "ui/icon/003000/003011.tex",
+              "path_hr1": "ui/icon/003000/003011_hr1.tex"
+            },
+            "Name": "Dismantle"
+          }
+        },
+        {
+          "row_id": 7410,
+          "fields": {
+            "Icon": {
+              "id": 3030,
+              "path": "ui/icon/003000/003030.tex",
+              "path_hr1": "ui/icon/003000/003030_hr1.tex"
+            },
+            "Name": "Heat Blast"
+          }
+        },
+        {
+          "row_id": 16497,
+          "fields": {
+            "Icon": {
+              "id": 3042,
+              "path": "ui/icon/003000/003042.tex",
+              "path_hr1": "ui/icon/003000/003042_hr1.tex"
+            },
+            "Name": "Auto Crossbow"
+          }
+        },
+        {
+          "row_id": 2874,
+          "fields": {
+            "Icon": {
+              "id": 3005,
+              "path": "ui/icon/003000/003005.tex",
+              "path_hr1": "ui/icon/003000/003005_hr1.tex"
+            },
+            "Name": "Gauss Round"
+          }
+        },
+        {
+          "row_id": 2890,
+          "fields": {
+            "Icon": {
+              "id": 3017,
+              "path": "ui/icon/003000/003017.tex",
+              "path_hr1": "ui/icon/003000/003017_hr1.tex"
+            },
+            "Name": "Ricochet"
+          }
+        },
+        {
+          "row_id": 3,
+          "fields": {
+            "Icon": {
+              "id": 104,
+              "path": "ui/icon/000000/000104.tex",
+              "path_hr1": "ui/icon/000000/000104_hr1.tex"
+            },
+            "Name": "Sprint"
+          }
+        },
+        {
+          "row_id": 7541,
+          "fields": {
+            "Icon": {
+              "id": 821,
+              "path": "ui/icon/000000/000821.tex",
+              "path_hr1": "ui/icon/000000/000821_hr1.tex"
+            },
+            "Name": "Second Wind"
+          }
+        }
+      ]
+    }
+  }
+}

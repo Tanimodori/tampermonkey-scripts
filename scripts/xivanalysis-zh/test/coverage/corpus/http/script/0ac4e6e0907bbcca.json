@@ -1,0 +1,234 @@
+{
+  "formatVersion": 1,
+  "id": "0ac4e6e0907bbcca",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Canvas&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "item",
+        "id": "27240",
+        "obj": {
+          "i": 27240,
+          "n": "Canvas Repair Materials",
+          "l": 290,
+          "c": 26109,
+          "t": 63,
+          "g": 5,
+          "f": [
+            {
+              "id": 33462,
+              "job": 8,
+              "lvl": 70
+            },
+            {
+              "id": 33468,
+              "job": 12,
+              "lvl": 70
+            },
+            {
+              "id": 33474,
+              "job": 13,
+              "lvl": 70
+            }
+          ],
+          "r": 1
+        }
+      },
+      {
+        "type": "quest",
+        "id": "70744",
+        "obj": {
+          "i": 70744,
+          "n": "Canvassing in Kozama'uka",
+          "g": 39,
+          "l": "Kozama'uka",
+          "s": 110,
+          "r": 1
+        }
+      },
+      {
+        "type": "leve",
+        "id": "1740",
+        "obj": {
+          "i": 1740,
+          "n": "Cloth for Canvas",
+          "l": 92,
+          "j": 14,
+          "p": 4504
+        }
+      },
+      {
+        "type": "item",
+        "id": "7025",
+        "obj": {
+          "i": 7025,
+          "n": "Cotton Canvas",
+          "l": 19,
+          "c": 21602,
+          "t": 51,
+          "g": 5,
+          "f": [
+            {
+              "id": 1594,
+              "job": 13,
+              "lvl": 18
+            }
+          ],
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "28934",
+        "obj": {
+          "i": 28934,
+          "n": "Extra Large Angler's Canvas",
+          "l": 1,
+          "c": 51425,
+          "t": 79,
+          "g": 9,
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "12231",
+        "obj": {
+          "i": 12231,
+          "n": "Farreach Canvas",
+          "l": 130,
+          "c": 21603,
+          "t": 51,
+          "g": 5,
+          "f": [
+            {
+              "id": 31190,
+              "job": 13,
+              "lvl": 53
+            }
+          ],
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "49968",
+        "obj": {
+          "i": 49968,
+          "n": "Insulated Pop-up Tent Canvas",
+          "l": 1,
+          "c": 21623,
+          "t": 63,
+          "g": 5,
+          "f": [
+            {
+              "id": 37690,
+              "job": 13,
+              "lvl": 100
+            },
+            {
+              "id": 37697,
+              "job": 13,
+              "lvl": 100,
+              "stars": 1
+            }
+          ],
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "28933",
+        "obj": {
+          "i": 28933,
+          "n": "Large Angler's Canvas",
+          "l": 1,
+          "c": 51424,
+          "t": 79,
+          "g": 9,
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "7026",
+        "obj": {
+          "i": 7026,
+          "n": "Linen Canvas",
+          "l": 36,
+          "c": 21605,
+          "t": 51,
+          "g": 5,
+          "f": [
+            {
+              "id": 1595,
+              "job": 13,
+              "lvl": 36
+            }
+          ],
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "28932",
+        "obj": {
+          "i": 28932,
+          "n": "Medium Angler's Canvas",
+          "l": 1,
+          "c": 51426,
+          "t": 79,
+          "g": 9,
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "49956",
+        "obj": {
+          "i": 49956,
+          "n": "Pop-up Tent Canvas",
+          "l": 1,
+          "c": 23252,
+          "t": 63,
+          "g": 5,
+          "f": [
+            {
+              "id": 37654,
+              "job": 12,
+              "lvl": 100
+            },
+            {
+              "id": 37661,
+              "job": 12,
+              "lvl": 100,
+              "stars": 1
+            }
+          ],
+          "r": 1
+        }
+      },
+      {
+        "type": "item",
+        "id": "28931",
+        "obj": {
+          "i": 28931,
+          "n": "Small Angler's Canvas",
+          "l": 1,
+          "c": 51427,
+          "t": 79,
+          "g": 9,
+          "r": 1
+        }
+      }
+    ]
+  }
+}

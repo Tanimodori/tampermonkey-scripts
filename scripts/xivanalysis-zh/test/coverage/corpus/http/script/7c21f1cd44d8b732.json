@@ -1,0 +1,417 @@
+{
+  "formatVersion": 1,
+  "id": "7c21f1cd44d8b732",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "sheet-cn",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action?rows=24387%2C24388%2C24405%2C24380%2C24381%2C24393%2C7546%2C36970%2C36971%2C24382%2C24383%2C24394%2C24396%2C24395%2C24399%2C36969%2C24398%2C24385%2C24391%2C24378%2C24374%2C24401%2C24375%2C7549%2C36973%2C24397%2C24400%2C24404%2C7542%2C24373%2C3%2C24379%2C24390%2C7541%2C36972%2C24376&limit=36&fields=Name%2CIcon&transient=&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "rows": [
+        {
+          "row_id": 24387,
+          "fields": {
+            "Icon": {
+              "id": 3615,
+              "path": "ui/icon/003000/003615.tex",
+              "path_hr1": "ui/icon/003000/003615_hr1.tex"
+            },
+            "Name": "播魂种"
+          }
+        },
+        {
+          "row_id": 24388,
+          "fields": {
+            "Icon": {
+              "id": 3616,
+              "path": "ui/icon/003000/003616.tex",
+              "path_hr1": "ui/icon/003000/003616_hr1.tex"
+            },
+            "Name": "收获月"
+          }
+        },
+        {
+          "row_id": 24405,
+          "fields": {
+            "Icon": {
+              "id": 3633,
+              "path": "ui/icon/003000/003633.tex",
+              "path_hr1": "ui/icon/003000/003633_hr1.tex"
+            },
+            "Name": "神秘环"
+          }
+        },
+        {
+          "row_id": 24380,
+          "fields": {
+            "Icon": {
+              "id": 3608,
+              "path": "ui/icon/003000/003608.tex",
+              "path_hr1": "ui/icon/003000/003608_hr1.tex"
+            },
+            "Name": "灵魂切割"
+          }
+        },
+        {
+          "row_id": 24381,
+          "fields": {
+            "Icon": {
+              "id": 3609,
+              "path": "ui/icon/003000/003609.tex",
+              "path_hr1": "ui/icon/003000/003609_hr1.tex"
+            },
+            "Name": "灵魂钐割"
+          }
+        },
+        {
+          "row_id": 24393,
+          "fields": {
+            "Icon": {
+              "id": 3621,
+              "path": "ui/icon/003000/003621.tex",
+              "path_hr1": "ui/icon/003000/003621_hr1.tex"
+            },
+            "Name": "暴食"
+          }
+        },
+        {
+          "row_id": 7546,
+          "fields": {
+            "Icon": {
+              "id": 830,
+              "path": "ui/icon/000000/000830.tex",
+              "path_hr1": "ui/icon/000000/000830_hr1.tex"
+            },
+            "Name": "真北"
+          }
+        },
+        {
+          "row_id": 36970,
+          "fields": {
+            "Icon": {
+              "id": 3635,
+              "path": "ui/icon/003000/003635.tex",
+              "path_hr1": "ui/icon/003000/003635_hr1.tex"
+            },
+            "Name": "绞决处刑"
+          }
+        },
+        {
+          "row_id": 36971,
+          "fields": {
+            "Icon": {
+              "id": 3636,
+              "path": "ui/icon/003000/003636.tex",
+              "path_hr1": "ui/icon/003000/003636_hr1.tex"
+            },
+            "Name": "缢杀处刑"
+          }
+        },
+        {
+          "row_id": 24382,
+          "fields": {
+            "Icon": {
+              "id": 3610,
+              "path": "ui/icon/003000/003610.tex",
+              "path_hr1": "ui/icon/003000/003610_hr1.tex"
+            },
+            "Name": "绞决"
+          }
+        },
+        {
+          "row_id": 24383,
+          "fields": {
+            "Icon": {
+              "id": 3611,
+              "path": "ui/icon/003000/003611.tex",
+              "path_hr1": "ui/icon/003000/003611_hr1.tex"
+            },
+            "Name": "缢杀"
+          }
+        },
+        {
+          "row_id": 24394,
+          "fields": {
+            "Icon": {
+              "id": 3622,
+              "path": "ui/icon/003000/003622.tex",
+              "path_hr1": "ui/icon/003000/003622_hr1.tex"
+            },
+            "Name": "夜游魂衣"
+          }
+        },
+        {
+          "row_id": 24396,
+          "fields": {
+            "Icon": {
+              "id": 3624,
+              "path": "ui/icon/003000/003624.tex",
+              "path_hr1": "ui/icon/003000/003624_hr1.tex"
+            },
+            "Name": "交错收割"
+          }
+        },
+        {
+          "row_id": 24395,
+          "fields": {
+            "Icon": {
+              "id": 3623,
+              "path": "ui/icon/003000/003623.tex",
+              "path_hr1": "ui/icon/003000/003623_hr1.tex"
+            },
+            "Name": "虚无收割"
+          }
+        },
+        {
+          "row_id": 24399,
+          "fields": {
+            "Icon": {
+              "id": 3627,
+              "path": "ui/icon/003000/003627.tex",
+              "path_hr1": "ui/icon/003000/003627_hr1.tex"
+            },
+            "Name": "夜游魂切割"
+          }
+        },
+        {
+          "row_id": 36969,
+          "fields": {
+            "Icon": {
+              "id": 3634,
+              "path": "ui/icon/003000/003634.tex",
+              "path_hr1": "ui/icon/003000/003634_hr1.tex"
+            },
+            "Name": "祭牲"
+          }
+        },
+        {
+          "row_id": 24398,
+          "fields": {
+            "Icon": {
+              "id": 3626,
+              "path": "ui/icon/003000/003626.tex",
+              "path_hr1": "ui/icon/003000/003626_hr1.tex"
+            },
+            "Name": "团契"
+          }
+        },
+        {
+          "row_id": 24385,
+          "fields": {
+            "Icon": {
+              "id": 3613,
+              "path": "ui/icon/003000/003613.tex",
+              "path_hr1": "ui/icon/003000/003613_hr1.tex"
+            },
+            "Name": "大丰收"
+          }
+        },
+        {
+          "row_id": 24391,
+          "fields": {
+            "Icon": {
+              "id": 3619,
+              "path": "ui/icon/003000/003619.tex",
+              "path_hr1": "ui/icon/003000/003619_hr1.tex"
+            },
+            "Name": "缢杀爪"
+          }
+        },
+        {
+          "row_id": 24378,
+          "fields": {
+            "Icon": {
+              "id": 3606,
+              "path": "ui/icon/003000/003606.tex",
+              "path_hr1": "ui/icon/003000/003606_hr1.tex"
+            },
+            "Name": "死亡之影"
+          }
+        },
+        {
+          "row_id": 24374,
+          "fields": {
+            "Icon": {
+              "id": 3602,
+              "path": "ui/icon/003000/003602.tex",
+              "path_hr1": "ui/icon/003000/003602_hr1.tex"
+            },
+            "Name": "增盈切割"
+          }
+        },
+        {
+          "row_id": 24401,
+          "fields": {
+            "Icon": {
+              "id": 3629,
+              "path": "ui/icon/003000/003629.tex",
+              "path_hr1": "ui/icon/003000/003629_hr1.tex"
+            },
+            "Name": "地狱入境"
+          }
+        },
+        {
+          "row_id": 24375,
+          "fields": {
+            "Icon": {
+              "id": 3603,
+              "path": "ui/icon/003000/003603.tex",
+              "path_hr1": "ui/icon/003000/003603_hr1.tex"
+            },
+            "Name": "地狱切割"
+          }
+        },
+        {
+          "row_id": 7549,
+          "fields": {
+            "Icon": {
+              "id": 828,
+              "path": "ui/icon/000000/000828.tex",
+              "path_hr1": "ui/icon/000000/000828_hr1.tex"
+            },
+            "Name": "牵制"
+          }
+        },
+        {
+          "row_id": 36973,
+          "fields": {
+            "Icon": {
+              "id": 3638,
+              "path": "ui/icon/003000/003638.tex",
+              "path_hr1": "ui/icon/003000/003638_hr1.tex"
+            },
+            "Name": "完人"
+          }
+        },
+        {
+          "row_id": 24397,
+          "fields": {
+            "Icon": {
+              "id": 3625,
+              "path": "ui/icon/003000/003625.tex",
+              "path_hr1": "ui/icon/003000/003625_hr1.tex"
+            },
+            "Name": "阴冷收割"
+          }
+        },
+        {
+          "row_id": 24400,
+          "fields": {
+            "Icon": {
+              "id": 3628,
+              "path": "ui/icon/003000/003628.tex",
+              "path_hr1": "ui/icon/003000/003628_hr1.tex"
+            },
+            "Name": "夜游魂钐割"
+          }
+        },
+        {
+          "row_id": 24404,
+          "fields": {
+            "Icon": {
+              "id": 3632,
+              "path": "ui/icon/003000/003632.tex",
+              "path_hr1": "ui/icon/003000/003632_hr1.tex"
+            },
+            "Name": "神秘纹"
+          }
+        },
+        {
+          "row_id": 7542,
+          "fields": {
+            "Icon": {
+              "id": 823,
+              "path": "ui/icon/000000/000823.tex",
+              "path_hr1": "ui/icon/000000/000823_hr1.tex"
+            },
+            "Name": "浴血"
+          }
+        },
+        {
+          "row_id": 24373,
+          "fields": {
+            "Icon": {
+              "id": 3601,
+              "path": "ui/icon/003000/003601.tex",
+              "path_hr1": "ui/icon/003000/003601_hr1.tex"
+            },
+            "Name": "切割"
+          }
+        },
+        {
+          "row_id": 3,
+          "fields": {
+            "Icon": {
+              "id": 104,
+              "path": "ui/icon/000000/000104.tex",
+              "path_hr1": "ui/icon/000000/000104_hr1.tex"
+            },
+            "Name": "冲刺"
+          }
+        },
+        {
+          "row_id": 24379,
+          "fields": {
+            "Icon": {
+              "id": 3607,
+              "path": "ui/icon/003000/003607.tex",
+              "path_hr1": "ui/icon/003000/003607_hr1.tex"
+            },
+            "Name": "死亡之涡"
+          }
+        },
+        {
+          "row_id": 24390,
+          "fields": {
+            "Icon": {
+              "id": 3618,
+              "path": "ui/icon/003000/003618.tex",
+              "path_hr1": "ui/icon/003000/003618_hr1.tex"
+            },
+            "Name": "绞决爪"
+          }
+        },
+        {
+          "row_id": 7541,
+          "fields": {
+            "Icon": {
+              "id": 821,
+              "path": "ui/icon/000000/000821.tex",
+              "path_hr1": "ui/icon/000000/000821_hr1.tex"
+            },
+            "Name": "内丹"
+          }
+        },
+        {
+          "row_id": 36972,
+          "fields": {
+            "Icon": {
+              "id": 3637,
+              "path": "ui/icon/003000/003637.tex",
+              "path_hr1": "ui/icon/003000/003637_hr1.tex"
+            },
+            "Name": "断首处刑"
+          }
+        },
+        {
+          "row_id": 24376,
+          "fields": {
+            "Icon": {
+              "id": 3604,
+              "path": "ui/icon/003000/003604.tex",
+              "path_hr1": "ui/icon/003000/003604_hr1.tex"
+            },
+            "Name": "旋转钐割"
+          }
+        }
+      ]
+    }
+  }
+}

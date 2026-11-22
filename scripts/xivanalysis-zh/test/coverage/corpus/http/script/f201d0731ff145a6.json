@@ -1,0 +1,65 @@
+{
+  "formatVersion": 1,
+  "id": "f201d0731ff145a6",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Shifu&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "34352",
+        "obj": {
+          "i": 34352,
+          "n": "Shifu",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "7479",
+        "obj": {
+          "i": 7479,
+          "n": "Shifu",
+          "c": 3156,
+          "j": 34,
+          "t": 3,
+          "l": 18
+        }
+      },
+      {
+        "type": "action",
+        "id": "8723",
+        "obj": {
+          "i": 8723,
+          "n": "Shifu",
+          "c": 405,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "8823",
+        "obj": {
+          "i": 8823,
+          "n": "Shifu",
+          "c": 784,
+          "j": null,
+          "t": 3,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

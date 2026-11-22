@@ -1,0 +1,350 @@
+{
+  "formatVersion": 1,
+  "id": "aTZkH1m6WjxNFACQ/3/5",
+  "url": "https://xivanalysis.com/fflogs/aTZkH1m6WjxNFACQ/3/5",
+  "job": "DRK",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Blood Gauge",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Starry Muse",
+      "-4"
+    ],
+    [
+      "Battle Voice",
+      "-4"
+    ],
+    [
+      "Chain Stratagem",
+      "-4"
+    ],
+    [
+      "Divination",
+      "-4"
+    ],
+    [
+      "Battle Litany",
+      "-4"
+    ],
+    [
+      "Radiant Finale",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Delirium",
+      "-5"
+    ],
+    [
+      "Living Shadow",
+      "-5"
+    ],
+    [
+      "Shadowbringer",
+      "-5"
+    ],
+    [
+      "Edge of Shadow",
+      "-5"
+    ],
+    [
+      "Carve and Spit",
+      "-5"
+    ],
+    [
+      "Salted Earth",
+      "-5"
+    ],
+    [
+      "Living Dead",
+      "-5"
+    ],
+    [
+      "Rampart",
+      "-5"
+    ],
+    [
+      "Dark Mind",
+      "-5"
+    ],
+    [
+      "The Blackest Night",
+      "-5"
+    ],
+    [
+      "Oblation",
+      "-5"
+    ],
+    [
+      "Reprisal",
+      "-5"
+    ],
+    [
+      "Dark Missionary",
+      "-5"
+    ],
+    [
+      "Provoke",
+      "-5"
+    ],
+    [
+      "Shirk",
+      "-5"
+    ],
+    [
+      "Shadowed Vigil",
+      "-5"
+    ],
+    [
+      "Shadowstride",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Starry Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213808_hr1.tex&format=png"
+    ],
+    [
+      "Battle Voice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212601_hr1.tex&format=png"
+    ],
+    [
+      "Chain Stratagem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212809_hr1.tex&format=png"
+    ],
+    [
+      "Divination",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213245_hr1.tex&format=png"
+    ],
+    [
+      "Battle Litany",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212578_hr1.tex&format=png"
+    ],
+    [
+      "Radiant Finale",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212622_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Hard Slash",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003051_hr1.tex&format=png"
+    ],
+    [
+      "Syphon Strike",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003054_hr1.tex&format=png"
+    ],
+    [
+      "Souleater",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003055_hr1.tex&format=png"
+    ],
+    [
+      "Scarlet Delirium",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003095_hr1.tex&format=png"
+    ],
+    [
+      "Comeuppance",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003096_hr1.tex&format=png"
+    ],
+    [
+      "Torcleaver",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003097_hr1.tex&format=png"
+    ],
+    [
+      "Disesteem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003099_hr1.tex&format=png"
+    ],
+    [
+      "Bloodspiller",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003080_hr1.tex&format=png"
+    ],
+    [
+      "Hard Slash",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003051_hr1.tex&format=png"
+    ],
+    [
+      "Syphon Strike",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003054_hr1.tex&format=png"
+    ],
+    [
+      "Souleater",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003055_hr1.tex&format=png"
+    ],
+    [
+      "Hard Slash",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003051_hr1.tex&format=png"
+    ],
+    [
+      "Syphon Strike",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003054_hr1.tex&format=png"
+    ],
+    [
+      "Souleater",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003055_hr1.tex&format=png"
+    ],
+    [
+      "Hard Slash",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003051_hr1.tex&format=png"
+    ],
+    [
+      "Syphon Strike",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003054_hr1.tex&format=png"
+    ],
+    [
+      "Souleater",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003055_hr1.tex&format=png"
+    ],
+    [
+      "Bloodspiller",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003080_hr1.tex&format=png"
+    ],
+    [
+      "Hard Slash",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003051_hr1.tex&format=png"
+    ],
+    [
+      "Syphon Strike",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003054_hr1.tex&format=png"
+    ],
+    [
+      "Souleater",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003055_hr1.tex&format=png"
+    ],
+    [
+      "Hard Slash",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003051_hr1.tex&format=png"
+    ],
+    [
+      "Syphon Strike",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003054_hr1.tex&format=png"
+    ],
+    [
+      "Souleater",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003055_hr1.tex&format=png"
+    ],
+    [
+      "Delirium",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003078_hr1.tex&format=png"
+    ],
+    [
+      "Living Shadow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003088_hr1.tex&format=png"
+    ],
+    [
+      "Abyssal Drain",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003064_hr1.tex&format=png"
+    ],
+    [
+      "Shadowstride",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003093_hr1.tex&format=png"
+    ],
+    [
+      "Shadowbringer",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003091_hr1.tex&format=png"
+    ],
+    [
+      "Edge of Shadow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003086_hr1.tex&format=png"
+    ],
+    [
+      "Bloodspiller",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003080_hr1.tex&format=png"
+    ],
+    [
+      "Disesteem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003099_hr1.tex&format=png"
+    ],
+    [
+      "Shadowbringer",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003091_hr1.tex&format=png"
+    ],
+    [
+      "Shadowbringer",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003091_hr1.tex&format=png"
+    ],
+    [
+      "Edge of Shadow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003086_hr1.tex&format=png"
+    ],
+    [
+      "Edge of Shadow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003086_hr1.tex&format=png"
+    ],
+    [
+      "Edge of Shadow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003086_hr1.tex&format=png"
+    ],
+    [
+      "Edge of Shadow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003086_hr1.tex&format=png"
+    ],
+    [
+      "Edge of Shadow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003086_hr1.tex&format=png"
+    ],
+    [
+      "Edge of Shadow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003086_hr1.tex&format=png"
+    ],
+    [
+      "Carve and Spit",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003058_hr1.tex&format=png"
+    ],
+    [
+      "Carve and Spit",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003058_hr1.tex&format=png"
+    ],
+    [
+      "Salted Earth",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003066_hr1.tex&format=png"
+    ],
+    [
+      "Salt and Darkness",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003090_hr1.tex&format=png"
+    ],
+    [
+      "Rampart",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000801_hr1.tex&format=png"
+    ],
+    [
+      "The Blackest Night",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003081_hr1.tex&format=png"
+    ],
+    [
+      "The Blackest Night",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003081_hr1.tex&format=png"
+    ],
+    [
+      "Reprisal",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000806_hr1.tex&format=png"
+    ],
+    [
+      "Dark Missionary",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003087_hr1.tex&format=png"
+    ],
+    [
+      "Shadowed Vigil",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003094_hr1.tex&format=png"
+    ]
+  ]
+}

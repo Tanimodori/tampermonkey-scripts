@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "dad27548aefc5b16",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/34651?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 34651,
+      "fields": {
+        "Icon": {
+          "id": 3802,
+          "path": "ui/icon/003000/003802.tex",
+          "path_hr1": "ui/icon/003000/003802_hr1.tex"
+        },
+        "Name": "疾风之绿"
+      },
+      "transient": {
+        "Description": "对目标发动风属性魔法攻击　威力：530\n追加效果：以太色调II\n持续时间：30秒\n发动条件：以太色调状态中，且非减色混合状态中\n发动时，若自身已经附加绘灵幻景状态，且处在星空构想的艺术空间内，则会消耗1档绘灵幻景\n\n※该技能无法设置到热键栏\n　满足发动条件后，火炎之红变为疾风之绿"
+      }
+    }
+  }
+}

@@ -1,0 +1,506 @@
+{
+  "formatVersion": 1,
+  "id": "7cF91zTNwqGyJZ4v/123/238",
+  "url": "https://xivanalysis.com/fflogs/7cF91zTNwqGyJZ4v/123/238",
+  "job": "MCH",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Double Check",
+      "-5"
+    ],
+    [
+      "Checkmate",
+      "-5"
+    ],
+    [
+      "Gauges",
+      "-5"
+    ],
+    [
+      "Heat",
+      "-4"
+    ],
+    [
+      "Battery",
+      "-4"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Chain Stratagem",
+      "-4"
+    ],
+    [
+      "Embolden",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Automaton Queen",
+      "-5"
+    ],
+    [
+      "Wildfire",
+      "-5"
+    ],
+    [
+      "Barrel Stabilizer",
+      "-5"
+    ],
+    [
+      "Hypercharge",
+      "-5"
+    ],
+    [
+      "Double Check",
+      "-5"
+    ],
+    [
+      "Checkmate",
+      "-5"
+    ],
+    [
+      "Reassemble",
+      "-5"
+    ],
+    [
+      "Chain Saw",
+      "-5"
+    ],
+    [
+      "Air Anchor",
+      "-5"
+    ],
+    [
+      "Drill",
+      "-5"
+    ],
+    [
+      "Dismantle",
+      "-5"
+    ],
+    [
+      "Tactician",
+      "-5"
+    ],
+    [
+      "Excavator",
+      "-5"
+    ],
+    [
+      "Full Metal Field",
+      "-5"
+    ],
+    [
+      "Foot Graze",
+      "-5"
+    ],
+    [
+      "Peloton",
+      "-5"
+    ],
+    [
+      "Leg Graze",
+      "-5"
+    ],
+    [
+      "Second Wind",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Chain Stratagem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212809_hr1.tex&format=png"
+    ],
+    [
+      "Embolden",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/218000/218941_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Drill",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003043_hr1.tex&format=png"
+    ],
+    [
+      "Air Anchor",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003045_hr1.tex&format=png"
+    ],
+    [
+      "Chain Saw",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003048_hr1.tex&format=png"
+    ],
+    [
+      "Excavator",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003500_hr1.tex&format=png"
+    ],
+    [
+      "Blazing Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003506_hr1.tex&format=png"
+    ],
+    [
+      "Blazing Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003506_hr1.tex&format=png"
+    ],
+    [
+      "Blazing Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003506_hr1.tex&format=png"
+    ],
+    [
+      "Blazing Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003506_hr1.tex&format=png"
+    ],
+    [
+      "Blazing Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003506_hr1.tex&format=png"
+    ],
+    [
+      "Drill",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003043_hr1.tex&format=png"
+    ],
+    [
+      "Full Metal Field",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003049_hr1.tex&format=png"
+    ],
+    [
+      "Drill",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003043_hr1.tex&format=png"
+    ],
+    [
+      "Heated Split Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003031_hr1.tex&format=png"
+    ],
+    [
+      "Heated Slug Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003032_hr1.tex&format=png"
+    ],
+    [
+      "Heated Clean Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003033_hr1.tex&format=png"
+    ],
+    [
+      "Heated Split Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003031_hr1.tex&format=png"
+    ],
+    [
+      "Heated Slug Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003032_hr1.tex&format=png"
+    ],
+    [
+      "Heated Clean Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003033_hr1.tex&format=png"
+    ],
+    [
+      "Drill",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003043_hr1.tex&format=png"
+    ],
+    [
+      "Air Anchor",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003045_hr1.tex&format=png"
+    ],
+    [
+      "Heated Split Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003031_hr1.tex&format=png"
+    ],
+    [
+      "Heated Slug Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003032_hr1.tex&format=png"
+    ],
+    [
+      "Heated Clean Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003033_hr1.tex&format=png"
+    ],
+    [
+      "Heated Split Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003031_hr1.tex&format=png"
+    ],
+    [
+      "Heated Slug Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003032_hr1.tex&format=png"
+    ],
+    [
+      "Drill",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003043_hr1.tex&format=png"
+    ],
+    [
+      "Air Anchor",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003045_hr1.tex&format=png"
+    ],
+    [
+      "Chain Saw",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003048_hr1.tex&format=png"
+    ],
+    [
+      "Excavator",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003500_hr1.tex&format=png"
+    ],
+    [
+      "Blazing Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003506_hr1.tex&format=png"
+    ],
+    [
+      "Blazing Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003506_hr1.tex&format=png"
+    ],
+    [
+      "Blazing Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003506_hr1.tex&format=png"
+    ],
+    [
+      "Blazing Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003506_hr1.tex&format=png"
+    ],
+    [
+      "Blazing Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003506_hr1.tex&format=png"
+    ],
+    [
+      "Drill",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003043_hr1.tex&format=png"
+    ],
+    [
+      "Full Metal Field",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003049_hr1.tex&format=png"
+    ],
+    [
+      "Drill",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003043_hr1.tex&format=png"
+    ],
+    [
+      "Heated Split Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003031_hr1.tex&format=png"
+    ],
+    [
+      "Heated Slug Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003032_hr1.tex&format=png"
+    ],
+    [
+      "Heated Clean Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003033_hr1.tex&format=png"
+    ],
+    [
+      "Heated Split Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003031_hr1.tex&format=png"
+    ],
+    [
+      "Heated Slug Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003032_hr1.tex&format=png"
+    ],
+    [
+      "Heated Clean Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003033_hr1.tex&format=png"
+    ],
+    [
+      "Drill",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003043_hr1.tex&format=png"
+    ],
+    [
+      "Air Anchor",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003045_hr1.tex&format=png"
+    ],
+    [
+      "Heated Split Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003031_hr1.tex&format=png"
+    ],
+    [
+      "Heated Slug Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003032_hr1.tex&format=png"
+    ],
+    [
+      "Heated Clean Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003033_hr1.tex&format=png"
+    ],
+    [
+      "Heated Split Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003031_hr1.tex&format=png"
+    ],
+    [
+      "Heated Slug Shot",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003032_hr1.tex&format=png"
+    ],
+    [
+      "Automaton Queen",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003501_hr1.tex&format=png"
+    ],
+    [
+      "Automaton Queen",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003501_hr1.tex&format=png"
+    ],
+    [
+      "Arm Punch",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003504_hr1.tex&format=png"
+    ],
+    [
+      "Arm Punch",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003504_hr1.tex&format=png"
+    ],
+    [
+      "Arm Punch",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003504_hr1.tex&format=png"
+    ],
+    [
+      "Arm Punch",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003504_hr1.tex&format=png"
+    ],
+    [
+      "Arm Punch",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003504_hr1.tex&format=png"
+    ],
+    [
+      "Pile Bunker",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003503_hr1.tex&format=png"
+    ],
+    [
+      "Crowned Collider",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003047_hr1.tex&format=png"
+    ],
+    [
+      "Arm Punch",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003504_hr1.tex&format=png"
+    ],
+    [
+      "Arm Punch",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003504_hr1.tex&format=png"
+    ],
+    [
+      "Arm Punch",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003504_hr1.tex&format=png"
+    ],
+    [
+      "Wildfire",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003018_hr1.tex&format=png"
+    ],
+    [
+      "Barrel Stabilizer",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003034_hr1.tex&format=png"
+    ],
+    [
+      "Hypercharge",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003041_hr1.tex&format=png"
+    ],
+    [
+      "Double Check",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003507_hr1.tex&format=png"
+    ],
+    [
+      "Double Check",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003507_hr1.tex&format=png"
+    ],
+    [
+      "Double Check",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003507_hr1.tex&format=png"
+    ],
+    [
+      "Double Check",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003507_hr1.tex&format=png"
+    ],
+    [
+      "Double Check",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003507_hr1.tex&format=png"
+    ],
+    [
+      "Double Check",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003507_hr1.tex&format=png"
+    ],
+    [
+      "Double Check",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003507_hr1.tex&format=png"
+    ],
+    [
+      "Checkmate",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003508_hr1.tex&format=png"
+    ],
+    [
+      "Checkmate",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003508_hr1.tex&format=png"
+    ],
+    [
+      "Checkmate",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003508_hr1.tex&format=png"
+    ],
+    [
+      "Checkmate",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003508_hr1.tex&format=png"
+    ],
+    [
+      "Checkmate",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003508_hr1.tex&format=png"
+    ],
+    [
+      "Checkmate",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003508_hr1.tex&format=png"
+    ],
+    [
+      "Checkmate",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003508_hr1.tex&format=png"
+    ],
+    [
+      "Reassemble",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003022_hr1.tex&format=png"
+    ],
+    [
+      "Reassemble",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003022_hr1.tex&format=png"
+    ],
+    [
+      "Chain Saw",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003048_hr1.tex&format=png"
+    ],
+    [
+      "Air Anchor",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003045_hr1.tex&format=png"
+    ],
+    [
+      "Air Anchor",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003045_hr1.tex&format=png"
+    ],
+    [
+      "Drill",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003043_hr1.tex&format=png"
+    ],
+    [
+      "Drill",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003043_hr1.tex&format=png"
+    ],
+    [
+      "Drill",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003043_hr1.tex&format=png"
+    ],
+    [
+      "Drill",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003043_hr1.tex&format=png"
+    ],
+    [
+      "Dismantle",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003011_hr1.tex&format=png"
+    ],
+    [
+      "Tactician",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003040_hr1.tex&format=png"
+    ],
+    [
+      "Excavator",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003500_hr1.tex&format=png"
+    ],
+    [
+      "Full Metal Field",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/003000/003049_hr1.tex&format=png"
+    ]
+  ]
+}

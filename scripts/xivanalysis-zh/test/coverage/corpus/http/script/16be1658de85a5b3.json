@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "16be1658de85a5b3",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-row",
+  "request": {
+    "method": "GET",
+    "url": "https://xivapi-v2.xivcdn.com/api/sheet/Action/29234?fields=Name,Icon&language=chs",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "schema": "exdschema@2:rev:e773c41a90aed788cf4c1c48469fa85618ef01fb",
+      "version": "20261013-1e14140",
+      "row_id": 29234,
+      "fields": {
+        "Icon": {
+          "id": 9612,
+          "path": "ui/icon/009000/009612.tex",
+          "path_hr1": "ui/icon/009000/009612_hr1.tex"
+        },
+        "Name": "展开战术"
+      },
+      "transient": {
+        "Description": "指定自身或一名队员又或一名敌人为目标\n以自身或队员为目标时，令其所带的鼓舞和激励状态向周围队员身上扩散\n以敌人为目标时，令其所带的蛊毒法和蛊毒状态向周围的敌人身上扩散\n持续时间：扩散时状态的剩余持续时间\n没有对目标附加对应状态时无效，对非玩家目标及搭乘了兵器的玩家无效\n积蓄次数：2"
+      }
+    }
+  }
+}

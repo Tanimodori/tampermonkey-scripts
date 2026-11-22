@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "id": "ZYk3gNxWb7ALj9Vr/5/3",
+  "slug": "ZYk3gNxWb7ALj9Vr__5__3",
+  "url": "https://xivanalysis.com/fflogs/ZYk3gNxWb7ALj9Vr/5/3",
+  "job": "RPR",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "5bdf6297d1731e02",
+      "782620f48bb61759"
+    ],
+    "script": [
+      "02fc74b13f197364",
+      "1049ff75b65b62bc",
+      "42ba2198e7873466",
+      "52cff746bbbb0564",
+      "58fea9352c8043ed",
+      "59c2370404070bc5",
+      "5ea858e69a0c1fca",
+      "61b211a6926ceceb",
+      "7902c6e70d2202fd",
+      "7f280b7c52bb060d",
+      "7fe6e9d854c3b3c0",
+      "86ebc34f2f30c19f",
+      "9b6b4a92cf7218f6",
+      "f9f43ecf1dc705a4"
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "formatVersion": 1,
+  "id": "98a9bddbb4f1a6be",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Foot+Graze&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "17679",
+        "obj": {
+          "i": 17679,
+          "n": "Foot Graze",
+          "c": 784,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "2884",
+        "obj": {
+          "i": 2884,
+          "n": "Foot Graze",
+          "c": 3012,
+          "j": null,
+          "t": 4,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "7553",
+        "obj": {
+          "i": 7553,
+          "n": "Foot Graze",
+          "c": 842,
+          "j": 5,
+          "t": 4,
+          "l": 10
+        }
+      }
+    ]
+  }
+}

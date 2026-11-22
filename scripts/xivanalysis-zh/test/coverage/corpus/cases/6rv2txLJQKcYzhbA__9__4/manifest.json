@@ -1,0 +1,41 @@
+{
+  "formatVersion": 1,
+  "id": "6rv2txLJQKcYzhbA/9/4",
+  "slug": "6rv2txLJQKcYzhbA__9__4",
+  "url": "https://xivanalysis.com/fflogs/6rv2txLJQKcYzhbA/9/4",
+  "job": "VPR",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "8bf98e2aa572c81c",
+      "81ef4cd673208020",
+      "e60fb7870023982d"
+    ],
+    "script": [
+      "0514bfd7b8701381",
+      "102d2ff7acfcf3d2",
+      "103c3015a6def940",
+      "276ec0af18f63b6c",
+      "2cf3543432d9fd49",
+      "33462a93f24b4ebf",
+      "36efeabe4f29a13d",
+      "3dd2ef1599920ad0",
+      "3ee63e9f335993ac",
+      "40cabd665db102ab",
+      "45f88cdfb541afe3",
+      "55863adc8e3d538e",
+      "5ea858e69a0c1fca",
+      "6a186e3f9688b873",
+      "74ca942c8963bb43",
+      "77b1f1dcbdc8b176",
+      "7fe6e9d854c3b3c0",
+      "8175356251d8cba9",
+      "8341b5767bfff561",
+      "9ac0ed03ec050088",
+      "9b6b4a92cf7218f6",
+      "a96022aed39c91ae",
+      "eab32931a93c3c6c"
+    ]
+  }
+}

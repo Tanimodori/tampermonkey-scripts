@@ -1,0 +1,27 @@
+{
+  "formatVersion": 1,
+  "id": "PF9aA7xQ2kMNn8G4/44/1208",
+  "slug": "PF9aA7xQ2kMNn8G4__44__1208",
+  "url": "https://xivanalysis.com/fflogs/PF9aA7xQ2kMNn8G4/44/1208",
+  "job": "WAR",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "50812ce87419229c",
+      "4e196c2afbedbc9b"
+    ],
+    "script": [
+      "1f9b682ab39a4681",
+      "58cdb656d2edd9ad",
+      "5ea858e69a0c1fca",
+      "60d51822cb8d4da6",
+      "7828341dc1f19ab2",
+      "9b6b4a92cf7218f6",
+      "9c5fcff7bd23f0a0",
+      "a5494e113727225d",
+      "b5959740f2740269",
+      "b873d30599260a42"
+    ]
+  }
+}

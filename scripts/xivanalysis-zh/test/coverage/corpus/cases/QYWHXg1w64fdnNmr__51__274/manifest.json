@@ -1,0 +1,27 @@
+{
+  "formatVersion": 1,
+  "id": "QYWHXg1w64fdnNmr/51/274",
+  "slug": "QYWHXg1w64fdnNmr__51__274",
+  "url": "https://xivanalysis.com/fflogs/QYWHXg1w64fdnNmr/51/274",
+  "job": "BRD",
+  "questions": "questions.json",
+  "expected": "expected.json",
+  "http": {
+    "page": [
+      "fb8263ab5da70aaf",
+      "e55173ac47b577eb",
+      "b35591a6d034df08"
+    ],
+    "script": [
+      "492bdc5f35edd320",
+      "56d478f8845c9d80",
+      "5ea858e69a0c1fca",
+      "707b2b4b07afa35d",
+      "91f9a1daa099d631",
+      "9b6b4a92cf7218f6",
+      "9c5fcff7bd23f0a0",
+      "da6f47519947af11",
+      "eb9f327e90026fec"
+    ]
+  }
+}

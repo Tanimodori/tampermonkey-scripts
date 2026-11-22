@@ -1,0 +1,386 @@
+{
+  "formatVersion": 1,
+  "id": "GQh7rjDL6n9wT8kB/18/15",
+  "url": "https://xivanalysis.com/fflogs/GQh7rjDL6n9wT8kB/18/15",
+  "job": "SCH",
+  "timeline": [
+    [
+      "Resources",
+      "-5"
+    ],
+    [
+      "Faerie Gauge",
+      "-5"
+    ],
+    [
+      "Raid Buffs",
+      "-5"
+    ],
+    [
+      "Starry Muse",
+      "-4"
+    ],
+    [
+      "Battle Voice",
+      "-4"
+    ],
+    [
+      "Divination",
+      "-4"
+    ],
+    [
+      "Chain Stratagem",
+      "-4"
+    ],
+    [
+      "Battle Litany",
+      "-4"
+    ],
+    [
+      "Radiant Finale",
+      "-4"
+    ],
+    [
+      "Medicated",
+      "-5"
+    ],
+    [
+      "Pet",
+      "-5"
+    ],
+    [
+      "Autos",
+      "-4"
+    ],
+    [
+      "Commands",
+      "-4"
+    ],
+    [
+      "GCD",
+      "-5"
+    ],
+    [
+      "Proc",
+      "-5"
+    ],
+    [
+      "Whispering Dawn",
+      "-5"
+    ],
+    [
+      "Dissipation",
+      "-5"
+    ],
+    [
+      "Chain Stratagem",
+      "-5"
+    ],
+    [
+      "Baneful Impaction",
+      "-5"
+    ],
+    [
+      "Lucid Dreaming",
+      "-5"
+    ],
+    [
+      "Excogitation",
+      "-5"
+    ],
+    [
+      "Seraphism",
+      "-5"
+    ],
+    [
+      "Swiftcast",
+      "-5"
+    ],
+    [
+      "Protraction",
+      "-5"
+    ],
+    [
+      "Expedient",
+      "-5"
+    ],
+    [
+      "Energy Drain",
+      "-5"
+    ],
+    [
+      "Aetherflow",
+      "-5"
+    ],
+    [
+      "Recitation",
+      "-5"
+    ],
+    [
+      "Fey Illumination",
+      "-5"
+    ],
+    [
+      "Summon Seraph",
+      "-5"
+    ],
+    [
+      "Consolation",
+      "-5"
+    ],
+    [
+      "Fey Blessing",
+      "-5"
+    ],
+    [
+      "Indomitability",
+      "-5"
+    ],
+    [
+      "Sacred Soil",
+      "-5"
+    ],
+    [
+      "Aetherpact",
+      "-5"
+    ],
+    [
+      "Deployment Tactics",
+      "-5"
+    ]
+  ],
+  "icons": [
+    [
+      "Starry Muse",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213808_hr1.tex&format=png"
+    ],
+    [
+      "Battle Voice",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212601_hr1.tex&format=png"
+    ],
+    [
+      "Divination",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/213000/213245_hr1.tex&format=png"
+    ],
+    [
+      "Chain Stratagem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212809_hr1.tex&format=png"
+    ],
+    [
+      "Battle Litany",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212578_hr1.tex&format=png"
+    ],
+    [
+      "Radiant Finale",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212622_hr1.tex&format=png"
+    ],
+    [
+      "Medicated",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/216000/216203_hr1.tex&format=png"
+    ],
+    [
+      "Whispering Dawn",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002827_hr1.tex&format=png"
+    ],
+    [
+      "Embrace",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002826_hr1.tex&format=png"
+    ],
+    [
+      "Embrace",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002826_hr1.tex&format=png"
+    ],
+    [
+      "Embrace",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002826_hr1.tex&format=png"
+    ],
+    [
+      "Embrace",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002826_hr1.tex&format=png"
+    ],
+    [
+      "Fey Illumination",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002829_hr1.tex&format=png"
+    ],
+    [
+      "Consolation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002846_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Biolysis",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002820_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Biolysis",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002820_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Biolysis",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002820_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Broil IV",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002875_hr1.tex&format=png"
+    ],
+    [
+      "Ruin II",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000502_hr1.tex&format=png"
+    ],
+    [
+      "Impact Imminent",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/212000/212818_hr1.tex&format=png"
+    ],
+    [
+      "Dissipation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002810_hr1.tex&format=png"
+    ],
+    [
+      "Chain Stratagem",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002815_hr1.tex&format=png"
+    ],
+    [
+      "Baneful Impaction",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002879_hr1.tex&format=png"
+    ],
+    [
+      "Lucid Dreaming",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000865_hr1.tex&format=png"
+    ],
+    [
+      "Excogitation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002813_hr1.tex&format=png"
+    ],
+    [
+      "Seraphism",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002881_hr1.tex&format=png"
+    ],
+    [
+      "Swiftcast",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000866_hr1.tex&format=png"
+    ],
+    [
+      "Energy Drain",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000514_hr1.tex&format=png"
+    ],
+    [
+      "Energy Drain",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000514_hr1.tex&format=png"
+    ],
+    [
+      "Energy Drain",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000514_hr1.tex&format=png"
+    ],
+    [
+      "Energy Drain",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000514_hr1.tex&format=png"
+    ],
+    [
+      "Energy Drain",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000514_hr1.tex&format=png"
+    ],
+    [
+      "Energy Drain",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000514_hr1.tex&format=png"
+    ],
+    [
+      "Aetherflow",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/000000/000510_hr1.tex&format=png"
+    ],
+    [
+      "Recitation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002822_hr1.tex&format=png"
+    ],
+    [
+      "Fey Illumination",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002829_hr1.tex&format=png"
+    ],
+    [
+      "Summon Seraph",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002850_hr1.tex&format=png"
+    ],
+    [
+      "Consolation",
+      "https://v2.xivapi.com/api/asset?path=ui/icon/002000/002851_hr1.tex&format=png"
+    ]
+  ]
+}

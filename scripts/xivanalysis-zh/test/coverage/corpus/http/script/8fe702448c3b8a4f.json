@@ -1,0 +1,41 @@
+{
+  "formatVersion": 1,
+  "id": "8fe702448c3b8a4f",
+  "kind": "script",
+  "origin": "script",
+  "purpose": "garland-search",
+  "request": {
+    "method": "GET",
+    "url": "https://www.garlandtools.cn/api/search.php?text=Techne+Makre&lang=en",
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "body": [
+      {
+        "type": "action",
+        "id": "24859",
+        "obj": {
+          "i": 24859,
+          "n": "Techne Makre",
+          "c": 103,
+          "j": 0,
+          "t": 9,
+          "l": 0
+        }
+      },
+      {
+        "type": "action",
+        "id": "25530",
+        "obj": {
+          "i": 25530,
+          "n": "Techne Makre",
+          "c": 405,
+          "j": null,
+          "t": 0,
+          "l": 0
+        }
+      }
+    ]
+  }
+}

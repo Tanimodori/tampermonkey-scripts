@@ -7,3 +7,7 @@ occult-pot-server.zip
 # target exists with sane ownership), what lands in it is not.
 logs/*
 !logs/.gitkeep
+
+# Credential backups taken before a rotation. They hold the deployment's real values, so the directory
+# is ignored even though it sits beside the tracked value lists.
+backups/
